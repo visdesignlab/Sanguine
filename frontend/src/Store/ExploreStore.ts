@@ -23,6 +23,7 @@ export class ExploreStore {
 
   set chartLayouts(input: { [key: string]: Layout[] }) {
     this._chartLayouts = input;
+    this._rootStore.provenanceStore.actions.updateExploreLayout(input);
   }
 
   _chartConfigs: ExploreChartConfig[] = [];
@@ -133,6 +134,8 @@ export class ExploreStore {
       maxH: 2,
     });
     this._chartLayouts = { ...this._chartLayouts, main: shifted };
+    this._rootStore.provenanceStore.actions.updateExploreConfig(this._chartConfigs);
+    this._rootStore.provenanceStore.actions.updateExploreLayout(this._chartLayouts);
   }
 
   // Removes chart from layouts (position) and config (info)
@@ -141,5 +144,15 @@ export class ExploreStore {
     Object.keys(this._chartLayouts).forEach((key) => {
       this._chartLayouts[key] = this._chartLayouts[key].filter((layout) => layout.i !== chartId);
     });
+    this._rootStore.provenanceStore.actions.updateExploreConfig(this._chartConfigs);
+    this._rootStore.provenanceStore.actions.updateExploreLayout(this._chartLayouts);
+  }
+
+  loadState(state: {
+    chartConfigs: ExploreChartConfig[];
+    chartLayouts: { [key: string]: Layout[] };
+  }) {
+    this._chartConfigs = state.chartConfigs;
+    this._chartLayouts = state.chartLayouts;
   }
 }

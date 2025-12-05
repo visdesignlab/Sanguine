@@ -42,6 +42,7 @@ export class RootStore {
   set unitCosts(costs: Record<Cost, number>) {
     this._unitCosts = costs;
     this.updateCostsTable();
+    this.provenanceStore.actions.updateSettings(costs);
   }
 
   allVisitsLength = 0;

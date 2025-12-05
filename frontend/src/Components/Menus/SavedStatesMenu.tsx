@@ -5,7 +5,7 @@ import {
 } from '@mantine/core';
 import {
     IconFolder, IconFolderDown, IconFolderSearch, IconEdit, IconTrash, IconSquareCheck, IconCheck, IconX, IconChevronLeft, IconChevronRight,
-    IconChartBar, IconFilter, IconClick
+    IconChartBar, IconFilter, IconClick, IconSettings, IconChartScatter
 } from '@tabler/icons-react';
 import { useThemeConstants } from '../../Theme/mantineTheme';
 import classes from '../../Shell/Shell.module.css';
@@ -16,8 +16,18 @@ import { ApplicationState } from '../../Store/ProvenanceStore';
 import {
     BLOOD_COMPONENTS, OUTCOMES, PROPHYL_MEDS, GUIDELINE_ADHERENT, LAB_RESULTS, COSTS, TIME_AGGREGATION_OPTIONS,
     AGGREGATION_OPTIONS,
-    DashboardChartConfig
+    DashboardChartConfig,
+    ExploreChartConfig,
+    Cost
 } from '../../Types/application';
+
+const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
+    rbc_units_cost: 200,
+    ffp_units_cost: 55,
+    plt_units_cost: 650,
+    cryo_units_cost: 70,
+    cell_saver_cost: 500,
+};
 
 // Helper to get readable names
 const getReadableName = (key: string): string => {
@@ -91,11 +101,13 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
     const {
         filterValues,
         selections,
-        dashboard
+        dashboard,
+        explore,
+        settings
     } = state;
 
-    // Process Charts
-    const charts = useMemo(() => {
+    // Process Dashboard Charts
+    const dashboardCharts = useMemo(() => {
         const items: string[] = [];
         if (dashboard?.chartConfigs) {
             dashboard.chartConfigs.forEach((config: DashboardChartConfig) => {
@@ -112,6 +124,36 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
         }
         return items;
     }, [dashboard]);
+
+    // Process Explore Charts
+    const exploreCharts = useMemo(() => {
+        const items: string[] = [];
+        if (explore?.chartConfigs) {
+            explore.chartConfigs.forEach((config: ExploreChartConfig) => {
+                const xLabel = getReadableName(config.xAxisVar);
+                const yLabel = getReadableName(config.yAxisVar);
+                items.push(`Chart: ${yLabel} vs ${xLabel}`);
+            });
+        }
+        return items;
+    }, [explore]);
+
+    // Process Settings
+    const activeSettings = useMemo(() => {
+        const items: { label: string, value: string }[] = [];
+        if (settings?.unitCosts) {
+            Object.entries(settings.unitCosts).forEach(([key, value]) => {
+                const costKey = key as Cost;
+                if (value !== DEFAULT_UNIT_COSTS[costKey]) {
+                    items.push({
+                        label: getReadableName(key),
+                        value: `$${value}`
+                    });
+                }
+            });
+        }
+        return items;
+    }, [settings]);
 
     // Process Filters
     const activeFilters = useMemo(() => {
@@ -168,7 +210,7 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
         return selections?.selectedTimePeriods || [];
     }, [selections]);
 
-    if (charts.length === 0 && activeFilters.length === 0 && selectedItems.length === 0) {
+    if (dashboardCharts.length === 0 && exploreCharts.length === 0 && activeFilters.length === 0 && selectedItems.length === 0 && activeSettings.length === 0) {
         return <Text size="sm" c="dimmed" fs="italic">No specific state details (default view).</Text>;
     }
 
@@ -176,15 +218,32 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
         <Stack gap="xs" w="100%">
 
             <Accordion variant="contained" radius="md" defaultValue={[]} multiple>
-                {charts.length > 0 && (
-                    <Accordion.Item value="charts">
+                {dashboardCharts.length > 0 && (
+                    <Accordion.Item value="dashboard">
                         <Accordion.Control icon={<IconChartBar size={16} color="var(--mantine-color-blue-6)" />}>
-                            <Text size="sm" fw={500}>Charts & Stats ({charts.length})</Text>
+                            <Text size="sm" fw={500}>Dashboard ({dashboardCharts.length})</Text>
                         </Accordion.Control>
                         <Accordion.Panel>
                             <ScrollArea.Autosize mah={150}>
                                 <Stack gap={4}>
-                                    {charts.map((chart, i) => (
+                                    {dashboardCharts.map((chart, i) => (
+                                        <Text key={i} size="xs" c="dimmed">• {chart}</Text>
+                                    ))}
+                                </Stack>
+                            </ScrollArea.Autosize>
+                        </Accordion.Panel>
+                    </Accordion.Item>
+                )}
+
+                {exploreCharts.length > 0 && (
+                    <Accordion.Item value="explore">
+                        <Accordion.Control icon={<IconChartScatter size={16} color="var(--mantine-color-grape-6)" />}>
+                            <Text size="sm" fw={500}>Explore ({exploreCharts.length})</Text>
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                            <ScrollArea.Autosize mah={150}>
+                                <Stack gap={4}>
+                                    {exploreCharts.map((chart, i) => (
                                         <Text key={i} size="xs" c="dimmed">• {chart}</Text>
                                     ))}
                                 </Stack>
@@ -223,6 +282,26 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
                                 <Stack gap={4}>
                                     {selectedItems.map((item, i) => (
                                         <Text key={i} size="xs" c="dimmed">• {item}</Text>
+                                    ))}
+                                </Stack>
+                            </ScrollArea.Autosize>
+                        </Accordion.Panel>
+                    </Accordion.Item>
+                )}
+
+                {activeSettings.length > 0 && (
+                    <Accordion.Item value="settings">
+                        <Accordion.Control icon={<IconSettings size={16} color="var(--mantine-color-gray-6)" />}>
+                            <Text size="sm" fw={500}>Settings ({activeSettings.length})</Text>
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                            <ScrollArea.Autosize mah={150}>
+                                <Stack gap={4}>
+                                    {activeSettings.map((setting, i) => (
+                                        <Group key={i} justify="space-between" wrap="nowrap" align="flex-start">
+                                            <Text size="xs" c="dimmed" style={{ flex: 1 }}>{setting.label}:</Text>
+                                            <Text size="xs" fw={500} style={{ flex: 1, textAlign: 'right' }}>{setting.value}</Text>
+                                        </Group>
                                     ))}
                                 </Stack>
                             </ScrollArea.Autosize>
@@ -595,7 +674,7 @@ export const SavedStatesMenu = observer(({
                                         {activeFullState && <StateDetails state={activeFullState} />}
                                     </ScrollArea>
 
-                                    <Group justify="space-between" align="center" wrap="nowrap" style={{ flex: '0 0 auto', paddingTop: 16 }}>
+                                    <Group justify="space-between" align="center" wrap="nowrap" style={{ flex: '0 0 auto', paddingTop: 0 }}>
                                         <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
                                             <Text fw={600} size="lg" style={{ wordBreak: 'break-word', lineHeight: 1.2 }}>
                                                 {activePreviewState.name}

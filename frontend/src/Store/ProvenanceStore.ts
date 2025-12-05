@@ -3,7 +3,7 @@ import {
     initProvenance, Provenance, ProvenanceGraph, NodeID,
 } from '@visdesignlab/trrack';
 import type { RootStore } from './Store';
-import { DashboardChartConfig, DashboardStatConfig } from '../Types/application';
+import { DashboardChartConfig, DashboardStatConfig, ExploreChartConfig, Cost } from '../Types/application';
 import { Layout } from 'react-grid-layout';
 
 export interface ApplicationState {
@@ -32,6 +32,13 @@ export interface ApplicationState {
         chartConfigs: DashboardChartConfig[];
         statConfigs: DashboardStatConfig[];
         chartLayouts: { [key: string]: Layout[] };
+    };
+    explore: {
+        chartConfigs: ExploreChartConfig[];
+        chartLayouts: { [key: string]: Layout[] };
+    };
+    settings: {
+        unitCosts: Record<Cost, number>;
     };
     ui: {
         activeTab: string;
@@ -92,6 +99,13 @@ export class ProvenanceStore {
                 chartConfigs: toJS(rootStore.dashboardStore.chartConfigs),
                 statConfigs: toJS(rootStore.dashboardStore.statConfigs),
                 chartLayouts: toJS(rootStore.dashboardStore.chartLayouts),
+            },
+            explore: {
+                chartConfigs: toJS(rootStore.exploreStore.chartConfigs),
+                chartLayouts: toJS(rootStore.exploreStore.chartLayouts),
+            },
+            settings: {
+                unitCosts: toJS(rootStore.unitCosts),
             },
             ui: {
                 activeTab: 'Dashboard',
@@ -163,6 +177,13 @@ export class ProvenanceStore {
                 chartConfigs: toJS(this._rootStore.dashboardStore.chartConfigs),
                 statConfigs: toJS(this._rootStore.dashboardStore.statConfigs),
                 chartLayouts: toJS(this._rootStore.dashboardStore.chartLayouts),
+            },
+            explore: {
+                chartConfigs: toJS(this._rootStore.exploreStore.chartConfigs),
+                chartLayouts: toJS(this._rootStore.exploreStore.chartLayouts),
+            },
+            settings: {
+                unitCosts: toJS(this._rootStore.unitCosts),
             },
             ui: {
                 activeTab: 'Dashboard',
@@ -533,6 +554,90 @@ export class ProvenanceStore {
                     } as any;
                 }
             }, 'Update UI State');
+        },
+        updateExploreConfig: (chartConfigs: ExploreChartConfig[]) => {
+            this.provenance.apply({
+                apply: (state: ApplicationState) => {
+                    if (!state) return {
+                        state: state || {} as ApplicationState,
+                        label: 'Update Explore Config',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+
+                    const newState = {
+                        ...state,
+                        explore: {
+                            ...state.explore,
+                            chartConfigs: chartConfigs
+                        }
+                    };
+                    return {
+                        state: newState,
+                        label: 'Update Explore Config',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+                }
+            }, 'Update Explore Config');
+        },
+        updateExploreLayout: (layouts: { [key: string]: Layout[] }) => {
+            this.provenance.apply({
+                apply: (state: ApplicationState) => {
+                    if (!state) return {
+                        state: state || {} as ApplicationState,
+                        label: 'Update Explore Layout',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+
+                    const newState = {
+                        ...state,
+                        explore: {
+                            ...state.explore,
+                            chartLayouts: layouts
+                        }
+                    };
+                    return {
+                        state: newState,
+                        label: 'Update Explore Layout',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+                }
+            }, 'Update Explore Layout');
+        },
+        updateSettings: (unitCosts: Record<Cost, number>) => {
+            this.provenance.apply({
+                apply: (state: ApplicationState) => {
+                    if (!state) return {
+                        state: state || {} as ApplicationState,
+                        label: 'Update Settings',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+
+                    const newState = {
+                        ...state,
+                        settings: {
+                            ...state.settings,
+                            unitCosts: unitCosts
+                        }
+                    };
+                    return {
+                        state: newState,
+                        label: 'Update Settings',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+                }
+            }, 'Update Settings');
         }
     };
 
@@ -564,6 +669,16 @@ export class ProvenanceStore {
         if (state.dashboard) {
             console.log("📊 [ProvenanceStore] Restoring Dashboard Config:", state.dashboard.chartConfigs);
             (this._rootStore.dashboardStore as any).loadState(state.dashboard);
+        }
+
+        // Sync Explore
+        if (state.explore) {
+            (this._rootStore.exploreStore as any).loadState(state.explore);
+        }
+
+        // Sync Settings
+        if (state.settings) {
+            (this._rootStore as any).unitCosts = state.settings.unitCosts;
         }
     }
 
