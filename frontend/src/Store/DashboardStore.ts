@@ -53,6 +53,9 @@ export class DashboardStore {
   }
 
   set chartLayouts(input: { [key: string]: Layout[] }) {
+    if (JSON.stringify(this._chartLayouts) === JSON.stringify(input)) {
+      return;
+    }
     this._chartLayouts = input;
     this._rootStore.provenanceStore.actions.updateDashboardLayout(input);
   }
