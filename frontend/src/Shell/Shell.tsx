@@ -64,7 +64,7 @@ export const Shell = observer(() => {
   const defaultTab = TABS[0].key;
 
   // Active tab in the view tabs
-  const activeTab = store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.activeTab;
+  const activeTab = store.provenanceStore.currentState.ui.activeTab;
   const setActiveTab = (tab: string) => {
     store.provenanceStore.actions.setUiState({ activeTab: tab });
   };
@@ -125,12 +125,12 @@ export const Shell = observer(() => {
   const LEFT_PANEL_WIDTH = 6 * toolbarWidth;
 
   // Open and close the left toolbar, burger toggle visible on hover.
-  const leftToolbarOpened = store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.leftToolbarOpened;
+  const leftToolbarOpened = store.provenanceStore.currentState.ui.leftToolbarOpened;
   const toggleLeftToolbar = () => {
     store.provenanceStore.actions.setUiState({ leftToolbarOpened: !leftToolbarOpened });
   };
 
-  const activeLeftPanel = store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.activeLeftPanel;
+  const activeLeftPanel = store.provenanceStore.currentState.ui.activeLeftPanel;
   const setActiveLeftPanel = (index: number | null) => {
     store.provenanceStore.actions.setUiState({ activeLeftPanel: index });
   };
@@ -147,7 +147,7 @@ export const Shell = observer(() => {
         <ActionIcon key="reset-filters" aria-label="Reset all filters" onClick={() => { store.filtersStore.resetAllFilters(); }} className={classes.leftToolbarIcon}>
           <IconRestore stroke={iconStroke} size={21} />
         </ActionIcon>,
-        <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.provenanceStore.actions.setUiState({ showFilterHistograms: !store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.showFilterHistograms }); }} data-active={store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.showFilterHistograms} className={classes.leftToolbarIcon}>
+        <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.provenanceStore.actions.setUiState({ showFilterHistograms: !store.provenanceStore.currentState.ui.showFilterHistograms }); }} data-active={store.provenanceStore.currentState.ui.showFilterHistograms} className={classes.leftToolbarIcon}>
           <IconChartBar stroke={iconStroke} />
         </ActionIcon>,
       ],

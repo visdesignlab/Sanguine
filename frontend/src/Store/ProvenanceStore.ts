@@ -406,7 +406,7 @@ export class ProvenanceStore {
                 }
             }, 'Add Chart');
         },
-        removeChart: (chartId: string) => {
+        removeChart: (chartId: string, layouts: { [key: string]: Layout[] }) => {
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
                     console.log("State before Remove Chart:", state);
@@ -422,7 +422,8 @@ export class ProvenanceStore {
                         ...state,
                         dashboard: {
                             ...state.dashboard,
-                            chartConfigs: state.dashboard.chartConfigs.filter(c => c.chartId !== chartId)
+                            chartConfigs: state.dashboard.chartConfigs.filter(c => c.chartId !== chartId),
+                            chartLayouts: layouts
                         }
                     };
 
@@ -611,6 +612,31 @@ export class ProvenanceStore {
                 }
             }, 'Update Explore Layout');
         },
+        updateExploreState: (exploreState: ApplicationState['explore'], label: string = 'Update Explore State') => {
+            this.provenance.apply({
+                apply: (state: ApplicationState) => {
+                    if (!state) return {
+                        state: state || {} as ApplicationState,
+                        label: label,
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+
+                    const newState = {
+                        ...state,
+                        explore: exploreState
+                    };
+                    return {
+                        state: newState,
+                        label: label,
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+                }
+            }, label);
+        },
         updateSettings: (unitCosts: Record<Cost, number>) => {
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
@@ -678,7 +704,8 @@ export class ProvenanceStore {
 
         // Sync Settings
         if (state.settings) {
-            (this._rootStore as any).unitCosts = state.settings.unitCosts;
+            this._rootStore._unitCosts = state.settings.unitCosts;
+            this._rootStore.updateCostsTable();
         }
     }
 
@@ -768,6 +795,13 @@ export class ProvenanceStore {
 
         const current = this.provenance.current;
         return current.children.length > 0;
+    }
+
+    get currentState() {
+        // Access graphVersion to ensure reactivity
+        // eslint-disable-next-line no-unused-expressions
+        this.graphVersion;
+        return this.provenance.getState(this.provenance.current);
     }
 
     restoreState(nodeId: NodeID) {

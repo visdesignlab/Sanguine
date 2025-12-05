@@ -53,9 +53,36 @@ export class DashboardStore {
   }
 
   set chartLayouts(input: { [key: string]: Layout[] }) {
-    if (JSON.stringify(this._chartLayouts) === JSON.stringify(input)) {
+    // Guard: Only update if Dashboard is active
+    // This prevents phantom updates when switching tabs (RGL triggers onLayoutChange when hidden/width=0)
+    if (this._rootStore.provenanceStore.currentState.ui.activeTab !== 'Dashboard') {
       return;
     }
+
+    // Robust comparison to avoid redundant updates from RGL
+    const areLayoutsEqual = (l1: Layout[], l2: Layout[]) => {
+      if (l1.length !== l2.length) return false;
+      // Sort by 'i' to ensure order doesn't matter for comparison
+      const sorted1 = [...l1].sort((a, b) => a.i.localeCompare(b.i));
+      const sorted2 = [...l2].sort((a, b) => a.i.localeCompare(b.i));
+
+      return sorted1.every((item, index) => {
+        const other = sorted2[index];
+        return item.i === other.i &&
+          item.x === other.x &&
+          item.y === other.y &&
+          item.w === other.w &&
+          item.h === other.h;
+      });
+    };
+
+    const mainEqual = areLayoutsEqual(this._chartLayouts.main || [], input.main || []);
+    const smEqual = areLayoutsEqual(this._chartLayouts.sm || [], input.sm || []);
+
+    if (mainEqual && smEqual) {
+      return;
+    }
+
     this._chartLayouts = input;
     this._rootStore.provenanceStore.actions.updateDashboardLayout(input);
   }
@@ -137,19 +164,53 @@ export class DashboardStore {
    * Removes chart from the dashboard by ID.
    */
   removeChart(chartId: string) {
-    if (this._chartLayouts && Array.isArray(this._chartLayouts.main)) {
-      this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
-    }
-    // Safely remove from main layout if it exists
-    if (this._chartLayouts && Array.isArray(this._chartLayouts.main)) {
-      this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== chartId);
-    }
+    // Helper to compact layout (simple vertical compaction)
+    const compactLayout = (layout: Layout[], cols: number): Layout[] => {
+      // Sort by y, then x
+      const sorted = [...layout].sort((a, b) => {
+        if (a.y === b.y) return a.x - b.x;
+        return a.y - b.y;
+      });
 
-    // Safely remove from sm (small) layout if it exists
-    if (this._chartLayouts && Array.isArray(this._chartLayouts.sm)) {
-      this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== chartId);
-    }
-    this._rootStore.provenanceStore.actions.removeChart(chartId);
+      const heightMap = new Array(cols).fill(0);
+
+      return sorted.map(item => {
+        const newItem = { ...item };
+        // Find max height in the columns this item occupies
+        let maxY = 0;
+        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
+          if (i < cols) {
+            maxY = Math.max(maxY, heightMap[i]);
+          }
+        }
+
+        newItem.y = maxY;
+
+        // Update height map
+        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
+          if (i < cols) {
+            heightMap[i] = maxY + newItem.h;
+          }
+        }
+        return newItem;
+      });
+    };
+
+    // Create deep copy of layouts to modify
+    const filteredMain = (this._chartLayouts.main || []).filter((layout) => layout.i !== chartId);
+    const filteredSm = (this._chartLayouts.sm || []).filter((layout) => layout.i !== chartId);
+
+    const newLayouts = {
+      main: compactLayout(filteredMain, 2), // main has 2 columns
+      sm: compactLayout(filteredSm, 1)      // sm has 1 column
+    };
+
+    // Update local state
+    this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
+    this._chartLayouts = newLayouts;
+
+    // Update provenance with both changes
+    this._rootStore.provenanceStore.actions.removeChart(chartId, newLayouts);
   }
 
   /**
@@ -159,6 +220,38 @@ export class DashboardStore {
   addChart(config: DashboardChartConfig) {
     // Chart data - Add chart config to beginning of array ----
     this._chartConfigs = [config, ...this._chartConfigs];
+
+    // Helper to compact layout (simple vertical compaction)
+    const compactLayout = (layout: Layout[], cols: number): Layout[] => {
+      // Sort by y, then x
+      const sorted = [...layout].sort((a, b) => {
+        if (a.y === b.y) return a.x - b.x;
+        return a.y - b.y;
+      });
+
+      const heightMap = new Array(cols).fill(0);
+
+      return sorted.map(item => {
+        const newItem = { ...item };
+        // Find max height in the columns this item occupies
+        let maxY = 0;
+        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
+          if (i < cols) {
+            maxY = Math.max(maxY, heightMap[i]);
+          }
+        }
+
+        newItem.y = maxY;
+
+        // Update height map
+        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
+          if (i < cols) {
+            heightMap[i] = maxY + newItem.h;
+          }
+        }
+        return newItem;
+      });
+    };
 
     // Layouts - create a new layout object ----
     const newMainLayouts = this._chartLayouts.main.map((layout) => ({
@@ -196,9 +289,13 @@ export class DashboardStore {
     // Replace the entire layouts object
     const newLayouts = {
       ...this._chartLayouts,
-      main: newMainLayouts,
-      ...(this._chartLayouts.sm && { sm: newSmLayouts }),
+      main: compactLayout(newMainLayouts, 2),
+      ...(this._chartLayouts.sm && { sm: compactLayout(newSmLayouts, 1) }),
     };
+
+    // Update local state immediately to prevent race condition with RGL
+    this._chartLayouts = newLayouts;
+
     this.computeChartData();
     this._rootStore.provenanceStore.actions.addChart(config, newLayouts);
   }
