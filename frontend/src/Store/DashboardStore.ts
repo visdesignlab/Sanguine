@@ -134,9 +134,18 @@ export class DashboardStore {
    * Removes chart from the dashboard by ID.
    */
   removeChart(chartId: string) {
-    this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
-    this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== chartId);
-    this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== chartId);
+    if (this._chartLayouts && Array.isArray(this._chartLayouts.main)) {
+      this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
+    }
+    // Safely remove from main layout if it exists
+    if (this._chartLayouts && Array.isArray(this._chartLayouts.main)) {
+      this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== chartId);
+    }
+
+    // Safely remove from sm (small) layout if it exists
+    if (this._chartLayouts && Array.isArray(this._chartLayouts.sm)) {
+      this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== chartId);
+    }
     this._rootStore.provenanceStore.actions.removeChart(chartId);
   }
 
@@ -219,6 +228,7 @@ export class DashboardStore {
    * Remove stat from dashboard by ID
    */
   removeStat(statId: string) {
+    console.log(`Removing stat with ID: ${statId}`);
     this._statConfigs = this._statConfigs.filter((config) => config.statId !== statId);
   }
 

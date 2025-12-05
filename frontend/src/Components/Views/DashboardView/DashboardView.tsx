@@ -104,6 +104,14 @@ export function DashboardView() {
       selectedYAxisVar as DashboardStatConfig['yAxisVar'],
       selectedAggregation as DashboardStatConfig['aggregation'],
       );
+      store.provenanceStore.actions.addStat(
+        {
+          statId: `stat-${Date.now()}`,
+          yAxisVar: selectedYAxisVar as DashboardStatConfig['yAxisVar'],
+          aggregation: selectedAggregation as DashboardStatConfig['aggregation'],
+          title: '',
+        } as DashboardStatConfig,
+      );
     }
     close();
   }, [selectedAggregation, selectedXAxisVar, selectedYAxisVar, itemModalType, close, store.dashboardStore]);

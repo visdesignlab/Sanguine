@@ -102,7 +102,7 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
                 const yLabel = getReadableName(config.yAxisVar);
                 const xLabel = getReadableName(config.xAxisVar);
                 const agg = AGGREGATION_OPTIONS[config.aggregation]?.label || config.aggregation;
-                items.push(`${agg} ${yLabel} by ${xLabel}`);
+                items.push(`Chart: ${agg} ${yLabel} by ${xLabel}`);
             });
         }
         if (dashboard?.statConfigs) {

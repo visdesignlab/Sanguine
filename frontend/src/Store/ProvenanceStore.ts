@@ -263,6 +263,7 @@ export class ProvenanceStore {
             }, 'Update Selection');
         },
         updateDashboardConfig: (chartConfigs: DashboardChartConfig[]) => {
+            console.log("💾 [ProvenanceStore] Saving Dashboard Config:", chartConfigs);
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
 
@@ -330,6 +331,7 @@ export class ProvenanceStore {
             }, 'Update Dashboard Layout');
         },
         addChart: (config: DashboardChartConfig, layouts: { [key: string]: Layout[] }) => {
+            console.log("➕ [ProvenanceStore] Adding Chart Config:", config);
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
 
@@ -362,7 +364,7 @@ export class ProvenanceStore {
         removeChart: (chartId: string) => {
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
-
+                    console.log("State before Remove Chart:", state);
                     if (!state || !state.dashboard) return {
                         state: state || {} as ApplicationState,
                         label: 'Remove Chart',
@@ -378,6 +380,8 @@ export class ProvenanceStore {
                             chartConfigs: state.dashboard.chartConfigs.filter(c => c.chartId !== chartId)
                         }
                     };
+
+                    console.log("New State after Remove Chart:", newState);
                     return {
                         state: newState,
                         label: 'Remove Chart',
@@ -387,6 +391,69 @@ export class ProvenanceStore {
                     } as any;
                 }
             }, 'Remove Chart');
+        },
+        // Remove stat
+        removeStat: (statId: string) => {
+            this.provenance.apply({
+                apply: (state: ApplicationState) => {
+
+                    if (!state || !state.dashboard) return {
+                        state: state || {} as ApplicationState,
+                        label: 'Remove Stat',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+
+                    const newState = {
+                        ...state,
+                        dashboard: {
+                            ...state.dashboard,
+                            statConfigs: state.dashboard.statConfigs.filter(s => s.statId !== statId)
+                        }
+                    };
+
+                    console.log("New State after Remove Stat:", newState);
+                    return {
+                        state: newState,
+                        label: 'Remove Stat',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+                }
+            }, 'Remove Stat');
+        },
+        // Add Stat
+        addStat: (config: DashboardStatConfig) => {
+            console.log("➕ [ProvenanceStore] Adding Stat Config:", config);
+            this.provenance.apply({
+                apply: (state: ApplicationState) => {
+
+                    if (!state || !state.dashboard) return {
+                        state: state || {} as ApplicationState,
+                        label: 'Add Stat',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+
+                    const newState = {
+                        ...state,
+                        dashboard: {
+                            ...state.dashboard,
+                            statConfigs: [config, ...state.dashboard.statConfigs],
+                        }
+                    };
+                    return {
+                        state: newState,
+                        label: 'Add Stat',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+                }
+            }, 'Add Stat');
         },
         // Generic update for complex dashboard changes
         updateDashboardState: (dashboardState: ApplicationState['dashboard'], label: string = 'Update Dashboard') => {
@@ -422,6 +489,8 @@ export class ProvenanceStore {
     syncStateToStores(state: ApplicationState) {
         if (!state) return;
 
+        console.log("🔄 [ProvenanceStore] Syncing State to Stores (Retrieving):", state);
+
         // Sync Filters
         const { filterValues } = state;
         if (filterValues) {
@@ -441,6 +510,7 @@ export class ProvenanceStore {
 
         // Sync Dashboard
         if (state.dashboard) {
+            console.log("📊 [ProvenanceStore] Restoring Dashboard Config:", state.dashboard.chartConfigs);
             (this._rootStore.dashboardStore as any).loadState(state.dashboard);
         }
     }
@@ -449,6 +519,9 @@ export class ProvenanceStore {
 
     saveState(name: string, screenshot?: string) {
         const currentNodeId = this.provenance.current.id;
+        console.log("Provenance Current Node:", this.provenance.current);
+
+        console.log("🔖 [ProvenanceStore] Bookmarking State:", this.provenance.getState(currentNodeId));
         this.provenance.addArtifact({ type: 'name', value: name }, currentNodeId);
         if (screenshot) {
             this.provenance.addArtifact({ type: 'screenshot', value: screenshot }, currentNodeId);
@@ -534,6 +607,8 @@ export class ProvenanceStore {
 
         const targetState = this.provenance.getState(nodeId);
 
+        console.log("⏪ [ProvenanceStore] Restoring State:", targetState);
         this.provenance.goToNode(nodeId);
+        console.log("Going to node:", this.provenance.getState(nodeId))
     }
 }
