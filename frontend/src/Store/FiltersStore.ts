@@ -51,7 +51,7 @@ export class FiltersStore {
     ecmo: null,
   };
 
-  showFilterHistograms = false;
+
 
   histogramData: Record<string, { units: string, count: number }[] | undefined> = {};
 

@@ -50,7 +50,10 @@ export function SelectedVisitsPanel() {
   }, [visitNos, searchQuery]);
 
   // Chosen visit from list
-  const [selectedVisitNo, setSelectedVisitNo] = useState<number | null>(null);
+  const selectedVisitNo = store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.selectedVisitNo;
+  const setSelectedVisitNo = (visitNo: number | null) => {
+    store.provenanceStore.actions.setUiState({ selectedVisitNo: visitNo });
+  };
   const [selectedVisit, setSelectedVisit] = useState<{
     visit_no: number;
     [key: string]: unknown;
@@ -98,8 +101,8 @@ export function SelectedVisitsPanel() {
       ).toString().toLowerCase();
 
       return humanReadableKey.includes(searchTerm)
-             || humanReadableValue.includes(searchTerm)
-             || key.toLowerCase().includes(searchTerm);
+        || humanReadableValue.includes(searchTerm)
+        || key.toLowerCase().includes(searchTerm);
     });
   }, [selectedVisit, attributeSearchQuery]);
 

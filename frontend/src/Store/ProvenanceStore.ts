@@ -33,6 +33,14 @@ export interface ApplicationState {
         statConfigs: DashboardStatConfig[];
         chartLayouts: { [key: string]: Layout[] };
     };
+    ui: {
+        activeTab: string;
+        leftToolbarOpened: boolean;
+        activeLeftPanel: number | null;
+        selectedVisitNo: number | null;
+        filterPanelExpandedItems: string[];
+        showFilterHistograms: boolean;
+    };
 }
 
 export interface MyAnnotation {
@@ -84,6 +92,14 @@ export class ProvenanceStore {
                 chartConfigs: toJS(rootStore.dashboardStore.chartConfigs),
                 statConfigs: toJS(rootStore.dashboardStore.statConfigs),
                 chartLayouts: toJS(rootStore.dashboardStore.chartLayouts),
+            },
+            ui: {
+                activeTab: 'Dashboard',
+                leftToolbarOpened: true,
+                activeLeftPanel: null,
+                selectedVisitNo: null,
+                filterPanelExpandedItems: ['date-filters', 'blood-component-filters'],
+                showFilterHistograms: false,
             },
         };
 
@@ -147,6 +163,14 @@ export class ProvenanceStore {
                 chartConfigs: toJS(this._rootStore.dashboardStore.chartConfigs),
                 statConfigs: toJS(this._rootStore.dashboardStore.statConfigs),
                 chartLayouts: toJS(this._rootStore.dashboardStore.chartLayouts),
+            },
+            ui: {
+                activeTab: 'Dashboard',
+                leftToolbarOpened: true,
+                activeLeftPanel: null,
+                selectedVisitNo: null,
+                filterPanelExpandedItems: ['date-filters', 'blood-component-filters'],
+                showFilterHistograms: false,
             },
         };
 
@@ -481,6 +505,34 @@ export class ProvenanceStore {
                     } as any;
                 }
             }, label);
+        },
+        setUiState: (partialUiState: Partial<ApplicationState['ui']>) => {
+            this.provenance.apply({
+                apply: (state: ApplicationState) => {
+                    if (!state) return {
+                        state: state || {} as ApplicationState,
+                        label: 'Update UI State',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+
+                    const newState = {
+                        ...state,
+                        ui: {
+                            ...state.ui,
+                            ...partialUiState
+                        }
+                    };
+                    return {
+                        state: newState,
+                        label: 'Update UI State',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+                }
+            }, 'Update UI State');
         }
     };
 
