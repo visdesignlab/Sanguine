@@ -77,7 +77,7 @@ export class RootStore {
       }
       // Outcome filter
       if (this.provenanceState.outcomeFilter.length > 0) {
-        // Reject case if it's missing any selected outcome (AND logic)
+        // Return false instead of direct return statement to allow for AND logic
         if (this.provenanceState.outcomeFilter.some((outcome) => !d[outcome])) {
           return false;
         }
