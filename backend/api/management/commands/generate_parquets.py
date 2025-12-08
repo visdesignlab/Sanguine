@@ -37,7 +37,7 @@ class Command(BaseCommand):
             pa.field("mrn", pa.string(), nullable=False),
             pa.field("adm_dtm", pa.date32(), nullable=True),
             pa.field("dsch_dtm", pa.date32(), nullable=True),
-            pa.field("age_at_adm", pa.bool8(), nullable=True),            # TINYINT UNSIGNED
+            pa.field("age_at_adm", pa.uint16(), nullable=True),            # TINYINT UNSIGNED
             pa.field("pat_class_desc", pa.string(), nullable=True),
             pa.field("apr_drg_weight", pa.float32(), nullable=True),
             pa.field("ms_drg_weight", pa.float32(), nullable=True),
@@ -54,7 +54,7 @@ class Command(BaseCommand):
             pa.field("cell_saver_ml", pa.uint32(), nullable=False),
             pa.field("overall_units", pa.uint16(), nullable=False),        # computed/stored
 
-            pa.field("los", pa.float32(), nullable=True),
+            pa.field("los", pa.decimal128(6, 2), nullable=True),
             pa.field("death", pa.bool8(), nullable=True),
             pa.field("vent", pa.bool8(), nullable=True),
             pa.field("stroke", pa.bool8(), nullable=True),
@@ -68,7 +68,11 @@ class Command(BaseCommand):
             pa.field("ffp_adherent", pa.uint16(), nullable=False),
             pa.field("plt_adherent", pa.uint16(), nullable=False),
             pa.field("cryo_adherent", pa.uint16(), nullable=False),
-            pa.field("overall_adherent", pa.uint16(), nullable=False),     # computed/stored
+            pa.field("overall_adherent", pa.uint16(), nullable=False),
+
+            pa.field("admitting_attending_provider", pa.string(), nullable=True),
+            pa.field("admitting_attending_provider_id", pa.string(), nullable=True),
+            pa.field("admitting_attending_provider_line", pa.uint16(), nullable=True)
         ])
 
         table = pa.Table.from_pylist(visits, schema=visit_attributes_schema)
