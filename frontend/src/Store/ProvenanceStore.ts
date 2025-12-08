@@ -58,7 +58,8 @@ export interface MyAnnotation {
 export class ProvenanceStore {
     _rootStore: RootStore;
 
-    provenance: Provenance<ApplicationState, any, MyAnnotation>;
+    provenance: Provenance<ApplicationState, any, MyAnnotation> | null = null;
+    isInitialized = false;
     graphVersion = 0;
 
     constructor(rootStore: RootStore) {
@@ -69,88 +70,23 @@ export class ProvenanceStore {
         // Everything else (provenance, actions) must remain plain objects to avoid MobX proxying Trrack.
         makeObservable(this, {
             graphVersion: observable,
+            isInitialized: observable,
             savedStates: computed,
             canUndo: computed,
             canRedo: computed,
         });
 
-        const rawInitialState: ApplicationState = {
-            filterValues: {
-                dateFrom: rootStore.filtersStore.initialFilterValues.dateFrom.toISOString(),
-                dateTo: rootStore.filtersStore.initialFilterValues.dateTo.toISOString(),
-                rbc_units: toJS(rootStore.filtersStore.initialFilterValues.rbc_units),
-                ffp_units: toJS(rootStore.filtersStore.initialFilterValues.ffp_units),
-                plt_units: toJS(rootStore.filtersStore.initialFilterValues.plt_units),
-                cryo_units: toJS(rootStore.filtersStore.initialFilterValues.cryo_units),
-                cell_saver_ml: toJS(rootStore.filtersStore.initialFilterValues.cell_saver_ml),
-                b12: rootStore.filtersStore.initialFilterValues.b12,
-                iron: rootStore.filtersStore.initialFilterValues.iron,
-                antifibrinolytic: rootStore.filtersStore.initialFilterValues.antifibrinolytic,
-                los: toJS(rootStore.filtersStore.initialFilterValues.los),
-                death: rootStore.filtersStore.initialFilterValues.death,
-                vent: rootStore.filtersStore.initialFilterValues.vent,
-                stroke: rootStore.filtersStore.initialFilterValues.stroke,
-                ecmo: rootStore.filtersStore.initialFilterValues.ecmo,
-            },
-            selections: {
-                selectedTimePeriods: [],
-            },
-            dashboard: {
-                chartConfigs: toJS(rootStore.dashboardStore.chartConfigs),
-                statConfigs: toJS(rootStore.dashboardStore.statConfigs),
-                chartLayouts: toJS(rootStore.dashboardStore.chartLayouts),
-            },
-            explore: {
-                chartConfigs: toJS(rootStore.exploreStore.chartConfigs),
-                chartLayouts: toJS(rootStore.exploreStore.chartLayouts),
-            },
-            settings: {
-                unitCosts: toJS(rootStore.unitCosts),
-            },
-            ui: {
-                activeTab: 'Dashboard',
-                leftToolbarOpened: true,
-                activeLeftPanel: null,
-                selectedVisitNo: null,
-                filterPanelExpandedItems: ['date-filters', 'blood-component-filters'],
-                showFilterHistograms: false,
-            },
-        };
-
-
-
-        const initialState = JSON.parse(JSON.stringify(rawInitialState));
-        this.provenance = initProvenance<ApplicationState, any, MyAnnotation>(initialState);
-
-        // Verify state immediately
-        const immediateState = this.provenance.getState(this.provenance.current);
-
-
-        this.provenance.addGlobalObserver((_graph, changeType) => {
-            runInAction(() => {
-                this.graphVersion++;
-            });
-
-            if (changeType === 'CurrentChanged') {
-                const state = this.provenance.getState(this.provenance.current);
-
-                if (!state || Object.keys(state).length === 0) {
-                    console.error("CRITICAL: Empty state detected during CurrentChanged!");
-                    return;
-                }
-                this.syncStateToStores(state);
-            }
-        });
-
-        this.provenance.done();
     }
 
     /**
-     * Reinitialize the provenance store with current store values.
+     * Initialize the provenance store with current store values.
      * This should be called after data is loaded and default filter values are calculated.
      */
-    reinitialize() {
-
+    init() {
+        if (this.isInitialized) {
+            console.warn("ProvenanceStore already initialized");
+            return;
+        }
 
         const rawInitialState: ApplicationState = {
             filterValues: {
@@ -197,7 +133,6 @@ export class ProvenanceStore {
 
         const initialState = JSON.parse(JSON.stringify(rawInitialState));
 
-
         // Create new provenance instance
         this.provenance = initProvenance<ApplicationState, any, MyAnnotation>(initialState);
 
@@ -208,7 +143,7 @@ export class ProvenanceStore {
             });
 
             if (changeType === 'CurrentChanged') {
-                const state = this.provenance.getState(this.provenance.current);
+                const state = this.provenance!.getState(this.provenance!.current);
 
                 if (!state || Object.keys(state).length === 0) {
                     console.error("CRITICAL: Empty state detected during CurrentChanged!");
@@ -219,7 +154,12 @@ export class ProvenanceStore {
         });
 
         this.provenance.done();
+
+        runInAction(() => {
+            this.isInitialized = true;
+        });
     }
+
 
     // Actions -------------------------------------------------------------------
 
@@ -233,6 +173,7 @@ export class ProvenanceStore {
             };
             (this._rootStore.filtersStore as any).loadState(updatedFilters);
 
+            if (!this.provenance) return;
             // Update Trrack state
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
@@ -263,6 +204,7 @@ export class ProvenanceStore {
             }, `Update Filter: ${filterKey}`);
         },
         resetAllFilters: () => {
+            if (!this.provenance) return;
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
 
@@ -277,6 +219,7 @@ export class ProvenanceStore {
             }, 'Reset All Filters');
         },
         updateSelection: (timePeriods: string[]) => {
+            if (!this.provenance) return;
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
 
@@ -308,6 +251,7 @@ export class ProvenanceStore {
             }, 'Update Selection');
         },
         updateDashboardConfig: (chartConfigs: DashboardChartConfig[]) => {
+            if (!this.provenance) return;
             console.log("💾 [ProvenanceStore] Saving Dashboard Config:", chartConfigs);
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
@@ -338,6 +282,7 @@ export class ProvenanceStore {
             }, 'Update Dashboard Config');
         },
         updateDashboardLayout: (layouts: { [key: string]: Layout[] }) => {
+            if (!this.provenance) return;
             // Guard against early calls or invalid state
             const currentState = this.provenance.getState(this.provenance.current);
             if (!currentState || !currentState.dashboard) {
@@ -376,6 +321,7 @@ export class ProvenanceStore {
             }, 'Update Dashboard Layout');
         },
         addChart: (config: DashboardChartConfig, layouts: { [key: string]: Layout[] }) => {
+            if (!this.provenance) return;
             console.log("➕ [ProvenanceStore] Adding Chart Config:", config);
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
@@ -407,6 +353,7 @@ export class ProvenanceStore {
             }, 'Add Chart');
         },
         removeChart: (chartId: string, layouts: { [key: string]: Layout[] }) => {
+            if (!this.provenance) return;
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
                     console.log("State before Remove Chart:", state);
@@ -440,6 +387,7 @@ export class ProvenanceStore {
         },
         // Remove stat
         removeStat: (statId: string) => {
+            if (!this.provenance) return;
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
 
@@ -472,6 +420,7 @@ export class ProvenanceStore {
         },
         // Add Stat
         addStat: (config: DashboardStatConfig) => {
+            if (!this.provenance) return;
             console.log("➕ [ProvenanceStore] Adding Stat Config:", config);
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
@@ -503,6 +452,7 @@ export class ProvenanceStore {
         },
         // Generic update for complex dashboard changes
         updateDashboardState: (dashboardState: ApplicationState['dashboard'], label: string = 'Update Dashboard') => {
+            if (!this.provenance) return;
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
 
@@ -529,6 +479,7 @@ export class ProvenanceStore {
             }, label);
         },
         setUiState: (partialUiState: Partial<ApplicationState['ui']>) => {
+            if (!this.provenance) return;
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
                     if (!state) return {
@@ -557,6 +508,7 @@ export class ProvenanceStore {
             }, 'Update UI State');
         },
         updateExploreConfig: (chartConfigs: ExploreChartConfig[]) => {
+            if (!this.provenance) return;
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
                     if (!state) return {
@@ -585,6 +537,7 @@ export class ProvenanceStore {
             }, 'Update Explore Config');
         },
         updateExploreLayout: (layouts: { [key: string]: Layout[] }) => {
+            if (!this.provenance) return;
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
                     if (!state) return {
@@ -613,6 +566,7 @@ export class ProvenanceStore {
             }, 'Update Explore Layout');
         },
         updateExploreState: (exploreState: ApplicationState['explore'], label: string = 'Update Explore State') => {
+            if (!this.provenance) return;
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
                     if (!state) return {
@@ -638,6 +592,7 @@ export class ProvenanceStore {
             }, label);
         },
         updateSettings: (unitCosts: Record<Cost, number>) => {
+            if (!this.provenance) return;
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
                     if (!state) return {
@@ -712,6 +667,7 @@ export class ProvenanceStore {
     // Save/Restore --------------------------------------------------------------
 
     saveState(name: string, screenshot?: string) {
+        if (!this.provenance) return;
         const currentNodeId = this.provenance.current.id;
         console.log("Provenance Current Node:", this.provenance.current);
 
@@ -739,6 +695,7 @@ export class ProvenanceStore {
     }
 
     renameState(nodeId: NodeID, newName: string) {
+        if (!this.provenance) return;
         this.provenance.addArtifact({ type: 'name', value: newName }, nodeId);
         // Trigger reactivity
         runInAction(() => {
@@ -751,17 +708,19 @@ export class ProvenanceStore {
         // eslint-disable-next-line no-unused-expressions
         this.graphVersion;
 
+        const provenance = this.provenance;
         // Return a list of nodes that have the 'name' artifact
-        const nodes = Object.values(this.provenance.graph.nodes);
+        if (!provenance) return [];
+        const nodes = Object.values(provenance.graph.nodes);
 
 
         return nodes.filter(node => {
             if (this.deletedStateIds.has(node.id)) return false;
-            const artifacts = this.provenance.getAllArtifacts(node.id);
+            const artifacts = provenance.getAllArtifacts(node.id);
             return artifacts.some(a => a.artifact.type === 'name');
         })
             .map(node => {
-                const artifacts = this.provenance.getAllArtifacts(node.id);
+                const artifacts = provenance.getAllArtifacts(node.id);
                 // Find the LATEST name artifact
                 const nameArtifact = artifacts.filter(a => a.artifact.type === 'name').pop();
                 const screenshotArtifact = artifacts.find(a => a.artifact.type === 'screenshot');
@@ -783,6 +742,7 @@ export class ProvenanceStore {
         // eslint-disable-next-line no-unused-expressions
         this.graphVersion;
 
+        if (!this.provenance) return false;
         const current = this.provenance.current;
         const root = this.provenance.root;
         return current.id !== root.id;
@@ -793,19 +753,35 @@ export class ProvenanceStore {
         // eslint-disable-next-line no-unused-expressions
         this.graphVersion;
 
+        if (!this.provenance) return false;
         const current = this.provenance.current;
         return current.children.length > 0;
     }
 
     get currentState() {
-        // Access graphVersion to ensure reactivity
-        // eslint-disable-next-line no-unused-expressions
-        this.graphVersion;
+        if (!this.provenance) {
+            // Return default/empty state if not initialized
+            return {
+                filterValues: {},
+                selections: {},
+                dashboard: {},
+                explore: {},
+                settings: {},
+                ui: {
+                    activeTab: 'Dashboard',
+                    leftToolbarOpened: true,
+                    activeLeftPanel: null,
+                    selectedVisitNo: null,
+                    filterPanelExpandedItems: [],
+                    showFilterHistograms: false,
+                }
+            } as any;
+        }
         return this.provenance.getState(this.provenance.current);
     }
 
     restoreState(nodeId: NodeID) {
-
+        if (!this.provenance) return;
         const targetState = this.provenance.getState(nodeId);
 
         console.log("⏪ [ProvenanceStore] Restoring State:", targetState);
