@@ -4,6 +4,55 @@ on:
       - 'v*'
 
 jobs:
+  test-backend:
+    name: Run backend tests
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: sanguine
+          MARIADB_USER: django
+          MARIADB_PASSWORD: password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v5
+
+      - name: Install poetry
+        run: pipx install poetry
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'poetry'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          poetry install
+
+      - name: Run tests
+        env:
+          MARIADB_DATABASE: sanguine
+          MARIADB_USER: django
+          MARIADB_PASSWORD: password
+          MARIADB_HOST: 127.0.0.1
+          MARIADB_PORT: 3306
+          DJANGO_SECRET_KEY: test_secret_key
+          DJANGO_DEBUG: True
+        run: |
+          cd backend
+          poetry run python manage.py test api.tests.test_materialized_views
+
   push_to_registry:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
