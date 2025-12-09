@@ -193,7 +193,7 @@ export class DashboardStore {
    * @description Adds new stat to dashboard with a generated title.
    */
   addStat(statVar: DashboardStatConfig['yAxisVar'], aggregation: DashboardStatConfig['aggregation']) {
-  // Generate unique ID and title internally
+    // Generate unique ID and title internally
     const statId = `stat-${Date.now()}`;
     const opt = dashboardYAxisOptions.find((o) => o.value === statVar);
     const title = opt?.label?.[aggregation || 'sum'] || statVar;
@@ -235,11 +235,11 @@ export class DashboardStore {
         // Special case: Sum of all blood product costs
         if (yAxisVar === 'total_blood_product_cost') {
           return [
-            `${aggFn}(rbc_units_cost) AS ${aggregation}_rbc_units_cost`,
-            `${aggFn}(plt_units_cost) AS ${aggregation}_plt_units_cost`,
-            `${aggFn}(ffp_units_cost) AS ${aggregation}_ffp_units_cost`,
-            `${aggFn}(cryo_units_cost) AS ${aggregation}_cryo_units_cost`,
-            `${aggFn}(cell_saver_cost) AS ${aggregation}_cell_saver_cost`,
+            `CAST(${aggFn}(rbc_units_cost) AS DOUBLE) AS ${aggregation}_rbc_units_cost`,
+            `CAST(${aggFn}(plt_units_cost) AS DOUBLE) AS ${aggregation}_plt_units_cost`,
+            `CAST(${aggFn}(ffp_units_cost) AS DOUBLE) AS ${aggregation}_ffp_units_cost`,
+            `CAST(${aggFn}(cryo_units_cost) AS DOUBLE) AS ${aggregation}_cryo_units_cost`,
+            `CAST(${aggFn}(cell_saver_cost) AS DOUBLE) AS ${aggregation}_cell_saver_cost`,
           ];
         }
 
@@ -248,7 +248,7 @@ export class DashboardStore {
         }
 
         // Return aggregated attribute. (E.g. "SUM(rbc_units) AS sum_rbc_units")
-        return `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
+        return `CAST(${aggFn}(${yAxisVar}) AS DOUBLE) AS ${aggregation}_${yAxisVar}`;
       })
     ));
 
@@ -352,7 +352,7 @@ export class DashboardStore {
               return entry as { timePeriod: TimePeriod; data: number | Record<Cost, number> };
             })
             .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
-            // Log filtered data for debugging
+          // Log filtered data for debugging
           if (chartDatum.length === 0) {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
           }
