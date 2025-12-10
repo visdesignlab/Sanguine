@@ -59,11 +59,11 @@ function App() {
           SELECT * FROM read_parquet('data.parquet');
 
           CREATE TABLE IF NOT EXISTS costs (
-            rbc_units_cost DECIMAL(10,2),
-            ffp_units_cost DECIMAL(10,2),
-            plt_units_cost DECIMAL(10,2),
-            cryo_units_cost DECIMAL(10,2),
-            cell_saver_cost DECIMAL(10,2)
+            rbc_units_cost DOUBLE,
+            ffp_units_cost DOUBLE,
+            plt_units_cost DOUBLE,
+            cryo_units_cost DOUBLE,
+            cell_saver_cost DOUBLE
           );
           INSERT INTO costs VALUES (
             ${store.unitCosts.rbc_units_cost},
