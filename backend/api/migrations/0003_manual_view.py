@@ -3,7 +3,7 @@ from django.db import migrations
 
 def create_materialize_proc(apps, schema_editor):
     create_sql = """
-    CREATE PROCEDURE intelvia.materializeVisitAttributes()
+    CREATE PROCEDURE materializeVisitAttributes()
     BEGIN
         /* 1) Materialize guideline adherence per visit */
         TRUNCATE TABLE GuidelineAdherence;
@@ -127,7 +127,12 @@ def create_materialize_proc(apps, schema_editor):
             rbc_adherent,
             ffp_adherent,
             plt_adherent,
-            cryo_adherent
+            cryo_adherent,
+            rbc_units_cost,
+            ffp_units_cost,
+            plt_units_cost,
+            cryo_units_cost,
+            overall_cost
         )
         SELECT
             v.visit_no,
@@ -158,7 +163,12 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(ga.rbc_adherent, 0) AS rbc_adherent,
             COALESCE(ga.ffp_adherent, 0) AS ffp_adherent,
             COALESCE(ga.plt_adherent, 0) AS plt_adherent,
-            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent
+            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent,
+            0 AS rbc_units_cost,
+            0 AS ffp_units_cost,
+            0 AS plt_units_cost,
+            0 AS cryo_units_cost,
+            0 AS overall_cost
         FROM Visit v
         LEFT JOIN (
             SELECT
@@ -194,14 +204,14 @@ def create_materialize_proc(apps, schema_editor):
     """
     conn = schema_editor.connection
     with conn.cursor() as cursor:
-        cursor.execute("DROP PROCEDURE IF EXISTS intelvia.materializeVisitAttributes")
+        cursor.execute("DROP PROCEDURE IF EXISTS materializeVisitAttributes")
         cursor.execute(create_sql)
 
 
 def drop_materialize_proc(apps, schema_editor):
     conn = schema_editor.connection
     with conn.cursor() as cursor:
-        cursor.execute("DROP PROCEDURE IF EXISTS intelvia.materializeVisitAttributes")
+        cursor.execute("DROP PROCEDURE IF EXISTS materializeVisitAttributes")
 
 
 class Migration(migrations.Migration):
@@ -273,6 +283,12 @@ class Migration(migrations.Migration):
                 cryo_adherent SMALLINT UNSIGNED DEFAULT 0,
                 overall_adherent SMALLINT UNSIGNED AS (rbc_adherent + ffp_adherent + plt_adherent + cryo_adherent) STORED,
 
+                rbc_units_cost DECIMAL(6,2) DEFAULT 0,
+                ffp_units_cost DECIMAL(6,2) DEFAULT 0,
+                plt_units_cost DECIMAL(6,2) DEFAULT 0,
+                cryo_units_cost DECIMAL(6,2) DEFAULT 0,
+                overall_cost DECIMAL(6,2) DEFAULT 0,
+
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),
                 FOREIGN KEY (mrn) REFERENCES Patient(mrn)
@@ -291,7 +307,7 @@ class Migration(migrations.Migration):
             CREATE EVENT IF NOT EXISTS updateVisitAttributesEvent
             ON SCHEDULE EVERY 1 DAY
             STARTS (CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 4 HOUR)
-            DO CALL intelvia.materializeVisitAttributes();
+            DO CALL materializeVisitAttributes();
             """,
             reverse_sql="""
             DROP EVENT IF EXISTS updateVisitAttributesEvent;

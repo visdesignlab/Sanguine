@@ -3,8 +3,7 @@ from django.db import connection
 from api.models.intelvia import (
     Patient, Visit, Transfusion, Lab, GuidelineAdherence, VisitAttributes
 )
-from datetime import date, datetime, timedelta
-import pytz
+from datetime import date, datetime, timedelta, timezone
 
 class MaterializedViewTests(TransactionTestCase):
     # Use TransactionTestCase because we are testing stored procedures/transactions
@@ -41,7 +40,7 @@ class MaterializedViewTests(TransactionTestCase):
         )
 
         # Create a transfusion (RBC)
-        self.transfusion_dtm = datetime(2023, 1, 2, 12, 0, 0, tzinfo=pytz.UTC)
+        self.transfusion_dtm = datetime(2023, 1, 2, 12, 0, 0, tzinfo=timezone.utc)
         Transfusion.objects.create(
             visit_no=self.visit,
             trnsfsn_dtm=self.transfusion_dtm,
@@ -71,7 +70,7 @@ class MaterializedViewTests(TransactionTestCase):
     def test_materialize_visit_attributes(self):
         # Call the stored procedure
         with connection.cursor() as cursor:
-            cursor.execute("CALL intelvia.materializeVisitAttributes()")
+            cursor.execute("CALL materializeVisitAttributes()")
 
         # Check GuidelineAdherence
         adherence = GuidelineAdherence.objects.get(visit_no=self.visit.visit_no)
@@ -108,7 +107,7 @@ class MaterializedViewTests(TransactionTestCase):
         )
 
         # Transfusion
-        transfusion_dtm = datetime(2023, 1, 3, 12, 0, 0, tzinfo=pytz.UTC)
+        transfusion_dtm = datetime(2023, 1, 3, 12, 0, 0, tzinfo=timezone.utc)
         Transfusion.objects.create(
             visit_no=visit2,
             trnsfsn_dtm=transfusion_dtm,
@@ -135,7 +134,7 @@ class MaterializedViewTests(TransactionTestCase):
         )
 
         with connection.cursor() as cursor:
-            cursor.execute("CALL intelvia.materializeVisitAttributes()")
+            cursor.execute("CALL materializeVisitAttributes()")
 
         adherence = GuidelineAdherence.objects.get(visit_no=visit2.visit_no)
         self.assertEqual(adherence.rbc_adherent, 0, "Should NOT be adherent for RBC (HGB > 7.5)")
