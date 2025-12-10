@@ -15,6 +15,8 @@ import {
 import { smallHoverColor, smallSelectColor } from '../../../../Theme/mantineTheme';
 import { SCATTER_PLOT_REFERENCE_LINES } from '../../../../Store/ScatterPlotDummyData';
 
+const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(val, max));
+
 export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig }) {
   const store = useContext(Store);
 
@@ -295,7 +297,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
           {/** Chart Grip */}
           <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
           {/** Chart Title */}
-          <Title order={4}>{chartConfig.title}</Title>
+          <Title order={4}>{chartConfig.title || `${yLabel} vs ${xLabel}`}</Title>
         </Flex>
 
         <Flex direction="row" align="center" gap="sm" pr="md">
@@ -397,10 +399,10 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
             ))}
             {selection && (
               <ReferenceArea
-                x1={selection.x1}
-                x2={selection.x2}
-                y1={selection.y1}
-                y2={selection.y2}
+                x1={clamp(selection.x1, xDomain[0], xDomain[1])}
+                x2={clamp(selection.x2, xDomain[0], xDomain[1])}
+                y1={clamp(selection.y1, yDomain[0], yDomain[1])}
+                y2={clamp(selection.y2, yDomain[0], yDomain[1])}
                 fill="#8884d8"
                 fillOpacity={0.3}
                 stroke="#8884d8"
