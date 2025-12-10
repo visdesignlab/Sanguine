@@ -34,6 +34,7 @@ export class SelectionsStore {
 
     this.selectedTimePeriods = Array.from(next);
     this.updateSelectedVisits();
+    this._rootStore.provenanceStore.actions.updateSelection(Array.from(next));
   }
 
   async removeSelectedTimePeriod(timePeriod: string) {
@@ -44,6 +45,19 @@ export class SelectionsStore {
 
     this.selectedTimePeriods = Array.from(next);
     this.updateSelectedVisits();
+    this._rootStore.provenanceStore.actions.updateSelection(Array.from(next));
+  }
+
+  loadState(selectedTimePeriods: string[]) {
+    this.selectedTimePeriods = selectedTimePeriods;
+    this.updateSelectedVisits();
+  }
+
+  reset() {
+    this.selectedTimePeriods = [];
+    this.selectedVisits = [];
+    this.selectedVisitNos = [];
+    this._rootStore.provenanceStore.actions.updateSelection([]);
   }
 
   async getVisitInfo(visitNo: number) {

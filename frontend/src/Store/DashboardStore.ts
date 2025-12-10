@@ -53,7 +53,38 @@ export class DashboardStore {
   }
 
   set chartLayouts(input: { [key: string]: Layout[] }) {
+    // Guard: Only update if Dashboard is active
+    // This prevents phantom updates when switching tabs (RGL triggers onLayoutChange when hidden/width=0)
+    if (this._rootStore.provenanceStore.currentState.ui.activeTab !== 'Dashboard') {
+      return;
+    }
+
+    // Robust comparison to avoid redundant updates from RGL
+    const areLayoutsEqual = (l1: Layout[], l2: Layout[]) => {
+      if (l1.length !== l2.length) return false;
+      // Sort by 'i' to ensure order doesn't matter for comparison
+      const sorted1 = [...l1].sort((a, b) => a.i.localeCompare(b.i));
+      const sorted2 = [...l2].sort((a, b) => a.i.localeCompare(b.i));
+
+      return sorted1.every((item, index) => {
+        const other = sorted2[index];
+        return item.i === other.i &&
+          item.x === other.x &&
+          item.y === other.y &&
+          item.w === other.w &&
+          item.h === other.h;
+      });
+    };
+
+    const mainEqual = areLayoutsEqual(this._chartLayouts.main || [], input.main || []);
+    const smEqual = areLayoutsEqual(this._chartLayouts.sm || [], input.sm || []);
+
+    if (mainEqual && smEqual) {
+      return;
+    }
+
     this._chartLayouts = input;
+    this._rootStore.provenanceStore.actions.updateDashboardLayout(input);
   }
 
   // Chart configurations by default
@@ -115,25 +146,71 @@ export class DashboardStore {
   setChartConfig(chartId: string, input: DashboardChartConfig) {
     const refreshData = input.yAxisVar !== this._chartConfigs.find((c) => c.chartId === chartId)?.yAxisVar;
 
-    this._chartConfigs = this._chartConfigs.map((config) => {
+    const newConfigs = this._chartConfigs.map((config) => {
       if (config.chartId === chartId) {
         return { ...config, ...input };
       }
       return config;
     });
+    this._chartConfigs = newConfigs;
 
     if (refreshData) {
       this.computeChartData();
     }
+    this._rootStore.provenanceStore.actions.updateDashboardConfig(newConfigs);
   }
 
   /**
    * Removes chart from the dashboard by ID.
    */
   removeChart(chartId: string) {
+    // Helper to compact layout (simple vertical compaction)
+    const compactLayout = (layout: Layout[], cols: number): Layout[] => {
+      // Sort by y, then x
+      const sorted = [...layout].sort((a, b) => {
+        if (a.y === b.y) return a.x - b.x;
+        return a.y - b.y;
+      });
+
+      const heightMap = new Array(cols).fill(0);
+
+      return sorted.map(item => {
+        const newItem = { ...item };
+        // Find max height in the columns this item occupies
+        let maxY = 0;
+        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
+          if (i < cols) {
+            maxY = Math.max(maxY, heightMap[i]);
+          }
+        }
+
+        newItem.y = maxY;
+
+        // Update height map
+        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
+          if (i < cols) {
+            heightMap[i] = maxY + newItem.h;
+          }
+        }
+        return newItem;
+      });
+    };
+
+    // Create deep copy of layouts to modify
+    const filteredMain = (this._chartLayouts.main || []).filter((layout) => layout.i !== chartId);
+    const filteredSm = (this._chartLayouts.sm || []).filter((layout) => layout.i !== chartId);
+
+    const newLayouts = {
+      main: compactLayout(filteredMain, 2), // main has 2 columns
+      sm: compactLayout(filteredSm, 1)      // sm has 1 column
+    };
+
+    // Update local state
     this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
-    this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== chartId);
-    this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== chartId);
+    this._chartLayouts = newLayouts;
+
+    // Update provenance with both changes
+    this._rootStore.provenanceStore.actions.removeChart(chartId, newLayouts);
   }
 
   /**
@@ -143,6 +220,38 @@ export class DashboardStore {
   addChart(config: DashboardChartConfig) {
     // Chart data - Add chart config to beginning of array ----
     this._chartConfigs = [config, ...this._chartConfigs];
+
+    // Helper to compact layout (simple vertical compaction)
+    const compactLayout = (layout: Layout[], cols: number): Layout[] => {
+      // Sort by y, then x
+      const sorted = [...layout].sort((a, b) => {
+        if (a.y === b.y) return a.x - b.x;
+        return a.y - b.y;
+      });
+
+      const heightMap = new Array(cols).fill(0);
+
+      return sorted.map(item => {
+        const newItem = { ...item };
+        // Find max height in the columns this item occupies
+        let maxY = 0;
+        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
+          if (i < cols) {
+            maxY = Math.max(maxY, heightMap[i]);
+          }
+        }
+
+        newItem.y = maxY;
+
+        // Update height map
+        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
+          if (i < cols) {
+            heightMap[i] = maxY + newItem.h;
+          }
+        }
+        return newItem;
+      });
+    };
 
     // Layouts - create a new layout object ----
     const newMainLayouts = this._chartLayouts.main.map((layout) => ({
@@ -178,12 +287,17 @@ export class DashboardStore {
     }
 
     // Replace the entire layouts object
-    this._chartLayouts = {
+    const newLayouts = {
       ...this._chartLayouts,
-      main: newMainLayouts,
-      ...(this._chartLayouts.sm && { sm: newSmLayouts }),
+      main: compactLayout(newMainLayouts, 2),
+      ...(this._chartLayouts.sm && { sm: compactLayout(newSmLayouts, 1) }),
     };
+
+    // Update local state immediately to prevent race condition with RGL
+    this._chartLayouts = newLayouts;
+
     this.computeChartData();
+    this._rootStore.provenanceStore.actions.addChart(config, newLayouts);
   }
 
   // Stat management -----------------------------------------------------------
@@ -214,7 +328,85 @@ export class DashboardStore {
    * Remove stat from dashboard by ID
    */
   removeStat(statId: string) {
+    console.log(`Removing stat with ID: ${statId}`);
     this._statConfigs = this._statConfigs.filter((config) => config.statId !== statId);
+  }
+
+  /**
+   * Load state from provenance
+   */
+  loadState(state: {
+    chartConfigs: DashboardChartConfig[];
+    statConfigs: DashboardStatConfig[];
+    chartLayouts: { [key: string]: Layout[] };
+  }) {
+    this._chartConfigs = state.chartConfigs;
+    this._statConfigs = state.statConfigs;
+    this._chartLayouts = state.chartLayouts;
+    this.computeChartData();
+    this.computeStatData();
+  }
+
+  /**
+   * Reset dashboard to default state
+   */
+  reset() {
+    this._chartLayouts = {
+      main: [
+        {
+          i: '0', x: 0, y: 0, w: 2, h: 1, maxH: 2,
+        },
+        {
+          i: '1', x: 0, y: 1, w: 1, h: 1, maxH: 2,
+        },
+        {
+          i: '2', x: 1, y: 1, w: 1, h: 1, maxH: 2,
+        },
+      ],
+    };
+
+    this._chartConfigs = [
+      {
+        chartId: '0', xAxisVar: 'month', yAxisVar: 'rbc_units', aggregation: 'sum', chartType: 'line',
+      },
+      {
+        chartId: '1', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
+      },
+      {
+        chartId: '2', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', chartType: 'bar',
+      },
+    ];
+
+    this._statConfigs = [
+      {
+        statId: '1', yAxisVar: 'rbc_units', aggregation: 'avg', title: 'Average RBCs Transfused Per Visit',
+      },
+      {
+        statId: '2', yAxisVar: 'plt_units', aggregation: 'avg', title: 'Average Platelets Transfused Per Visit',
+      },
+      {
+        statId: '3', yAxisVar: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
+      },
+      {
+        statId: '4', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', title: 'Total Blood Product Costs',
+      },
+      {
+        statId: '5', yAxisVar: 'rbc_adherent', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
+      },
+      {
+        statId: '6', yAxisVar: 'plt_adherent', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
+      },
+    ];
+
+    this.computeChartData();
+    this.computeStatData();
+
+    // Also update provenance to track this reset
+    this._rootStore.provenanceStore.actions.updateDashboardState({
+      chartConfigs: this._chartConfigs,
+      statConfigs: this._statConfigs,
+      chartLayouts: this._chartLayouts,
+    }, 'Reset Dashboard to Defaults');
   }
 
   // Dashboard data ----------------------------------------------------------------

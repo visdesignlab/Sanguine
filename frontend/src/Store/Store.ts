@@ -8,6 +8,7 @@ import { DashboardStore } from './DashboardStore';
 import { FiltersStore } from './FiltersStore';
 import { ExploreStore } from './ExploreStore';
 import { SelectionsStore } from './SelectionsStore';
+import { ProvenanceStore } from './ProvenanceStore';
 
 export class RootStore {
   // Provenance
@@ -21,6 +22,8 @@ export class RootStore {
   filtersStore: FiltersStore;
 
   selectionsStore: SelectionsStore;
+
+  provenanceStore: ProvenanceStore;
 
   duckDB: AsyncDuckDBConnection | null = null;
 
@@ -39,6 +42,7 @@ export class RootStore {
   set unitCosts(costs: Record<Cost, number>) {
     this._unitCosts = costs;
     this.updateCostsTable();
+    this.provenanceStore.actions.updateSettings(costs);
   }
 
   allVisitsLength = 0;
@@ -51,8 +55,11 @@ export class RootStore {
     this.exploreStore = new ExploreStore(this);
     this.filtersStore = new FiltersStore(this);
     this.selectionsStore = new SelectionsStore(this);
+    this.provenanceStore = new ProvenanceStore(this);
 
-    makeAutoObservable(this);
+    makeAutoObservable(this, {
+      provenanceStore: false, // Exclude provenanceStore from auto observable to prevent deep proxying of Trrack
+    });
   }
 
   async updateFilteredData() {

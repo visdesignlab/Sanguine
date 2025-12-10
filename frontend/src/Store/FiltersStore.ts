@@ -51,7 +51,7 @@ export class FiltersStore {
     ecmo: null,
   };
 
-  showFilterHistograms = false;
+
 
   histogramData: Record<string, { units: string, count: number }[] | undefined> = {};
 
@@ -70,7 +70,29 @@ export class FiltersStore {
   }
 
   setFilterValue<T extends keyof typeof this._filterValues>(key: T, value: typeof this._filterValues[T]) {
+    // Ensure dates are actually Date objects
+    if ((key === 'dateFrom' || key === 'dateTo') && typeof value === 'string') {
+      // eslint-disable-next-line no-param-reassign
+      value = safeParseDate(value) as any;
+    }
+
+    let val: any = value;
+    if (value instanceof Date) {
+      val = value.toISOString();
+    }
+
     this._filterValues[key] = value;
+    this._rootStore.updateFilteredData();
+
+    this._rootStore.provenanceStore.actions.updateFilter(key as any, val);
+  }
+
+  loadState(newFilterValues: typeof this._filterValues) {
+    this._filterValues = newFilterValues;
+    // Ensure dates are Date objects
+    this._filterValues.dateFrom = safeParseDate(this._filterValues.dateFrom as any);
+    this._filterValues.dateTo = safeParseDate(this._filterValues.dateTo as any);
+
     this._rootStore.updateFilteredData();
   }
 
@@ -158,11 +180,15 @@ export class FiltersStore {
    * Returns 1 if filters are applied, 0 otherwise.
    */
   get dateFiltersAppliedCount(): number {
-    const { dateFrom, dateTo } = this._filterValues;
+    const dateFrom = safeParseDate(this._filterValues.dateFrom as any);
+    const dateTo = safeParseDate(this._filterValues.dateTo as any);
+    const initDateFrom = safeParseDate(this._initialFilterValues.dateFrom as any);
+    const initDateTo = safeParseDate(this._initialFilterValues.dateTo as any);
+
     // Only count if user has changed from initial values
     return (
-      dateFrom.getTime() !== this._initialFilterValues.dateFrom.getTime()
-      || dateTo.getTime() !== this._initialFilterValues.dateTo.getTime()
+      dateFrom.getTime() !== initDateFrom.getTime()
+      || dateTo.getTime() !== initDateTo.getTime()
     ) ? 1 : 0;
   }
 
@@ -220,6 +246,7 @@ export class FiltersStore {
   resetAllFilters() {
     this._filterValues = { ...this._initialFilterValues };
     this._rootStore.updateFilteredData();
+    this._rootStore.provenanceStore.actions.resetAllFilters();
   }
 
   // Reset only date filters to initial values
@@ -227,6 +254,8 @@ export class FiltersStore {
     this._filterValues.dateFrom = new Date(this._initialFilterValues.dateFrom);
     this._filterValues.dateTo = new Date(this._initialFilterValues.dateTo);
     this._rootStore.updateFilteredData();
+    this._rootStore.provenanceStore.actions.updateFilter('dateFrom', this._initialFilterValues.dateFrom.toISOString());
+    this._rootStore.provenanceStore.actions.updateFilter('dateTo', this._initialFilterValues.dateTo.toISOString());
   }
 
   // Reset Blood Component filters to initial values
@@ -234,6 +263,7 @@ export class FiltersStore {
     const bloodKeys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
     bloodKeys.forEach((key) => {
       this._filterValues[key] = [...this._initialFilterValues[key]];
+      this._rootStore.provenanceStore.actions.updateFilter(key, [...this._initialFilterValues[key]]);
     });
     this._rootStore.updateFilteredData();
   }
@@ -244,6 +274,7 @@ export class FiltersStore {
     medKeys.forEach((key) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
+      this._rootStore.provenanceStore.actions.updateFilter(key, this._initialFilterValues[key]);
     });
     this._rootStore.updateFilteredData();
   }
@@ -254,6 +285,7 @@ export class FiltersStore {
     outcomeKeys.forEach((key) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
+      this._rootStore.provenanceStore.actions.updateFilter(key, this._initialFilterValues[key]);
     });
     this._rootStore.updateFilteredData();
   }

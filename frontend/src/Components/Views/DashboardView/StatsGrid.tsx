@@ -35,6 +35,7 @@ export function StatsGrid() {
   // Remove stat handler
   const handleRemoveStat = useCallback((statId: string) => {
     store.dashboardStore.removeStat(statId);
+    store.provenanceStore.actions.removeStat(statId);
   }, [store.dashboardStore]);
 
   return useObserver(() => {

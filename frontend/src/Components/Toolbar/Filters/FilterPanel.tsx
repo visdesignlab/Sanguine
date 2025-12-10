@@ -70,8 +70,8 @@ export function FilterPanel() {
           </ActionIcon>
           <ActionIcon
             aria-label="Toggle filter histograms"
-            onClick={() => { store.filtersStore.showFilterHistograms = !store.filtersStore.showFilterHistograms; }}
-            data-active={store.filtersStore.showFilterHistograms}
+            onClick={() => { store.provenanceStore.actions.setUiState({ showFilterHistograms: !store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.showFilterHistograms }); }}
+            data-active={store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.showFilterHistograms}
             className={classes.leftToolbarIcon}
             ml="xs"
           >
@@ -86,7 +86,11 @@ export function FilterPanel() {
         overscrollBehavior="contain"
         mt="sm"
       >
-        <Accordion multiple defaultValue={['date-filters', 'blood-component-filters']}>
+        <Accordion
+          multiple
+          value={store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.filterPanelExpandedItems}
+          onChange={(value) => store.provenanceStore.actions.setUiState({ filterPanelExpandedItems: value })}
+        >
           {/* Date Filters */}
           <Accordion.Item value="date-filters" key="date-filters">
             <FilterHeader
@@ -138,7 +142,7 @@ export function FilterPanel() {
                 >
                   <Flex
                     justify="center"
-                    style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
+                    style={{ display: store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
                     <BarChart
                       h={30}
@@ -166,7 +170,7 @@ export function FilterPanel() {
                 >
                   <Flex
                     justify="center"
-                    style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
+                    style={{ display: store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
                     <BarChart
                       h={30}
@@ -194,7 +198,7 @@ export function FilterPanel() {
                 >
                   <Flex
                     justify="center"
-                    style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
+                    style={{ display: store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
                     <BarChart
                       h={30}
@@ -222,7 +226,7 @@ export function FilterPanel() {
                 >
                   <Flex
                     justify="center"
-                    style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
+                    style={{ display: store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
                     <BarChart
                       h={30}
@@ -250,7 +254,7 @@ export function FilterPanel() {
                 >
                   <Flex
                     justify="center"
-                    style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
+                    style={{ display: store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
                     <BarChart
                       h={30}
@@ -657,7 +661,7 @@ export function FilterPanel() {
                   label="Length of Stay"
                   styles={{ label: { color: rangeChanged(store, 'los') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                 >
-                  {store.filtersStore.showFilterHistograms && (
+                  {store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.showFilterHistograms && (
                     <Flex justify="center">
                       <BarChart
                         h={30}
