@@ -3,6 +3,7 @@ import { Layout } from 'react-grid-layout';
 
 import type { RootStore } from './Store';
 import { ExploreChartConfig, ExploreChartData } from '../Types/application';
+import { SCATTER_PLOT_DUMMY_DATA } from './ScatterPlotDummyData';
 
 export class ExploreStore {
   _rootStore: RootStore;
@@ -39,46 +40,6 @@ export class ExploreStore {
 
   // TODO: Remove dummy data and replace with query results
   dummyData: ExploreChartData = {
-    // Scatter plot dummy data (cell salvage volume vs post-op hemoglobin)
-    sum_post_op_hgb_cell_saver_ml: [
-      {
-        name: 'Anesth 101',
-        color: 'blue',
-        data: [
-          { cell_saver_ml: 50, post_op_hgb: 11.2 },
-          { cell_saver_ml: 120, post_op_hgb: 10.8 },
-          { cell_saver_ml: 180, post_op_hgb: 10.5 },
-          { cell_saver_ml: 240, post_op_hgb: 10.1 },
-          { cell_saver_ml: 310, post_op_hgb: 9.7 },
-          { cell_saver_ml: 400, post_op_hgb: 9.4 },
-        ],
-      },
-      {
-        name: 'Anesth 204',
-        color: 'teal',
-        data: [
-          { cell_saver_ml: 40, post_op_hgb: 12.0 },
-          { cell_saver_ml: 90, post_op_hgb: 11.6 },
-          { cell_saver_ml: 150, post_op_hgb: 11.1 },
-          { cell_saver_ml: 200, post_op_hgb: 10.9 },
-          { cell_saver_ml: 270, post_op_hgb: 10.2 },
-          { cell_saver_ml: 350, post_op_hgb: 9.9 },
-        ],
-      },
-      {
-        name: 'Anesth 317',
-        color: 'grape',
-        data: [
-          { cell_saver_ml: 30, post_op_hgb: 12.5 },
-          { cell_saver_ml: 70, post_op_hgb: 12.1 },
-          { cell_saver_ml: 110, post_op_hgb: 11.7 },
-          { cell_saver_ml: 160, post_op_hgb: 11.3 },
-          { cell_saver_ml: 220, post_op_hgb: 10.8 },
-          { cell_saver_ml: 300, post_op_hgb: 10.4 },
-        ],
-      },
-    ],
-
     // Cost bar chart dummy data (sum of costs per surgeon)
     sum_surgeon_prov_id_cost: [
       {
@@ -114,6 +75,8 @@ export class ExploreStore {
         cell_saver_cost: 550,
       },
     ],
+    // Scatter plot dummy data (all combinations)
+    ...SCATTER_PLOT_DUMMY_DATA,
   };
 
   chartData: ExploreChartData = {
@@ -141,5 +104,13 @@ export class ExploreStore {
     Object.keys(this._chartLayouts).forEach((key) => {
       this._chartLayouts[key] = this._chartLayouts[key].filter((layout) => layout.i !== chartId);
     });
+  }
+
+  // Updates an existing chart configuration
+  updateChartConfig(updatedConfig: ExploreChartConfig) {
+    const index = this._chartConfigs.findIndex((config) => config.chartId === updatedConfig.chartId);
+    if (index !== -1) {
+      this._chartConfigs[index] = updatedConfig;
+    }
   }
 }
