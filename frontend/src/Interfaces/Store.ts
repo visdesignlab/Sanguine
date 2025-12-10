@@ -77,7 +77,10 @@ export class RootStore {
       }
       // Outcome filter
       if (this.provenanceState.outcomeFilter.length > 0) {
-        return !this.provenanceState.outcomeFilter.some((outcome) => !d[outcome]);
+        // Return false if outcome filter fails, but continue checking other filters if it passes
+        if (this.provenanceState.outcomeFilter.some((outcome) => !d[outcome])) {
+          return false;
+        }
       }
       // Surgery urgency filter
       if (!this.provenanceState.surgeryUrgencySelection[SurgeryUrgencyArray.indexOf(d.SURGERY_TYPE_DESC)]) {
