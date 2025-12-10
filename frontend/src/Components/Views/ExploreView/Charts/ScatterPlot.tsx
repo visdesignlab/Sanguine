@@ -85,7 +85,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [selection, setSelection] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing'>('idle');
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [hoveredPoint, setHoveredPoint] = useState<{ seriesIndex: number; pointIndex: number } | null>(null);
   const [cursorOverride, setCursorOverride] = useState<string | null>(null);
 
   const dragStart = useRef<{ x: number; y: number } | null>(null);
@@ -407,7 +407,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                 strokeOpacity={0.5}
               />
             )}
-            {data.map((series) => (
+            {data.map((series, seriesIndex) => (
               <Scatter
                 key={series.name}
                 name={series.name}
@@ -415,11 +415,11 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                 fill={series.color}
                 onMouseEnter={(_, index) => {
                   if (interactionMode !== 'idle') return;
-                  setHoveredIndex(index);
+                  setHoveredPoint({ seriesIndex, pointIndex: index });
                   setCursorOverride('pointer');
                 }}
                 onMouseLeave={() => {
-                  setHoveredIndex(null);
+                  setHoveredPoint(null);
                   setCursorOverride(null);
                 }}
                 onClick={(point) => {
@@ -434,7 +434,9 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   let fillColor = series.color;
                   let opacity = 1;
 
-                  if (index === hoveredIndex) {
+                  const isHovered = hoveredPoint?.seriesIndex === seriesIndex && hoveredPoint?.pointIndex === index;
+
+                  if (isHovered) {
                     fillColor = smallHoverColor;
                   } else if (selection) {
                     if (isSelected(entry)) {
