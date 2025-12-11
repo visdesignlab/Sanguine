@@ -4,7 +4,7 @@ import {
 import { IconGripVertical } from '@tabler/icons-react';
 import { useContext, useMemo, useState, useRef, useCallback } from 'react';
 import {
-  ComposedChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea, Brush, Cell, ReferenceLine,
+  ComposedChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea, Cell, ReferenceLine,
 } from 'recharts';
 import { Store } from '../../../../Store/Store';
 import {
@@ -27,15 +27,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
   const data = store.exploreStore.chartData[dataKeyString] as ScatterPlotData || [];
 
-  // Flatten data for Brush
-  const allPoints = useMemo(() => {
-    const points: any[] = [];
-    data.forEach((series) => {
-      points.push(...series.data);
-    });
-    // Sort by x axis so the brush works correctly as a sequential 1D filter
-    return points.sort((a, b) => a[chartConfig.xAxisVar] - b[chartConfig.xAxisVar]);
-  }, [data, chartConfig.xAxisVar]);
+
 
   // Options for Selects
   const scatterXOptions = useMemo(() => [
@@ -100,15 +92,18 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [hoveredPoint, setHoveredPoint] = useState<{ seriesIndex: number; pointIndex: number } | null>(null);
   const [cursorOverride, setCursorOverride] = useState<string | null>(null);
 
+
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const initialSelection = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
 
   // Constants for Layout
-  const MARGIN = { top: 20, right: 20, bottom: 60, left: 20 };
+  const MARGIN = { top: 20, right: 20, bottom: 80, left: 20 };
   const Y_AXIS_WIDTH = 60;
   const X_AXIS_HEIGHT = 30;
   const LEGEND_HEIGHT = 40;
+
+
 
   // Helper: Convert Pixel to Data
   const pixelsToData = useCallback((x: number, y: number, width: number, height: number) => {
@@ -124,6 +119,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     const xRatio = (clampedX - chartLeft) / chartWidth;
     const yRatio = (height - MARGIN.bottom - X_AXIS_HEIGHT - clampedY) / chartHeight; // Y is inverted
 
+    // Use zoomed domain if active, otherwise default domain
     const xVal = xDomain[0] + xRatio * (xDomain[1] - xDomain[0]);
     const yVal = yDomain[0] + yRatio * (yDomain[1] - yDomain[0]);
 
@@ -145,6 +141,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
     return { x, y };
   }, [xDomain, yDomain]);
+
+
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!chartRef.current) return;
@@ -196,7 +194,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     const chartTop = MARGIN.top + LEGEND_HEIGHT;
     const chartRight = rect.width - MARGIN.right;
     const chartBottom = rect.height - MARGIN.bottom - X_AXIS_HEIGHT;
-
     if (x < chartLeft || x > chartRight || y < chartTop || y > chartBottom) return;
 
     // Start new selection
@@ -352,7 +349,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             margin={MARGIN}
-            data={allPoints}
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
@@ -466,7 +462,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                 })}
               </Scatter>
             ))}
-            <Brush dataKey={chartConfig.xAxisVar} height={30} stroke="#8884d8" />
+
           </ComposedChart>
         </ResponsiveContainer>
       </div>
