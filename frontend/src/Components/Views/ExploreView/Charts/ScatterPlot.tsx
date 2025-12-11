@@ -4,7 +4,7 @@ import {
 import { IconGripVertical } from '@tabler/icons-react';
 import { useContext, useMemo, useState, useRef, useCallback } from 'react';
 import {
-  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea, Brush, Cell, ReferenceLine,
+  ComposedChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea, Brush, Cell, ReferenceLine,
 } from 'recharts';
 import { Store } from '../../../../Store/Store';
 import {
@@ -26,6 +26,16 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   );
 
   const data = store.exploreStore.chartData[dataKeyString] as ScatterPlotData || [];
+
+  // Flatten data for Brush
+  const allPoints = useMemo(() => {
+    const points: any[] = [];
+    data.forEach((series) => {
+      points.push(...series.data);
+    });
+    // Sort by x axis so the brush works correctly as a sequential 1D filter
+    return points.sort((a, b) => a[chartConfig.xAxisVar] - b[chartConfig.xAxisVar]);
+  }, [data, chartConfig.xAxisVar]);
 
   // Options for Selects
   const scatterXOptions = useMemo(() => [
@@ -95,7 +105,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const chartRef = useRef<HTMLDivElement>(null);
 
   // Constants for Layout
-  const MARGIN = { top: 20, right: 20, bottom: 20, left: 20 };
+  const MARGIN = { top: 20, right: 20, bottom: 60, left: 20 };
   const Y_AXIS_WIDTH = 60;
   const X_AXIS_HEIGHT = 30;
   const LEGEND_HEIGHT = 40;
@@ -340,13 +350,9 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
           }
         `}</style>
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart
-            margin={{
-              top: 20,
-              right: 20,
-              bottom: 20,
-              left: 20,
-            }}
+          <ComposedChart
+            margin={MARGIN}
+            data={allPoints}
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
@@ -393,7 +399,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                 x={line.direction === 'x' ? line.value : undefined}
                 stroke={line.color}
                 label={{
-                  value: line.label, position: 'insideTopRight', fill: line.color, fontSize: 12,
+                  value: line.label, position: 'insideTopLeft', fill: line.color, fontSize: 12,
                 }}
               />
             ))}
@@ -415,6 +421,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                 name={series.name}
                 data={series.data}
                 fill={series.color}
+                isAnimationActive={false}
                 onMouseEnter={(_, index) => {
                   if (interactionMode !== 'idle') return;
                   setHoveredPoint({ seriesIndex, pointIndex: index });
@@ -459,7 +466,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                 })}
               </Scatter>
             ))}
-          </ScatterChart>
+            <Brush dataKey={chartConfig.xAxisVar} height={30} stroke="#8884d8" />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </Stack>
