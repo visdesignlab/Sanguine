@@ -1,7 +1,7 @@
 import {
-  Flex, Title, CloseButton, Stack, Select,
+  Flex, Title, CloseButton, Stack, Select, ActionIcon, Popover, MultiSelect,
 } from '@mantine/core';
-import { IconGripVertical } from '@tabler/icons-react';
+import { IconGripVertical, IconCircles, IconFilter } from '@tabler/icons-react';
 import { useContext, useMemo, useState, useRef, useCallback } from 'react';
 import {
   ComposedChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea, Cell, ReferenceLine,
@@ -10,7 +10,8 @@ import { Store } from '../../../../Store/Store';
 import {
   ScatterPlotData, ScatterPlotConfig,
   TIME_AGGREGATION_OPTIONS, BLOOD_COMPONENT_OPTIONS, dashboardYAxisOptions, LAB_RESULT_OPTIONS,
-  dashboardXAxisVars, dashboardYAxisVars,
+  dashboardXAxisVars, dashboardYAxisVars, OUTCOME_OPTIONS, PROPHYL_MED_OPTIONS, GUIDELINE_ADHERENT_OPTIONS,
+  OVERALL_BLOOD_PRODUCT_COST, CASE_MIX_INDEX,
 } from '../../../../Types/application';
 import { smallHoverColor, smallSelectColor } from '../../../../Theme/mantineTheme';
 import { SCATTER_PLOT_REFERENCE_LINES } from '../../../../Store/ScatterPlotDummyData';
@@ -36,6 +37,15 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
   const scatterYOptions = useMemo(() => [
     ...LAB_RESULT_OPTIONS.map((l) => ({ value: l.value, label: l.label.base })),
+  ], []);
+
+  // Options for MultiSelect
+  const multiSelectOptions = useMemo(() => [
+    { group: 'Blood components used', items: BLOOD_COMPONENT_OPTIONS.map((o) => ({ value: o.value, label: o.label.base })) },
+    { group: 'Outcomes', items: OUTCOME_OPTIONS.map((o) => ({ value: o.value, label: o.label.base })) },
+    { group: 'Prophylactic meds used', items: PROPHYL_MED_OPTIONS.map((o) => ({ value: o.value, label: o.label.base })) },
+    { group: 'Guideline adherence', items: GUIDELINE_ADHERENT_OPTIONS.map((o) => ({ value: o.value, label: o.label.base })) },
+    { group: 'General', items: [{ value: OVERALL_BLOOD_PRODUCT_COST.value, label: 'Cost' }, { value: CASE_MIX_INDEX.value, label: 'Case mix index' }] },
   ], []);
 
   const handleXChange = (val: string | null) => {
@@ -87,9 +97,11 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
   // Selection State
   const [selection, setSelection] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const [metricSelection, setMetricSelection] = useState<string[]>([]);
   const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing'>('idle');
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const [hoveredPoint, setHoveredPoint] = useState<{ seriesIndex: number; pointIndex: number } | null>(null);
+  const [hoveredLegend, setHoveredLegend] = useState<string | null>(null);
   const [cursorOverride, setCursorOverride] = useState<string | null>(null);
 
 
@@ -98,7 +110,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const chartRef = useRef<HTMLDivElement>(null);
 
   // Constants for Layout
-  const MARGIN = { top: 20, right: 20, bottom: 80, left: 20 };
+  const MARGIN = { top: 5, right: 20, bottom: 30, left: 20 };
   const Y_AXIS_WIDTH = 60;
   const X_AXIS_HEIGHT = 30;
   const LEGEND_HEIGHT = 40;
@@ -308,6 +320,28 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         </Flex>
 
         <Flex direction="row" align="center" gap="sm" pr="md">
+          {/** Action Icons */}
+          <ActionIcon variant="subtle" disabled>
+            <IconFilter size={18} />
+          </ActionIcon>
+          <Popover width={300} position="bottom" withArrow shadow="md">
+            <Popover.Target>
+              <ActionIcon variant="subtle">
+                <IconCircles size={18} />
+              </ActionIcon>
+            </Popover.Target>
+            <Popover.Dropdown>
+              <MultiSelect
+                data={multiSelectOptions}
+                value={metricSelection}
+                onChange={setMetricSelection}
+                searchable
+                clearable
+                placeholder="Group by..."
+                comboboxProps={{ withinPortal: false }}
+              />
+            </Popover.Dropdown>
+          </Popover>
           {/** Attribute Selects */}
           <Select
             placeholder="X Axis"
@@ -378,6 +412,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
               align="right"
               height={LEGEND_HEIGHT}
               wrapperStyle={{ paddingBottom: '20px', fontSize: '14px' }}
+              onMouseEnter={(o) => setHoveredLegend(o.value)}
+              onMouseLeave={() => setHoveredLegend(null)}
             />
             {xTicks.slice(0, -1).map((tick, index) => (
               <ReferenceArea
@@ -450,6 +486,10 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                       fillColor = '#ccc';
                       opacity = 0.5;
                     }
+                  }
+
+                  if (hoveredLegend && hoveredLegend !== series.name) {
+                    opacity = 0.1;
                   }
 
                   return (
