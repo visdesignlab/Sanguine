@@ -27,8 +27,8 @@ const generateScatterData = (
     seriesName: string,
     color: string,
     numPoints: number = 20,
-): { [key: string]: number }[] => {
-    const data: { [key: string]: number }[] = [];
+): { [key: string]: number | boolean }[] => {
+    const data: { [key: string]: number | boolean }[] = [];
 
     // Determine x-axis range based on variable
     const isCellSaver = xVar === 'cell_saver_ml';
@@ -45,10 +45,73 @@ const generateScatterData = (
         const baseY = yMax - ((x / xMax) * (yMax - yMin));
         const y = baseY + (Math.random() - 0.5) * 1.5;
 
-        data.push({
+        // Generate other random attributes for grouping
+        // Random boolean outcomes
+        const ecmo = Math.random() > 0.9; // 10% chance
+        const death = Math.random() > 0.95; // 5% chance
+        const vent = Math.random() > 0.8;
+        const stroke = Math.random() > 0.98;
+
+        // Random blood product usage
+        const rbc_units = Math.floor(Math.random() * 5);
+        const ffp_units = Math.floor(Math.random() * 5);
+        const plt_units = Math.floor(Math.random() * 3);
+        const cryo_units = Math.floor(Math.random() * 3);
+        const cell_saver_ml = Math.floor(Math.random() * 500);
+
+        // Random costs
+        const total_blood_product_cost = Math.floor(Math.random() * 2000);
+        const case_mix_index = 0.5 + Math.random(); // 0.5 to 1.5
+
+        // Random length of stay
+        const los = Math.floor(Math.random() * 15);
+
+        // Guideline adherence (booleans converted to strings or just booleans if supported)
+        const ffp_adherent = Math.random() > 0.5;
+
+        const point: any = {
             [xVar]: Math.round(x * 10) / 10,
             [yVar]: Math.max(yMin, Math.min(yMax, Math.round(y * 10) / 10)),
-        });
+            // Outcomes
+            ecmo,
+            death,
+            vent,
+            stroke,
+            // Blood Products (ensure these exist even if they aren't the axis var)
+            rbc_units,
+            ffp_units,
+            plt_units,
+            cryo_units,
+            cell_saver_ml,
+            // Costs & Indices
+            total_blood_product_cost,
+            case_mix_index,
+            // Other
+            los,
+            ffp_adherent,
+        };
+
+        // Ensure the main axis vars are definitely set (overwriting random generation if needed)
+        // (Though the logic above does this, it's safer to rely on the passed args for the main x/y)
+        // But since we are populating ALL fields, we might overwrite the main X/Y if we are not careful.
+        // Actually, the keys [xVar] and [yVar] will overwrite the specific fields if they match.
+        // For example if xVar is 'rbc_units', the first line `[xVar]: ...` sets it.
+        // Then `rbc_units` later might overwrite it?
+        // Let's construct `point` carefully.
+
+        // Base Point
+        const basePoint = {
+            // Default randoms for everything
+            ecmo, death, vent, stroke,
+            rbc_units, ffp_units, plt_units, cryo_units, cell_saver_ml,
+            total_blood_product_cost, case_mix_index, los, ffp_adherent,
+        };
+
+        // Override with the correlated x/y values
+        basePoint[xVar as string] = Math.round(x * 10) / 10;
+        basePoint[yVar as string] = Math.max(yMin, Math.min(yMax, Math.round(y * 10) / 10));
+
+        data.push(basePoint);
     }
 
     return data;

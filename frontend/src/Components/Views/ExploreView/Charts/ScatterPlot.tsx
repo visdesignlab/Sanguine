@@ -1,22 +1,47 @@
 import {
-  Flex, Title, CloseButton, Stack, Select, ActionIcon, Popover, MultiSelect,
+  Flex, Title, CloseButton, Stack, Select, ActionIcon, Popover, MultiSelect, Button, Group, Badge,
 } from '@mantine/core';
-import { IconGripVertical, IconCircles, IconFilter } from '@tabler/icons-react';
+import { IconGripVertical, IconCircles, IconFilter, IconPlus, IconX } from '@tabler/icons-react';
 import { useContext, useMemo, useState, useRef, useCallback } from 'react';
+import { AddGroupModal, GroupDefinition, GroupCondition } from './AddGroupModal';
 import {
   ComposedChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea, Cell, ReferenceLine,
 } from 'recharts';
 import { Store } from '../../../../Store/Store';
 import {
   ScatterPlotData, ScatterPlotConfig,
-  TIME_AGGREGATION_OPTIONS, BLOOD_COMPONENT_OPTIONS, dashboardYAxisOptions, LAB_RESULT_OPTIONS,
-  dashboardXAxisVars, dashboardYAxisVars, OUTCOME_OPTIONS, PROPHYL_MED_OPTIONS, GUIDELINE_ADHERENT_OPTIONS,
-  OVERALL_BLOOD_PRODUCT_COST, CASE_MIX_INDEX,
+  BLOOD_COMPONENT_OPTIONS, LAB_RESULT_OPTIONS,
+  dashboardXAxisVars, dashboardYAxisVars,
 } from '../../../../Types/application';
 import { smallHoverColor, smallSelectColor } from '../../../../Theme/mantineTheme';
 import { SCATTER_PLOT_REFERENCE_LINES } from '../../../../Store/ScatterPlotDummyData';
 
 const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(val, max));
+
+const checkCondition = (point: any, condition: GroupCondition) => {
+  const val = point[condition.field];
+  // Handle boolean/string comparisons
+  if (typeof condition.value === 'boolean' || condition.value === 'true' || condition.value === 'false') {
+    // robust boolean check
+    const boolVal = String(val) === 'true';
+    const targetBool = String(condition.value) === 'true';
+    return condition.operator === '!=' ? boolVal !== targetBool : boolVal === targetBool;
+  }
+
+  // Numeric check
+  const numVal = Number(val);
+  const targetVal = Number(condition.value);
+
+  switch (condition.operator) {
+    case '>': return numVal > targetVal;
+    case '>=': return numVal >= targetVal;
+    case '<': return numVal < targetVal;
+    case '<=': return numVal <= targetVal;
+    case '=': return numVal === targetVal;
+    case '!=': return numVal !== targetVal;
+    default: return false;
+  }
+};
 
 export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig }) {
   const store = useContext(Store);
@@ -26,7 +51,67 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     [chartConfig.aggregation, chartConfig.yAxisVar, chartConfig.xAxisVar],
   );
 
-  const data = store.exploreStore.chartData[dataKeyString] as ScatterPlotData || [];
+  const rawData = store.exploreStore.chartData[dataKeyString] as ScatterPlotData || [];
+
+  const [groups, setGroups] = useState<GroupDefinition[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Process data into groups
+  const processedData = useMemo(() => {
+    // 1. Flatten all data points
+    const allPoints = rawData.flatMap((series) => series.data);
+
+    if (groups.length === 0) {
+      // Default View: Single "Visits" group (All points)
+      return [{
+        name: 'Visits',
+        color: '#6b7280', // Darker grey
+        data: allPoints,
+      }];
+    }
+
+    // 2. Buckets
+    const buckets: Record<string, any[]> = {};
+    groups.forEach(g => { buckets[g.id] = []; });
+    buckets['all'] = [];
+
+    // 3. Assign
+    allPoints.forEach(point => {
+      let assigned = false;
+      for (const group of groups) {
+        // Check all conditions for this group (AND logic)
+        const matches = group.conditions.every(c => checkCondition(point, c));
+        if (matches) {
+          buckets[group.id].push(point);
+          assigned = true;
+          break; // First match wins
+        }
+      }
+      if (!assigned) {
+        buckets['all'].push(point);
+      }
+    });
+
+    // 4. Convert to Series
+    const result = groups.map(g => ({
+      name: g.name,
+      color: g.color,
+      data: buckets[g.id],
+    }));
+
+    // Add "All" group if it has points
+    if (buckets['all'].length > 0) {
+      result.push({
+        name: 'All',
+        color: '#e5e7eb', // Light grey
+        data: buckets['all'],
+      });
+    }
+
+    return result;
+  }, [rawData, groups]);
+
+  const data = processedData; // Use processed data for rendering logic depending on 'data' variable
 
 
 
@@ -39,14 +124,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     ...LAB_RESULT_OPTIONS.map((l) => ({ value: l.value, label: l.label.base })),
   ], []);
 
-  // Options for MultiSelect
-  const multiSelectOptions = useMemo(() => [
-    { group: 'Blood components used', items: BLOOD_COMPONENT_OPTIONS.map((o) => ({ value: o.value, label: o.label.base })) },
-    { group: 'Outcomes', items: OUTCOME_OPTIONS.map((o) => ({ value: o.value, label: o.label.base })) },
-    { group: 'Prophylactic meds used', items: PROPHYL_MED_OPTIONS.map((o) => ({ value: o.value, label: o.label.base })) },
-    { group: 'Guideline adherence', items: GUIDELINE_ADHERENT_OPTIONS.map((o) => ({ value: o.value, label: o.label.base })) },
-    { group: 'General', items: [{ value: OVERALL_BLOOD_PRODUCT_COST.value, label: 'Cost' }, { value: CASE_MIX_INDEX.value, label: 'Case mix index' }] },
-  ], []);
+
 
   const handleXChange = (val: string | null) => {
     if (!val) return;
@@ -97,7 +175,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
   // Selection State
   const [selection, setSelection] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
-  const [metricSelection, setMetricSelection] = useState<string[]>([]);
   const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing'>('idle');
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const [hoveredPoint, setHoveredPoint] = useState<{ seriesIndex: number; pointIndex: number } | null>(null);
@@ -324,24 +401,25 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
           <ActionIcon variant="subtle" disabled>
             <IconFilter size={18} />
           </ActionIcon>
-          <Popover width={300} position="bottom" withArrow shadow="md">
-            <Popover.Target>
-              <ActionIcon variant="subtle">
-                <IconCircles size={18} />
-              </ActionIcon>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <MultiSelect
-                data={multiSelectOptions}
-                value={metricSelection}
-                onChange={setMetricSelection}
-                searchable
-                clearable
-                placeholder="Group by..."
-                comboboxProps={{ withinPortal: false }}
-              />
-            </Popover.Dropdown>
-          </Popover>
+
+          <ActionIcon
+            variant="subtle"
+            onClick={() => setIsModalOpen(true)}
+            disabled={groups.length >= 6}
+          >
+            <IconCircles size={18} />
+          </ActionIcon>
+
+          <AddGroupModal
+            opened={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onAddGroup={(g) => setGroups([...groups, g])}
+            onUpdateGroup={(g) => {
+              setGroups(groups.map((group) => (group.id === g.id ? g : group)));
+            }}
+            existingGroups={groups}
+            onRemoveGroup={(id) => setGroups(groups.filter(g => g.id !== id))}
+          />
           {/** Attribute Selects */}
           <Select
             placeholder="X Axis"
@@ -404,9 +482,28 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                 value: yLabel, angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' },
               }}
             />
-            {interactionMode === 'idle' && (
-              <Tooltip cursor={{ strokeDasharray: '5 5', stroke: '#888', strokeWidth: 1 }} />
-            )}
+            <Tooltip
+              cursor={{ strokeDasharray: '5 5', stroke: '#888', strokeWidth: 1 }}
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  return (
+                    <div style={{
+                      backgroundColor: 'white',
+                      border: '1px solid #ccc',
+                      padding: '8px 12px',
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      <p style={{ margin: '2px 0', fontWeight: 'bold' }}>{payload[0].name}</p>
+                      <p style={{ margin: '2px 0' }}>{xLabel}: {data[chartConfig.xAxisVar]}</p>
+                      <p style={{ margin: '2px 0' }}>{yLabel}: {data[chartConfig.yAxisVar]}</p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
             <Legend
               verticalAlign="top"
               align="right"
