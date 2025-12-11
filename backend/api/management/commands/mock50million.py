@@ -9,6 +9,7 @@ from faker import Faker
 from faker.providers import date_time
 import random
 import tempfile
+import string
 
 from api.views.utils.utils import get_all_cpt_code_filters
 
@@ -99,10 +100,18 @@ class Command(BaseCommand):
         surgeries = []
         labs = []
         surgeons = [
-            (fake.unique.random_number(digits=10), fake.name()) for _ in range(50)
+            (
+                fake.unique.random_number(digits=10),
+                f"Dr. {fake.first_name()} {random.choice(string.ascii_uppercase)}. {fake.last_name()}"
+            )
+            for _ in range(50)
         ]
         anests = [
-            (fake.unique.random_number(digits=10), fake.name()) for _ in range(50)
+            (
+                fake.unique.random_number(digits=10),
+                f"Dr. {fake.first_name()} {random.choice(string.ascii_uppercase)}. {fake.last_name()}"
+            )
+            for _ in range(50)
         ]
 
         # Generate patients
@@ -298,6 +307,40 @@ class Command(BaseCommand):
         ]
 
         def gen_surgery_cases():
+            # Seed one surgery per surgeon so every provider has surgery_count >= 1
+            if visits:
+                for prov_id, prov_name in surgeons:
+                    pat, bad_pat, visit = random.choice(visits)
+                    # schedule somewhere during the stay
+                    start_time = make_aware(
+                        fake.date_time_between(
+                            start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT),
+                            end_date=datetime.strptime(visit["dsch_dtm"], DATE_FORMAT),
+                        )
+                    )
+                    end_time = start_time + timedelta(hours=3)
+                    anesth = fake.random_element(elements=anests)
+                    surgery = {
+                        "case_id": fake.unique.random_number(digits=10),
+                        "visit_no": visit["visit_no"],
+                        "mrn": pat["mrn"],
+                        "case_date": start_time.date().strftime("%Y-%m-%d"),
+                        "surgery_start_dtm": start_time.strftime(DATE_FORMAT),
+                        "surgery_end_dtm": end_time.strftime(DATE_FORMAT),
+                        "surgery_elap": (end_time - start_time).total_seconds() / 60,
+                        "surgery_type_desc": fake.random_element(elements=("Elective","Emergent","Urgent")),
+                        "surgeon_prov_id": prov_id,
+                        "surgeon_prov_name": prov_name,
+                        "anesth_prov_id": anesth[0],
+                        "anesth_prov_name": anesth[1],
+                        "prim_proc_desc": fake.sentence(),
+                        "postop_icu_los": fake.random_int(min=0, max=10),
+                        "sched_site_desc": fake.sentence(),
+                        "asa_code": fake.random_element(elements=("1","2","3","4","5","6")),
+                    }
+                    surgeries.append((pat, bad_pat, visit, surgery))
+                    yield surgery
+
             for pat, bad_pat, visit in visits:
                 # Randomly decide if this visit gets a surgery case, most don't
                 if not bad_pat and random.random() < 0.9:
@@ -741,7 +784,7 @@ class Command(BaseCommand):
         self.send_csv_to_db(gen_transfusions(), fieldnames=transfusion_fieldnames, table_name="Transfusion")
 
         # Generate Attending Providers
-        attending_provider_fieldnames = [
+        admitting_attending_provider_fieldnames = [
             "visit_no",
             "prov_id",
             "prov_name",
@@ -750,17 +793,20 @@ class Command(BaseCommand):
             "attend_prov_line",
         ]
 
-        def gen_attending_providers():
-            for i in range(int(target_attending_provs_count)):
+        def gen_admitting_attending_providers():
+            provider_pool = surgeons + anests
+            pool_len = len(provider_pool) or 1
+            for i in range(int(target_visits_count)):
+                prov_id, prov_name = provider_pool[i % pool_len]
                 yield {
-                    "visit_no": (i % int(target_visits_count + 1)),
-                    "prov_id": f"PROV{i:05d}",
-                    "prov_name": f"Dr. Attending{i}",
+                    "visit_no": i,
+                    "prov_id": prov_id,
+                    "prov_name": prov_name,
                     "attend_start_dtm": "2020-01-01 08:00:00",
                     "attend_end_dtm": "2020-01-05 17:00:00",
-                    "attend_prov_line": float(i),
+                    "attend_prov_line": 0,
                 }
-        self.send_csv_to_db(gen_attending_providers(), fieldnames=attending_provider_fieldnames, table_name="AttendingProvider")
+        self.send_csv_to_db(gen_admitting_attending_providers(), fieldnames=admitting_attending_provider_fieldnames, table_name="AttendingProvider")
 
         # Generate Room Trace
         room_trace_fieldnames = [
