@@ -3,6 +3,7 @@ import { createContext } from 'react';
 import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
 import {
   Cost,
+  DEFAULT_UNIT_COSTS,
 } from '../Types/application';
 import { DashboardStore } from './DashboardStore';
 import { FiltersStore } from './FiltersStore';
@@ -27,13 +28,7 @@ export class RootStore {
 
   duckDB: AsyncDuckDBConnection | null = null;
 
-  _unitCosts: Record<Cost, number> = {
-    rbc_units_cost: 200,
-    ffp_units_cost: 55,
-    plt_units_cost: 650,
-    cryo_units_cost: 70,
-    cell_saver_cost: 500,
-  };
+  _unitCosts: Record<Cost, number> = { ...DEFAULT_UNIT_COSTS };
 
   get unitCosts() {
     return this._unitCosts;

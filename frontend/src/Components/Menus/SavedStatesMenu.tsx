@@ -18,16 +18,9 @@ import {
     AGGREGATION_OPTIONS,
     DashboardChartConfig,
     ExploreChartConfig,
-    Cost
+    Cost,
+    DEFAULT_UNIT_COSTS
 } from '../../Types/application';
-
-const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
-    rbc_units_cost: 200,
-    ffp_units_cost: 55,
-    plt_units_cost: 650,
-    cryo_units_cost: 70,
-    cell_saver_cost: 500,
-};
 
 // Helper to get readable names
 const getReadableName = (key: string): string => {

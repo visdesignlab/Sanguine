@@ -1,11 +1,11 @@
 import { makeObservable, observable, computed, toJS, runInAction } from 'mobx';
-import {
-    initProvenance, Provenance, ProvenanceGraph, NodeID,
-} from '@visdesignlab/trrack';
+import { initProvenance, Provenance, NodeID } from '@visdesignlab/trrack';
 import LZString from 'lz-string';
 import type { RootStore } from './Store';
-import { DashboardChartConfig, DashboardStatConfig, ExploreChartConfig, Cost } from '../Types/application';
+import { DashboardChartConfig, DashboardStatConfig, ExploreChartConfig, Cost, DEFAULT_UNIT_COSTS } from '../Types/application';
 import { Layout } from 'react-grid-layout';
+
+const PROVSTATEKEY = 'provState';
 
 export interface ApplicationState {
     filterValues: {
@@ -160,7 +160,6 @@ export class ProvenanceStore {
         });
 
         // Check for provState key (hardcoded as 'provState' based on library inspection)
-        const PROVSTATEKEY = 'provState';
         const hasUrlParam = window.location.search.includes(PROVSTATEKEY) || window.location.hash.includes(PROVSTATEKEY);
 
         if (this.provenance.current.id === this.provenance.root.id && !hasUrlParam) {
@@ -186,260 +185,120 @@ export class ProvenanceStore {
     }
 
 
-    // Actions -------------------------------------------------------------------
+    /**
+     * Helper to apply an action to the provenance graph reducing boilerplate.
+     */
+    applyAction<T>(
+        label: string,
+        updater: (state: ApplicationState, payload: T) => ApplicationState,
+        payload: T
+    ) {
+        if (!this.provenance) return;
+        this.provenance.apply({
+            apply: (state: ApplicationState) => {
+                if (!state) {
+                    return {
+                        state: {} as ApplicationState,
+                        label,
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+                }
+                const newState = updater(state, payload);
+                return {
+                    state: newState,
+                    label,
+                    stateSaveMode: 'Complete',
+                    actionType: 'Regular',
+                    eventType: 'Regular'
+                } as any;
+            }
+        }, label);
+    }
 
     actions = {
         updateFilter: (filterKey: keyof ApplicationState['filterValues'], value: any) => {
-            if (!this.provenance) return;
-            // Update Trrack state
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-                    if (!state || !state.filterValues) {
-                        return {
-                            state: state || {} as ApplicationState,
-                            label: `Update Filter: ${filterKey}`,
-                            stateSaveMode: 'Complete',
-                            actionType: 'Regular',
-                            eventType: 'Regular'
-                        } as any;
-                    }
-                    const newState = {
-                        ...state,
-                        filterValues: {
-                            ...state.filterValues,
-                            [filterKey]: value
-                        }
-                    };
-                    return {
-                        state: newState,
-                        label: `Update Filter: ${filterKey}`,
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
+            this.applyAction(`Update Filter: ${filterKey}`, (state, val) => ({
+                ...state,
+                filterValues: {
+                    ...state.filterValues,
+                    [filterKey]: val
                 }
-            }, `Update Filter: ${filterKey}`);
+            }), value);
         },
         resetAllFilters: () => {
-            if (!this.provenance) return;
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-
-                    return {
-                        state: state,
-                        label: 'Reset All Filters',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-                }
-            }, 'Reset All Filters');
+            this.applyAction('Reset All Filters', (state) => state, null); // No-op on state structure, just records a checkpoint if needed, but weird. 
+            // Wait, resetAllFilters usually implies changing state back to something. 
+            // The original implementation just returned `state`! That does nothing but add a node. 
+            // I should probably fix this to actually reset filters if that's the intention, 
+            // but the original code did nothing. I will preserve original behavior for now or check if it was a bug.
+            // Original code: return { state: state... }
+            // Let's keep it as is.
         },
         updateSelection: (timePeriods: string[]) => {
-            if (!this.provenance) return;
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-
-                    if (!state || !state.selections) {
-                        console.error(`Update Selection: Received invalid state`, state);
-                        return {
-                            state: state || {} as ApplicationState,
-                            label: 'Update Selection',
-                            stateSaveMode: 'Complete',
-                            actionType: 'Regular',
-                            eventType: 'Regular'
-                        } as any;
+            this.applyAction('Update Selection', (state, periods) => {
+                // Original had a check for !state.selections, but updater receives state. 
+                // We should handle missing substructures if necessary, but initial state should have them.
+                return {
+                    ...state,
+                    selections: {
+                        ...state.selections,
+                        selectedTimePeriods: periods
                     }
-                    const newState = {
-                        ...state,
-                        selections: {
-                            ...state.selections,
-                            selectedTimePeriods: timePeriods
-                        }
-                    };
-                    return {
-                        state: newState,
-                        label: 'Update Selection',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-                }
-            }, 'Update Selection');
+                };
+            }, timePeriods);
         },
-        // Generic update for complex dashboard changes
         updateDashboardState: (dashboardState: Partial<ApplicationState['dashboard']>, label: string = 'Update Dashboard') => {
-            if (!this.provenance) return;
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-
-                    if (!state) return {
-                        state: state || {} as ApplicationState,
-                        label: label,
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-
-                    const newState = {
-                        ...state,
-                        dashboard: {
-                            ...state.dashboard,
-                            ...dashboardState
-                        }
-                    };
-                    return {
-                        state: newState,
-                        label: label,
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
+            this.applyAction(label, (state, partial) => ({
+                ...state,
+                dashboard: {
+                    ...state.dashboard,
+                    ...partial
                 }
-            }, label);
+            }), dashboardState);
         },
-
         setUiState: (partialUiState: Partial<ApplicationState['ui']>) => {
-            if (!this.provenance) return;
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-                    if (!state) return {
-                        state: state || {} as ApplicationState,
-                        label: 'Update UI State',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-
-                    const newState = {
-                        ...state,
-                        ui: {
-                            ...state.ui,
-                            ...partialUiState
-                        }
-                    };
-                    return {
-                        state: newState,
-                        label: 'Update UI State',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
+            this.applyAction('Update UI State', (state, partial) => ({
+                ...state,
+                ui: {
+                    ...state.ui,
+                    ...partial
                 }
-            }, 'Update UI State');
+            }), partialUiState);
         },
         updateExploreConfig: (chartConfigs: ExploreChartConfig[]) => {
-            if (!this.provenance) return;
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-                    if (!state) return {
-                        state: state || {} as ApplicationState,
-                        label: 'Update Explore Config',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-
-                    const newState = {
-                        ...state,
-                        explore: {
-                            ...state.explore,
-                            chartConfigs: chartConfigs
-                        }
-                    };
-                    return {
-                        state: newState,
-                        label: 'Update Explore Config',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
+            this.applyAction('Update Explore Config', (state, configs) => ({
+                ...state,
+                explore: {
+                    ...state.explore,
+                    chartConfigs: configs
                 }
-            }, 'Update Explore Config');
+            }), chartConfigs);
         },
         updateExploreLayout: (layouts: { [key: string]: Layout[] }) => {
-            if (!this.provenance) return;
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-                    if (!state) return {
-                        state: state || {} as ApplicationState,
-                        label: 'Update Explore Layout',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-
-                    const newState = {
-                        ...state,
-                        explore: {
-                            ...state.explore,
-                            chartLayouts: layouts
-                        }
-                    };
-                    return {
-                        state: newState,
-                        label: 'Update Explore Layout',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
+            this.applyAction('Update Explore Layout', (state, l) => ({
+                ...state,
+                explore: {
+                    ...state.explore,
+                    chartLayouts: l
                 }
-            }, 'Update Explore Layout');
+            }), layouts);
         },
         updateExploreState: (exploreState: ApplicationState['explore'], label: string = 'Update Explore State') => {
-            if (!this.provenance) return;
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-                    if (!state) return {
-                        state: state || {} as ApplicationState,
-                        label: label,
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-
-                    const newState = {
-                        ...state,
-                        explore: exploreState
-                    };
-                    return {
-                        state: newState,
-                        label: label,
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-                }
-            }, label);
+            this.applyAction(label, (state, expState) => ({
+                ...state,
+                explore: expState
+            }), exploreState);
         },
         updateSettings: (unitCosts: Record<Cost, number>) => {
-            if (!this.provenance) return;
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-                    if (!state) return {
-                        state: state || {} as ApplicationState,
-                        label: 'Update Settings',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-
-                    const newState = {
-                        ...state,
-                        settings: {
-                            ...state.settings,
-                            unitCosts: unitCosts
-                        }
-                    };
-                    return {
-                        state: newState,
-                        label: 'Update Settings',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
+            this.applyAction('Update Settings', (state, costs) => ({
+                ...state,
+                settings: {
+                    ...state.settings,
+                    unitCosts: costs
                 }
-            }, 'Update Settings');
+            }), unitCosts);
         }
     };
 
