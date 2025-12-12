@@ -37,7 +37,7 @@ class Command(BaseCommand):
             pa.field("mrn", pa.string(), nullable=False),
             pa.field("adm_dtm", pa.date32(), nullable=True),
             pa.field("dsch_dtm", pa.date32(), nullable=True),
-            pa.field("age_at_adm", pa.bool8(), nullable=True),            # TINYINT UNSIGNED
+            pa.field("age_at_adm", pa.uint16(), nullable=True),            # TINYINT UNSIGNED
             pa.field("pat_class_desc", pa.string(), nullable=True),
             pa.field("apr_drg_weight", pa.float32(), nullable=True),
             pa.field("ms_drg_weight", pa.float32(), nullable=True),
