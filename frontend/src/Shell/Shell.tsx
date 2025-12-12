@@ -237,19 +237,6 @@ export const Shell = observer(() => {
                   <ScreenshotMenu key="screenshot-menu" activeTab={activeTab} />
                 );
               }
-              // --- Saved States Menu on Save Icon Hover ---
-              if (label === 'Save') {
-                return (
-                  <SavedStatesMenu
-                    key="saved-states-menu"
-                    onSave={() => {
-                      setSaveModalOpened(true);
-                    }}
-                    onRestore={(id) => confirmRestore(id)}
-                    onReset={() => setResetModalOpened(true)}
-                  />
-                );
-              }
               // --- User menu ---
               if (label === 'User') {
                 return (
