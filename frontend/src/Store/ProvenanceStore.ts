@@ -2,6 +2,7 @@ import { makeObservable, observable, computed, toJS, runInAction } from 'mobx';
 import {
     initProvenance, Provenance, ProvenanceGraph, NodeID,
 } from '@visdesignlab/trrack';
+import LZString from 'lz-string';
 import type { RootStore } from './Store';
 import { DashboardChartConfig, DashboardStatConfig, ExploreChartConfig, Cost } from '../Types/application';
 import { Layout } from 'react-grid-layout';
@@ -134,7 +135,9 @@ export class ProvenanceStore {
         const initialState = JSON.parse(JSON.stringify(rawInitialState));
 
         // Create new provenance instance
-        this.provenance = initProvenance<ApplicationState, any, MyAnnotation>(initialState);
+        this.provenance = initProvenance<ApplicationState, any, MyAnnotation>(initialState, {
+            loadFromUrl: true
+        });
 
         // Set up observer again
         this.provenance.addGlobalObserver((_graph, changeType) => {
@@ -159,19 +162,30 @@ export class ProvenanceStore {
             this.isInitialized = true;
         });
 
-        // WORKAROUND: Trrack Root Node does not support artifacts.
-        // We apply an 'Initial State' action so the user starts at a node that CAN accept artifacts (Node 1).
-        this.provenance.apply({
-            apply: (state: ApplicationState) => {
-                return {
-                    state: state,
-                    label: 'Initial State',
-                    stateSaveMode: 'Complete',
-                    actionType: 'Regular',
-                    eventType: 'Regular'
-                } as any;
+        // Check for provState key (hardcoded as 'provState' based on library inspection)
+        const PROVSTATEKEY = 'provState';
+        const hasUrlParam = window.location.search.includes(PROVSTATEKEY) || window.location.hash.includes(PROVSTATEKEY);
+
+        if (this.provenance.current.id === this.provenance.root.id && !hasUrlParam) {
+            this.provenance.apply({
+                apply: (state: ApplicationState) => {
+                    return {
+                        state: state,
+                        label: 'Initial State',
+                        stateSaveMode: 'Complete',
+                        actionType: 'Regular',
+                        eventType: 'Regular'
+                    } as any;
+                }
+            }, 'Initial State');
+        } else {
+
+            // Explicitly sync the state because the global observer might have been added AFTER the initial load
+            const currentState = this.provenance.getState(this.provenance.current);
+            if (currentState) {
+                this.syncStateToStores(currentState);
             }
-        }, 'Initial State');
+        }
     }
 
 
@@ -819,5 +833,36 @@ export class ProvenanceStore {
             // For now, let's just log error.
             console.error("Could not find 'Initial State' node to restore to.");
         }
+    }
+
+    getShareUrl(nodeId: NodeID): string | null {
+        if (!this.provenance) return null;
+
+        console.log("🔍 [ProvenanceStore] Inspecting provenance config:", this.provenance.config);
+
+        const state = this.provenance.getState(nodeId);
+
+        // Try accessing Trrack's serializer, fallback to manual LZString
+        let serializedState: string | null = null;
+        const serializer = (this.provenance.config as any)._serializer;
+
+        if (serializer) {
+            serializedState = serializer(state);
+        } else {
+            console.warn("⚠️ [ProvenanceStore] Serializer not found on config. Using fallback LZString.");
+            try {
+                serializedState = LZString.compressToEncodedURIComponent(JSON.stringify(state));
+            } catch (e) {
+                console.error("Error serializing state:", e);
+            }
+        }
+
+        if (serializedState) {
+            const baseUrl = window.location.origin + window.location.pathname;
+            // Let's assume the default Trrack uses which is usually 'config' or the whole hash? 
+            // Trrack v2 typically puts it in the query param `?config=`.
+            return `${baseUrl}?config=${serializedState}`;
+        }
+        return null;
     }
 }

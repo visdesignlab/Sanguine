@@ -5,7 +5,7 @@ import {
 } from '@mantine/core';
 import {
     IconFolder, IconFolderDown, IconFolderSearch, IconEdit, IconTrash, IconSquareCheck, IconCheck, IconX, IconChevronLeft, IconChevronRight,
-    IconChartBar, IconFilter, IconClick, IconSettings, IconChartScatter, IconRotateClockwise
+    IconChartBar, IconFilter, IconClick, IconSettings, IconChartScatter, IconRotateClockwise, IconShare
 } from '@tabler/icons-react';
 import { useThemeConstants } from '../../Theme/mantineTheme';
 import classes from '../../Shell/Shell.module.css';
@@ -426,6 +426,28 @@ export const SavedStatesMenu = observer(({
         setTempName(currentName);
     };
 
+    const handleShareState = async (id: string) => {
+        const url = store.provenanceStore.getShareUrl(id);
+        if (url) {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Intelvia Link',
+                        text: 'Here is what we found in Intelvia',
+                        url: url
+                    });
+                } catch (err) {
+                    console.error("Error sharing:", err);
+                }
+            } else {
+                navigator.clipboard.writeText(url);
+                alert("State URL copied to clipboard!");
+            }
+        } else {
+            alert("Could not generate share URL.");
+        }
+    };
+
     const saveRename = () => {
         if (editingStateId && tempName.trim()) {
             store.provenanceStore.renameState(editingStateId, tempName.trim());
@@ -637,6 +659,11 @@ export const SavedStatesMenu = observer(({
                                                         </Group>
                                                     ) : (
                                                         <Group gap={4}>
+                                                            <Tooltip label="Share State URL">
+                                                                <ActionIcon size="sm" variant="subtle" onClick={(e) => { e.stopPropagation(); handleShareState(state.id); }}>
+                                                                    <IconShare size={14} />
+                                                                </ActionIcon>
+                                                            </Tooltip>
                                                             <ActionIcon size="sm" variant="subtle" onClick={(e) => { e.stopPropagation(); startEditing(state.id, state.name || ""); }}>
                                                                 <IconEdit size={14} />
                                                             </ActionIcon>
