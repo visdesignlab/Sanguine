@@ -50,7 +50,7 @@ export function SelectedVisitsPanel() {
   }, [visitNos, searchQuery]);
 
   // Chosen visit from list
-  const selectedVisitNo = store.provenanceStore.provenance.getState(store.provenanceStore.provenance.current).ui.selectedVisitNo;
+  const selectedVisitNo = store.provenanceStore.currentState.ui.selectedVisitNo;
   const setSelectedVisitNo = (visitNo: number | null) => {
     store.provenanceStore.actions.setUiState({ selectedVisitNo: visitNo });
   };
@@ -60,28 +60,16 @@ export function SelectedVisitsPanel() {
   } | null>(null);
 
   // Choose first visit by default
-  useEffect(() => {
-    if (selectedVisitNo === null && filteredVisitNos.length > 0) {
-      setSelectedVisitNo(filteredVisitNos[0]);
-    }
-    if (filteredVisitNos.length === 0) {
-      setSelectedVisitNo(null);
-      setSelectedVisit(null);
-    }
-    // If current selection is not in filtered results, clear it
-    if (selectedVisitNo !== null && !filteredVisitNos.includes(selectedVisitNo)) {
-      setSelectedVisitNo(filteredVisitNos.length > 0 ? filteredVisitNos[0] : null);
-    }
-  }, [filteredVisitNos, selectedVisitNo]);
+  const effectiveSelectedVisitNo = selectedVisitNo ?? (filteredVisitNos.length > 0 ? filteredVisitNos[0] : null);
 
   // Fetch details whenever a visit number is chosen
   useEffect(() => {
-    if (selectedVisitNo != null) {
-      store.selectionsStore.getVisitInfo(selectedVisitNo).then(setSelectedVisit);
+    if (effectiveSelectedVisitNo != null) {
+      store.selectionsStore.getVisitInfo(effectiveSelectedVisitNo).then(setSelectedVisit);
     } else {
       setSelectedVisit(null);
     }
-  }, [selectedVisitNo, store.selectionsStore]);
+  }, [effectiveSelectedVisitNo, store.selectionsStore]);
 
   // Filter visit details based on search query
   const [attributeSearchQuery, setAttributeSearchQuery] = useState('');
@@ -135,14 +123,14 @@ export function SelectedVisitsPanel() {
             <NavLink
               label={filteredVisitNos[index]}
               key={filteredVisitNos[index]}
-              active={selectedVisitNo === filteredVisitNos[index]}
+              active={effectiveSelectedVisitNo === filteredVisitNos[index]}
               onClick={() => setSelectedVisitNo(filteredVisitNos[index])}
               style={style}
             />
           )}
           rowProps={{
             visitNos: filteredVisitNos,
-            selectedVisitNo,
+            selectedVisitNo: effectiveSelectedVisitNo,
             setSelectedVisitNo,
           }}
           rowCount={filteredVisitNos.length}

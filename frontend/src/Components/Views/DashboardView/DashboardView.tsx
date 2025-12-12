@@ -89,7 +89,7 @@ export function DashboardView() {
 
   const addItemToDashboard = useCallback(() => {
     if (itemModalType === 'chart') {
-    // Infer chartType
+      // Infer chartType
       const chartType: DashboardChartConfig['chartType'] = 'line';
       store.dashboardStore.addChart({
         chartId: `chart-${Date.now()}`,
@@ -99,10 +99,10 @@ export function DashboardView() {
         chartType,
       });
     } else {
-    // Add stat
+      // Add stat
       store.dashboardStore.addStat(
-      selectedYAxisVar as DashboardStatConfig['yAxisVar'],
-      selectedAggregation as DashboardStatConfig['aggregation'],
+        selectedYAxisVar as DashboardStatConfig['yAxisVar'],
+        selectedAggregation as DashboardStatConfig['aggregation'],
       );
     }
     close();
@@ -216,6 +216,12 @@ export function DashboardView() {
           onLayoutChange={(currentLayout: Layout[], newLayouts: Record<string, Layout[]>) => {
             store.dashboardStore.chartLayouts = newLayouts;
           }}
+          onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+            store.dashboardStore.updateDashboardLayout(store.dashboardStore.chartLayouts);
+          }}
+          onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+            store.dashboardStore.updateDashboardLayout(store.dashboardStore.chartLayouts);
+          }}
           layouts={store.dashboardStore.chartLayouts}
         >
           {/** Render each chart - defined in the store's chart configs */}
@@ -235,9 +241,9 @@ export function DashboardView() {
             const series = chartDataKeys.map((name, idx) => ({
               name,
               color:
-              chartDataKeys.length === 1
-                ? DEFAULT_DATA_COLOR // Or use a constant like DEFAULT_DATA_COLOR if defined
-                : chartColors[idx % chartColors.length],
+                chartDataKeys.length === 1
+                  ? DEFAULT_DATA_COLOR // Or use a constant like DEFAULT_DATA_COLOR if defined
+                  : chartColors[idx % chartColors.length],
               label: chartDataKeys.length === 1
                 ? 'Total'
                 : dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
@@ -339,7 +345,7 @@ export function DashboardView() {
                   </Flex>
                   <Box style={{ flex: 1, minHeight: 0, padding: '0 15px' }}>
                     <LoadingOverlay visible={chartData.length === 0} overlayProps={{ radius: 'sm', blur: 2 }} />
-                    { chartType === 'bar' ? (
+                    {chartType === 'bar' ? (
                       // Bar Chart
                       <BarChart
                         h="100%"

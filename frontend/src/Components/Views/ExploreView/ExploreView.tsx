@@ -231,6 +231,12 @@ export function ExploreView() {
           onLayoutChange={(currentLayout: Layout[], newLayouts: Record<string, Layout[]>) => {
             store.exploreStore.chartLayouts = newLayouts;
           }}
+          onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+            store.exploreStore.updateExploreLayout(store.exploreStore.chartLayouts);
+          }}
+          onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+            store.exploreStore.updateExploreLayout(store.exploreStore.chartLayouts);
+          }}
           layouts={store.exploreStore.chartLayouts}
         >
           {/** Render each chart defined in the store. */}

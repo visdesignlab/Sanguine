@@ -105,6 +105,14 @@ export class DashboardStore {
     }
 
     this._chartLayouts = input;
+  }
+
+  /**
+   * Explicitly update the dashboard layout in the provenance store.
+   * This should be called on drag/resize stop, not on every layout change.
+   */
+  updateDashboardLayout(input: { [key: string]: Layout[] }) {
+    this._chartLayouts = input;
     this._rootStore.provenanceStore.actions.updateDashboardState({
       chartLayouts: input,
     }, 'Update Dashboard Layout');
