@@ -1,6 +1,7 @@
 import {
   useContext, useEffect, useState, useMemo, useRef, createContext, memo, useCallback,
 } from 'react';
+import { observer } from 'mobx-react-lite';
 import {
   MultiSelect,
   CloseButton,
@@ -11,6 +12,7 @@ import {
   Box,
   Tooltip,
   TextInput,
+  Select,
 } from '@mantine/core';
 import {
   IconGripVertical, IconMathGreater, IconMathLower,
@@ -22,7 +24,7 @@ import { BarChart } from '@mantine/charts';
 import { interpolateReds } from 'd3';
 import { Store } from '../../../../Store/Store';
 import {
-  ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions,
+  ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions, ExploreTableColumnOptionsGrouped, ExploreTableRowOptions,
 } from '../../../../Types/application';
 import { backgroundHoverColor, smallHoverColor } from '../../../../Theme/mantineTheme';
 import './ExploreTable.css';
@@ -37,8 +39,22 @@ type SetHoveredValue = (val: HoveredValue) => void;
 // Context to pass hovered value to footers without re-rendering columns
 const HoverContext = createContext<HoveredValue>(null);
 
+// Helper to get decimals
+const getDecimals = (colVar: string, agg: string = 'sum'): number => {
+  const option = ExploreTableColumnOptions.find((opt) => opt.value === colVar);
+  if (!option || option.decimals === undefined) return 0;
+  if (typeof option.decimals === 'number') return option.decimals;
+  const key = (agg === 'avg') ? 'avg' : 'sum';
+  return (option.decimals as { sum: number; avg: number })[key] ?? 0;
+};
+
 // When adding column, infer column type from attribute
 const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColumn['type'] => {
+  // Always treat year and quarter as text
+  if (['year', 'quarter', 'attending_provider'].includes(key)) {
+    return 'text';
+  }
+
   const sample = data[0]?.[key];
 
   if (typeof sample !== 'string') {
@@ -106,17 +122,17 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
   });
 
 
-  console.log("Bins:", result);
   return result;
 };
 
 // Histogram footer component
 const HistogramFooter = ({
-  bins, colorInterpolator, colVar,
+  bins, colorInterpolator, colVar, agg,
 }: {
   bins: HistogramBin[];
   colorInterpolator?: (t: number) => string;
   colVar?: string;
+  agg?: string;
 }) => {
   if (!bins || bins.length === 0) {
     return null;
@@ -196,8 +212,12 @@ const HistogramFooter = ({
 
       {/* Min / Max ticks under the histogram */}
       <div className="histogram-footer-ticks">
-        <div className="histogram-footer-tick-min" style={{ color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>{minVal}</div>
-        <div className="histogram-footer-tick-max" style={{ color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>{maxVal}</div>
+        <div className="histogram-footer-tick-min" style={{ color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>
+          {colVar ? minVal.toFixed(getDecimals(colVar, agg)) : minVal}
+        </div>
+        <div className="histogram-footer-tick-max" style={{ color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>
+          {colVar ? maxVal.toFixed(getDecimals(colVar, agg)) : maxVal}
+        </div>
       </div>
     </div>
   );
@@ -232,7 +252,9 @@ const NumericBarCell = ({
   // The actual numeric value to display
   const unitKey = (agg === 'avg') ? 'avg' : 'sum';
   const valueUnit = ExploreTableColumnOptions.find((opt) => opt.value === colVar)?.units?.[unitKey];
-  const displayValue = `${value} ${valueUnit}`;
+  const decimals = getDecimals(colVar, agg);
+  const formattedValue = Number(value ?? 0).toFixed(decimals);
+  const displayValue = `${formattedValue} ${valueUnit}`;
   const hasValue = Number(value ?? 0) !== 0;
 
   return (
@@ -256,7 +278,7 @@ const NumericBarCell = ({
             className="numeric-bar-cell-text-container"
           >
             <p className="numeric-bar-cell-text" style={{ lineHeight: `${cellHeight}px` }}>
-              {typeof suffix === 'string' ? `${value}${suffix}` : value}
+              {typeof suffix === 'string' ? `${formattedValue}${suffix}` : formattedValue}
             </p>
           </div>
           {/* Bar fill */}
@@ -277,7 +299,7 @@ const NumericBarCell = ({
             }}
           >
             <p className="numeric-bar-cell-text" style={{ lineHeight: `${cellHeight}px` }}>
-              {typeof suffix === 'string' ? `${value}${suffix}` : value}
+              {typeof suffix === 'string' ? `${formattedValue}${suffix}` : formattedValue}
             </p>
           </div>
         </div>
@@ -288,7 +310,7 @@ const NumericBarCell = ({
 
 // MARK: - ExploreTable
 
-export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTableConfig }) {
+const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfig }) => {
   const store = useContext(Store);
   const chartData = store.exploreStore.chartData[chartConfig.chartId] as ExploreTableData;
 
@@ -359,6 +381,55 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     chartConfig.twoValsPerRow,
   ]);
 
+  const handleRowChange = (value: string | null) => {
+    if (!value) return;
+
+    const rowOptions = ExploreTableRowOptions.map((o) => o.value);
+    let newColumns = chartConfig.columns.filter((c) => {
+      // Keep the column if it's NOT a row option OR if it matches the NEW value
+      return !rowOptions.includes(c.colVar) || c.colVar === value;
+    });
+
+    // Ensure the new row variable is included as a column
+    const isRowVarPresent = newColumns.some((c) => c.colVar === value);
+    if (!isRowVarPresent) {
+      const selectedOption = ExploreTableColumnOptions.find((o) => o.value === value);
+      if (selectedOption) {
+        // Create new column config
+        const newCol: ExploreTableColumn = {
+          colVar: selectedOption.value,
+          aggregation: 'none', // Usually the grouping column shouldn't be aggregated or it's implicitly grouped
+          type: inferColumnType(selectedOption.value, chartData),
+          title: selectedOption.label,
+        };
+        // Prepend to columns
+        newColumns = [newCol, ...newColumns];
+      }
+    }
+
+    const updatedConfig: ExploreTableConfig = {
+      ...chartConfig,
+      rowVar: value,
+      columns: newColumns,
+    };
+    store.exploreStore.updateChartConfig(updatedConfig);
+  };
+
+  const availableColumnOptions = useMemo(() => {
+    const rowOptions = ExploreTableRowOptions.map((o) => o.value);
+    // Filter out any option that is a row variable BUT NOT the current row variable
+    return ExploreTableColumnOptionsGrouped.map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        // If it's a potential row var, it must equal the current chartConfig.rowVar
+        if (rowOptions.includes(item.value)) {
+          return item.value === chartConfig.rowVar;
+        }
+        return true;
+      }),
+    })).filter((group) => group.items.length > 0);
+  }, [chartConfig.rowVar]);
+
   const handleColumnsChange = (newColValues: string[]) => {
     const currentCols = chartConfig.columns;
     const currentColVars = currentCols.map((c) => c.colVar);
@@ -375,7 +446,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
       addedCols.push({
         colVar: selected.value,
-        aggregation: 'none',
+        aggregation: 'avg',
         type: inferColumnType(selected.value, chartData),
         title: selected.label,
       });
@@ -405,6 +476,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       resizable: false,
       sortable: true,
       render: (row: ExploreTableRow) => <div>{String(row[colVar] ?? '')}</div>,
+      noWrap: true,
     };
 
     // If accessor is 'cases', different size
@@ -416,7 +488,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     // Primary text column (e.g. surgeon) has max width & no dragging
     const textColumns = colConfigs.filter((c) => c.type === 'text');
     if (textColumns.length === 1 && textColumns[0].colVar === colVar) {
-      column.width = 120;
+      column.width = 175;
       column.draggable = false;
     }
 
@@ -437,6 +509,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           bins={bins}
           colorInterpolator={type === 'heatmap' ? interpolateReds : undefined}
           colVar={colVar}
+          agg={colConfig.aggregation}
         />
       );
     };
@@ -480,27 +553,32 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     // Heatmap columns ---
     if (type === 'heatmap') {
       column.render = (row: ExploreTableRow) => {
-        const renderHeatmapCell = (val: number, padding: string, isSplit: boolean) => (
-          <Tooltip label={`${val}% of cases`} withArrow>
-            <div
-              onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
-              onMouseLeave={() => setHoveredValue(null)}
-              style={{ padding, width: '100%' }}
-            >
+        const decimals = getDecimals(colVar, colConfig.aggregation);
+
+        const renderHeatmapCell = (val: number, padding: string, isSplit: boolean) => {
+          const formattedVal = Number(val ?? 0).toFixed(decimals);
+          return (
+            <Tooltip label={`${formattedVal}% of cases`} withArrow>
               <div
-                className={`heatmap-cell heatmap-cell-${isSplit ? 'split' : 'full'}`}
-                data-visible={numericTextVisible}
-                style={{
-                  backgroundColor: interpolateReds(val / 100),
-                  '--heatmap-text-color': val > 50 ? 'white' : 'black',
-                }}
+                onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
+                onMouseLeave={() => setHoveredValue(null)}
+                style={{ padding, width: '100%' }}
               >
-                {val}
-                %
+                <div
+                  className={`heatmap-cell heatmap-cell-${isSplit ? 'split' : 'full'}`}
+                  data-visible={numericTextVisible}
+                  style={{
+                    backgroundColor: interpolateReds(val / 100),
+                    '--heatmap-text-color': val > 50 ? 'white' : 'black',
+                  }}
+                >
+                  {formattedVal}
+                  %
+                </div>
               </div>
-            </div>
-          </Tooltip>
-        );
+            </Tooltip>
+          );
+        };
 
         // Render two values per row if enabled
         if (chartConfig.twoValsPerRow) {
@@ -552,7 +630,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         }
         return (
           <NumericBarCell
-            value={Number(row[colVar])}
+            value={Number(row[colVar] ?? 0)}
             max={maxVal}
             colVar={colVar}
             setHoveredValue={setHoveredValue}
@@ -625,16 +703,22 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         </Flex>
 
         <Flex direction="row" align="center" gap="sm">
+          {/** Row Selection */}
+          <Select
+            placeholder="Rows"
+            data={ExploreTableRowOptions}
+            value={chartConfig.rowVar}
+            onChange={handleRowChange}
+            allowDeselect={false}
+            w={120}
+          />
           {/** Add Column */}
           <MultiSelect
             placeholder="Columns"
             searchable
             clearable={false}
             nothingFoundMessage="No options"
-            data={ExploreTableColumnOptions.map((opt) => ({
-              value: opt.value,
-              label: opt.label,
-            }))}
+            data={availableColumnOptions}
             onChange={handleColumnsChange}
             value={chartConfig.columns.map((c) => c.colVar)}
             styles={{
@@ -669,4 +753,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       </Box>
     </Stack>
   );
-}
+});
+
+export default ExploreTable;

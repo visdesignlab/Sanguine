@@ -46,10 +46,113 @@ export class ExploreStore {
   async computeChartData(): Promise<void> {
     const data: ExploreChartData = {};
 
-    this._chartConfigs.forEach((config) => {
-      // Temporary: use dummy data for all chart types
+    for (const config of this._chartConfigs) {
       if (config.chartType === 'exploreTable') {
-        data[config.chartId] = config.twoValsPerRow ? dummyDataTwoVals : dummyData;
+        const tableConfig = config as ExploreTableConfig;
+
+        // Build column selection clauses based on config.columns
+        const columnClauses: string[] = [];
+
+        tableConfig.columns.forEach((col) => {
+          const { colVar, aggregation } = col;
+
+          // Special case: percent_*_rbc columns
+          // These require calculating percentages from RBC unit counts
+          if (colVar.startsWith('percent_')) {
+            const match = colVar.match(/percent_(\d+|above_5)_rbc/);
+            if (match) {
+              const count = match[1];
+              let condition: string;
+
+              if (count === 'above_5') {
+                condition = 'rbc_units >= 5';
+              } else {
+                condition = `rbc_units = ${count}`;
+              }
+
+              // Calculate percentage of visits matching the condition
+              if (aggregation === 'avg' || aggregation === 'sum') {
+                columnClauses.push(
+                  `(SUM(CASE WHEN ${condition} THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS ${colVar}`
+                );
+              } else {
+                // For 'none', we'd need individual visit data - use array aggregation
+                columnClauses.push(
+                  `LIST(CASE WHEN ${condition} THEN 100 ELSE 0 END) AS ${colVar}`
+                );
+              }
+            }
+          }
+          // Special case: cases (visit count)
+          else if (colVar === 'cases') {
+            if (aggregation === 'none') {
+              // For violin/heatmap, return individual counts as array
+              columnClauses.push(`LIST(1) AS ${colVar}`);
+            } else {
+              columnClauses.push(`COUNT(*) AS ${colVar}`);
+            }
+          }
+          // Special case: attending_provider, year, quarter (text/categorical fields, should be in GROUP BY)
+          else if (['attending_provider', 'year', 'quarter'].includes(colVar)) {
+            if (colVar === tableConfig.rowVar) {
+              columnClauses.push(`${colVar}`);
+            } else {
+              // Cast to string to ensure consistency (especially for numerical years)
+              columnClauses.push(`STRING_AGG(CAST(${colVar} AS STRING), ', ') AS ${colVar}`);
+            }
+          }
+          // Standard numeric fields with aggregation
+          else {
+            const aggFn = aggregation === 'none' ? 'LIST' : aggregation.toUpperCase();
+
+            // Handle boolean fields (convert to percentage for sum/avg)
+            const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
+            if (booleanFields.includes(colVar) && (aggregation === 'avg' || aggregation === 'sum')) {
+              // Convert boolean to percentage
+              columnClauses.push(
+                `(SUM(CASE WHEN ${colVar} = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS ${colVar}`
+              );
+            } else if (aggregation === 'none') {
+              // For violin/heatmap visualization, collect all values
+              columnClauses.push(`LIST(${colVar}) AS ${colVar}`);
+            } else {
+              columnClauses.push(`${aggFn}(${colVar}) AS ${colVar}`);
+            }
+          }
+        });
+
+        // Add the rowVar to the SELECT (it will be in GROUP BY)
+        if (!columnClauses.includes(tableConfig.rowVar)) {
+          columnClauses.unshift(tableConfig.rowVar);
+        }
+
+        // Build the query
+        const query = `
+          SELECT 
+            ${columnClauses.join(',\n            ')}
+          FROM filteredVisits
+          GROUP BY ${tableConfig.rowVar}
+          ORDER BY ${tableConfig.rowVar};
+        `;
+
+        console.log('ExploreTable Query:', query);
+
+        try {
+          const queryResult = await this._rootStore.duckDB!.query(query);
+          const rows = queryResult.toArray().map((row: any) => row.toJSON());
+
+          // If twoValsPerRow is enabled, we need to transform the data
+          // This would require a different query structure - TODO for now
+          if (tableConfig.twoValsPerRow) {
+            // For now, use dummy data transformation similar to exploreTableDummyData
+            console.warn('twoValsPerRow is not yet fully implemented, using basic data');
+          }
+
+          data[config.chartId] = rows;
+        } catch (error) {
+          console.error('Error executing explore table query:', error);
+          data[config.chartId] = [];
+        }
       }
       if (config.chartType === 'scatterPlot') {
         data[config.chartId] = dummyData;
@@ -57,7 +160,8 @@ export class ExploreStore {
       if (config.chartType === 'cost') {
         data[config.chartId] = dummyData;
       }
-    });
+    }
+    console.log("ExploreStore chartData:", data);
     this.chartData = data;
   }
 
