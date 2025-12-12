@@ -2,7 +2,6 @@ import { observer } from 'mobx-react-lite';
 import {
   ReactNode, useContext, useMemo, useState,
 } from 'react';
-import { useDisclosure } from '@mantine/hooks';
 import {
   AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
   Modal,
@@ -20,7 +19,6 @@ import {
   IconChartBar,
   IconClipboardList,
 } from '@tabler/icons-react';
-import * as htmlToImage from 'html-to-image';
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
 import classes from './Shell.module.css';
