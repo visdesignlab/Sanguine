@@ -1,7 +1,9 @@
 import {
+  useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { useObserver } from 'mobx-react-lite';
@@ -10,6 +12,7 @@ import {
   Box,
   Divider,
   Flex,
+  LoadingOverlay,
   NavLink,
   ScrollArea,
   Space,
@@ -50,26 +53,12 @@ export function SelectedVisitsPanel() {
   }, [visitNos, searchQuery]);
 
   // Chosen visit from list
+  const [loadingVisit, setLoadingVisit] = useState(false);
   const [selectedVisitNo, setSelectedVisitNo] = useState<number | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<{
     visit_no: number;
     [key: string]: unknown;
   } | null>(null);
-
-  // Choose first visit by default
-  useEffect(() => {
-    if (selectedVisitNo === null && filteredVisitNos.length > 0) {
-      setSelectedVisitNo(filteredVisitNos[0]);
-    }
-    if (filteredVisitNos.length === 0) {
-      setSelectedVisitNo(null);
-      setSelectedVisit(null);
-    }
-    // If current selection is not in filtered results, clear it
-    if (selectedVisitNo !== null && !filteredVisitNos.includes(selectedVisitNo)) {
-      setSelectedVisitNo(filteredVisitNos.length > 0 ? filteredVisitNos[0] : null);
-    }
-  }, [filteredVisitNos, selectedVisitNo]);
 
   // Fetch details whenever a visit number is chosen
   useEffect(() => {
@@ -103,6 +92,19 @@ export function SelectedVisitsPanel() {
     });
   }, [selectedVisit, attributeSearchQuery]);
 
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const handleClickVisitNo = useCallback((visitNo: number) => {
+    setLoadingVisit(true);
+    setSelectedVisitNo(visitNo);
+
+    // Clear any existing timeout before starting a new one
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+    // Simulate loading delay for better UX
+    loadingTimeoutRef.current = setTimeout(() => setLoadingVisit(false), 400);
+  }, []);
+
   return useObserver(() => (
     <Box>
       {/* Panel Header */}
@@ -133,7 +135,7 @@ export function SelectedVisitsPanel() {
               label={filteredVisitNos[index]}
               key={filteredVisitNos[index]}
               active={selectedVisitNo === filteredVisitNos[index]}
-              onClick={() => setSelectedVisitNo(filteredVisitNos[index])}
+              onClick={() => handleClickVisitNo(filteredVisitNos[index])}
               style={style}
             />
           )}
@@ -150,6 +152,7 @@ export function SelectedVisitsPanel() {
         <Divider />
         {/* Details panel for the selected visit */}
         <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px - 250px - 30px - 40px - 40px)`}>
+          <LoadingOverlay visible={loadingVisit} overlayProps={{ blur: 2 }} />
           {selectedVisit ? (
             <Stack p="sm">
               {/* Search bar for visit attributes */}
