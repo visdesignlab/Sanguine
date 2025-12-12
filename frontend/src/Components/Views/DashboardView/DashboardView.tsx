@@ -34,6 +34,7 @@ import {
   DashboardStatConfig,
   chartColors,
   Cost,
+  dashboardYAxisGroupedOptions,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
@@ -171,12 +172,10 @@ export function DashboardView() {
             <Select
               label={`${itemModalType === 'chart' ? 'Metric (Y-Axis)' : 'Metric'}`}
               placeholder={`Choose ${itemModalType} metric`}
-              data={dashboardYAxisOptions.map((opt) => ({
-                value: opt.value,
-                label: opt.label.base,
-              }))}
+              data={dashboardYAxisGroupedOptions}
               value={selectedYAxisVar}
               onChange={(value) => setSelectedYAxisVar(value || '')}
+              searchable
             />
             {/** Modal - choose x-axis for chart only */}
             {itemModalType === 'chart' && (
@@ -311,10 +310,7 @@ export function DashboardView() {
                       </Tooltip>
                       {/* Chart Select Attribute Menu */}
                       <Select
-                        data={dashboardYAxisOptions.map((opt) => ({
-                          value: opt.value,
-                          label: opt.label.base,
-                        }))}
+                        data={dashboardYAxisGroupedOptions}
                         defaultValue={yAxisVar}
                         value={yAxisVar}
                         allowDeselect={false}
@@ -332,6 +328,7 @@ export function DashboardView() {
                             chartType: inferredChartType,
                           });
                         }}
+                        searchable
                       />
                       {/* Remove / Delete chart */}
                       <CloseButton onClick={() => handleRemoveChart(chartId)} />

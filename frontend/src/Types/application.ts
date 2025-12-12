@@ -187,52 +187,117 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
 
 // Guideline adherence ---------------------------------------------
 export const GUIDELINE_ADHERENT = {
-  rbc: {
-    value: 'rbc_adherent',
+  rbc_adherence: {
+    value: 'rbc_adherence',
     label: {
-      base: 'Guideline Adherent RBC Transfusions',
-      sum: 'Total Guideline Adherent RBC Transfusions',
-      avg: 'Percentage of Guideline Adherent RBC Transfusions',
+      base: 'RBC Guideline Adherence',
+      sum: 'RBC Guideline Adherence',
+      avg: 'RBC Guideline Adherence',
     },
-    // Adherence units & decimal truncation for display
-    units: { sum: 'Adherent RBC Transfusions', avg: '% Adherent RBC Transfusions' },
-    decimals: 0,
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
   },
-  ffp: {
-    value: 'ffp_adherent',
+  ffp_adherence: {
+    value: 'ffp_adherence',
     label: {
-      base: 'Guideline Adherent FFP Transfusions',
-      sum: 'Total Guideline Adherent FFP Transfusions',
-      avg: 'Percentage of Guideline Adherent FFP Transfusions',
+      base: 'FFP Guideline Adherence',
+      sum: 'FFP Guideline Adherence',
+      avg: 'FFP Guideline Adherence',
     },
-    units: { sum: 'Adherent Plasma Transfusions', avg: '% Adherent Plasma Transfusions' },
-    decimals: 0,
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
   },
-  plt: {
-    value: 'plt_adherent',
+  plt_adherence: {
+    value: 'plt_adherence',
     label: {
-      base: 'Guideline Adherent Platelet Transfusions',
-      sum: 'Total Guideline Adherent Platelet Transfusions',
-      avg: 'Percentage of Adherent Platelet Transfusions',
+      base: 'Platelet Guideline Adherence',
+      sum: 'Platelet Guideline Adherence',
+      avg: 'Platelet Guideline Adherence',
     },
-    units: { sum: 'Adherent Platelet Transfusions', avg: '% Adherent Platelet Transfusions' },
-    decimals: 0,
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
   },
-  cryo: {
-    value: 'cryo_adherent',
+  cryo_adherence: {
+    value: 'cryo_adherence',
     label: {
-      base: 'Guideline Adherent Cryo Transfusions',
-      sum: 'Total Guideline Adherent Cryo Transfusions',
-      avg: 'Percentage of Guideline Adherent Cryo Transfusions',
+      base: 'Cryo Guideline Adherence',
+      sum: 'Cryo Guideline Adherence',
+      avg: 'Cryo Guideline Adherence',
     },
-    units: { sum: 'Adherent Cryo Transfusions', avg: '% Adherent Cryo Transfusions' },
-    decimals: 0,
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
   },
 } as const;
 
+export const TRANSFUSION_COUNT = {
+
+  // Transfusion counts
+  rbc_transfusion: {
+    value: 'rbc_transfusions_count',
+    label: {
+      base: 'RBC Transfusions',
+      sum: 'Total RBC Transfusions',
+      avg: 'Average RBC Transfusions Per Visit',
+    },
+    units: { sum: 'RBC Transfusions', avg: 'RBC Transfusions' },
+    decimals: { sum: 0, avg: 2 },
+  },
+  ffp_transfusion: {
+    value: 'ffp_transfusions_count',
+    label: {
+      base: 'FFP Transfusions',
+      sum: 'Total FFP Transfusions',
+      avg: 'Average FFP Transfusions Per Visit',
+    },
+    units: { sum: 'FFP Transfusions', avg: 'FFP Transfusions' },
+    decimals: { sum: 0, avg: 2 },
+  },
+  plt_transfusion: {
+    value: 'plt_transfusions_count',
+    label: {
+      base: 'Platelet Transfusions',
+      sum: 'Total Platelet Transfusions',
+      avg: 'Average Platelet Transfusions Per Visit',
+    },
+    units: { sum: 'Platelet Transfusions', avg: 'Platelet Transfusions' },
+    decimals: { sum: 0, avg: 2 },
+  },
+  cryo_transfusion: {
+    value: 'cryo_transfusions_count',
+    label: {
+      base: 'Cryo Transfusions',
+      sum: 'Total Cryo Transfusions',
+      avg: 'Average Cryo Transfusions Per Visit',
+    },
+    units: { sum: 'Cryo Transfusions', avg: 'Cryo Transfusions' },
+    decimals: { sum: 0, avg: 2 },
+  },
+  overall_transfusion: {
+    value: 'overall_transfusions_count',
+    label: {
+      base: 'Total Transfusions',
+      sum: 'Total Transfusions',
+      avg: 'Average Transfusions Per Visit',
+    },
+    units: { sum: 'Transfusions', avg: 'Transfusions' },
+    decimals: { sum: 0, avg: 2 },
+  },
+} as const;
+
+// Types for guideline adherence fields
+export type TrasnfusionCounts = typeof TRANSFUSION_COUNT[keyof typeof TRANSFUSION_COUNT]['value'];
+
+// Guideline adherence options for dashboard
+export const TRANSFUSION_COUNT_OPTIONS = Object.values(TRANSFUSION_COUNT) as ReadonlyArray<{
+  value: TrasnfusionCounts;
+  label: { base: string; sum: string; avg: string };
+  units: { sum: string; avg: string };
+  decimals: { sum: number; avg: number };
+}>;
+
 // Total guideline adherence (Across all blood products)
 export const OVERALL_GUIDELINE_ADHERENT = {
-  value: 'overall_adherent',
+  value: 'overall_adherence',
   label: {
     base: 'Guideline Adherent Transfusions',
     sum: 'Total Guideline Adherent Transfusions',
@@ -370,9 +435,9 @@ export type VisitCount = typeof VISIT_COUNT['value'];
 export const CASE_MIX_INDEX = {
   value: 'case_mix_index',
   label: {
-    base: 'Case Mix Index',
-    sum: 'Case Mix Index',
-    avg: 'Case Mix Index',
+    base: 'Case Mix Index (CMI)',
+    sum: 'Case Mix Index (CMI)',
+    avg: 'Case Mix Index (CMI)',
   },
   units: { sum: '', avg: '' },
   decimals: { sum: 2, avg: 2 },
@@ -417,17 +482,81 @@ export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
 
 // Dashboard chart y-axis variable options
 export const dashboardYAxisOptions = [
-  ...BLOOD_COMPONENT_OPTIONS,
   OVERALL_GUIDELINE_ADHERENT,
   ...GUIDELINE_ADHERENT_OPTIONS,
-  ...OUTCOME_OPTIONS,
-  ...PROPHYL_MED_OPTIONS,
   ...COST_OPTIONS,
   OVERALL_BLOOD_PRODUCT_COST,
-  VISIT_COUNT,
+  ...BLOOD_COMPONENT_OPTIONS,
+  ...OUTCOME_OPTIONS,
+  ...PROPHYL_MED_OPTIONS,
   CASE_MIX_INDEX,
+  ...TRANSFUSION_COUNT_OPTIONS,
+  VISIT_COUNT,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
+
+// Grouped y-axis options for easier selection in UI
+export const dashboardYAxisGroupedOptions = [
+  {
+    group: 'Transfusion Guidelines',
+    items: [
+      { value: OVERALL_GUIDELINE_ADHERENT.value, label: OVERALL_GUIDELINE_ADHERENT.label.base },
+      ...GUIDELINE_ADHERENT_OPTIONS.map((o) => ({
+        value: o.value,
+        label: o.label.base,
+      })),
+    ],
+  },
+  {
+    group: 'Costs',
+    items: [
+      { value: OVERALL_BLOOD_PRODUCT_COST.value, label: OVERALL_BLOOD_PRODUCT_COST.label.base },
+      ...COST_OPTIONS.map((o) => ({
+        value: o.value,
+        label: o.label.base,
+      })),
+    ],
+  },
+  {
+    group: 'Blood Products Used',
+    items: [
+      ...BLOOD_COMPONENT_OPTIONS.map((o) => ({
+        value: o.value,
+        label: o.label.base,
+      })),
+    ],
+  },
+  {
+    group: 'Visit Outcomes',
+    items: OUTCOME_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label.base,
+    })),
+  },
+  {
+    group: 'Medications Used',
+    items: PROPHYL_MED_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label.base,
+    })),
+  },
+  {
+    group: 'Severity',
+    items: [
+      { value: CASE_MIX_INDEX.value, label: CASE_MIX_INDEX.label.base },
+      ...TRANSFUSION_COUNT_OPTIONS.map((o) => ({
+        value: o.value,
+        label: o.label.base,
+      })),
+    ],
+  },
+  {
+    group: 'Other',
+    items: [
+      { value: VISIT_COUNT.value, label: VISIT_COUNT.label.base },
+    ],
+  },
+];
 
 // Dashboard aggregate y-axis variable type
 export type DashboardAggYAxisVar = `${keyof typeof AGGREGATION_OPTIONS}_${typeof dashboardYAxisVars[number]}`;

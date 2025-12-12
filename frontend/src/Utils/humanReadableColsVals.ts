@@ -3,39 +3,49 @@ const columnNameMap: Record<string, string> = {
   age_at_adm: 'Age at Admission',
   antifibrinolytic: 'Antifibrinolytic',
   apr_drg_weight: 'APR DRG Weight',
-  ms_drg_weight: 'MS DRG Weight',
   b12: 'B12',
   cell_saver_cost: 'Cell Saver Cost',
   cell_saver_ml: 'Cell Saver (mL)',
-  cryo_adherent: '# Cryoprecipitate Units Adherent',
-  cryo_units: '# Cryoprecipitate Units',
-  cryo_units_cost: 'Cryoprecipitate Units Cost',
+  cryo_adherence: 'Adherent Cryo Transfusions (%)',
+  cryo_adherent_count: '# Adherent Cryo Transfusions',
+  cryo_transfusions_count: '# Cryo Transfusions',
+  cryo_units: '# Cryo Units Transfused',
+  cryo_units_cost: 'Cryo Units Cost',
   death: 'Death',
+  departments: 'Departments',
   dsch_dtm: 'Discharge Date',
   ecmo: 'ECMO',
-  ffp_adherent: '# FFP Units Adherent',
-  ffp_units: '# FFP Units',
+  ffp_adherence: 'Adherent FFP Transfusions (%)',
+  ffp_adherent_count: '# Adherent FFP Transfusions',
+  ffp_transfusions_count: '# FFP Transfusions',
+  ffp_units: '# FFP Units Transfused',
   ffp_units_cost: 'FFP Units Cost',
   iron: 'Iron',
   los: 'Length of Stay',
   month: 'Month',
   mrn: 'MRN',
-  overall_adherent: '# Overall Units Adherent',
-  overall_units: '# Overall Units',
+  ms_drg_weight: 'MS DRG Weight',
+  overall_adherence: 'Adherent Transfusions (%)',
+  overall_adherent_count: '# Adherent Transfusions',
+  overall_transfusions_count: '# Total Transfusions',
+  overall_units: '# Units Transfused',
   pat_class_desc: 'Patient Class Description',
-  plt_adherent: '# Platelet Units Adherent',
-  plt_units: '# Platelet Units',
+  plt_adherence: 'Adherent Platelet Transfusions (%)',
+  plt_adherent_count: '# Adherent Platelet Transfusions',
+  plt_transfusions_count: '# Platelet Transfusions',
+  plt_units: '# Platelet Units Transfused',
   plt_units_cost: 'Platelet Units Cost',
   quarter: 'Quarter',
-  rbc_adherent: '# RBC Units Adherent',
-  rbc_units: '# RBC Units',
+  rbc_adherence: 'Adherent RBC Transfusions (%)',
+  rbc_adherent_count: '# Adherent RBC Transfusions',
+  rbc_transfusions_count: '# RBC Transfusions',
+  rbc_units: '# RBC Units Transfused',
   rbc_units_cost: 'RBC Units Cost',
   stroke: 'Stroke',
   vent: 'Ventilator',
   visit_no: 'Visit Number',
   whole_units: '# Whole Blood Units',
   year: 'Year',
-  departments: 'Departments',
 };
 
 export function makeHumanReadableColumn(columnName: keyof typeof columnNameMap): string {
@@ -52,6 +62,12 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
   }
   if (['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'].includes(columnName)) {
     return (value === 1 || value === true) ? 'Yes' : 'No';
+  }
+  if (
+    ['rbc_adherence', 'ffp_adherence', 'plt_adherence', 'cryo_adherence', 'overall_adherence'].includes(columnName)
+    && (value === null || value === undefined)
+  ) {
+    return 'N/A';
   }
   if (
     (columnName === 'apr_drg_weight' || columnName === 'ms_drg_weight')
