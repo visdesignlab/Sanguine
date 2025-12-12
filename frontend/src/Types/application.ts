@@ -529,25 +529,86 @@ const RBC_PERCENT_OPTIONS = RBC_COUNTS.map((count) => ({
   value: `percent_${count}_rbc`,
   label: count === 'above_5' ? '5+ RBC' : `${count} RBC`,
   units: { sum: '%', avg: '%' },
+  decimals: 1,
 }));
 
-export const ExploreTableColumnOptions: { value: string; label: string, units?: { sum: string, avg: string } }[] = [
-  ...dashboardYAxisOptions.map((opt) => ({
-    value: opt.value,
-    label: opt.label.base,
-    units: { sum: opt.label.sum, avg: opt.label.avg },
-  })),
-  ...RBC_PERCENT_OPTIONS,
+// Column Groups
+export const ExploreTableColumnOptionsGrouped = [
   {
-    value: 'attending_provider',
-    label: 'Provider',
+    group: 'Blood Products',
+    items: BLOOD_COMPONENT_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: { sum: opt.label.sum, avg: opt.label.avg },
+      decimals: opt.decimals,
+    })),
   },
   {
-    value: 'cases',
-    label: 'Cases',
-    units: { sum: 'cases', avg: '% of cases' },
+    group: 'Outcomes',
+    items: OUTCOME_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: { sum: opt.label.sum, avg: opt.label.avg },
+      decimals: opt.decimals,
+    })),
+  },
+  {
+    group: 'Prophylactic Medications',
+    items: PROPHYL_MED_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: { sum: opt.label.sum, avg: opt.label.avg },
+      decimals: opt.decimals,
+    })),
+  },
+  {
+    group: 'Guideline Adherence',
+    items: GUIDELINE_ADHERENT_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: { sum: opt.label.sum, avg: opt.label.avg },
+      decimals: opt.decimals,
+    })),
+  },
+  {
+    group: 'Lab Results',
+    items: LAB_RESULT_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: { sum: opt.label.sum, avg: opt.label.avg },
+      decimals: opt.decimals,
+    })),
+  },
+  {
+    group: 'Costs',
+    items: COST_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: { sum: opt.label.sum, avg: opt.label.avg },
+      decimals: opt.decimals,
+    })),
+  },
+  {
+    group: 'Other',
+    items: [
+      { value: 'year', label: 'Year' },
+      { value: 'quarter', label: 'Quarter' },
+      ...RBC_PERCENT_OPTIONS,
+      {
+        value: 'attending_provider',
+        label: 'Provider',
+      },
+      {
+        value: 'cases',
+        label: 'Cases',
+        units: { sum: 'cases', avg: '% of cases' },
+        decimals: 0,
+      },
+    ],
   },
 ];
+
+export const ExploreTableColumnOptions: { value: string; label: string, units?: { sum: string, avg: string }, decimals?: number | { sum: number, avg: number } }[] = ExploreTableColumnOptionsGrouped.flatMap(g => g.items);
 
 // Row options
 export const ExploreTableRowOptions: { value: string; label: string }[] = [
