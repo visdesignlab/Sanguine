@@ -158,6 +158,20 @@ export class ProvenanceStore {
         runInAction(() => {
             this.isInitialized = true;
         });
+
+        // WORKAROUND: Trrack Root Node does not support artifacts.
+        // We apply an 'Initial State' action so the user starts at a node that CAN accept artifacts (Node 1).
+        this.provenance.apply({
+            apply: (state: ApplicationState) => {
+                return {
+                    state: state,
+                    label: 'Initial State',
+                    stateSaveMode: 'Complete',
+                    actionType: 'Regular',
+                    eventType: 'Regular'
+                } as any;
+            }
+        }, 'Initial State');
     }
 
 
@@ -669,7 +683,6 @@ export class ProvenanceStore {
     saveState(name: string, screenshot?: string) {
         if (!this.provenance) return;
         const currentNodeId = this.provenance.current.id;
-        console.log("Provenance Current Node:", this.provenance.current);
 
         console.log("🔖 [ProvenanceStore] Bookmarking State:", this.provenance.getState(currentNodeId));
         this.provenance.addArtifact({ type: 'name', value: name }, currentNodeId);
@@ -745,7 +758,9 @@ export class ProvenanceStore {
         if (!this.provenance) return false;
         const current = this.provenance.current;
         const root = this.provenance.root;
-        return current.id !== root.id;
+
+        // Disable undo if at root OR if at the "Initial State" node (our artificial root)
+        return current.id !== root.id && current.label !== 'Initial State';
     }
 
     get canRedo() {
@@ -787,5 +802,22 @@ export class ProvenanceStore {
         console.log("⏪ [ProvenanceStore] Restoring State:", targetState);
         this.provenance.goToNode(nodeId);
         console.log("Going to node:", this.provenance.getState(nodeId))
+    }
+
+    restoreToInitialState() {
+        if (!this.provenance) return;
+
+        // Find the node labeled "Initial State"
+        const nodes = Object.values(this.provenance.graph.nodes);
+        const initialNode = nodes.find(n => n.label === 'Initial State');
+
+        if (initialNode) {
+            this.provenance.goToNode(initialNode.id);
+        } else {
+            // Fallback: This theoretically shouldn't happen given our init logic,
+            // but if so, maybe just undo until Root or reset all stores manually?
+            // For now, let's just log error.
+            console.error("Could not find 'Initial State' node to restore to.");
+        }
     }
 }

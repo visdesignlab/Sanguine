@@ -5,7 +5,7 @@ import {
 } from '@mantine/core';
 import {
     IconFolder, IconFolderDown, IconFolderSearch, IconEdit, IconTrash, IconSquareCheck, IconCheck, IconX, IconChevronLeft, IconChevronRight,
-    IconChartBar, IconFilter, IconClick, IconSettings, IconChartScatter
+    IconChartBar, IconFilter, IconClick, IconSettings, IconChartScatter, IconRotateClockwise
 } from '@tabler/icons-react';
 import { useThemeConstants } from '../../Theme/mantineTheme';
 import classes from '../../Shell/Shell.module.css';
@@ -477,6 +477,18 @@ export const SavedStatesMenu = observer(({
                     >
                         Show Saved States
                     </Menu.Item>
+                    {store.provenanceStore.canUndo && (
+                        <>
+                            <Menu.Divider />
+                            <Menu.Item
+                                leftSection={<IconRotateClockwise size={14} />}
+                                onClick={onReset}
+                                color="red"
+                            >
+                                Restore Default State
+                            </Menu.Item>
+                        </>
+                    )}
                 </Menu.Dropdown>
             </Menu>
 
@@ -492,7 +504,7 @@ export const SavedStatesMenu = observer(({
                         <Box style={{ flex: 1 }}>
                             <Group justify="space-between">
                                 <Group gap="xs">
-                                    {isMultiSelecting && (
+                                    {isMultiSelecting && sortedStates.length > 0 && (
                                         <Checkbox
                                             checked={selectedStateIds.size === sortedStates.length && sortedStates.length > 0}
                                             indeterminate={selectedStateIds.size > 0 && selectedStateIds.size < sortedStates.length}
@@ -517,19 +529,21 @@ export const SavedStatesMenu = observer(({
                                         </Button>
                                     )}
                                     {/* Multi-select toggle */}
-                                    <ActionIcon
-                                        variant={isMultiSelecting ? "filled" : "subtle"}
-                                        color={isMultiSelecting ? "blue" : "gray"}
-                                        onClick={() => {
-                                            setIsMultiSelecting(!isMultiSelecting);
-                                            if (isMultiSelecting) clearSelections();
-                                        }}
-                                        title="Toggle Multi-select"
-                                        size={22}
-                                        mr={4}
-                                    >
-                                        <IconSquareCheck size={18} />
-                                    </ActionIcon>
+                                    {sortedStates.length > 0 && (
+                                        <ActionIcon
+                                            variant={isMultiSelecting ? "filled" : "subtle"}
+                                            color={isMultiSelecting ? "blue" : "gray"}
+                                            onClick={() => {
+                                                setIsMultiSelecting(!isMultiSelecting);
+                                                if (isMultiSelecting) clearSelections();
+                                            }}
+                                            title="Toggle Multi-select"
+                                            size={22}
+                                            mr={4}
+                                        >
+                                            <IconSquareCheck size={18} />
+                                        </ActionIcon>
+                                    )}
                                 </Group>
                             </Group>
                         </Box>

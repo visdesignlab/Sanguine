@@ -72,10 +72,8 @@ export const Shell = observer(() => {
   // Reset to defaults modal ----------------------
   const [resetModalOpened, setResetModalOpened] = useState(false);
   const handleConfirmReset = () => {
-    // Reset filters, dashboard, and selections
-    store.filtersStore.resetAllFilters();
-    store.dashboardStore.reset();
-    store.selectionsStore.reset();
+    // Restore to initial state via provenance
+    store.provenanceStore.restoreToInitialState();
     setResetModalOpened(false);
   };
 
