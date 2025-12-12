@@ -1,7 +1,7 @@
 import { Layout } from 'react-grid-layout';
 
 /**
- * Robust comparison to avoid redundant updates from RGL
+ * Robust comparison to avoid redundant updates from reactive grid layout
  * Checks if two layout arrays are effectively equal regardless of order
  */
 export const areLayoutsEqual = (l1: Layout[], l2: Layout[]) => {
