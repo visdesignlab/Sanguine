@@ -86,6 +86,7 @@ export class FiltersStore {
         MIN(adm_dtm) AS min_adm,
         MAX(dsch_dtm) AS max_dsch,
         MIN(rbc_units) AS min_rbc,
+        MAX(rbc_units) AS max_rbc,
         MIN(ffp_units) AS min_ffp,
         MAX(ffp_units) AS max_ffp,
         MIN(plt_units) AS min_plt,
@@ -93,7 +94,6 @@ export class FiltersStore {
         MIN(cryo_units) AS min_cryo,
         MAX(cryo_units) AS max_cryo,
         MIN(cell_saver_ml) AS min_cell_saver,
-        MAX(rbc_units) AS max_rbc,
         MAX(cell_saver_ml) AS max_cell_saver,
 
         MIN(los) AS min_los,
