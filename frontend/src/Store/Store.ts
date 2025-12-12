@@ -53,7 +53,7 @@ export class RootStore {
     this.provenanceStore = new ProvenanceStore(this);
 
     makeAutoObservable(this, {
-      provenanceStore: false, // Exclude provenanceStore from auto observable to prevent deep proxying of Trrack
+      provenanceStore: false,
     });
   }
 
