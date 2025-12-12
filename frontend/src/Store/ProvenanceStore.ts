@@ -72,6 +72,8 @@ export class ProvenanceStore {
             savedStates: computed,
             canUndo: computed,
             canRedo: computed,
+            currentState: computed,
+            uiState: computed,
         });
 
     }
@@ -439,6 +441,7 @@ export class ProvenanceStore {
     }
 
     get currentState() {
+        this.graphVersion;
         if (!this.provenance) {
             // Return default/empty state if not initialized
             return {
@@ -458,6 +461,10 @@ export class ProvenanceStore {
             } as any;
         }
         return this.provenance.getState(this.provenance.current);
+    }
+
+    get uiState() {
+        return this.currentState.ui;
     }
 
     restoreState(nodeId: NodeID) {
