@@ -51,7 +51,7 @@ export interface ApplicationState {
     };
 }
 
-export interface MyAnnotation {
+export interface StateAnnotation {
     type: string;
     value: string;
 }
@@ -59,16 +59,13 @@ export interface MyAnnotation {
 export class ProvenanceStore {
     _rootStore: RootStore;
 
-    provenance: Provenance<ApplicationState, any, MyAnnotation> | null = null;
+    provenance: Provenance<ApplicationState, any, StateAnnotation> | null = null;
     isInitialized = false;
     graphVersion = 0;
 
     constructor(rootStore: RootStore) {
         this._rootStore = rootStore;
 
-        // Use makeObservable for precise control. 
-        // We ONLY want graphVersion to be observable and savedStates to be computed.
-        // Everything else (provenance, actions) must remain plain objects to avoid MobX proxying Trrack.
         makeObservable(this, {
             graphVersion: observable,
             isInitialized: observable,
@@ -135,7 +132,7 @@ export class ProvenanceStore {
         const initialState = JSON.parse(JSON.stringify(rawInitialState));
 
         // Create new provenance instance
-        this.provenance = initProvenance<ApplicationState, any, MyAnnotation>(initialState, {
+        this.provenance = initProvenance<ApplicationState, any, StateAnnotation>(initialState, {
             loadFromUrl: true
         });
 
@@ -193,14 +190,6 @@ export class ProvenanceStore {
 
     actions = {
         updateFilter: (filterKey: keyof ApplicationState['filterValues'], value: any) => {
-            // Update MobX store directly
-            const currentFilters = this._rootStore.filtersStore.filterValues;
-            const updatedFilters = {
-                ...currentFilters,
-                [filterKey]: value instanceof Date ? value : (Array.isArray(value) ? value : value)
-            };
-            (this._rootStore.filtersStore as any).loadState(updatedFilters);
-
             if (!this.provenance) return;
             // Update Trrack state
             this.provenance.apply({
@@ -278,208 +267,8 @@ export class ProvenanceStore {
                 }
             }, 'Update Selection');
         },
-        updateDashboardConfig: (chartConfigs: DashboardChartConfig[]) => {
-            if (!this.provenance) return;
-            console.log("💾 [ProvenanceStore] Saving Dashboard Config:", chartConfigs);
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-
-                    if (!state || !state.dashboard) return {
-                        state: state || {} as ApplicationState,
-                        label: 'Update Dashboard Config',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-
-                    const newState = {
-                        ...state,
-                        dashboard: {
-                            ...state.dashboard,
-                            chartConfigs: chartConfigs
-                        }
-                    };
-                    return {
-                        state: newState,
-                        label: 'Update Dashboard Config',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-                }
-            }, 'Update Dashboard Config');
-        },
-        updateDashboardLayout: (layouts: { [key: string]: Layout[] }) => {
-            if (!this.provenance) return;
-            // Guard against early calls or invalid state
-            const currentState = this.provenance.getState(this.provenance.current);
-            if (!currentState || !currentState.dashboard) {
-                console.warn("Skipping updateDashboardLayout: Invalid current state", currentState);
-                return;
-            }
-
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-
-                    if (!state || !state.dashboard) {
-                        console.error("Invalid state in updateDashboardLayout apply. Received:", state);
-                        return {
-                            state: state || {} as ApplicationState,
-                            label: 'Update Dashboard Layout',
-                            stateSaveMode: 'Complete',
-                            actionType: 'Regular',
-                            eventType: 'Regular'
-                        } as any;
-                    }
-                    const newState = {
-                        ...state,
-                        dashboard: {
-                            ...state.dashboard,
-                            chartLayouts: layouts
-                        }
-                    };
-                    return {
-                        state: newState,
-                        label: 'Update Dashboard Layout',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-                }
-            }, 'Update Dashboard Layout');
-        },
-        addChart: (config: DashboardChartConfig, layouts: { [key: string]: Layout[] }) => {
-            if (!this.provenance) return;
-            console.log("➕ [ProvenanceStore] Adding Chart Config:", config);
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-
-                    if (!state || !state.dashboard) return {
-                        state: state || {} as ApplicationState,
-                        label: 'Add Chart',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-
-                    const newState = {
-                        ...state,
-                        dashboard: {
-                            ...state.dashboard,
-                            chartConfigs: [config, ...state.dashboard.chartConfigs],
-                            chartLayouts: layouts
-                        }
-                    };
-                    return {
-                        state: newState,
-                        label: 'Add Chart',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-                }
-            }, 'Add Chart');
-        },
-        removeChart: (chartId: string, layouts: { [key: string]: Layout[] }) => {
-            if (!this.provenance) return;
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-                    console.log("State before Remove Chart:", state);
-                    if (!state || !state.dashboard) return {
-                        state: state || {} as ApplicationState,
-                        label: 'Remove Chart',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-
-                    const newState = {
-                        ...state,
-                        dashboard: {
-                            ...state.dashboard,
-                            chartConfigs: state.dashboard.chartConfigs.filter(c => c.chartId !== chartId),
-                            chartLayouts: layouts
-                        }
-                    };
-
-                    console.log("New State after Remove Chart:", newState);
-                    return {
-                        state: newState,
-                        label: 'Remove Chart',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-                }
-            }, 'Remove Chart');
-        },
-        // Remove stat
-        removeStat: (statId: string) => {
-            if (!this.provenance) return;
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-
-                    if (!state || !state.dashboard) return {
-                        state: state || {} as ApplicationState,
-                        label: 'Remove Stat',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-
-                    const newState = {
-                        ...state,
-                        dashboard: {
-                            ...state.dashboard,
-                            statConfigs: state.dashboard.statConfigs.filter(s => s.statId !== statId)
-                        }
-                    };
-
-                    console.log("New State after Remove Stat:", newState);
-                    return {
-                        state: newState,
-                        label: 'Remove Stat',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-                }
-            }, 'Remove Stat');
-        },
-        // Add Stat
-        addStat: (config: DashboardStatConfig) => {
-            if (!this.provenance) return;
-            console.log("➕ [ProvenanceStore] Adding Stat Config:", config);
-            this.provenance.apply({
-                apply: (state: ApplicationState) => {
-
-                    if (!state || !state.dashboard) return {
-                        state: state || {} as ApplicationState,
-                        label: 'Add Stat',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-
-                    const newState = {
-                        ...state,
-                        dashboard: {
-                            ...state.dashboard,
-                            statConfigs: [config, ...state.dashboard.statConfigs],
-                        }
-                    };
-                    return {
-                        state: newState,
-                        label: 'Add Stat',
-                        stateSaveMode: 'Complete',
-                        actionType: 'Regular',
-                        eventType: 'Regular'
-                    } as any;
-                }
-            }, 'Add Stat');
-        },
         // Generic update for complex dashboard changes
-        updateDashboardState: (dashboardState: ApplicationState['dashboard'], label: string = 'Update Dashboard') => {
+        updateDashboardState: (dashboardState: Partial<ApplicationState['dashboard']>, label: string = 'Update Dashboard') => {
             if (!this.provenance) return;
             this.provenance.apply({
                 apply: (state: ApplicationState) => {
@@ -494,7 +283,10 @@ export class ProvenanceStore {
 
                     const newState = {
                         ...state,
-                        dashboard: dashboardState
+                        dashboard: {
+                            ...state.dashboard,
+                            ...dashboardState
+                        }
                     };
                     return {
                         state: newState,
@@ -506,6 +298,7 @@ export class ProvenanceStore {
                 }
             }, label);
         },
+
         setUiState: (partialUiState: Partial<ApplicationState['ui']>) => {
             if (!this.provenance) return;
             this.provenance.apply({
@@ -710,7 +503,6 @@ export class ProvenanceStore {
         });
     }
 
-    // Workaround: Trrack doesn't support removing artifacts, so we track deleted state IDs locally
     deletedStateIds: Set<NodeID> = new Set();
 
     removeState(nodeId: NodeID) {

@@ -35,7 +35,6 @@ export function StatsGrid() {
   // Remove stat handler
   const handleRemoveStat = useCallback((statId: string) => {
     store.dashboardStore.removeStat(statId);
-    store.provenanceStore.actions.removeStat(statId);
   }, [store.dashboardStore]);
 
   return useObserver(() => {
@@ -98,7 +97,7 @@ export function StatsGrid() {
               />
               {/** Stat Close / Delete Button */}
               {isHovered && (
-              <CloseButton size="xs" onClick={() => handleRemoveStat(statConfig.statId)} />
+                <CloseButton size="xs" onClick={() => handleRemoveStat(statConfig.statId)} />
               )}
             </Group>
           </Group>

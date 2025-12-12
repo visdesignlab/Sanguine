@@ -84,7 +84,9 @@ export class DashboardStore {
     }
 
     this._chartLayouts = input;
-    this._rootStore.provenanceStore.actions.updateDashboardLayout(input);
+    this._rootStore.provenanceStore.actions.updateDashboardState({
+      chartLayouts: input,
+    }, 'Update Dashboard Layout');
   }
 
   // Chart configurations by default
@@ -157,7 +159,9 @@ export class DashboardStore {
     if (refreshData) {
       this.computeChartData();
     }
-    this._rootStore.provenanceStore.actions.updateDashboardConfig(newConfigs);
+    this._rootStore.provenanceStore.actions.updateDashboardState({
+      chartConfigs: newConfigs,
+    }, 'Update Dashboard Config');
   }
 
   /**
@@ -210,7 +214,10 @@ export class DashboardStore {
     this._chartLayouts = newLayouts;
 
     // Update provenance with both changes
-    this._rootStore.provenanceStore.actions.removeChart(chartId, newLayouts);
+    this._rootStore.provenanceStore.actions.updateDashboardState({
+      chartConfigs: this._chartConfigs,
+      chartLayouts: newLayouts,
+    }, 'Remove Chart');
   }
 
   /**
@@ -297,7 +304,10 @@ export class DashboardStore {
     this._chartLayouts = newLayouts;
 
     this.computeChartData();
-    this._rootStore.provenanceStore.actions.addChart(config, newLayouts);
+    this._rootStore.provenanceStore.actions.updateDashboardState({
+      chartConfigs: this._chartConfigs,
+      chartLayouts: newLayouts,
+    }, 'Add Chart');
   }
 
   // Stat management -----------------------------------------------------------
@@ -322,6 +332,9 @@ export class DashboardStore {
     // Add the stat
     this._statConfigs = [...this._statConfigs, fullStatConfig];
     this.computeStatData();
+    this._rootStore.provenanceStore.actions.updateDashboardState({
+      statConfigs: this._statConfigs,
+    }, 'Add Stat');
   }
 
   /**
@@ -330,6 +343,9 @@ export class DashboardStore {
   removeStat(statId: string) {
     console.log(`Removing stat with ID: ${statId}`);
     this._statConfigs = this._statConfigs.filter((config) => config.statId !== statId);
+    this._rootStore.provenanceStore.actions.updateDashboardState({
+      statConfigs: this._statConfigs,
+    }, 'Remove Stat');
   }
 
   /**
