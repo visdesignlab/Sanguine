@@ -1,7 +1,7 @@
-import { useRef, useState, useContext, useMemo } from 'react';
+import { useState, useContext, useMemo } from 'react';
 import {
-    Menu, ActionIcon, Tooltip, Box, Text, Checkbox, Modal, Button, Stack, Group, Badge,
-    Title, Image, ScrollArea, CloseButton, TextInput, Divider, Accordion, ThemeIcon
+    Menu, ActionIcon, Tooltip, Box, Text, Checkbox, Modal, Button, Stack, Group,
+    Title, Image, ScrollArea, CloseButton, TextInput, Accordion,
 } from '@mantine/core';
 import {
     IconFolder, IconFolderDown, IconFolderSearch, IconEdit, IconTrash, IconSquareCheck, IconCheck, IconX, IconChevronLeft, IconChevronRight,
@@ -11,7 +11,6 @@ import { useThemeConstants } from '../../Theme/mantineTheme';
 import classes from '../../Shell/Shell.module.css';
 import { Store } from '../../Store/Store';
 import { observer } from 'mobx-react-lite';
-import { captureScreenshot } from '../../Utils/screenshotUtils';
 import { ApplicationState } from '../../Store/ProvenanceStore';
 import {
     BLOOD_COMPONENTS, OUTCOMES, PROPHYL_MEDS, GUIDELINE_ADHERENT, LAB_RESULTS, COSTS, TIME_AGGREGATION_OPTIONS,
