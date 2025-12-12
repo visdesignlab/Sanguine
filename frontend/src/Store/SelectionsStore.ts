@@ -10,19 +10,14 @@ export class SelectionsStore {
   constructor(rootStore: RootStore) {
     this._rootStore = rootStore;
     makeAutoObservable(this, {
-      selectedVisits: observable.ref,
       selectedTimePeriods: observable.ref,
       selectedVisitNos: observable.ref,
     });
   }
 
-  // TODO: replace 'any' with actual visit type
-
   selectedTimePeriods: string[] = [];
 
   selectedDepartments: string[] = [];
-
-  selectedVisits: { visit_no: number, [key: string]: unknown }[] = [];
 
   selectedVisitNos: number[] = [];
 
@@ -65,7 +60,7 @@ export class SelectionsStore {
     const months = this.selectedTimePeriods.filter((p) => monthRe.test(p));
 
     if (months.length === 0) {
-      this.selectedVisits = [];
+      this.selectedVisitNos = [];
       return;
     }
 
