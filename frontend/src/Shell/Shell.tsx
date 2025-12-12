@@ -30,7 +30,6 @@ import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/Select
 import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
 import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
-import { SavedStatesMenu } from '../Components/Menus/SavedStatesMenu';
 import { captureScreenshot } from '../Utils/screenshotUtils';
 
 /** *
