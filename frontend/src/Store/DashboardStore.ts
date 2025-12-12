@@ -18,6 +18,7 @@ import {
 } from '../Types/application';
 import { compareTimePeriods } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
+import { areLayoutsEqual, compactLayout } from '../Utils/layout';
 
 /**
  * DashboardStore manages the state of the PBM dashboard: stats, layouts, and chart data.
@@ -58,23 +59,6 @@ export class DashboardStore {
     if (this._rootStore.provenanceStore.currentState.ui.activeTab !== 'Dashboard') {
       return;
     }
-
-    // Robust comparison to avoid redundant updates from RGL
-    const areLayoutsEqual = (l1: Layout[], l2: Layout[]) => {
-      if (l1.length !== l2.length) return false;
-      // Sort by 'i' to ensure order doesn't matter for comparison
-      const sorted1 = [...l1].sort((a, b) => a.i.localeCompare(b.i));
-      const sorted2 = [...l2].sort((a, b) => a.i.localeCompare(b.i));
-
-      return sorted1.every((item, index) => {
-        const other = sorted2[index];
-        return item.i === other.i &&
-          item.x === other.x &&
-          item.y === other.y &&
-          item.w === other.w &&
-          item.h === other.h;
-      });
-    };
 
     const mainEqual = areLayoutsEqual(this._chartLayouts.main || [], input.main || []);
     const smEqual = areLayoutsEqual(this._chartLayouts.sm || [], input.sm || []);
@@ -168,38 +152,6 @@ export class DashboardStore {
    * Removes chart from the dashboard by ID.
    */
   removeChart(chartId: string) {
-    // Helper to compact layout (simple vertical compaction)
-    const compactLayout = (layout: Layout[], cols: number): Layout[] => {
-      // Sort by y, then x
-      const sorted = [...layout].sort((a, b) => {
-        if (a.y === b.y) return a.x - b.x;
-        return a.y - b.y;
-      });
-
-      const heightMap = new Array(cols).fill(0);
-
-      return sorted.map(item => {
-        const newItem = { ...item };
-        // Find max height in the columns this item occupies
-        let maxY = 0;
-        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
-          if (i < cols) {
-            maxY = Math.max(maxY, heightMap[i]);
-          }
-        }
-
-        newItem.y = maxY;
-
-        // Update height map
-        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
-          if (i < cols) {
-            heightMap[i] = maxY + newItem.h;
-          }
-        }
-        return newItem;
-      });
-    };
-
     // Create deep copy of layouts to modify
     const filteredMain = (this._chartLayouts.main || []).filter((layout) => layout.i !== chartId);
     const filteredSm = (this._chartLayouts.sm || []).filter((layout) => layout.i !== chartId);
@@ -227,38 +179,6 @@ export class DashboardStore {
   addChart(config: DashboardChartConfig) {
     // Chart data - Add chart config to beginning of array ----
     this._chartConfigs = [config, ...this._chartConfigs];
-
-    // Helper to compact layout (simple vertical compaction)
-    const compactLayout = (layout: Layout[], cols: number): Layout[] => {
-      // Sort by y, then x
-      const sorted = [...layout].sort((a, b) => {
-        if (a.y === b.y) return a.x - b.x;
-        return a.y - b.y;
-      });
-
-      const heightMap = new Array(cols).fill(0);
-
-      return sorted.map(item => {
-        const newItem = { ...item };
-        // Find max height in the columns this item occupies
-        let maxY = 0;
-        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
-          if (i < cols) {
-            maxY = Math.max(maxY, heightMap[i]);
-          }
-        }
-
-        newItem.y = maxY;
-
-        // Update height map
-        for (let i = newItem.x; i < newItem.x + newItem.w; i++) {
-          if (i < cols) {
-            heightMap[i] = maxY + newItem.h;
-          }
-        }
-        return newItem;
-      });
-    };
 
     // Layouts - create a new layout object ----
     const newMainLayouts = this._chartLayouts.main.map((layout) => ({
