@@ -53,6 +53,12 @@ export class ExploreStore {
         // Build column selection clauses based on config.columns
         const columnClauses: string[] = [];
 
+        const isFiltered = this._rootStore.filteredVisitsLength !== this._rootStore.allVisitsLength;
+        const costColumns = ['rbc_units_cost', 'ffp_units_cost', 'plt_units_cost', 'cryo_units_cost', 'cell_saver_cost'];
+        const usesCostColumns = tableConfig.columns.some((col) => costColumns.includes(col.colVar));
+
+        const sourceTable = (!isFiltered && !usesCostColumns) ? 'visits' : 'filteredVisits';
+
         tableConfig.columns.forEach((col) => {
           const { colVar, aggregation } = col;
 
@@ -72,8 +78,9 @@ export class ExploreStore {
 
               // Calculate percentage of visits matching the condition
               if (aggregation === 'avg' || aggregation === 'sum') {
+                // Use COUNT FILTER which is faster than SUM CASE
                 columnClauses.push(
-                  `(SUM(CASE WHEN ${condition} THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS ${colVar}`
+                  `(COUNT(*) FILTER (WHERE ${condition}) * 100.0 / COUNT(*)) AS ${colVar}`
                 );
               } else {
                 // For 'none', we'd need individual visit data - use array aggregation
@@ -98,7 +105,8 @@ export class ExploreStore {
               columnClauses.push(`${colVar}`);
             } else {
               // Cast to string to ensure consistency (especially for numerical years)
-              columnClauses.push(`STRING_AGG(CAST(${colVar} AS STRING), ', ') AS ${colVar}`);
+              // Use DISTINCT and avoid massive string composition if possible, but STRING_AGG is needed for "list of values" if not grouping by it
+              columnClauses.push(`STRING_AGG(DISTINCT CAST(${colVar} AS STRING), ', ') AS ${colVar}`);
             }
           }
           // Standard numeric fields with aggregation
@@ -110,7 +118,7 @@ export class ExploreStore {
             if (booleanFields.includes(colVar) && (aggregation === 'avg' || aggregation === 'sum')) {
               // Convert boolean to percentage
               columnClauses.push(
-                `(SUM(CASE WHEN ${colVar} = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS ${colVar}`
+                `(COUNT(*) FILTER (WHERE ${colVar} = TRUE) * 100.0 / COUNT(*)) AS ${colVar}`
               );
             } else if (aggregation === 'none') {
               // For violin/heatmap visualization, collect all values
@@ -130,7 +138,7 @@ export class ExploreStore {
         const query = `
           SELECT 
             ${columnClauses.join(',\n            ')}
-          FROM filteredVisits
+          FROM ${sourceTable}
           GROUP BY ${tableConfig.rowVar}
           ORDER BY ${tableConfig.rowVar};
         `;
@@ -138,8 +146,11 @@ export class ExploreStore {
         console.log('ExploreTable Query:', query);
 
         try {
+          const startTime = performance.now();
           const queryResult = await this._rootStore.duckDB!.query(query);
           const rows = queryResult.toArray().map((row: any) => row.toJSON());
+          const endTime = performance.now();
+          console.log(`Query execution time: ${endTime - startTime} ms`);
 
           // If twoValsPerRow is enabled, we need to transform the data
           // This would require a different query structure - TODO for now
