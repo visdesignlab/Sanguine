@@ -447,8 +447,6 @@ export const SavedStatesMenu = observer(({
     };
 
 
-    const [menuOpened, setMenuOpened] = useState(false);
-
     const handleSaveCurrentState = async () => {
         // Capture screenshot
         onSave();
@@ -461,6 +459,7 @@ export const SavedStatesMenu = observer(({
     // Retrieve full state for details
     const activeFullState = activePreviewState ? store.provenanceStore.provenance?.getState(activePreviewState.id) : null;
 
+    const [menuOpened, setMenuOpened] = useState(false);
     return (
         <>
             <Menu shadow="md" width={200} trigger="click" closeDelay={200} offset={12} opened={menuOpened} onChange={setMenuOpened}>
@@ -471,7 +470,6 @@ export const SavedStatesMenu = observer(({
                         </ActionIcon>
                     </Tooltip>
                 </Menu.Target>
-
                 <Menu.Dropdown>
                     <Menu.Item
                         leftSection={<IconFolderDown size={14} />}
@@ -499,7 +497,6 @@ export const SavedStatesMenu = observer(({
                     )}
                 </Menu.Dropdown>
             </Menu>
-
             <Modal
                 opened={manageModalOpened}
                 onClose={() => { setManageModalOpened(false); clearSelections(); setIsMultiSelecting(false); }}
@@ -559,7 +556,6 @@ export const SavedStatesMenu = observer(({
                             <CloseButton onClick={() => { setManageModalOpened(false); clearSelections(); setIsMultiSelecting(false); }} />
                         </Box>
                     </Group>
-
                     <Group align="flex-start" style={{ flex: 1, overflow: 'hidden' }}>
                         {/* Left Column: List of States */}
                         <Stack style={{ flex: 1, height: '100%' }} gap="xs">
@@ -665,7 +661,6 @@ export const SavedStatesMenu = observer(({
                                 )}
                             </ScrollArea>
                         </Stack>
-
                         {/* Right Column: Screenshot Preview and Details */}
                         <Box style={{
                             flex: 1.5,
@@ -730,7 +725,6 @@ export const SavedStatesMenu = observer(({
                     </Group>
                 </Stack>
             </Modal>
-
             {/* Zoomed Screenshot Modal */}
             <Modal
                 opened={!!zoomedStateId}
@@ -831,7 +825,6 @@ export const SavedStatesMenu = observer(({
                     );
                 })()}
             </Modal>
-
             {/* Delete Confirmation Modal */}
             <Modal
                 opened={deleteConfirmation.isOpen}
