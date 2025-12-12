@@ -462,6 +462,7 @@ export const SavedStatesMenu = observer(({
     const [menuOpened, setMenuOpened] = useState(false);
     return (
         <>
+            {/* Save State Menu */}
             <Menu shadow="md" width={200} trigger="click" closeDelay={200} offset={12} opened={menuOpened} onChange={setMenuOpened}>
                 <Menu.Target>
                     <Tooltip label="Save State" disabled={menuOpened}>
@@ -497,6 +498,7 @@ export const SavedStatesMenu = observer(({
                     )}
                 </Menu.Dropdown>
             </Menu>
+            {/* Saved States Modal */}
             <Modal
                 opened={manageModalOpened}
                 onClose={() => { setManageModalOpened(false); clearSelections(); setIsMultiSelecting(false); }}
@@ -508,6 +510,7 @@ export const SavedStatesMenu = observer(({
                     <Group align="center">
                         <Box style={{ flex: 1 }}>
                             <Group justify="space-between">
+                                {/** Title and Select All */}
                                 <Group gap="xs">
                                     {isMultiSelecting && sortedStates.length > 0 && (
                                         <Checkbox
@@ -559,7 +562,6 @@ export const SavedStatesMenu = observer(({
                     <Group align="flex-start" style={{ flex: 1, overflow: 'hidden' }}>
                         {/* Left Column: List of States */}
                         <Stack style={{ flex: 1, height: '100%' }} gap="xs">
-
                             <ScrollArea style={{ flex: 1 }} type="auto">
                                 {sortedStates.length === 0 ? (
                                     <Text c="dimmed" ta="center" mt="xl">No saved states found.</Text>
@@ -589,6 +591,7 @@ export const SavedStatesMenu = observer(({
                                                 }}
                                             >
                                                 <Group gap="sm" style={{ flex: 1, minWidth: 0 }} wrap="nowrap">
+                                                    {/** State gets checkbox if in multi-select mode */}
                                                     {isMultiSelecting && (
                                                         <Checkbox
                                                             checked={selectedStateIds.has(state.id)}
@@ -597,6 +600,7 @@ export const SavedStatesMenu = observer(({
                                                             style={{ flexShrink: 0 }}
                                                         />
                                                     )}
+                                                    {/** State gets text input if in edit mode */}
                                                     {editingStateId === state.id ? (
                                                         <TextInput
                                                             value={tempName}
@@ -618,6 +622,7 @@ export const SavedStatesMenu = observer(({
                                                             }}
                                                         />
                                                     ) : (
+                                                        // Normal state display
                                                         <Stack gap={0} style={{ minWidth: 0 }}>
                                                             <Text size="sm" fw={500} style={{ wordBreak: 'break-word', lineHeight: 1.2 }}>
                                                                 {state.name}
@@ -628,8 +633,8 @@ export const SavedStatesMenu = observer(({
                                                         </Stack>
                                                     )}
                                                 </Group>
-
                                                 <Group gap={4}>
+                                                    {/** Edit, delete, share buttons */}
                                                     {editingStateId === state.id ? (
                                                         <Group gap={4}>
                                                             <ActionIcon size="sm" variant="subtle" color="green" onClick={(e) => { e.stopPropagation(); saveRename(); }}>
@@ -672,6 +677,7 @@ export const SavedStatesMenu = observer(({
                             position: 'relative',
                             overflow: 'hidden' // Ensure scroll area works
                         }}>
+                            {/** Preview state details */}
                             {activePreviewState ? (
                                 <Stack h="100%" gap="md">
                                     <Box style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', maxHeight: '300px' }}>
@@ -695,7 +701,7 @@ export const SavedStatesMenu = observer(({
                                     <ScrollArea style={{ flex: 1 }} type="auto">
                                         {activeFullState && <StateDetails state={activeFullState} />}
                                     </ScrollArea>
-
+                                    {/** State Name and Timestamp */}
                                     <Group justify="space-between" align="center" wrap="nowrap" style={{ flex: '0 0 auto', paddingTop: 0 }}>
                                         <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
                                             <Text fw={600} size="lg" style={{ wordBreak: 'break-word', lineHeight: 1.2 }}>
@@ -725,7 +731,7 @@ export const SavedStatesMenu = observer(({
                     </Group>
                 </Stack>
             </Modal>
-            {/* Zoomed Screenshot Modal */}
+            {/** Zoomed Screenshot Modal (Click for closer look at state screenshot) */}
             <Modal
                 opened={!!zoomedStateId}
                 onClose={() => setZoomedStateId(null)}
@@ -762,14 +768,13 @@ export const SavedStatesMenu = observer(({
                     const hasPrev = currentIndex > 0;
                     const hasNext = currentIndex < sortedStates.length - 1;
 
+                    // Click to see previous and next state screenshots
                     const handlePrev = () => {
                         if (hasPrev) setZoomedStateId(sortedStates[currentIndex - 1].id);
                     };
-
                     const handleNext = () => {
                         if (hasNext) setZoomedStateId(sortedStates[currentIndex + 1].id);
                     };
-
                     return (
                         <Stack align="center" justify="center" gap="xl" style={{ width: '100%', height: '100%', padding: '40px 0' }}>
                             {zoomedState && (
@@ -784,8 +789,8 @@ export const SavedStatesMenu = observer(({
                                             borderRadius: 8
                                         }}
                                     />
-
                                     <Group gap="xl" align="center">
+                                        {/** Previous State */}
                                         <ActionIcon
                                             variant="filled"
                                             color="dark"
@@ -797,7 +802,7 @@ export const SavedStatesMenu = observer(({
                                         >
                                             <IconChevronLeft size={24} />
                                         </ActionIcon>
-
+                                        {/** State name and Timestamp */}
                                         <Stack gap={0} align="center">
                                             <Title order={3} c="white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                                 {zoomedState.name}
@@ -806,7 +811,7 @@ export const SavedStatesMenu = observer(({
                                                 {formatTimestamp(zoomedState.timestamp)}
                                             </Text>
                                         </Stack>
-
+                                        {/** Next State */}
                                         <ActionIcon
                                             variant="filled"
                                             color="dark"
