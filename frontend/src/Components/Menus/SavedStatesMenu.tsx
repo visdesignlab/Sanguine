@@ -459,7 +459,7 @@ export const SavedStatesMenu = observer(({
         (previewStateId ? sortedStates.find(s => s.id === previewStateId) : null);
 
     // Retrieve full state for details
-    const activeFullState = activePreviewState ? store.provenanceStore.provenance.getState(activePreviewState.id) : null;
+    const activeFullState = activePreviewState ? store.provenanceStore.provenance?.getState(activePreviewState.id) : null;
 
     return (
         <>
