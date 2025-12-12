@@ -58,7 +58,7 @@ const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColum
   const sample = data[0]?.[key];
 
   if (typeof sample !== 'string') {
-    if (key.includes('adherent') || ['rbc', 'ffp', 'cryo', 'plt'].some(component => key.includes(component))) {
+    if (['percent_1_rbc', 'percent_2_rbc', 'percent_3_rbc', 'percent_4_rbc', 'percent_above_5_rbc'].includes(key)) {
       return 'heatmap';
     }
     return 'numeric';
