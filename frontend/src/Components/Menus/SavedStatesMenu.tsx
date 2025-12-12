@@ -845,6 +845,7 @@ export const SavedStatesMenu = observer(({
                         : `Are you sure you want to delete state "${deleteConfirmation.name}"?`
                     }
                 </Text>
+                {/** Cancel and Delete buttons */}
                 <Group justify="flex-end">
                     <Button variant="default" onClick={() => setDeleteConfirmation({ ...deleteConfirmation, isOpen: false })}>
                         Cancel
