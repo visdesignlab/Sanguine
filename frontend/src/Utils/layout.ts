@@ -22,7 +22,6 @@ export const areLayoutsEqual = (l1: Layout[], l2: Layout[]) => {
 
 /**
  * Helper to compact layout (simple vertical compaction)
- * Simulates gravity to calculate final positions immediately
  */
 export const compactLayout = (layout: Layout[], cols: number): Layout[] => {
     // Sort by y, then x

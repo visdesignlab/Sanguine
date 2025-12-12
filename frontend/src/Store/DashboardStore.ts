@@ -261,7 +261,6 @@ export class DashboardStore {
    * Remove stat from dashboard by ID
    */
   removeStat(statId: string) {
-    console.log(`Removing stat with ID: ${statId}`);
     this._statConfigs = this._statConfigs.filter((config) => config.statId !== statId);
     this._rootStore.provenanceStore.actions.updateDashboardState({
       statConfigs: this._statConfigs,
