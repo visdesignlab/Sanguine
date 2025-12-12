@@ -177,10 +177,7 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
                     return; // Skip if matches initial
                 }
 
-                // Special case for dates stored as strings in Trrack but Dates in store
-                // The `state` passed here comes from Trrack, so dates might be strings if not parsed yet.
-                // However, `ProvenanceStore.ts` types say `filterValues` has string dates.
-                // Let's handle the possibility of string dates in `value` vs Date in `initialValue`.
+                // Special case
                 if (typeof value === 'string' && initialValue instanceof Date) {
                     const dateVal = new Date(value);
                     if (!isNaN(dateVal.getTime()) && dateVal.getTime() === initialValue.getTime()) {
@@ -208,7 +205,6 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
 
     return (
         <Stack gap="xs" w="100%">
-
             <Accordion variant="contained" radius="md" defaultValue={[]} multiple>
                 {dashboardCharts.length > 0 && (
                     <Accordion.Item value="dashboard">
@@ -226,11 +222,10 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
                         </Accordion.Panel>
                     </Accordion.Item>
                 )}
-
                 {exploreCharts.length > 0 && (
                     <Accordion.Item value="explore">
                         <Accordion.Control icon={<IconChartScatter size={16} color="var(--mantine-color-grape-6)" />}>
-                            <Text size="sm" fw={500}>Explore ({exploreCharts.length})</Text>
+                            <Text size="sm" fw={500}>Explore View ({exploreCharts.length})</Text>
                         </Accordion.Control>
                         <Accordion.Panel>
                             <ScrollArea.Autosize mah={150}>
@@ -243,7 +238,6 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
                         </Accordion.Panel>
                     </Accordion.Item>
                 )}
-
                 {activeFilters.length > 0 && (
                     <Accordion.Item value="filters">
                         <Accordion.Control icon={<IconFilter size={16} color="var(--mantine-color-orange-6)" />}>
@@ -263,7 +257,6 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
                         </Accordion.Panel>
                     </Accordion.Item>
                 )}
-
                 {selectedItems.length > 0 && (
                     <Accordion.Item value="selections">
                         <Accordion.Control icon={<IconClick size={16} color="var(--mantine-color-green-6)" />}>
@@ -280,7 +273,6 @@ const StateDetails = ({ state }: { state: ApplicationState }) => {
                         </Accordion.Panel>
                     </Accordion.Item>
                 )}
-
                 {activeSettings.length > 0 && (
                     <Accordion.Item value="settings">
                         <Accordion.Control icon={<IconSettings size={16} color="var(--mantine-color-gray-6)" />}>
@@ -418,6 +410,20 @@ export const SavedStatesMenu = observer(({
         setTempName(currentName);
     };
 
+    const saveRename = () => {
+        if (editingStateId && tempName.trim()) {
+            store.provenanceStore.renameState(editingStateId, tempName.trim());
+            setEditingStateId(null);
+            setTempName("");
+        }
+    };
+
+    const cancelEditing = () => {
+        setEditingStateId(null);
+        setTempName("");
+    };
+
+    // Share State Logic
     const handleShareState = async (id: string) => {
         const url = store.provenanceStore.getShareUrl(id);
         if (url) {
@@ -440,18 +446,6 @@ export const SavedStatesMenu = observer(({
         }
     };
 
-    const saveRename = () => {
-        if (editingStateId && tempName.trim()) {
-            store.provenanceStore.renameState(editingStateId, tempName.trim());
-            setEditingStateId(null);
-            setTempName("");
-        }
-    };
-
-    const cancelEditing = () => {
-        setEditingStateId(null);
-        setTempName("");
-    };
 
     const [menuOpened, setMenuOpened] = useState(false);
 
