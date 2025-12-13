@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { useObserver } from 'mobx-react-lite';
 import {
+  ActionIcon,
   Badge,
   Box,
   Divider,
@@ -20,15 +21,27 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from '@mantine/core';
 import { List } from 'react-window';
-import { IconSearch } from '@tabler/icons-react';
+import { IconRestore, IconSearch } from '@tabler/icons-react';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import {
   makeHumanReadableColumn,
   makeHumanReadableValues,
 } from '../../../Utils/humanReadableColsVals';
+import classes from '../../../Shell/Shell.module.css';
+
+function formatVisitCount(count: number): string {
+  if (count >= 1_000_000) {
+    return `${(count / 1_000_000).toFixed(1)} M`;
+  }
+  if (count >= 1_000) {
+    return `${(count / 1_000).toFixed(1)} K`;
+  }
+  return count.toString();
+}
 
 /**
  * SelectedVisitsPanel
@@ -37,7 +50,7 @@ import {
  * - Displays details for the currently selected visit
  */
 export function SelectedVisitsPanel() {
-  const { toolbarWidth } = useThemeConstants();
+  const { toolbarWidth, iconStroke } = useThemeConstants();
   const store = useContext(Store);
 
   // All selected visit numbers from the store
@@ -129,11 +142,26 @@ export function SelectedVisitsPanel() {
       <Flex direction="row" justify="space-between" align="center" h={40}>
         <Title order={3}>Selected Visits</Title>
         <Flex direction="row" align="center">
-          <Badge variant="light" size="sm">
-            {store.selectionsStore.selectedVisitNos.length}
-            {' '}
-            Visits
-          </Badge>
+          <Tooltip label={`${store.selectionsStore.selectedVisitNos.length} visits selected`} position="bottom">
+            <Badge
+              variant="light"
+              size="sm"
+            >
+              {formatVisitCount(store.selectionsStore.selectedVisitNos.length)}
+              {' '}
+              Visits
+            </Badge>
+          </Tooltip>
+          <Tooltip label="Clear all selected visits" position="bottom">
+            <ActionIcon
+              aria-label="Reset all filters"
+              onClick={() => { store.selectionsStore.clearAllSelectedVisits(); }}
+              className={classes.leftToolbarIcon}
+              ml={4}
+            >
+              <IconRestore stroke={iconStroke} size={21} />
+            </ActionIcon>
+          </Tooltip>
         </Flex>
       </Flex>
 
