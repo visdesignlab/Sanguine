@@ -50,7 +50,6 @@ export function SelectedVisitsPanel() {
   }, [visitNos, searchQuery]);
 
   // Chosen visit from list
-  const selectedVisitNo = store.provenanceStore.currentState.ui.selectedVisitNo;
   const setSelectedVisitNo = (visitNo: number | null) => {
     store.provenanceStore.actions.setUiState({ selectedVisitNo: visitNo });
   };
@@ -60,7 +59,7 @@ export function SelectedVisitsPanel() {
   } | null>(null);
 
   // Choose first visit by default
-  const effectiveSelectedVisitNo = selectedVisitNo ?? (filteredVisitNos.length > 0 ? filteredVisitNos[0] : null);
+  const effectiveSelectedVisitNo = store.provenanceStore.currentState.ui.selectedVisitNo ?? (filteredVisitNos.length > 0 ? filteredVisitNos[0] : null);
 
   // Fetch details whenever a visit number is chosen
   useEffect(() => {

@@ -51,8 +51,6 @@ export class FiltersStore {
     ecmo: null,
   };
 
-
-
   histogramData: Record<string, { units: string, count: number }[] | undefined> = {};
 
   // Initialize store with the root store

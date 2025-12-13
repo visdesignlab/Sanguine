@@ -156,7 +156,7 @@ export class ExploreStore {
 
     const newLayouts = {
       ...this._chartLayouts,
-      main: compactLayout(shifted, 2)
+      main: compactLayout(shifted, 2),
     };
 
     // Update local state immediately
@@ -164,7 +164,7 @@ export class ExploreStore {
 
     this._rootStore.provenanceStore.actions.updateExploreState({
       chartConfigs: this._chartConfigs,
-      chartLayouts: this._chartLayouts
+      chartLayouts: this._chartLayouts,
     }, 'Add Explore Chart');
   }
 
@@ -180,14 +180,14 @@ export class ExploreStore {
     const newLayouts = {
       ...this._chartLayouts,
       main: compactLayout(filteredMain, 2), // main has 2 columns
-      ...(this._chartLayouts.sm ? { sm: compactLayout(filteredSm, 1) } : {})
+      ...(this._chartLayouts.sm ? { sm: compactLayout(filteredSm, 1) } : {}),
     };
 
     this._chartLayouts = newLayouts;
 
     this._rootStore.provenanceStore.actions.updateExploreState({
       chartConfigs: this._chartConfigs,
-      chartLayouts: this._chartLayouts
+      chartLayouts: this._chartLayouts,
     }, 'Remove Explore Chart');
   }
 

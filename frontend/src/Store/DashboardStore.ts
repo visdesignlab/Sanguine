@@ -174,7 +174,7 @@ export class DashboardStore {
 
     const newLayouts = {
       main: compactLayout(filteredMain, 2), // main has 2 columns
-      sm: compactLayout(filteredSm, 1)      // sm has 1 column
+      sm: compactLayout(filteredSm, 1), // sm has 1 column
     };
 
     // Update local state
