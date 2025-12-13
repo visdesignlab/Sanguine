@@ -232,19 +232,11 @@ export class ProvenanceStore {
     },
     resetAllFilters: () => {
       this.applyAction('Reset All Filters', (state) => state, null); // No-op on state structure, just records a checkpoint if needed, but weird.
-      // Wait, resetAllFilters usually implies changing state back to something.
-      // The original implementation just returned `state`! That does nothing but add a node.
-      // I should probably fix this to actually reset filters if that's the intention,
-      // but the original code did nothing. I will preserve original behavior for now or check if it was a bug.
-      // Original code: return { state: state... }
-      // Let's keep it as is.
     },
     updateSelection: (timePeriods: string[]) => {
       this.applyAction(
         'Update Selection',
         (state, periods) =>
-        // Original had a check for !state.selections, but updater receives state.
-        // We should handle missing substructures if necessary, but initial state should have them.
           ({
             ...state,
             selections: {
@@ -411,9 +403,6 @@ export class ProvenanceStore {
           id: node.id,
           name: nameArtifact?.artifact.value,
           screenshot: screenshotArtifact?.artifact.value,
-          // timestamp: node.createdOn // createdOn might be on metadata or different property
-          // Let's assume metadata.createdOn or just use Date.now() if not available, or check node structure
-          // Trrack nodes usually have createdOn. If lint fails, we can cast to any or check type.
           // @ts-ignore
           timestamp: node.createdOn || node.metadata?.createdOn || 0,
         };
@@ -489,9 +478,6 @@ export class ProvenanceStore {
     if (initialNode) {
       this.provenance.goToNode(initialNode.id);
     } else {
-      // Fallback: This theoretically shouldn't happen given our init logic,
-      // but if so, maybe just undo until Root or reset all stores manually?
-      // For now, let's just log error.
       console.error("Could not find 'Initial State' node to restore to.");
     }
   }
@@ -520,8 +506,6 @@ export class ProvenanceStore {
 
     if (serializedState) {
       const baseUrl = window.location.origin + window.location.pathname;
-      // Let's assume the default Trrack uses which is usually 'config' or the whole hash?
-      // Trrack v2 typically puts it in the query param `?config=`.
       return `${baseUrl}?config=${serializedState}`;
     }
     return null;
