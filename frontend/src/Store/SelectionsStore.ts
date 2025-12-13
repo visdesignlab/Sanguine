@@ -21,7 +21,12 @@ export class SelectionsStore {
 
   selectedVisitNos: number[] = [];
 
-  async addSelectedTimePeriod(timePeriod: string) {
+  clearAllSelectedVisits() {
+    this.selectedTimePeriods = [];
+    this.selectedVisitNos = [];
+  }
+
+  addSelectedTimePeriod(timePeriod: string) {
     if (!timePeriod) return;
 
     const next = new Set(this.selectedTimePeriods);
@@ -31,7 +36,7 @@ export class SelectionsStore {
     this.updateSelectedVisits();
   }
 
-  async removeSelectedTimePeriod(timePeriod: string) {
+  removeSelectedTimePeriod(timePeriod: string) {
     if (!timePeriod) return;
 
     const next = new Set(this.selectedTimePeriods);
