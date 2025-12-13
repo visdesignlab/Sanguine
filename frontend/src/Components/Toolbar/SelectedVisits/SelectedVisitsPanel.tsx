@@ -60,6 +60,14 @@ export function SelectedVisitsPanel() {
     [key: string]: unknown;
   } | null>(null);
 
+  // When selected visits no longer include the current selection, clear it
+  useEffect(() => {
+    if (selectedVisitNo != null && !store.selectionsStore.selectedVisitNos.includes(selectedVisitNo)) {
+      setSelectedVisitNo(null);
+      setSelectedVisit(null);
+    }
+  }, [store.selectionsStore.selectedVisitNos, selectedVisitNo]);
+
   // Fetch details whenever a visit number is chosen
   useEffect(() => {
     if (selectedVisitNo != null) {
@@ -94,16 +102,26 @@ export function SelectedVisitsPanel() {
 
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const handleClickVisitNo = useCallback((visitNo: number) => {
-    setLoadingVisit(true);
+    // Deselect if already selected
+    if (selectedVisitNo === visitNo) {
+      setSelectedVisitNo(null);
+      return;
+    }
+
+    // Render loading overlay when changing selection
+    if (selectedVisitNo !== null) {
+      setLoadingVisit(true);
+    }
     setSelectedVisitNo(visitNo);
 
     // Clear any existing timeout before starting a new one
     if (loadingTimeoutRef.current) {
       clearTimeout(loadingTimeoutRef.current);
     }
+
     // Simulate loading delay for better UX
-    loadingTimeoutRef.current = setTimeout(() => setLoadingVisit(false), 400);
-  }, []);
+    loadingTimeoutRef.current = setTimeout(() => setLoadingVisit(false), 200);
+  }, [selectedVisitNo]);
 
   return useObserver(() => (
     <Box>
