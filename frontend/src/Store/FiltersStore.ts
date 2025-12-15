@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, computed } from 'mobx';
 import type { RootStore } from './Store';
 import { safeParseDate } from '../Utils/dates';
 
@@ -30,33 +30,15 @@ export class FiltersStore {
     ecmo: null as boolean | null,
   };
 
-  _filterValues: typeof this._initialFilterValues = {
-    dateFrom: new Date(new Date().getFullYear() - 5, 0, 1), // 5 years ago from today
-    dateTo: new Date(),
-
-    rbc_units: [0, MANUAL_INFINITY],
-    ffp_units: [0, MANUAL_INFINITY],
-    plt_units: [0, MANUAL_INFINITY],
-    cryo_units: [0, MANUAL_INFINITY],
-    cell_saver_ml: [0, MANUAL_INFINITY],
-
-    b12: null,
-    iron: null,
-    antifibrinolytic: null,
-
-    los: [0, MANUAL_INFINITY],
-    death: null,
-    vent: null,
-    stroke: null,
-    ecmo: null,
-  };
 
   histogramData: Record<string, { units: string, count: number }[] | undefined> = {};
 
   // Initialize store with the root store
   constructor(rootStore: RootStore) {
     this._rootStore = rootStore;
-    makeAutoObservable(this);
+    makeAutoObservable(this, {
+      filterValues: computed
+    });
   }
 
   get initialFilterValues() {
@@ -64,11 +46,22 @@ export class FiltersStore {
   }
 
   get filterValues() {
-    return this._filterValues;
+    const state = this._rootStore.state;
+    const rawFilters = state.filterValues;
+
+    if (!rawFilters || Object.keys(rawFilters).length === 0) {
+      return this._initialFilterValues;
+    }
+
+    return {
+      ...rawFilters,
+      dateFrom: new Date(rawFilters.dateFrom),
+      dateTo: new Date(rawFilters.dateTo),
+    };
   }
 
-  setFilterValue<T extends keyof typeof this._filterValues>(key: T, value: typeof this._filterValues[T]) {
-    // Ensure dates are actually Date objects
+  setFilterValue<T extends keyof typeof this._initialFilterValues>(key: T, value: typeof this._initialFilterValues[T]) {
+    // Ensure dates are actually Date objects for validation (though we send strings/values to provenance)
     if ((key === 'dateFrom' || key === 'dateTo') && typeof value === 'string') {
       // eslint-disable-next-line no-param-reassign
       value = safeParseDate(value) as any;
@@ -79,19 +72,9 @@ export class FiltersStore {
       val = value.toISOString();
     }
 
-    this._filterValues[key] = value;
-    this._rootStore.updateFilteredData();
-
-    this._rootStore.provenanceStore.actions.updateFilter(key as any, val);
-  }
-
-  loadState(newFilterValues: typeof this._filterValues) {
-    this._filterValues = newFilterValues;
-    // Ensure dates are Date objects
-    this._filterValues.dateFrom = safeParseDate(this._filterValues.dateFrom as any);
-    this._filterValues.dateTo = safeParseDate(this._filterValues.dateTo as any);
-
-    this._rootStore.updateFilteredData();
+    // Direct dispatch to provenance. 
+    // Side effect (updateFilteredData) will be handled by RootStore reaction.
+    this._rootStore.actions.updateFilter(key as any, val);
   }
 
   async calculateDefaultFilterValues() {
@@ -131,27 +114,7 @@ export class FiltersStore {
     const cell_saver_ml: [number, number] = [Number(row.min_cell_saver), Number(row.max_cell_saver)];
     const los: [number, number] = [Number(row.min_los), Number(row.max_los)];
 
-    this._filterValues = {
-      dateFrom,
-      dateTo,
-
-      rbc_units,
-      ffp_units,
-      plt_units,
-      cryo_units,
-      cell_saver_ml,
-
-      b12: null,
-      iron: null,
-      antifibrinolytic: null,
-
-      los,
-      death: null,
-      vent: null,
-      stroke: null,
-      ecmo: null,
-    };
-
+    // Only update the initial values reference
     this._initialFilterValues = {
       dateFrom,
       dateTo,
@@ -172,14 +135,19 @@ export class FiltersStore {
       stroke: null,
       ecmo: null,
     };
+
+    // NOTE: We do NOT set `_filterValues` here anymore. 
+    // If this is the very first load, ProvenanceStore.init() will read these `_initialFilterValues` 
+    // to populate the initial state node.
   }
 
   /**
    * Returns 1 if filters are applied, 0 otherwise.
    */
   get dateFiltersAppliedCount(): number {
-    const dateFrom = safeParseDate(this._filterValues.dateFrom as any);
-    const dateTo = safeParseDate(this._filterValues.dateTo as any);
+    const filters = this.filterValues;
+    const dateFrom = safeParseDate(filters.dateFrom as any);
+    const dateTo = safeParseDate(filters.dateTo as any);
     const initDateFrom = safeParseDate(this._initialFilterValues.dateFrom as any);
     const initDateTo = safeParseDate(this._initialFilterValues.dateTo as any);
 
@@ -195,12 +163,13 @@ export class FiltersStore {
    */
   get outcomeFiltersAppliedCount(): number {
     let count = 0;
+    const filters = this.filterValues;
     const keys = ['los', 'death', 'vent', 'stroke', 'ecmo'] as const;
     keys.forEach((key) => {
       if (key === 'los'
-        ? (this._filterValues.los[0] !== this._initialFilterValues.los[0]
-          || this._filterValues.los[1] !== this._initialFilterValues.los[1])
-        : this._filterValues[key] !== this._initialFilterValues[key]
+        ? (filters.los[0] !== this._initialFilterValues.los[0]
+          || filters.los[1] !== this._initialFilterValues.los[1])
+        : filters[key] !== this._initialFilterValues[key]
       ) {
         count += 1;
       }
@@ -210,9 +179,10 @@ export class FiltersStore {
 
   get medicationsFiltersAppliedCount(): number {
     let count = 0;
+    const filters = this.filterValues;
     const keys = ['b12', 'iron', 'antifibrinolytic'] as const;
     keys.forEach((key) => {
-      if (this._filterValues[key] !== this._initialFilterValues[key]) {
+      if (filters[key] !== this._initialFilterValues[key]) {
         count += 1;
       }
     });
@@ -224,9 +194,10 @@ export class FiltersStore {
   */
   get bloodComponentFiltersAppliedCount(): number {
     let count = 0;
+    const filters = this.filterValues;
     const keys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
     keys.forEach((key) => {
-      const [min, max] = this._filterValues[key] as [number, number];
+      const [min, max] = filters[key] as [number, number];
       const [initMin, initMax] = this._initialFilterValues[key] as [number, number];
       if (min !== initMin || max !== initMax) count += 1;
     });
@@ -242,50 +213,40 @@ export class FiltersStore {
 
   // Resets all filters to their initial values.
   resetAllFilters() {
-    this._filterValues = { ...this._initialFilterValues };
-    this._rootStore.updateFilteredData();
-    this._rootStore.provenanceStore.actions.resetAllFilters();
+    this._rootStore.actions.resetAllFilters();
   }
 
   // Reset only date filters to initial values
   resetDateFilters() {
-    this._filterValues.dateFrom = new Date(this._initialFilterValues.dateFrom);
-    this._filterValues.dateTo = new Date(this._initialFilterValues.dateTo);
-    this._rootStore.updateFilteredData();
-    this._rootStore.provenanceStore.actions.updateFilter('dateFrom', this._initialFilterValues.dateFrom.toISOString());
-    this._rootStore.provenanceStore.actions.updateFilter('dateTo', this._initialFilterValues.dateTo.toISOString());
+    // NOTE: Using `updateFilter` calls here is slightly inefficient as it creates 2 actions.
+    // But standard 'updateFilter' is fine for now. 
+    // If needed, we can make a `updateFilters(partial)` action.
+    this._rootStore.actions.updateFilter('dateFrom', this._initialFilterValues.dateFrom.toISOString());
+    this._rootStore.actions.updateFilter('dateTo', this._initialFilterValues.dateTo.toISOString());
   }
 
   // Reset Blood Component filters to initial values
   resetBloodComponentFilters() {
     const bloodKeys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
     bloodKeys.forEach((key) => {
-      this._filterValues[key] = [...this._initialFilterValues[key]];
-      this._rootStore.provenanceStore.actions.updateFilter(key, [...this._initialFilterValues[key]]);
+      this._rootStore.actions.updateFilter(key, [...this._initialFilterValues[key]]);
     });
-    this._rootStore.updateFilteredData();
   }
 
   // Reset Medication filters to initial values
   resetMedicationsFilters() {
     const medKeys = ['b12', 'iron', 'antifibrinolytic'] as const;
     medKeys.forEach((key) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
-      this._rootStore.provenanceStore.actions.updateFilter(key, this._initialFilterValues[key]);
+      this._rootStore.actions.updateFilter(key, this._initialFilterValues[key]);
     });
-    this._rootStore.updateFilteredData();
   }
 
   // Reset Patient Outcome filters to initial values
   resetOutcomeFilters() {
     const outcomeKeys = ['los', 'death', 'vent', 'stroke', 'ecmo'] as const;
     outcomeKeys.forEach((key) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
-      this._rootStore.provenanceStore.actions.updateFilter(key, this._initialFilterValues[key]);
+      this._rootStore.actions.updateFilter(key, this._initialFilterValues[key]);
     });
-    this._rootStore.updateFilteredData();
   }
 
   // Cached histogram data for each blood component
@@ -320,8 +281,10 @@ export class FiltersStore {
       // TODO: Not hard coded list
       const components = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml', 'los'];
       const histogramData: Record<string, { units: string, count: number }[]> = {};
+      const filters = this.filterValues;
+
       await Promise.all(components.map(async (component) => {
-        const [minRange, maxRange] = this._filterValues[component as keyof typeof this._filterValues] as [number, number];
+        const [minRange, maxRange] = filters[component as keyof typeof filters] as [number, number];
         const numBins = Math.min(20, Math.max(1, maxRange - minRange));
         const result = await duckDB.query(`
           WITH bins AS (

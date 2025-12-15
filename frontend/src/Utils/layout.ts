@@ -13,10 +13,10 @@ export const areLayoutsEqual = (l1: Layout[], l2: Layout[]) => {
   return sorted1.every((item, index) => {
     const other = sorted2[index];
     return item.i === other.i
-    && item.x === other.x
-    && item.y === other.y
-    && item.w === other.w
-    && item.h === other.h;
+      && item.x === other.x
+      && item.y === other.y
+      && item.w === other.w
+      && item.h === other.h;
   });
 };
 

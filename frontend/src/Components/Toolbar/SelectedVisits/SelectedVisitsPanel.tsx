@@ -50,8 +50,9 @@ export function SelectedVisitsPanel() {
   }, [visitNos, searchQuery]);
 
   // Chosen visit from list
+  const selectedVisitNo = store.state.ui.selectedVisitNo;
   const setSelectedVisitNo = (visitNo: number | null) => {
-    store.provenanceStore.actions.setUiState({ selectedVisitNo: visitNo });
+    store.actions.setUiState({ selectedVisitNo: visitNo });
   };
   const [selectedVisit, setSelectedVisit] = useState<{
     visit_no: number;

@@ -39,7 +39,7 @@ export function StatsGrid() {
 
   return useObserver(() => {
     // For every stat config, create a card describing it.
-    const statCards = store.dashboardStore._statConfigs.map((statConfig, idx) => {
+    const statCards = store.dashboardStore.statConfigs.map((statConfig, idx) => {
       // Get the stat value from statData
       const aggregationKey = statConfig.aggregation || 'sum';
       const dataKey = `${aggregationKey}_${statConfig.yAxisVar}` as keyof typeof store.dashboardStore.statData;
@@ -97,7 +97,7 @@ export function StatsGrid() {
               />
               {/** Stat Close / Delete Button */}
               {isHovered && (
-              <CloseButton size="xs" onClick={() => handleRemoveStat(statConfig.statId)} />
+                <CloseButton size="xs" onClick={() => handleRemoveStat(statConfig.statId)} />
               )}
             </Group>
           </Group>

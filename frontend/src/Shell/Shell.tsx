@@ -61,9 +61,9 @@ export const Shell = observer(() => {
   const defaultTab = TABS[0].key;
 
   // Active tab in the view tabs
-  const activeTab = store.provenanceStore.currentState.ui.activeTab;
+  const activeTab = store.state.ui.activeTab;
   const setActiveTab = (tab: string) => {
-    store.provenanceStore.actions.setUiState({ activeTab: tab });
+    store.actions.setUiState({ activeTab: tab });
   };
 
   // Reset to defaults modal ----------------------
@@ -120,14 +120,14 @@ export const Shell = observer(() => {
   const LEFT_PANEL_WIDTH = 6 * toolbarWidth;
 
   // Open and close the left toolbar, burger toggle visible on hover.
-  const leftToolbarOpened = store.provenanceStore.currentState.ui.leftToolbarOpened;
+  const leftToolbarOpened = store.state.ui.leftToolbarOpened;
   const toggleLeftToolbar = () => {
-    store.provenanceStore.actions.setUiState({ leftToolbarOpened: !leftToolbarOpened });
+    store.actions.setUiState({ leftToolbarOpened: !leftToolbarOpened });
   };
 
-  const activeLeftPanel = store.provenanceStore.currentState.ui.activeLeftPanel;
+  const activeLeftPanel = store.state.ui.activeLeftPanel;
   const setActiveLeftPanel = (index: number | null) => {
-    store.provenanceStore.actions.setUiState({ activeLeftPanel: index });
+    store.actions.setUiState({ activeLeftPanel: index });
   };
   const navbarWidth = useMemo(() => (activeLeftPanel === null ? toolbarWidth : LEFT_PANEL_WIDTH), [activeLeftPanel, LEFT_PANEL_WIDTH, toolbarWidth]);
 
@@ -142,7 +142,7 @@ export const Shell = observer(() => {
         <ActionIcon key="reset-filters" aria-label="Reset all filters" onClick={() => { store.filtersStore.resetAllFilters(); }} className={classes.leftToolbarIcon}>
           <IconRestore stroke={iconStroke} size={21} />
         </ActionIcon>,
-        <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.provenanceStore.actions.setUiState({ showFilterHistograms: !store.provenanceStore.currentState.ui.showFilterHistograms }); }} data-active={store.provenanceStore.currentState.ui.showFilterHistograms} className={classes.leftToolbarIcon}>
+        <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.actions.setUiState({ showFilterHistograms: !store.state.ui.showFilterHistograms }); }} data-active={store.state.ui.showFilterHistograms} className={classes.leftToolbarIcon}>
           <IconChartBar stroke={iconStroke} />
         </ActionIcon>,
       ],
@@ -176,8 +176,8 @@ export const Shell = observer(() => {
 
   // Header toolbar icons
   const headerIcons = useMemo(() => [
-    { icon: IconArrowNarrowLeftDashed, label: 'Back', onClick: () => store.provenanceStore.provenance.undo(), disabled: !store.provenanceStore.canUndo },
-    { icon: IconArrowNarrowRightDashed, label: 'Forward', onClick: () => store.provenanceStore.provenance.redo(), disabled: !store.provenanceStore.canRedo },
+    { icon: IconArrowNarrowLeftDashed, label: 'Back', onClick: () => store.provenanceStore.provenance?.undo(), disabled: !store.provenanceStore.canUndo },
+    { icon: IconArrowNarrowRightDashed, label: 'Forward', onClick: () => store.provenanceStore.provenance?.redo(), disabled: !store.provenanceStore.canRedo },
     { icon: IconDeviceFloppy, label: 'Save', onClick: () => setSaveModalOpened(true) },
     { icon: IconCamera, label: 'Camera' },
     { icon: IconUser, label: 'User' },

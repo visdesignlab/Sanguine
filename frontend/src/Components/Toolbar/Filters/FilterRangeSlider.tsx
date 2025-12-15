@@ -21,7 +21,7 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Filter
   }, [store.filtersStore.filterValues[varName]]);
 
   return useObserver(() => {
-    const initial = store.filtersStore.initialFilterValues[varName];
+    const initial = (store.filtersStore.initialFilterValues as any)[varName];
     const [min, max] = initial;
     const changed = value[0] !== initial[0] || value[1] !== initial[1];
 
@@ -31,7 +31,7 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Filter
         value={value}
         size="sm"
         onChange={setValue}
-        onChangeEnd={(v) => store.filtersStore.setFilterValue(varName, v)}
+        onChangeEnd={(v) => store.filtersStore.setFilterValue(varName as any, v)}
         min={min}
         max={max}
         step={varName === 'cell_saver_ml' ? 50 : 1}

@@ -24,7 +24,7 @@ import { areLayoutsEqual, compactLayout } from '../Utils/layout';
  * DashboardStore manages the state of the PBM dashboard: stats, layouts, and chart data.
  */
 
-const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
+export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
     {
       i: '0', x: 0, y: 0, w: 2, h: 1, maxH: 2,
@@ -38,7 +38,7 @@ const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   ],
 };
 
-const DEFAULT_CHART_CONFIGS: DashboardChartConfig[] = [
+export const DEFAULT_CHART_CONFIGS: DashboardChartConfig[] = [
   {
     chartId: '0', xAxisVar: 'month', yAxisVar: 'rbc_units', aggregation: 'sum', chartType: 'line',
   },
@@ -50,7 +50,7 @@ const DEFAULT_CHART_CONFIGS: DashboardChartConfig[] = [
   },
 ];
 
-const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
+export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
   {
     statId: '1', yAxisVar: 'rbc_units', aggregation: 'avg', title: 'Average RBCs Transfused Per Visit',
   },
@@ -82,84 +82,87 @@ export class DashboardStore {
 
   // Chart settings ------------------------------------------------------------
 
-  // Chart Layouts
-  // Chart Layouts
-  _chartLayouts: { [key: string]: Layout[] } = JSON.parse(JSON.stringify(DEFAULT_CHART_LAYOUTS));
+  _baseLayouts: { [key: string]: Layout[] } | null = null;
 
   get chartLayouts() {
-    return this._chartLayouts;
+    if (this._baseLayouts) {
+      return this._baseLayouts;
+    }
+    // Access computed state
+    const state = this._rootStore.state;
+    return (state && state.dashboard && state.dashboard.chartLayouts) ? state.dashboard.chartLayouts : DEFAULT_CHART_LAYOUTS;
   }
 
   set chartLayouts(input: { [key: string]: Layout[] }) {
     // Guard: Only update if Dashboard is active
-    // This prevents phantom updates when switching tabs (RGL triggers onLayoutChange when hidden/width=0)
-    if (this._rootStore.provenanceStore.currentState.ui.activeTab !== 'Dashboard') {
+    if (this._rootStore.state.ui.activeTab !== 'Dashboard') {
       return;
     }
 
-    const mainEqual = areLayoutsEqual(this._chartLayouts.main || [], input.main || []);
-    const smEqual = areLayoutsEqual(this._chartLayouts.sm || [], input.sm || []);
+    const current = this.chartLayouts;
+    const mainEqual = areLayoutsEqual(current.main || [], input.main || []);
+    const smEqual = areLayoutsEqual(current.sm || [], input.sm || []);
 
     if (mainEqual && smEqual) {
       return;
     }
 
-    this._chartLayouts = input;
+    this._baseLayouts = input;
   }
 
   /**
    * Explicitly update the dashboard layout in the provenance store.
-   * This should be called on drag/resize stop, not on every layout change.
+   * This should be called on drag/resize stop.
    */
   updateDashboardLayout(input: { [key: string]: Layout[] }) {
-    this._chartLayouts = input;
-    this._rootStore.provenanceStore.actions.updateDashboardState({
+    console.log("Updating dashboard layout in provenance store:", input);
+    // Commit to provenance
+    this._rootStore.actions.updateDashboardState({
       chartLayouts: input,
     }, 'Update Dashboard Layout');
+    this._baseLayouts = null;
   }
 
-  // Chart configurations by default
-  _chartConfigs: DashboardChartConfig[] = [...DEFAULT_CHART_CONFIGS];
-
   get chartConfigs() {
-    return this._chartConfigs;
+    const state = this._rootStore.state;
+    return (state && state.dashboard && state.dashboard.chartConfigs) ? state.dashboard.chartConfigs : DEFAULT_CHART_CONFIGS;
   }
 
   set chartConfigs(input: DashboardChartConfig[]) {
-    this._chartConfigs = input;
+    this._rootStore.actions.updateDashboardState({
+      chartConfigs: input
+    }, 'Update Dashboard Config');
   }
 
   // Stats settings ------------------------------------------------------------
-  // Stat configurations by default
-  _statConfigs: DashboardStatConfig[] = [...DEFAULT_STAT_CONFIGS];
 
   get statConfigs() {
-    return this._statConfigs;
+    const state = this._rootStore.state;
+    return (state && state.dashboard && state.dashboard.statConfigs) ? state.dashboard.statConfigs : DEFAULT_STAT_CONFIGS;
   }
 
   set statConfigs(input: DashboardStatConfig[]) {
-    this._statConfigs = input;
+    this._rootStore.actions.updateDashboardState({
+      statConfigs: input
+    }, 'Update Stat Configs');
   }
 
   // Chart management ----------------------------------------------------------
   /**
-   * Initializes the dashboard with default chart configurations.
+   * Sets the configuration for a specific chart by ID.
    */
   setChartConfig(chartId: string, input: DashboardChartConfig) {
-    const refreshData = input.yAxisVar !== this._chartConfigs.find((c) => c.chartId === chartId)?.yAxisVar;
+    const currentConfigs = this.chartConfigs;
+    const refreshData = input.yAxisVar !== currentConfigs.find((c) => c.chartId === chartId)?.yAxisVar;
 
-    const newConfigs = this._chartConfigs.map((config) => {
+    const newConfigs = currentConfigs.map((config) => {
       if (config.chartId === chartId) {
         return { ...config, ...input };
       }
       return config;
     });
-    this._chartConfigs = newConfigs;
 
-    if (refreshData) {
-      this.computeChartData();
-    }
-    this._rootStore.provenanceStore.actions.updateDashboardState({
+    this._rootStore.actions.updateDashboardState({
       chartConfigs: newConfigs,
     }, 'Update Dashboard Config');
   }
@@ -168,22 +171,23 @@ export class DashboardStore {
    * Removes chart from the dashboard by ID.
    */
   removeChart(chartId: string) {
-    // Create deep copy of layouts to modify
-    const filteredMain = (this._chartLayouts.main || []).filter((layout) => layout.i !== chartId);
-    const filteredSm = (this._chartLayouts.sm || []).filter((layout) => layout.i !== chartId);
+    // Calculate new state based on current PROVENANCE state
+    const currentLayouts = this.chartLayouts;
+    const currentConfigs = this.chartConfigs;
+
+    const filteredMain = (currentLayouts.main || []).filter((layout) => layout.i !== chartId);
+    const filteredSm = (currentLayouts.sm || []).filter((layout) => layout.i !== chartId);
 
     const newLayouts = {
       main: compactLayout(filteredMain, 2), // main has 2 columns
       sm: compactLayout(filteredSm, 1), // sm has 1 column
     };
 
-    // Update local state
-    this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
-    this._chartLayouts = newLayouts;
+    const newConfigs = currentConfigs.filter((config) => config.chartId !== chartId);
 
     // Update provenance with both changes
-    this._rootStore.provenanceStore.actions.updateDashboardState({
-      chartConfigs: this._chartConfigs,
+    this._rootStore.actions.updateDashboardState({
+      chartConfigs: newConfigs,
       chartLayouts: newLayouts,
     }, 'Remove Chart');
   }
@@ -193,11 +197,14 @@ export class DashboardStore {
    * @param config Chart data specification for chart to add
    */
   addChart(config: DashboardChartConfig) {
+    const currentConfigs = this.chartConfigs;
+    const currentLayouts = this.chartLayouts;
+
     // Chart data - Add chart config to beginning of array ----
-    this._chartConfigs = [config, ...this._chartConfigs];
+    const newConfigs = [config, ...currentConfigs];
 
     // Layouts - create a new layout object ----
-    const newMainLayouts = this._chartLayouts.main.map((layout) => ({
+    const newMainLayouts = currentLayouts.main.map((layout) => ({
       ...layout,
       y: layout.y + 1,
     }));
@@ -213,12 +220,12 @@ export class DashboardStore {
     });
 
     // Also handle sm breakpoint if it exists
-    const newSmLayouts = this._chartLayouts.sm ? this._chartLayouts.sm.map((layout) => ({
+    const newSmLayouts = currentLayouts.sm ? currentLayouts.sm.map((layout) => ({
       ...layout,
       y: layout.y + 1,
     })) : [];
 
-    if (this._chartLayouts.sm) {
+    if (currentLayouts.sm) {
       newSmLayouts.unshift({
         i: config.chartId,
         x: 0,
@@ -231,17 +238,13 @@ export class DashboardStore {
 
     // Replace the entire layouts object
     const newLayouts = {
-      ...this._chartLayouts,
+      ...currentLayouts,
       main: compactLayout(newMainLayouts, 2),
-      ...(this._chartLayouts.sm && { sm: compactLayout(newSmLayouts, 1) }),
+      ...(currentLayouts.sm && { sm: compactLayout(newSmLayouts, 1) }),
     };
 
-    // Update local state immediately to prevent race condition with RGL
-    this._chartLayouts = newLayouts;
-
-    this.computeChartData();
-    this._rootStore.provenanceStore.actions.updateDashboardState({
-      chartConfigs: this._chartConfigs,
+    this._rootStore.actions.updateDashboardState({
+      chartConfigs: newConfigs,
       chartLayouts: newLayouts,
     }, 'Add Chart');
   }
@@ -265,11 +268,11 @@ export class DashboardStore {
       title,
     };
 
+    const currentStats = this.statConfigs;
+
     // Add the stat
-    this._statConfigs = [...this._statConfigs, fullStatConfig];
-    this.computeStatData();
-    this._rootStore.provenanceStore.actions.updateDashboardState({
-      statConfigs: this._statConfigs,
+    this._rootStore.actions.updateDashboardState({
+      statConfigs: [...currentStats, fullStatConfig],
     }, 'Add Stat');
   }
 
@@ -277,43 +280,20 @@ export class DashboardStore {
    * Remove stat from dashboard by ID
    */
   removeStat(statId: string) {
-    this._statConfigs = this._statConfigs.filter((config) => config.statId !== statId);
-    this._rootStore.provenanceStore.actions.updateDashboardState({
-      statConfigs: this._statConfigs,
+    const currentStats = this.statConfigs;
+    this._rootStore.actions.updateDashboardState({
+      statConfigs: currentStats.filter((config) => config.statId !== statId),
     }, 'Remove Stat');
-  }
-
-  /**
-   * Load state from provenance
-   */
-  loadState(state: {
-    chartConfigs: DashboardChartConfig[];
-    statConfigs: DashboardStatConfig[];
-    chartLayouts: { [key: string]: Layout[] };
-  }) {
-    this._chartConfigs = state.chartConfigs;
-    this._statConfigs = state.statConfigs;
-    this._chartLayouts = state.chartLayouts;
-    this.computeChartData();
-    this.computeStatData();
   }
 
   /**
    * Reset dashboard to default state
    */
   reset() {
-    this._chartLayouts = JSON.parse(JSON.stringify(DEFAULT_CHART_LAYOUTS));
-    this._chartConfigs = [...DEFAULT_CHART_CONFIGS];
-    this._statConfigs = [...DEFAULT_STAT_CONFIGS];
-
-    this.computeChartData();
-    this.computeStatData();
-
-    // Also update provenance to track this reset
-    this._rootStore.provenanceStore.actions.updateDashboardState({
-      chartConfigs: this._chartConfigs,
-      statConfigs: this._statConfigs,
-      chartLayouts: this._chartLayouts,
+    this._rootStore.actions.updateDashboardState({
+      chartConfigs: JSON.parse(JSON.stringify(DEFAULT_CHART_CONFIGS)),
+      statConfigs: JSON.parse(JSON.stringify(DEFAULT_STAT_CONFIGS)),
+      chartLayouts: JSON.parse(JSON.stringify(DEFAULT_CHART_LAYOUTS)),
     }, 'Reset Dashboard to Defaults');
   }
 
@@ -328,7 +308,7 @@ export class DashboardStore {
     const result = {} as DashboardChartData;
 
     // Dynamically build the query to ensure all current charts are included
-    const selectClauses = this._chartConfigs.flatMap(({ yAxisVar }) => (
+    const selectClauses = this.chartConfigs.flatMap(({ yAxisVar }) => (
       Object.keys(AGGREGATION_OPTIONS).flatMap((aggregation) => {
         const aggFn = aggregation.toUpperCase();
 
@@ -452,10 +432,6 @@ export class DashboardStore {
               return entry as { timePeriod: TimePeriod; data: number | Record<Cost, number> };
             })
             .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
-          // Log filtered data for debugging
-          if (chartDatum.length === 0) {
-            console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
-          }
 
           // Return result (E.g. Key: "sum_rbc_units_quarter", Value: chartDatum)
           const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;

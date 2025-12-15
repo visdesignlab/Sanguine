@@ -32,7 +32,7 @@ export class SelectionsStore {
     const next = new Set(this.selectedTimePeriods);
     for (const p of expandTimePeriod(timePeriod)) next.add(p);
 
-    this._rootStore.provenanceStore.actions.updateSelection(Array.from(next));
+    this._rootStore.actions.updateSelection(Array.from(next));
   }
 
   async removeSelectedTimePeriod(timePeriod: string) {
@@ -41,7 +41,7 @@ export class SelectionsStore {
     const next = new Set(this.selectedTimePeriods);
     for (const p of expandTimePeriod(timePeriod)) next.delete(p);
 
-    this._rootStore.provenanceStore.actions.updateSelection(Array.from(next));
+    this._rootStore.actions.updateSelection(Array.from(next));
   }
 
   loadState(selectedTimePeriods: string[]) {
@@ -50,7 +50,7 @@ export class SelectionsStore {
   }
 
   reset() {
-    this._rootStore.provenanceStore.actions.updateSelection([]);
+    this._rootStore.actions.updateSelection([]);
   }
 
   async getVisitInfo(visitNo: number) {

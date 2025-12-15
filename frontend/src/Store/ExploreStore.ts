@@ -8,33 +8,39 @@ import { areLayoutsEqual, compactLayout } from '../Utils/layout';
 export class ExploreStore {
   _rootStore: RootStore;
 
+  initialChartConfigs: ExploreChartConfig[] = [];
+  initialChartLayouts: { [key: string]: Layout[] } = { main: [] };
+
   // Initialize store with the root store
   constructor(rootStore: RootStore) {
     this._rootStore = rootStore;
     makeAutoObservable(this, { chartData: observable.ref });
   }
 
-  _chartLayouts: { [key: string]: Layout[] } = {
-    main: [],
-  };
+  _transientLayouts: { [key: string]: Layout[] } | null = null;
 
   get chartLayouts() {
-    return this._chartLayouts;
+    if (this._transientLayouts) {
+      return this._transientLayouts;
+    }
+    const state = this._rootStore.state;
+    return (state && state.explore && state.explore.chartLayouts) ? state.explore.chartLayouts : this.initialChartLayouts;
   }
 
   set chartLayouts(input: { [key: string]: Layout[] }) {
     // Guard: Only update if Explore is active
-    if (this._rootStore.provenanceStore.currentState.ui.activeTab !== 'Explore') {
+    if (this._rootStore.state.ui.activeTab !== 'Explore') {
       return;
     }
 
-    const mainEqual = areLayoutsEqual(this._chartLayouts.main || [], input.main || []);
+    const current = this.chartLayouts;
+    const mainEqual = areLayoutsEqual(current.main || [], input.main || []);
 
     if (mainEqual) {
       return;
     }
 
-    this._chartLayouts = input;
+    this._transientLayouts = input;
   }
 
   /**
@@ -42,18 +48,21 @@ export class ExploreStore {
    * This should be called on drag/resize stop, not on every layout change.
    */
   updateExploreLayout(input: { [key: string]: Layout[] }) {
-    this._chartLayouts = input;
-    this._rootStore.provenanceStore.actions.updateExploreLayout(input);
+    this._rootStore.actions.updateExploreState({
+      chartLayouts: input
+    }, 'Update Explore Layout');
+    this._transientLayouts = null;
   }
 
-  _chartConfigs: ExploreChartConfig[] = [];
-
   get chartConfigs() {
-    return this._chartConfigs;
+    const state = this._rootStore.state;
+    return (state && state.explore && state.explore.chartConfigs) ? state.explore.chartConfigs : this.initialChartConfigs;
   }
 
   set chartConfigs(input: ExploreChartConfig[]) {
-    this._chartConfigs = input;
+    this._rootStore.actions.updateExploreState({
+      chartConfigs: input
+    }, 'Update Explore Config');
   }
 
   // Explore View Chart Data -----------------------------------
@@ -143,8 +152,13 @@ export class ExploreStore {
 
   // Adds a new chart to the top of the layout
   addChart(config: ExploreChartConfig) {
-    this._chartConfigs = [config, ...this._chartConfigs];
-    const shifted = this._chartLayouts.main.map((l) => ({ ...l, y: l.y + 1 }));
+    const currentConfigs = this.chartConfigs;
+    const currentLayouts = this.chartLayouts;
+
+    const newConfigs = [config, ...currentConfigs];
+
+    // Calculate new layout
+    const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 1 }));
     shifted.unshift({
       i: config.chartId,
       x: 0,
@@ -155,47 +169,38 @@ export class ExploreStore {
     });
 
     const newLayouts = {
-      ...this._chartLayouts,
-      main: compactLayout(shifted, 2),
+      ...currentLayouts,
+      main: compactLayout(shifted, 2)
     };
 
-    // Update local state immediately
-    this._chartLayouts = newLayouts;
-
-    this._rootStore.provenanceStore.actions.updateExploreState({
-      chartConfigs: this._chartConfigs,
-      chartLayouts: this._chartLayouts,
+    // Update provenance
+    this._rootStore.actions.updateExploreState({
+      chartConfigs: newConfigs,
+      chartLayouts: newLayouts
     }, 'Add Explore Chart');
   }
 
   // Removes chart from layouts (position) and config (info)
   removeChart(chartId: string) {
-    this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
+    const currentConfigs = this.chartConfigs;
+    const currentLayouts = this.chartLayouts;
+
+    const newConfigs = currentConfigs.filter((config) => config.chartId !== chartId);
 
     // Create deep copy of layouts to modify
-    const filteredMain = (this._chartLayouts.main || []).filter((layout) => layout.i !== chartId);
+    const filteredMain = (currentLayouts.main || []).filter((layout) => layout.i !== chartId);
     // Explore might not have sm layout defined in the same way, but let's handle it safely
-    const filteredSm = (this._chartLayouts.sm || []).filter((layout) => layout.i !== chartId);
+    const filteredSm = (currentLayouts.sm || []).filter((layout) => layout.i !== chartId);
 
     const newLayouts = {
-      ...this._chartLayouts,
+      ...currentLayouts,
       main: compactLayout(filteredMain, 2), // main has 2 columns
-      ...(this._chartLayouts.sm ? { sm: compactLayout(filteredSm, 1) } : {}),
+      ...(currentLayouts.sm ? { sm: compactLayout(filteredSm, 1) } : {})
     };
 
-    this._chartLayouts = newLayouts;
-
-    this._rootStore.provenanceStore.actions.updateExploreState({
-      chartConfigs: this._chartConfigs,
-      chartLayouts: this._chartLayouts,
+    this._rootStore.actions.updateExploreState({
+      chartConfigs: newConfigs,
+      chartLayouts: newLayouts
     }, 'Remove Explore Chart');
-  }
-
-  loadState(state: {
-    chartConfigs: ExploreChartConfig[];
-    chartLayouts: { [key: string]: Layout[] };
-  }) {
-    this._chartConfigs = state.chartConfigs;
-    this._chartLayouts = state.chartLayouts;
   }
 }

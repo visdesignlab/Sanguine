@@ -70,8 +70,8 @@ export function FilterPanel() {
           </ActionIcon>
           <ActionIcon
             aria-label="Toggle filter histograms"
-            onClick={() => { store.provenanceStore.actions.setUiState({ showFilterHistograms: !store.provenanceStore.uiState.showFilterHistograms }); }}
-            data-active={store.provenanceStore.uiState.showFilterHistograms}
+            onClick={() => { store.actions.setUiState({ showFilterHistograms: !store.state.ui.showFilterHistograms }); }}
+            data-active={store.state.ui.showFilterHistograms}
             className={classes.leftToolbarIcon}
             ml="xs"
           >
@@ -88,8 +88,8 @@ export function FilterPanel() {
       >
         <Accordion
           multiple
-          value={store.provenanceStore.uiState.filterPanelExpandedItems}
-          onChange={(value) => store.provenanceStore.actions.setUiState({ filterPanelExpandedItems: value })}
+          value={store.state.ui.filterPanelExpandedItems}
+          onChange={(value) => store.actions.setUiState({ filterPanelExpandedItems: value })}
         >
           {/* Date Filters */}
           <Accordion.Item value="date-filters" key="date-filters">
@@ -142,7 +142,7 @@ export function FilterPanel() {
                 >
                   <Flex
                     justify="center"
-                    style={{ display: store.provenanceStore.uiState.showFilterHistograms ? 'flex' : 'none' }}
+                    style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
                     <BarChart
                       h={30}
@@ -170,7 +170,7 @@ export function FilterPanel() {
                 >
                   <Flex
                     justify="center"
-                    style={{ display: store.provenanceStore.uiState.showFilterHistograms ? 'flex' : 'none' }}
+                    style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
                     <BarChart
                       h={30}
@@ -198,7 +198,7 @@ export function FilterPanel() {
                 >
                   <Flex
                     justify="center"
-                    style={{ display: store.provenanceStore.uiState.showFilterHistograms ? 'flex' : 'none' }}
+                    style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
                     <BarChart
                       h={30}
@@ -226,7 +226,7 @@ export function FilterPanel() {
                 >
                   <Flex
                     justify="center"
-                    style={{ display: store.provenanceStore.uiState.showFilterHistograms ? 'flex' : 'none' }}
+                    style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
                     <BarChart
                       h={30}
@@ -254,7 +254,7 @@ export function FilterPanel() {
                 >
                   <Flex
                     justify="center"
-                    style={{ display: store.provenanceStore.uiState.showFilterHistograms ? 'flex' : 'none' }}
+                    style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
                     <BarChart
                       h={30}
@@ -661,7 +661,7 @@ export function FilterPanel() {
                   label="Length of Stay"
                   styles={{ label: { color: rangeChanged(store, 'los') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                 >
-                  {store.provenanceStore.uiState.showFilterHistograms && (
+                  {store.state.ui.showFilterHistograms && (
                     <Flex justify="center">
                       <BarChart
                         h={30}

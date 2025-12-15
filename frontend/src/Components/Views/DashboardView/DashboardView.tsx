@@ -213,16 +213,13 @@ export function DashboardView() {
           rowHeight={chartRowHeight}
           containerPadding={[0, 0]}
           draggableHandle=".move-icon"
-          onLayoutChange={(currentLayout: Layout[], newLayouts: Record<string, Layout[]>) => {
-            store.dashboardStore.chartLayouts = newLayouts;
-          }}
           onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.dashboardStore.updateDashboardLayout(store.dashboardStore.chartLayouts);
+            store.dashboardStore.updateDashboardLayout({'main': _layout});
           }}
           onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.dashboardStore.updateDashboardLayout(store.dashboardStore.chartLayouts);
+            store.dashboardStore.updateDashboardLayout({'main': _layout});
           }}
-          layouts={store.dashboardStore.chartLayouts}
+          layouts={store.state.dashboard.chartLayouts}
         >
           {/** Render each chart - defined in the store's chart configs */}
           {Object.values(store.dashboardStore.chartConfigs).map(({
