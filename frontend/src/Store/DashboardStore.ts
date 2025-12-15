@@ -193,7 +193,7 @@ export class DashboardStore {
    * @description Adds new stat to dashboard with a generated title.
    */
   addStat(statVar: DashboardStatConfig['yAxisVar'], aggregation: DashboardStatConfig['aggregation']) {
-  // Generate unique ID and title internally
+    // Generate unique ID and title internally
     const statId = `stat-${Date.now()}`;
     const opt = dashboardYAxisOptions.find((o) => o.value === statVar);
     const title = opt?.label?.[aggregation || 'sum'] || statVar;
@@ -218,6 +218,53 @@ export class DashboardStore {
   }
 
   // Dashboard data ----------------------------------------------------------------
+  // Helper to get visit-level aggregated data -------------------------------
+  /**
+   * Returns a subquery that aggregates filteredVisits from Provider Level -> Visit Level.
+   */
+  _getVisitLevelQuery() {
+    return `
+      SELECT
+        visit_no,
+        month,
+        quarter,
+        year,
+        dsch_dtm,
+        
+        -- Sum granular metrics across providers for the visit
+        SUM(rbc_units) as rbc_units,
+        SUM(ffp_units) as ffp_units,
+        SUM(plt_units) as plt_units,
+        SUM(cryo_units) as cryo_units,
+        -- SUM(whole_units) as whole_units,
+        SUM(cell_saver_ml) as cell_saver_ml,
+
+        SUM(rbc_units_cost) as rbc_units_cost,
+        SUM(ffp_units_cost) as ffp_units_cost,
+        SUM(plt_units_cost) as plt_units_cost,
+        SUM(cryo_units_cost) as cryo_units_cost,
+        SUM(cell_saver_cost) as cell_saver_cost,
+        
+        SUM(rbc_adherent) as rbc_adherent,
+        SUM(ffp_adherent) as ffp_adherent,
+        SUM(plt_adherent) as plt_adherent,
+        SUM(cryo_adherent) as cryo_adherent,
+        
+        -- Max visit-level attributes
+        MAX(los) as los,
+        MAX(death) as death,
+        MAX(vent) as vent,
+        MAX(stroke) as stroke,
+        MAX(ecmo) as ecmo,
+        
+        MAX(ms_drg_weight) as ms_drg_weight,
+        MAX(age_at_adm) as age_at_adm
+
+      FROM filteredVisits
+      GROUP BY visit_no, month, quarter, year, dsch_dtm
+    `;
+  }
+
   chartData: DashboardChartData = {} as DashboardChartData;
 
   statData: DashboardStatData = {} as DashboardStatData;
@@ -260,7 +307,7 @@ export class DashboardStore {
         year,
         COUNT(visit_no) AS visit_count,
         ${selectClauses.join(',\n')}
-      FROM filteredVisits
+      FROM (${this._getVisitLevelQuery()})
       GROUP BY month, quarter, year
       ORDER BY year, quarter, month;
     `;
@@ -352,7 +399,7 @@ export class DashboardStore {
               return entry as { timePeriod: TimePeriod; data: number | Record<Cost, number> };
             })
             .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
-            // Log filtered data for debugging
+          // Log filtered data for debugging
           if (chartDatum.length === 0) {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
           }
@@ -439,7 +486,7 @@ export class DashboardStore {
     const mainStatsQuery = `
     SELECT
       ${statSelects}
-      FROM filteredVisits
+      FROM (${this._getVisitLevelQuery()})
       WHERE dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}';
     `;
 
@@ -486,7 +533,7 @@ export class DashboardStore {
     SELECT
       month,
       ${sparklineSelects.join(',\n')}
-    FROM filteredVisits
+    FROM (${this._getVisitLevelQuery()})
     WHERE month IN (${sparklineMonths.map((m) => `'${m}'`).join(', ')})
     GROUP BY month
     ORDER BY month;
