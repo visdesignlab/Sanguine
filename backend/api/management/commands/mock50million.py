@@ -16,7 +16,7 @@ from api.views.utils.utils import get_all_cpt_code_filters
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Scale mock counts to match real-data percentages.
-MOCK_TOTAL = 40 * 10**3  # Change to scale
+MOCK_TOTAL = 40 * 10**6  # Change to scale
 REAL_COUNTS = {
     "Patients": 303_000,
     "Visits": 704_000,
