@@ -16,7 +16,7 @@ from api.views.utils.utils import get_all_cpt_code_filters
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Scale mock counts to match real-data percentages.
-MOCK_TOTAL = 40 * 10**6  # Change to scale
+MOCK_TOTAL = 40 * 10**3  # Change to scale
 REAL_COUNTS = {
     "Patients": 303_000,
     "Visits": 704_000,
@@ -796,6 +796,34 @@ class Command(BaseCommand):
         def gen_attending_providers():
             provider_pool = surgeons + anests
             for pat, bad_pat, visit in visits:
+                # Parse base dates
+                adm_time = datetime.strptime(visit["adm_dtm"], DATE_FORMAT)
+                dsch_time = datetime.strptime(visit["dsch_dtm"], DATE_FORMAT)
+                
+                # Default: overlapping full duration
+                prov0_end = dsch_time
+                extra_start = adm_time
+                
+                # Secondary providers (lines 1, 2, etc.)
+                # 40% chance of having extra providers
+                has_extra = random.random() < 0.4
+                
+                # If we have multiple providers, 50% chance that they don't fully overlap during visit
+                if has_extra and random.random() < 0.5:
+                    total_seconds = (dsch_time - adm_time).total_seconds()
+                    # Split point between 20% and 80% of stay
+                    split_offset = random.uniform(0.2, 0.8) * total_seconds
+                    split_time = adm_time + timedelta(seconds=split_offset)
+                    
+                    # Provide a small overlap (e.g. 1 hour) or no overlap
+                    prov0_end = split_time + timedelta(hours=1)
+                    if prov0_end > dsch_time:
+                        prov0_end = dsch_time
+                        
+                    extra_start = split_time
+                    if extra_start < adm_time:
+                        extra_start = adm_time
+
                 # Primary attending provider (line 0)
                 prov_id, prov_name = random.choice(provider_pool)
                 yield {
@@ -803,13 +831,11 @@ class Command(BaseCommand):
                     "prov_id": prov_id,
                     "prov_name": prov_name,
                     "attend_start_dtm": visit["adm_dtm"],
-                    "attend_end_dtm": visit["dsch_dtm"],
+                    "attend_end_dtm": prov0_end.strftime(DATE_FORMAT),
                     "attend_prov_line": 0,
                 }
 
-                # Secondary providers (lines 1, 2, etc.)
-                # 40% chance of having extra providers
-                if random.random() < 0.4:
+                if has_extra:
                     num_extra = random.randint(1, 2)
                     for i in range(num_extra):
                         other_prov_id, other_prov_name = random.choice(provider_pool)
@@ -817,7 +843,7 @@ class Command(BaseCommand):
                             "visit_no": visit["visit_no"],
                             "prov_id": other_prov_id,
                             "prov_name": other_prov_name,
-                            "attend_start_dtm": visit["adm_dtm"],
+                            "attend_start_dtm": extra_start.strftime(DATE_FORMAT),
                             "attend_end_dtm": visit["dsch_dtm"],
                             "attend_prov_line": i + 1,
                         }
