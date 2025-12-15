@@ -100,7 +100,7 @@ def create_materialize_proc(apps, schema_editor):
         
         -- Transfusions and Adherence Aggregated by Provider
         -- Find all attending providers active at the time of transfusion.
-        -- Rank them by Responsibility (Line 0 > Line 1) and then Arrival (First Start Time).
+        -- Rank them by Responsibility (Line 0 > Line 1).
         -- Assign the transfusion strictly to the #1 ranked provider to prevent double-counting.
         LEFT JOIN (
             SELECT 
@@ -178,7 +178,7 @@ def create_materialize_proc(apps, schema_editor):
                     
                     ROW_NUMBER() OVER (
                         PARTITION BY t.id 
-                        ORDER BY ap_int.attend_prov_line ASC, ap_int.attend_start_dtm ASC
+                        ORDER BY ap_int.attend_prov_line ASC
                     ) as rn
                 FROM AttendingProvider ap_int
                 JOIN Transfusion t ON ap_int.visit_no = t.visit_no
@@ -189,7 +189,7 @@ def create_materialize_proc(apps, schema_editor):
         ) pt ON ap.visit_no = pt.visit_no AND ap.prov_id = pt.prov_id
 
         -- Medications Aggregated by Provider
-        -- Logic: Same as Transfusions. Assign to #1 ranked provider (Line 0 > Line 1, Start Time ASC)
+        -- Logic: Same as Transfusions. Assign to #1 ranked provider (Line 0 > Line 1)
         LEFT JOIN (
             SELECT 
                 ranked_med.visit_no,
@@ -204,7 +204,7 @@ def create_materialize_proc(apps, schema_editor):
                     m.medication_name,
                     ROW_NUMBER() OVER (
                         PARTITION BY m.id 
-                        ORDER BY ap_int.attend_prov_line ASC, ap_int.attend_start_dtm ASC
+                        ORDER BY ap_int.attend_prov_line ASC
                     ) as rn
                 FROM AttendingProvider ap_int
                 JOIN Medication m ON ap_int.visit_no = m.visit_no
