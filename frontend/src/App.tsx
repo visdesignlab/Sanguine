@@ -100,9 +100,9 @@ function App() {
         await store.dashboardStore.computeChartData();
         await store.dashboardStore.computeStatData();
 
-        await store.providersStore.fetchSelectedProvSurgCount();
-        await store.providersStore.getProviderCharts();
-        await store.providersStore.fetchProviderList();
+        // await store.providersStore.fetchSelectedProvSurgCount();
+        // await store.providersStore.getProviderCharts();
+        // await store.providersStore.fetchProviderList();
       } catch (e) {
         console.error('Error fetching visits data:', e);
         setDataLoadingFailed(true);

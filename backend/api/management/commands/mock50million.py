@@ -784,7 +784,7 @@ class Command(BaseCommand):
         self.send_csv_to_db(gen_transfusions(), fieldnames=transfusion_fieldnames, table_name="Transfusion")
 
         # Generate Attending Providers
-        admitting_attending_provider_fieldnames = [
+        attending_provider_fieldnames = [
             "visit_no",
             "prov_id",
             "prov_name",
@@ -793,20 +793,35 @@ class Command(BaseCommand):
             "attend_prov_line",
         ]
 
-        def gen_admitting_attending_providers():
+        def gen_attending_providers():
             provider_pool = surgeons + anests
-            pool_len = len(provider_pool) or 1
-            for i in range(int(target_visits_count)):
-                prov_id, prov_name = provider_pool[i % pool_len]
+            for pat, bad_pat, visit in visits:
+                # Primary attending provider (line 0)
+                prov_id, prov_name = random.choice(provider_pool)
                 yield {
-                    "visit_no": i,
+                    "visit_no": visit["visit_no"],
                     "prov_id": prov_id,
                     "prov_name": prov_name,
-                    "attend_start_dtm": "2020-01-01 08:00:00",
-                    "attend_end_dtm": "2020-01-05 17:00:00",
+                    "attend_start_dtm": visit["adm_dtm"],
+                    "attend_end_dtm": visit["dsch_dtm"],
                     "attend_prov_line": 0,
                 }
-        self.send_csv_to_db(gen_admitting_attending_providers(), fieldnames=admitting_attending_provider_fieldnames, table_name="AttendingProvider")
+
+                # Secondary providers (lines 1, 2, etc.)
+                # 40% chance of having extra providers
+                if random.random() < 0.4:
+                    num_extra = random.randint(1, 2)
+                    for i in range(num_extra):
+                        other_prov_id, other_prov_name = random.choice(provider_pool)
+                        yield {
+                            "visit_no": visit["visit_no"],
+                            "prov_id": other_prov_id,
+                            "prov_name": other_prov_name,
+                            "attend_start_dtm": visit["adm_dtm"],
+                            "attend_end_dtm": visit["dsch_dtm"],
+                            "attend_prov_line": i + 1,
+                        }
+        self.send_csv_to_db(gen_attending_providers(), fieldnames=attending_provider_fieldnames, table_name="AttendingProvider")
 
         # Generate Room Trace
         room_trace_fieldnames = [

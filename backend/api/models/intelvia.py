@@ -60,7 +60,9 @@ class Visit(models.Model):
 
 class VisitAttributes(models.Model):
     # all visit attributes
-    visit_no = models.OneToOneField(Visit, on_delete=models.CASCADE, db_column="visit_no", primary_key=True, related_name="attributes")
+    # The primary key is a composite string: "{visit_no}-{prov_id}"
+    id = models.CharField(max_length=50, primary_key=True)
+    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no", related_name="attributes")
     mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
     adm_dtm = models.DateField()
     dsch_dtm = models.DateField()
@@ -80,10 +82,10 @@ class VisitAttributes(models.Model):
     whole_units = models.IntegerField()
 
     los = models.DecimalField(max_digits=6, decimal_places=2, null=True)
-    death = models.BooleanField()
-    vent = models.BooleanField()
-    stroke = models.BooleanField()
-    ecmo = models.BooleanField()
+    death = models.BooleanField(null=True)
+    vent = models.BooleanField(null=True)
+    stroke = models.BooleanField(null=True)
+    ecmo = models.BooleanField(null=True)
 
     b12 = models.BooleanField()
     iron = models.BooleanField()
@@ -101,24 +103,17 @@ class VisitAttributes(models.Model):
     cryo_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
     overall_cost = models.DecimalField(max_digits=6, decimal_places=2)
 
-    admitting_attending_provider = models.CharField(max_length=100)
-    admitting_attending_provider_id = models.CharField(max_length=25)
-    admitting_attending_provider_line = models.IntegerField()
+    attending_provider = models.CharField(max_length=100)
+    attending_provider_id = models.CharField(max_length=25)
+    # 0 if admitting, >0 if consulting/transfer
+    attending_provider_line = models.IntegerField()
+    
+    # helper to identify if this row holds the outcomes
+    is_admitting_attending = models.BooleanField()
+
 
     class Meta:
         db_table = "VisitAttributes"
-        managed = False
-
-
-class GuidelineAdherence(models.Model):
-    visit_no = models.OneToOneField(Visit, on_delete=models.CASCADE, db_column="visit_no", primary_key=True, related_name="guideline_adherence")
-    rbc_adherent = models.IntegerField()
-    ffp_adherent = models.IntegerField()
-    plt_adherent = models.IntegerField()
-    cryo_adherent = models.IntegerField()
-
-    class Meta:
-        db_table = "GuidelineAdherence"
         managed = False
 
 
