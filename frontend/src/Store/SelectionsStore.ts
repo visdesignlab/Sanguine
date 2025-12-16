@@ -11,14 +11,15 @@ export class SelectionsStore {
     this._rootStore = rootStore;
     makeAutoObservable(this, {
       selectedVisits: observable.ref,
-      selectedTimePeriods: observable.ref,
       selectedVisitNos: observable.ref,
     });
   }
 
   // TODO: replace 'any' with actual visit type
 
-  selectedTimePeriods: string[] = [];
+  get selectedTimePeriods() {
+    return this._rootStore.state.selections.selectedTimePeriods;
+  }
 
   selectedDepartments: string[] = [];
 
@@ -29,7 +30,7 @@ export class SelectionsStore {
   async addSelectedTimePeriod(timePeriod: string) {
     if (!timePeriod) return;
 
-    const next = new Set(this.selectedTimePeriods);
+    const next = new Set<string>(this.selectedTimePeriods);
     for (const p of expandTimePeriod(timePeriod)) next.add(p);
 
     this._rootStore.actions.updateSelection(Array.from(next));
@@ -38,15 +39,10 @@ export class SelectionsStore {
   async removeSelectedTimePeriod(timePeriod: string) {
     if (!timePeriod) return;
 
-    const next = new Set(this.selectedTimePeriods);
+    const next = new Set<string>(this.selectedTimePeriods);
     for (const p of expandTimePeriod(timePeriod)) next.delete(p);
 
     this._rootStore.actions.updateSelection(Array.from(next));
-  }
-
-  loadState(selectedTimePeriods: string[]) {
-    this.selectedTimePeriods = selectedTimePeriods;
-    this.updateSelectedVisits();
   }
 
   reset() {
@@ -69,7 +65,7 @@ export class SelectionsStore {
 
     // Only match month-level selections (e.g., 2020-Jan)
     const monthRe = /^\d{4}-[A-Za-z]{3}$/;
-    const months = this.selectedTimePeriods.filter((p) => monthRe.test(p));
+    const months = this.selectedTimePeriods.filter((p: string) => monthRe.test(p));
 
     if (months.length === 0) {
       this.selectedVisits = [];
