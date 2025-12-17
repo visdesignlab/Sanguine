@@ -6,7 +6,6 @@ import { Shell } from './Shell/Shell';
 import { Store } from './Store/Store';
 import { mantineTheme } from './Theme/mantineTheme';
 import { logoutHandler, whoamiAPICall } from './Store/UserManagement';
-import { BrowserWarning } from './Components/Modals/BrowserWarning';
 import { DataRetrieval } from './Components/Modals/DataRetrieval';
 import { initDuckDB } from './duckdb';
 
@@ -114,8 +113,6 @@ function App() {
       {/** App Shell (Header, Main Content, etc.) */}
       <Shell />
       <>
-        {/** Browser incompatibility warning modal */}
-        <BrowserWarning />
         { /* Data loading modal */}
         <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
       </>
