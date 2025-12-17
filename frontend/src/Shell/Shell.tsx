@@ -14,7 +14,7 @@ import {
   IconDatabase, IconBook,
   IconArrowNarrowLeftDashed,
   IconArrowNarrowRightDashed, IconDeviceFloppy,
-  IconCamera, IconLogout, IconUser, IconMenu,
+  IconCamera, IconLogout, IconMenu,
   IconRestore, type IconProps,
   IconChartBar,
   IconClipboardList,
@@ -67,14 +67,6 @@ export function Shell() {
 
   // Active tab in the view tabs
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
-
-  // Reset to defaults modal ----------------------
-  const [resetModalOpened, setResetModalOpened] = useState(false);
-  const handleConfirmReset = () => {
-    // Reset filters (add other reset logic as needed)
-    store.filtersStore.resetAllFilters();
-    setResetModalOpened(false);
-  };
 
   // About modal ----------------------
   const [aboutModalOpened, setAboutModalOpened] = useState(false);
@@ -140,7 +132,6 @@ export function Shell() {
     { icon: IconArrowNarrowRightDashed, label: 'Forward' },
     { icon: IconDeviceFloppy, label: 'Save' },
     { icon: IconCamera, label: 'Camera' },
-    { icon: IconUser, label: 'User' },
   ];
 
   return (
@@ -196,31 +187,6 @@ export function Shell() {
                   <ScreenshotMenu key="screenshot-menu" activeTab={activeTab} />
                 );
               }
-              // --- User menu ---
-              if (label === 'User') {
-                return (
-                  <Menu shadow="md" width={200} offset={12} trigger="hover" key="user-menu">
-                    <Menu.Target>
-                      <ActionIcon aria-label="User">
-                        <IconUser stroke={iconStroke} />
-                      </ActionIcon>
-                    </Menu.Target>
-
-                    <Menu.Dropdown>
-                      <Menu.Label>User</Menu.Label>
-                      <Menu.Item
-                        leftSection={<IconRestore size={14} />}
-                        onClick={() => setResetModalOpened(true)}
-                      >
-                        Reset to defaults
-                      </Menu.Item>
-                      <Menu.Item leftSection={<IconLogout size={14} />}>
-                        Log out
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                );
-              }
               // Default header icon button
               return (
                 <Tooltip key={label} label={label}>
@@ -256,23 +222,12 @@ export function Shell() {
                   Clear selected visits
                 </Menu.Item>
 
-
                 <Menu.Label>Session</Menu.Label>
                 <Menu.Item
                   leftSection={<IconSubtask size={14} />}
                   disabled
                 >
                   Manage Sessions
-                </Menu.Item>
-
-                <Menu.Label>Account</Menu.Label>
-                <Menu.Item
-                  leftSection={<IconLogout size={14} />}
-                  onClick={async () => {
-                    await fetch(`${import.meta.env.VITE_QUERY_URL}accounts/logout`, { credentials: 'include' });
-                  }}
-                >
-                  Log out
                 </Menu.Item>
 
                 <Menu.Label>Help & Feedback</Menu.Label>
@@ -301,6 +256,16 @@ export function Shell() {
                   onClick={() => { window.open('https://github.com/visdesignlab/Sanguine/issues/', '_blank'); }}
                 >
                   Report a Bug
+                </Menu.Item>
+
+                <Menu.Label>Account</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconLogout size={14} />}
+                  onClick={async () => {
+                    await fetch(`${import.meta.env.VITE_QUERY_URL}accounts/logout`, { credentials: 'include' });
+                  }}
+                >
+                  Log out
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
@@ -363,25 +328,6 @@ export function Shell() {
           ))}
         </Container>
       </AppShell.Main>
-      {/** Reset to Defaults Modal */}
-      <Modal
-        opened={resetModalOpened}
-        onClose={() => setResetModalOpened(false)}
-        title="Are you sure you want to reset?"
-        centered
-      >
-        <Stack gap="md">
-          <Text size="sm">
-            This action will reset to Intelvia&apos;s default state.
-            <br />
-            All custom charts and filters will be removed.
-          </Text>
-          <Group justify="flex-end" mt="xs">
-            <Button variant="default" onClick={() => setResetModalOpened(false)}>Cancel</Button>
-            <Button color="red" onClick={handleConfirmReset}>Reset</Button>
-          </Group>
-        </Stack>
-      </Modal>
 
       <Modal
         opened={aboutModalOpened}
@@ -391,7 +337,7 @@ export function Shell() {
       >
         <Stack gap="md">
           <Text size="sm">
-            Intelvia is a visual analytics platform designed to help healthcare professionals explore and analyze transfusion data effectively. Our original research prototype, Sanguine, was developed at the University of Utah's Visualization Design Lab.
+            Intelvia is a visual analytics platform designed to help healthcare professionals explore and analyze transfusion data effectively. Our original research prototype, Sanguine, was developed at the University of Utah&apos;s Visualization Design Lab.
           </Text>
           <Text size="sm">
             For more information, check out the
