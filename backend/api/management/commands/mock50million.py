@@ -859,7 +859,7 @@ class Command(BaseCommand):
                         "prov_name": prov_name,
                         "attend_start_dtm": current_start.strftime(DATE_FORMAT),
                         "attend_end_dtm": prov_line_end.strftime(DATE_FORMAT),
-                        "attend_prov_line": i,
+                        "attend_prov_line": i + 1,
                     }
 
                     if is_last:

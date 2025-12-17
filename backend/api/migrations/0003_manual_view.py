@@ -65,11 +65,11 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(pt.sum_cell_saver_ml, 0),
 
             -- Visit outcomes assigned only to admitting attending
-            CASE WHEN ap.attend_prov_line = 0 THEN v.clinical_los ELSE NULL END AS los,
-            CASE WHEN ap.attend_prov_line = 0 THEN (CASE WHEN v.pat_expired_f = 'Y' THEN TRUE ELSE FALSE END) ELSE NULL END AS death,
-            CASE WHEN ap.attend_prov_line = 0 THEN (CASE WHEN v.total_vent_mins > 1440 THEN TRUE ELSE FALSE END) ELSE NULL END AS vent,
-            CASE WHEN ap.attend_prov_line = 0 THEN (CASE WHEN bc.stroke = 1 THEN TRUE ELSE FALSE END) ELSE NULL END AS stroke,
-            CASE WHEN ap.attend_prov_line = 0 THEN (CASE WHEN bc.ecmo = 1 THEN TRUE ELSE FALSE END) ELSE NULL END AS ecmo,
+            CASE WHEN ap.attend_prov_line = 1 THEN v.clinical_los ELSE NULL END AS los,
+            CASE WHEN ap.attend_prov_line = 1 THEN (CASE WHEN v.pat_expired_f = 'Y' THEN TRUE ELSE FALSE END) ELSE NULL END AS death,
+            CASE WHEN ap.attend_prov_line = 1 THEN (CASE WHEN v.total_vent_mins > 1440 THEN TRUE ELSE FALSE END) ELSE NULL END AS vent,
+            CASE WHEN ap.attend_prov_line = 1 THEN (CASE WHEN bc.stroke = 1 THEN TRUE ELSE FALSE END) ELSE NULL END AS stroke,
+            CASE WHEN ap.attend_prov_line = 1 THEN (CASE WHEN bc.ecmo = 1 THEN TRUE ELSE FALSE END) ELSE NULL END AS ecmo,
 
             -- Medications per provider
             CASE WHEN pm.has_b12 = 1 THEN TRUE ELSE FALSE END AS b12,
@@ -85,14 +85,14 @@ def create_materialize_proc(apps, schema_editor):
             ap.prov_name,
             ap.prov_id,
             ap.attend_prov_line,
-            CASE WHEN ap.attend_prov_line = 0 THEN TRUE ELSE FALSE END AS is_admitting_attending
+            CASE WHEN ap.attend_prov_line = 1 THEN TRUE ELSE FALSE END AS is_admitting_attending
 
         FROM AttendingProvider ap
         JOIN Visit v ON ap.visit_no = v.visit_no
         
         -- Transfusions and Adherence Aggregated by Provider
         -- Find all attending providers active at the time of transfusion.
-        -- Rank them by Responsibility (Line 0 > Line 1).
+        -- Rank them by Responsibility (Line 1 > Line 2).
         -- Assign the transfusion strictly to the #1 ranked provider to prevent double-counting.
         LEFT JOIN (
             SELECT 
@@ -181,7 +181,7 @@ def create_materialize_proc(apps, schema_editor):
         ) pt ON ap.visit_no = pt.visit_no AND ap.prov_id = pt.prov_id
 
         -- Medications Aggregated by Provider
-        -- Logic: Same as Transfusions. Assign to #1 ranked provider (Line 0 > Line 1)
+        -- Logic: Same as Transfusions. Assign to #1 ranked provider (Line 1 > Line 2)
         LEFT JOIN (
             SELECT 
                 ranked_med.visit_no,
