@@ -10,7 +10,7 @@ export function FilterIcon() {
   const { iconStroke } = useThemeConstants();
 
   return useObserver(() => (
-    <Indicator inline label={store.filtersStore.totalFiltersAppliedCount} disabled={store.filtersStore.totalFiltersAppliedCount === 0} size={18} color="blue.4" offset={-5}>
+    <Indicator inline label={store.totalFiltersAppliedCount} disabled={store.totalFiltersAppliedCount === 0} size={18} color="blue.4" offset={-5}>
       <IconFilter stroke={iconStroke} />
     </Indicator>
   ));

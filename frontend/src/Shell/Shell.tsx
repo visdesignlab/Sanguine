@@ -70,7 +70,7 @@ export const Shell = observer(() => {
   const [resetModalOpened, setResetModalOpened] = useState(false);
   const handleConfirmReset = () => {
     // Restore to initial state via provenance
-    store.provenanceStore.restoreToInitialState();
+    store.restoreToInitialState();
     setResetModalOpened(false);
   };
 
@@ -90,7 +90,7 @@ export const Shell = observer(() => {
       // Capture screenshot now that modal is gone
       const screenshot = await captureScreenshot(null, { pixelRatio: 1 });
 
-      store.provenanceStore.saveState(stateName, screenshot);
+      store.saveState(stateName, screenshot);
       setStateName('');
     }
   };
@@ -101,7 +101,7 @@ export const Shell = observer(() => {
 
   const handleRestoreState = () => {
     if (stateToRestore) {
-      store.provenanceStore.restoreState(stateToRestore);
+      store.restoreState(stateToRestore);
       setRestoreModalOpened(false);
       setStateToRestore(null);
     }
@@ -139,7 +139,7 @@ export const Shell = observer(() => {
       label: 'Filter Panel',
       content: <FilterPanel />,
       actionButtons: [
-        <ActionIcon key="reset-filters" aria-label="Reset all filters" onClick={() => { store.filtersStore.resetAllFilters(); }} className={classes.leftToolbarIcon}>
+        <ActionIcon key="reset-filters" aria-label="Reset all filters" onClick={() => { store.resetAllFilters(); }} className={classes.leftToolbarIcon}>
           <IconRestore stroke={iconStroke} size={21} />
         </ActionIcon>,
         <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.actions.setUiState({ showFilterHistograms: !store.state.ui.showFilterHistograms }); }} data-active={store.state.ui.showFilterHistograms} className={classes.leftToolbarIcon}>
@@ -153,7 +153,7 @@ export const Shell = observer(() => {
       content: <SelectedVisitsPanel />,
       actionButtons: [
         <Badge key="selected-visits-badge" variant="light" size="sm">
-          {store.selectionsStore.selectedVisitNos.length}
+          {store.selectedVisitNos.length}
           {' '}
           Visits
         </Badge>,
@@ -176,12 +176,12 @@ export const Shell = observer(() => {
 
   // Header toolbar icons
   const headerIcons = useMemo(() => [
-    { icon: IconArrowNarrowLeftDashed, label: 'Back', onClick: () => store.provenanceStore.provenance?.undo(), disabled: !store.provenanceStore.canUndo },
-    { icon: IconArrowNarrowRightDashed, label: 'Forward', onClick: () => store.provenanceStore.provenance?.redo(), disabled: !store.provenanceStore.canRedo },
+    { icon: IconArrowNarrowLeftDashed, label: 'Back', onClick: () => store.provenance?.undo(), disabled: !store.canUndo },
+    { icon: IconArrowNarrowRightDashed, label: 'Forward', onClick: () => store.provenance?.redo(), disabled: !store.canRedo },
     { icon: IconDeviceFloppy, label: 'Save', onClick: () => setSaveModalOpened(true) },
     { icon: IconCamera, label: 'Camera' },
     { icon: IconUser, label: 'User' },
-  ], [store.provenanceStore.provenance, store.provenanceStore.canUndo, store.provenanceStore.canRedo]);
+  ], [store.provenance, store.canUndo, store.canRedo]);
 
   return (
     <AppShell

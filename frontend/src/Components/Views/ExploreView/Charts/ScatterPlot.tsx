@@ -14,7 +14,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ExploreChartConfig }
     [chartConfig.aggregation, chartConfig.yAxisVar, chartConfig.xAxisVar],
   );
 
-  const data = store.exploreStore.chartData[dataKeyString] as ScatterPlotData || [];
+  const data = store.exploreChartData[dataKeyString] as ScatterPlotData || [];
 
   return (
     <>
@@ -26,7 +26,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ExploreChartConfig }
           </Title>
         </Flex>
         <Flex direction="row" align="center" gap="sm">
-          <CloseButton onClick={() => { store.exploreStore.removeChart(chartConfig.chartId); }} />
+          <CloseButton onClick={() => { store.removeExploreChart(chartConfig.chartId); }} />
         </Flex>
       </Flex>
       <ScatterChart

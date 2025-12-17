@@ -1,37 +1,36 @@
 import { useContext, useEffect, useState } from 'react';
 import { RangeSlider } from '@mantine/core';
 import { useObserver } from 'mobx-react-lite';
-import { Store } from '../../../Store/Store';
-import { FiltersStore } from '../../../Store/FiltersStore';
+import { Store, ApplicationState } from '../../../Store/Store';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 
 type NumberArrayKeys<T> = {
   [K in keyof T]: T[K] extends number[] ? K : never
 }[keyof T];
 
-export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<FiltersStore['filterValues']> }) {
+export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<ApplicationState['filterValues']> }) {
   const store = useContext(Store);
 
-  const [value, setValue] = useState(store.filtersStore.filterValues[varName]);
+  const [value, setValue] = useState(store.filterValues[varName]);
   useEffect(() => {
-    if (store.filtersStore.filterValues[varName][0] !== value[0] || store.filtersStore.filterValues[varName][1] !== value[1]) {
-      setValue(store.filtersStore.filterValues[varName]);
+    if (store.filterValues[varName][0] !== value[0] || store.filterValues[varName][1] !== value[1]) {
+      setValue(store.filterValues[varName]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.filtersStore.filterValues[varName]]);
+  }, [store.filterValues[varName]]);
 
   return useObserver(() => {
-    const initial = (store.filtersStore.initialFilterValues as any)[varName];
+    const initial = (store.initialFilterValues as any)[varName];
     const [min, max] = initial;
     const changed = value[0] !== initial[0] || value[1] !== initial[1];
 
     return (
       <RangeSlider
-        defaultValue={store.filtersStore.filterValues[varName]}
+        defaultValue={store.filterValues[varName]}
         value={value}
         size="sm"
         onChange={setValue}
-        onChangeEnd={(v) => store.filtersStore.setFilterValue(varName as any, v)}
+        onChangeEnd={(v) => store.setFilterValue(varName as any, v)}
         min={min}
         max={max}
         step={varName === 'cell_saver_ml' ? 50 : 1}

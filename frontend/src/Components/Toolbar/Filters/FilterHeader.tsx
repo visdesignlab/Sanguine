@@ -4,18 +4,17 @@ import {
 import { useContext } from 'react';
 import { IconRestore } from '@tabler/icons-react';
 import { useObserver } from 'mobx-react';
-import { Store } from '../../../Store/Store';
-import { FiltersStore } from '../../../Store/FiltersStore';
+import { RootStore, Store } from '../../../Store/Store';
 
 export function FilterHeader({
   countName, title, tooltipLabel, resetFunc,
 }: {
-  countName: keyof FiltersStore, title: string, tooltipLabel: string, resetFunc: () => void
+  countName: keyof RootStore, title: string, tooltipLabel: string, resetFunc: () => void
 }) {
   const store = useContext(Store);
 
   return useObserver(() => {
-    const count = store.filtersStore[countName] as number;
+    const count = store[countName] as number;
 
     return (
       <Flex align="center">

@@ -48,9 +48,9 @@ export function ExploreView() {
   const handlePresetClick = (groupIdx: number, cardIdx: number) => {
     const { chartConfigs, chartLayouts } = presetStateCards[groupIdx].options[cardIdx];
     // Add chart config to store
-    store.exploreStore.chartConfigs = [...chartConfigs];
+    store.exploreChartConfigs = [...chartConfigs];
     // Add chart layout to store
-    store.exploreStore.chartLayouts = {
+    store.exploreChartLayouts = {
       main: [...chartLayouts.main],
     };
   };
@@ -80,7 +80,7 @@ export function ExploreView() {
     const id = `explore-${Date.now()}`;
     if (chartType === 'cost') {
       if (!costGroupVar) return;
-      store.exploreStore.addChart({
+      store.addExploreChart({
         chartId: id,
         chartType: 'cost',
         xAxisVar: 'cost',
@@ -89,7 +89,7 @@ export function ExploreView() {
       });
     } else {
       if (!scatterXAxisVar || !scatterYAxisVar) return;
-      store.exploreStore.addChart({
+      store.addExploreChart({
         chartId: id,
         chartType: 'scatterPlot',
         xAxisVar: scatterXAxisVar as typeof dashboardXAxisVars[number],
@@ -216,7 +216,7 @@ export function ExploreView() {
           </Button>
         </Stack>
       </Modal>
-      {store.exploreStore.chartLayouts.main.length > 0 ? (
+      {store.exploreChartLayouts.main.length > 0 ? (
         <ResponsiveGridLayout
           className="layout"
           breakpoints={{
@@ -229,18 +229,18 @@ export function ExploreView() {
           containerPadding={[0, 0]}
           draggableHandle=".move-icon"
           onLayoutChange={(currentLayout: Layout[], newLayouts: Record<string, Layout[]>) => {
-            store.exploreStore.chartLayouts = newLayouts;
+            store.exploreChartLayouts = newLayouts;
           }}
           onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.exploreStore.updateExploreLayout(store.exploreStore.chartLayouts);
+            store.updateExploreLayout(store.exploreChartLayouts);
           }}
           onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.exploreStore.updateExploreLayout(store.exploreStore.chartLayouts);
+            store.updateExploreLayout(store.exploreChartLayouts);
           }}
-          layouts={store.exploreStore.chartLayouts}
+          layouts={store.exploreChartLayouts}
         >
           {/** Render each chart defined in the store. */}
-          {store.exploreStore.chartConfigs.map((chartConfig) => (
+          {store.exploreChartConfigs.map((chartConfig) => (
             <Card
               key={chartConfig.chartId}
               withBorder

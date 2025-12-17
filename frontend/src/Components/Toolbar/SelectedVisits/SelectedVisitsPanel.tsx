@@ -38,7 +38,7 @@ export function SelectedVisitsPanel() {
   const store = useContext(Store);
 
   // All selected visit numbers from the store
-  const visitNos = store.selectionsStore.selectedVisitNos;
+  const visitNos = store.selectedVisitNos;
 
   // Filter visit numbers by search query
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,16 +60,16 @@ export function SelectedVisitsPanel() {
   } | null>(null);
 
   // Choose first visit by default
-  const effectiveSelectedVisitNo = store.provenanceStore.currentState.ui.selectedVisitNo ?? (filteredVisitNos.length > 0 ? filteredVisitNos[0] : null);
+  const effectiveSelectedVisitNo = store.currentState.ui.selectedVisitNo ?? (filteredVisitNos.length > 0 ? filteredVisitNos[0] : null);
 
   // Fetch details whenever a visit number is chosen
   useEffect(() => {
     if (effectiveSelectedVisitNo != null) {
-      store.selectionsStore.getVisitInfo(effectiveSelectedVisitNo).then(setSelectedVisit);
+      store.getVisitInfo(effectiveSelectedVisitNo).then(setSelectedVisit);
     } else {
       setSelectedVisit(null);
     }
-  }, [effectiveSelectedVisitNo, store.selectionsStore]);
+  }, [effectiveSelectedVisitNo, store]);
 
   // Filter visit details based on search query
   const [attributeSearchQuery, setAttributeSearchQuery] = useState('');
@@ -101,7 +101,7 @@ export function SelectedVisitsPanel() {
         <Title order={3}>Selected Visits</Title>
         <Flex direction="row" align="center">
           <Badge variant="light" size="sm">
-            {store.selectionsStore.selectedVisitNos.length}
+            {store.selectedVisitNos.length}
             {' '}
             Visits
           </Badge>
