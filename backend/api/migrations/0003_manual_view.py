@@ -87,15 +87,7 @@ def create_materialize_proc(apps, schema_editor):
             ap.attend_prov_line,
             CASE WHEN ap.attend_prov_line = 0 THEN TRUE ELSE FALSE END AS is_admitting_attending
 
-        FROM (
-            SELECT 
-                visit_no, 
-                prov_id, 
-                MAX(prov_name) as prov_name, 
-                MIN(attend_prov_line) as attend_prov_line
-            FROM AttendingProvider
-            GROUP BY visit_no, prov_id
-        ) ap
+        FROM AttendingProvider ap
         JOIN Visit v ON ap.visit_no = v.visit_no
         
         -- Transfusions and Adherence Aggregated by Provider
