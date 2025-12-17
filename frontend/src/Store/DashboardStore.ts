@@ -218,8 +218,6 @@ export class DashboardStore {
   }
 
   // Dashboard data ----------------------------------------------------------------
-
-
   chartData: DashboardChartData = {} as DashboardChartData;
 
   statData: DashboardStatData = {} as DashboardStatData;

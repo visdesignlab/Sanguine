@@ -53,11 +53,11 @@ function App() {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
-        await db.registerFileBuffer('visits.parquet', new Uint8Array(await res.arrayBuffer()));
+        await db.registerFileBuffer('visit_attributes.parquet', new Uint8Array(await res.arrayBuffer()));
 
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
-          SELECT * FROM read_parquet('visits.parquet');
+          SELECT * FROM read_parquet('visit_attributes.parquet');
 
           CREATE TABLE IF NOT EXISTS costs (
             rbc_units_cost DECIMAL(10,2),
@@ -75,7 +75,7 @@ function App() {
           );
           
           CREATE TABLE IF NOT EXISTS filteredVisitIds AS
-          SELECT visit_no FROM visits;
+          SELECT DISTINCT visit_no FROM visits;
 
           CREATE VIEW IF NOT EXISTS filteredVisits AS
           SELECT
@@ -129,7 +129,6 @@ function App() {
           FROM filteredVisits
           GROUP BY visit_no, month, quarter, year, dsch_dtm;
         `);
-
 
         // Update all stores
         await store.updateAllVisitsLength();
