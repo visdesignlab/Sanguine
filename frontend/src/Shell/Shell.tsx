@@ -8,6 +8,7 @@ import {
   Button,
   Stack,
   Badge,
+  Anchor,
 } from '@mantine/core';
 import {
   IconDatabase, IconBook,
@@ -22,6 +23,7 @@ import {
   IconAt,
   IconFilter,
   IconSubtask,
+  IconInfoSquareRounded,
 } from '@tabler/icons-react';
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
@@ -73,6 +75,9 @@ export function Shell() {
     store.filtersStore.resetAllFilters();
     setResetModalOpened(false);
   };
+
+  // About modal ----------------------
+  const [aboutModalOpened, setAboutModalOpened] = useState(false);
 
   // Toolbar & Left Panel states ----------------------
   // Width of the header toolbar & left toolbar
@@ -251,7 +256,32 @@ export function Shell() {
                   Clear selected visits
                 </Menu.Item>
 
+
+                <Menu.Label>Session</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconSubtask size={14} />}
+                  disabled
+                >
+                  Manage Sessions
+                </Menu.Item>
+
+                <Menu.Label>Account</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconLogout size={14} />}
+                  onClick={async () => {
+                    await fetch(`${import.meta.env.VITE_QUERY_URL}accounts/logout`, { credentials: 'include' });
+                  }}
+                >
+                  Log out
+                </Menu.Item>
+
                 <Menu.Label>Help & Feedback</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconInfoSquareRounded size={14} />}
+                  onClick={() => { setAboutModalOpened(true); }}
+                >
+                  About Intelvia
+                </Menu.Item>
                 <Menu.Item
                   leftSection={<IconBook size={14} />}
                   onClick={() => { window.open('https://docs.intelvia.app/', '_blank'); }}
@@ -271,24 +301,6 @@ export function Shell() {
                   onClick={() => { window.open('https://github.com/visdesignlab/Sanguine/issues/', '_blank'); }}
                 >
                   Report a Bug
-                </Menu.Item>
-
-                <Menu.Label>Session</Menu.Label>
-                <Menu.Item
-                  leftSection={<IconSubtask size={14} />}
-                  disabled
-                >
-                  Manage Sessions
-                </Menu.Item>
-
-                <Menu.Label>Account</Menu.Label>
-                <Menu.Item
-                  leftSection={<IconLogout size={14} />}
-                  onClick={async () => {
-                    await fetch(`${import.meta.env.VITE_QUERY_URL}accounts/logout`, { credentials: 'include' });
-                  }}
-                >
-                  Log out
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
@@ -367,6 +379,35 @@ export function Shell() {
           <Group justify="flex-end" mt="xs">
             <Button variant="default" onClick={() => setResetModalOpened(false)}>Cancel</Button>
             <Button color="red" onClick={handleConfirmReset}>Reset</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={aboutModalOpened}
+        onClose={() => setAboutModalOpened(false)}
+        title="About Intelvia"
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Intelvia is a visual analytics platform designed to help healthcare professionals explore and analyze transfusion data effectively. Our original research prototype, Sanguine, was developed at the University of Utah's Visualization Design Lab.
+          </Text>
+          <Text size="sm">
+            For more information, check out the
+            {' '}
+            <Anchor href="https://docs.intelvia.app/" target="_blank" rel="noopener noreferrer">documentation</Anchor>
+            .
+          </Text>
+          <Text size="sm">
+            Version:
+            {' '}
+            <Text component="span" ff="monospace">
+              {import.meta.env.VITE_VERSION || 'vX.YY.ZZ-alpha.AA'}
+            </Text>
+          </Text>
+          <Group justify="flex-end" mt="xs">
+            <Button variant="default" onClick={() => setAboutModalOpened(false)}>Close</Button>
           </Group>
         </Stack>
       </Modal>
