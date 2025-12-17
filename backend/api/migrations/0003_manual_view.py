@@ -44,7 +44,7 @@ def create_materialize_proc(apps, schema_editor):
             is_admitting_attending
         )
         SELECT
-            CONCAT(v.visit_no, '-', ap.prov_id) AS id,
+            CONCAT(v.visit_no, '-', ap.attend_prov_line) AS id,
             v.visit_no,
             v.mrn,
             v.adm_dtm,
