@@ -264,6 +264,7 @@ export function Shell() {
                   onClick={async () => {
                     await fetch(`${import.meta.env.VITE_QUERY_URL}accounts/logout`, { credentials: 'include' });
                   }}
+                  disabled
                 >
                   Log out
                 </Menu.Item>
