@@ -138,10 +138,6 @@ function App() {
         await store.filtersStore.generateHistogramData();
         await store.dashboardStore.computeChartData();
         await store.dashboardStore.computeStatData();
-
-        // await store.providersStore.fetchSelectedProvSurgCount();
-        // await store.providersStore.getProviderCharts();
-        // await store.providersStore.fetchProviderList();
       } catch (e) {
         console.error('Error fetching visits data:', e);
         setDataLoadingFailed(true);
