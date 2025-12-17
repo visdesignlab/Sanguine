@@ -1,11 +1,11 @@
 import {
   Flex, Title, CloseButton, Stack, Select, ActionIcon, Popover, MultiSelect, Button, Group, Badge,
 } from '@mantine/core';
-import { IconGripVertical, IconCircles, IconFilter, IconPlus, IconX } from '@tabler/icons-react';
-import { useContext, useMemo, useState, useRef, useCallback } from 'react';
+import { IconGripVertical, IconCircles, IconFilter, IconSettings, IconPlus, IconX } from '@tabler/icons-react';
+import { useContext, useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import { AddGroupModal, GroupDefinition, GroupCondition } from './AddGroupModal';
 import {
-  ComposedChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea, Cell, ReferenceLine,
+  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea, Cell, ReferenceLine,
 } from 'recharts';
 import { Store } from '../../../../Store/Store';
 import {
@@ -17,6 +17,14 @@ import { smallHoverColor, smallSelectColor } from '../../../../Theme/mantineThem
 import { SCATTER_PLOT_REFERENCE_LINES } from '../../../../Store/ScatterPlotDummyData';
 
 const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(val, max));
+
+const getUnit = (varName: string) => {
+  const blood = BLOOD_COMPONENT_OPTIONS.find((b) => b.value === varName);
+  if (blood) return blood.units.sum; // Simple approximation for now
+  const lab = LAB_RESULT_OPTIONS.find((l) => l.value === varName);
+  if (lab) return lab.units.sum;
+  return '';
+};
 
 const checkCondition = (point: any, condition: GroupCondition) => {
   const val = point[condition.field];
@@ -43,6 +51,50 @@ const checkCondition = (point: any, condition: GroupCondition) => {
   }
 };
 
+function CustomTooltip({
+  active,
+  payload,
+  xLabel,
+  yLabel,
+  xAxisVar,
+  yAxisVar,
+}: {
+  active?: boolean;
+  payload?: any[];
+  xLabel: string;
+  yLabel: string;
+  xAxisVar: string;
+  yAxisVar: string;
+}) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div style={{
+        backgroundColor: 'white',
+        border: '1px solid #ccc',
+        padding: '8px 12px',
+        borderRadius: '4px',
+        fontSize: '12px',
+      }}
+      >
+        <p style={{ margin: '2px 0' }}>
+          {xLabel}
+          :
+          {' '}
+          {data[xAxisVar]}
+        </p>
+        <p style={{ margin: '2px 0' }}>
+          {yLabel}
+          :
+          {' '}
+          {data[yAxisVar]}
+        </p>
+      </div>
+    );
+  }
+  return null;
+}
+
 export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig }) {
   const store = useContext(Store);
 
@@ -51,20 +103,26 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     [chartConfig.aggregation, chartConfig.yAxisVar, chartConfig.xAxisVar],
   );
 
-  const rawData = store.exploreStore.chartData[dataKeyString] as ScatterPlotData || [];
-
   const [groups, setGroups] = useState<GroupDefinition[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [localRefLines, setLocalRefLines] = useState<any[]>([]);
+
+  useEffect(() => {
+    setLocalRefLines(SCATTER_PLOT_REFERENCE_LINES[chartConfig.yAxisVar]?.map((l) => ({ ...l })) || []);
+  }, [chartConfig.yAxisVar]);
+
+  // Process data into groups
 
   // Process data into groups
   const processedData = useMemo(() => {
+    const rawData = (store.exploreStore.chartData[dataKeyString] as ScatterPlotData) || [];
     // 1. Flatten all data points
     const allPoints = rawData.flatMap((series) => series.data);
 
     if (groups.length === 0) {
       // Default View: Single "Visits" group (All points)
       return [{
-        name: 'Visits',
+        name: 'Surigcal Cases',
         color: '#6b7280', // Darker grey
         data: allPoints,
       }];
@@ -103,13 +161,13 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     if (buckets['all'].length > 0) {
       result.push({
         name: 'All',
-        color: '#e5e7eb', // Light grey
+        color: '#9ca3af', // Darker grey (was #e5e7eb)
         data: buckets['all'],
       });
     }
 
     return result;
-  }, [rawData, groups]);
+  }, [store.exploreStore.chartData, dataKeyString, groups]);
 
   const data = processedData; // Use processed data for rendering logic depending on 'data' variable
 
@@ -151,11 +209,15 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   };
 
   // Define ticks for the x-axis to match the buckets
-  const isCellSaver = chartConfig.xAxisVar === 'cell_saver_ml';
-  const xTicks = isCellSaver
-    ? [0, 100, 200, 300, 400]
-    : Array.from({ length: 21 }, (_, i) => i); // [0, 1, 2, ..., 20]
-  const xDomain = isCellSaver ? [0, 400] : [0, 20];
+  // Define ticks for the x-axis to match the buckets
+  const { xTicks, xDomain } = useMemo(() => {
+    const isCellSaver = chartConfig.xAxisVar === 'cell_saver_ml';
+    const ticks = isCellSaver
+      ? [0, 100, 200, 300, 400]
+      : Array.from({ length: 21 }, (_, i) => i);
+    const domain = isCellSaver ? [0, 400] : [0, 20];
+    return { xTicks: ticks, xDomain: domain };
+  }, [chartConfig.xAxisVar]);
 
   // Calculate Y Domain
   const yDomain = useMemo(() => {
@@ -173,13 +235,58 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     return [Math.floor(min - padding), Math.ceil(max + padding)];
   }, [data, chartConfig.yAxisVar]);
 
+  // Calculate Median Lines per Bin
+  const binMedians = useMemo(() => {
+    // Collect all y-values per bin
+    const binValues: Record<number, number[]> = {};
+    // Initialize bins based on ticks
+    xTicks.slice(0, -1).forEach((tick) => { binValues[tick] = []; });
+
+    data.forEach((series) => {
+      series.data.forEach((point) => {
+        const x = point[chartConfig.xAxisVar];
+        const y = point[chartConfig.yAxisVar];
+        // Find the bin this point belongs to
+        for (let i = 0; i < xTicks.length - 1; i += 1) {
+          const start = xTicks[i];
+          const end = xTicks[i + 1];
+          // Determine strictness. For last bin include end.
+          if (x >= start && (i === xTicks.length - 2 ? x <= end : x < end)) {
+            binValues[start].push(y);
+            break;
+          }
+        }
+      });
+    });
+
+    // Compute medians
+    return Object.entries(binValues).map(([startStr, values]) => {
+      const start = Number(startStr);
+      if (values.length === 0) return null;
+      values.sort((a, b) => a - b);
+      const mid = Math.floor(values.length / 2);
+      const median = values.length % 2 !== 0
+        ? values[mid]
+        : (values[mid - 1] + values[mid]) / 2;
+
+      const endTickIndex = xTicks.findIndex((t) => t === start);
+      const end = xTicks[endTickIndex + 1];
+
+      if (end === undefined) return null;
+
+      return { start, end, median };
+    }).filter((b) => b !== null) as { start: number; end: number; median: number }[];
+  }, [data, xTicks, chartConfig.xAxisVar, chartConfig.yAxisVar]);
+
   // Selection State
   const [selection, setSelection] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
-  const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing'>('idle');
+  const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing' | 'draggingLine'>('idle');
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const [hoveredPoint, setHoveredPoint] = useState<{ seriesIndex: number; pointIndex: number } | null>(null);
+  const [hoveredMedian, setHoveredMedian] = useState<{ median: number; range: string; x: number; y: number } | null>(null);
   const [hoveredLegend, setHoveredLegend] = useState<string | null>(null);
   const [cursorOverride, setCursorOverride] = useState<string | null>(null);
+  const [draggedLineIndex, setDraggedLineIndex] = useState<number | null>(null);
 
 
   const dragStart = useRef<{ x: number; y: number } | null>(null);
@@ -238,6 +345,35 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     const rect = chartRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    // Check for Reference Lines
+    if (localRefLines.length > 0) {
+      const chartLeft = MARGIN.left + Y_AXIS_WIDTH;
+      const chartTop = MARGIN.top + LEGEND_HEIGHT;
+      const chartWidth = rect.width - chartLeft - MARGIN.right;
+      const chartHeight = rect.height - chartTop - MARGIN.bottom - X_AXIS_HEIGHT;
+      const clickTolerance = 10;
+
+      for (let i = 0; i < localRefLines.length; i += 1) {
+        const line = localRefLines[i];
+        if (line.direction === 'y') {
+          const { y: lineY } = dataToPixels(0, line.value, rect.width, rect.height);
+          if (Math.abs(y - lineY) <= clickTolerance && x >= chartLeft && x <= chartLeft + chartWidth) {
+            setInteractionMode('draggingLine');
+            setDraggedLineIndex(i);
+            return;
+          }
+        } else {
+          // Horizontal drag (vertical line)
+          const { x: lineX } = dataToPixels(line.value, 0, rect.width, rect.height);
+          if (Math.abs(x - lineX) <= clickTolerance && y >= chartTop && y <= chartTop + chartHeight) {
+            setInteractionMode('draggingLine');
+            setDraggedLineIndex(i);
+            return;
+          }
+        }
+      }
+    }
 
     // Check if clicking existing selection
     if (selection) {
@@ -301,6 +437,32 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     // Update Cursor when Idle
     if (interactionMode === 'idle') {
       let cursor = 'crosshair';
+
+      // Check hover over ref lines
+      if (localRefLines.length > 0) {
+        const chartLeft = MARGIN.left + Y_AXIS_WIDTH;
+        const chartTop = MARGIN.top + LEGEND_HEIGHT;
+        const chartWidth = rect.width - chartLeft - MARGIN.right;
+        const chartHeight = rect.height - chartTop - MARGIN.bottom - X_AXIS_HEIGHT;
+        const hoverTolerance = 10;
+
+        for (const line of localRefLines) {
+          if (line.direction === 'y') {
+            const { y: lineY } = dataToPixels(0, line.value, rect.width, rect.height);
+            if (Math.abs(y - lineY) <= hoverTolerance && x >= chartLeft && x <= chartLeft + chartWidth) {
+              cursor = 'ns-resize';
+              break;
+            }
+          } else {
+            const { x: lineX } = dataToPixels(line.value, 0, rect.width, rect.height);
+            if (Math.abs(x - lineX) <= hoverTolerance && y >= chartTop && y <= chartTop + chartHeight) {
+              cursor = 'ew-resize';
+              break;
+            }
+          }
+        }
+      }
+
       if (selection) {
         const p1 = dataToPixels(selection.x1, selection.y1, rect.width, rect.height);
         const p2 = dataToPixels(selection.x2, selection.y2, rect.width, rect.height);
@@ -356,12 +518,41 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       if (resizeHandle?.includes('s')) newMinY = dataY;
 
       setSelection({ x1: newMinX, y1: newMinY, x2: newMaxX, y2: newMaxY });
+    } else if (interactionMode === 'draggingLine') {
+      if (draggedLineIndex === null) return;
+      // dataX/Y already calculated above
+      const line = localRefLines[draggedLineIndex];
+      let newValue = line.direction === 'y' ? dataY : dataX;
+
+      // Apply constraints if maxAdjustment is defined
+      if (line.maxAdjustment !== undefined) {
+        // Find the initial value from the source of truth (dummy data) to calculate the range
+        // We look up by the current yAxisVar (or xAxisVar if direction is x, but we only have y-axis refs for now usually)
+        // If we can't find original, we fallback to current (no constraint essentially, or strict to current)
+        // Better: store initialValue in localRefLines state when initializing.
+        // But for now, let's look it up from SCATTER_PLOT_REFERENCE_LINES directly.
+
+        const originalLines = SCATTER_PLOT_REFERENCE_LINES[chartConfig.yAxisVar];
+        // We assume the index matches because we initialized localRefLines from it and didn't reorder
+        const originalLine = originalLines?.[draggedLineIndex];
+
+        if (originalLine) {
+          const minVal = originalLine.value - line.maxAdjustment;
+          const maxVal = originalLine.value + line.maxAdjustment;
+          newValue = Math.max(minVal, Math.min(maxVal, newValue));
+        }
+      }
+
+      const newLines = [...localRefLines];
+      newLines[draggedLineIndex] = { ...line, value: newValue };
+      setLocalRefLines(newLines);
     }
   };
 
   const handleMouseUp = () => {
     setInteractionMode('idle');
     setResizeHandle(null);
+    setDraggedLineIndex(null);
     dragStart.current = null;
     initialSelection.current = null;
 
@@ -398,6 +589,9 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
         <Flex direction="row" align="center" gap="sm" pr="md">
           {/** Action Icons */}
+          <ActionIcon variant="subtle" disabled>
+            <IconSettings size={18} />
+          </ActionIcon>
           <ActionIcon variant="subtle" disabled>
             <IconFilter size={18} />
           </ActionIcon>
@@ -459,7 +653,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
           }
         `}</style>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart
+          <ScatterChart
             margin={MARGIN}
           >
             <CartesianGrid strokeDasharray="3 3" />
@@ -484,25 +678,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
             />
             <Tooltip
               cursor={{ strokeDasharray: '5 5', stroke: '#888', strokeWidth: 1 }}
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const data = payload[0].payload;
-                  return (
-                    <div style={{
-                      backgroundColor: 'white',
-                      border: '1px solid #ccc',
-                      padding: '8px 12px',
-                      borderRadius: '4px',
-                      fontSize: '12px'
-                    }}>
-                      <p style={{ margin: '2px 0', fontWeight: 'bold' }}>{payload[0].name}</p>
-                      <p style={{ margin: '2px 0' }}>{xLabel}: {data[chartConfig.xAxisVar]}</p>
-                      <p style={{ margin: '2px 0' }}>{yLabel}: {data[chartConfig.yAxisVar]}</p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
+              content={<CustomTooltip xLabel={xLabel} yLabel={yLabel} xAxisVar={chartConfig.xAxisVar} yAxisVar={chartConfig.yAxisVar} />}
             />
             <Legend
               verticalAlign="top"
@@ -521,17 +697,30 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                 fillOpacity={1}
               />
             ))}
-            {SCATTER_PLOT_REFERENCE_LINES[chartConfig.yAxisVar]?.map((line: { value: number; label: string; color: string; direction: 'x' | 'y' }, i: number) => (
-              <ReferenceLine
-                key={i}
-                y={line.direction === 'y' ? line.value : undefined}
-                x={line.direction === 'x' ? line.value : undefined}
-                stroke={line.color}
-                label={{
-                  value: line.label, position: 'insideTopLeft', fill: line.color, fontSize: 12,
-                }}
-              />
-            ))}
+
+            {localRefLines.map((line: { value: number; label: string; color: string; direction: 'x' | 'y' }, i: number) => {
+              const unit = getUnit(line.direction === 'x' ? chartConfig.xAxisVar : chartConfig.yAxisVar);
+              // Extract base label if it was previously modified or just use it
+              const baseLabel = line.label.split(':')[0];
+              const displayLabel = `${baseLabel}: ${Math.round(line.value * 10) / 10} ${unit}`;
+
+              return (
+                <ReferenceLine
+                  key={i}
+                  y={line.direction === 'y' ? line.value : undefined}
+                  x={line.direction === 'x' ? line.value : undefined}
+                  stroke={line.color}
+                  strokeDasharray="5 5"
+                  label={{
+                    value: displayLabel,
+                    position: 'insideTopLeft',
+                    fill: line.color,
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                />
+              );
+            })}
             {selection && (
               <ReferenceArea
                 x1={clamp(selection.x1, xDomain[0], xDomain[1])}
@@ -570,7 +759,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
               >
                 {series.data.map((entry, index) => {
                   let fillColor = series.color;
-                  let opacity = 1;
+                  let opacity = 0.7;
 
                   const isHovered = hoveredPoint?.seriesIndex === seriesIndex && hoveredPoint?.pointIndex === index;
 
@@ -600,8 +789,79 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
               </Scatter>
             ))}
 
-          </ComposedChart>
+            {binMedians.map((bin) => {
+              const width = bin.end - bin.start;
+              const startX = bin.start + width * 0.25;
+              const endX = bin.start + width * 0.75;
+              return (
+                <ReferenceLine
+                  key={`median-${bin.start}`}
+                  segment={[{ x: startX, y: bin.median }, { x: endX, y: bin.median }]}
+                  stroke="#ccc" // Lighter grey
+                  strokeWidth={2}
+                  strokeOpacity={0.7}
+                  isFront
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={(e) => {
+                    // Calculate position relative to chart container
+                    if (!chartRef.current) return;
+                    const domEvent = e as unknown as React.MouseEvent;
+                    if (domEvent && chartRef.current) {
+                      const rect = chartRef.current.getBoundingClientRect();
+                      const centerX = bin.start + width / 2;
+                      const { x: pixelX, y: pixelY } = dataToPixels(centerX, bin.median, rect.width, rect.height);
+                      setHoveredMedian({
+                        median: bin.median,
+                        range: `${bin.start}-${bin.end}`,
+                        x: pixelX,
+                        y: pixelY,
+                      });
+                    }
+                  }}
+                  onMouseLeave={() => setHoveredMedian(null)}
+                />
+              );
+            })}
+          </ScatterChart>
         </ResponsiveContainer>
+        {hoveredMedian && (
+          <div
+            style={{
+              position: 'absolute',
+              left: hoveredMedian.x,
+              top: hoveredMedian.y - 10,
+              transform: 'translate(-50%, -100%)',
+              backgroundColor: 'white',
+              border: '1px solid #ccc',
+              padding: '8px 12px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              pointerEvents: 'none',
+              zIndex: 10,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            }}
+          >
+            <p style={{ margin: '2px 0', fontWeight: 600 }}>
+              Median
+              {' '}
+              {yLabel}
+              :
+              {' '}
+              {Math.round(hoveredMedian.median * 100) / 100}
+              {' '}
+              {getUnit(chartConfig.yAxisVar)}
+            </p>
+            <p style={{ margin: '2px 0', color: '#666' }}>
+              Group:
+              {' '}
+              {hoveredMedian.range}
+              {' '}
+              {getUnit(chartConfig.xAxisVar)}
+              {' '}
+              {xLabel}
+            </p>
+          </div>
+        )}
       </div>
     </Stack>
   );

@@ -256,9 +256,19 @@ export const GUIDELINE_ADHERENT_OPTIONS = Object.values(GUIDELINE_ADHERENT) as R
 // Lab Results ---------------------------------------------------
 export const LAB_RESULTS = [
   {
+    value: 'pre_op_hgb',
+    label: {
+      base: 'Pre-Operative Hemoglobin (g/dL)',
+      sum: 'Total Pre-Operative Hemoglobin',
+      avg: 'Average Pre-Operative Hemoglobin',
+    },
+    units: { sum: 'g/dL', avg: 'g/dL' },
+    decimals: { sum: 0, avg: 2 },
+  },
+  {
     value: 'post_op_hgb',
     label: {
-      base: 'Post-Operative Hemoglobin',
+      base: 'Post-Operative Hemoglobin (g/dL)',
       sum: 'Total Post-Operative Hemoglobin',
       avg: 'Average Post-Operative Hemoglobin',
     },
@@ -397,6 +407,7 @@ type ChartConfig<X, Y, A, T> = {
   yAxisVar: Y;
   aggregation: A;
   chartType: T;
+  title?: string;
 };
 
 // PBM Dashboard ---------------------------------------------------
@@ -448,7 +459,7 @@ export type DashboardStatConfig = {
   title: string;
 };
 
-export type DashboardStatData = Record<DashboardAggYAxisVar, {value: string, diff: number, comparedTo?: string, sparklineData: number[]} >;
+export type DashboardStatData = Record<DashboardAggYAxisVar, { value: string, diff: number, comparedTo?: string, sparklineData: number[] }>;
 
 // Chart colors (for up to 5 lines/bars)
 export const chartColors = [

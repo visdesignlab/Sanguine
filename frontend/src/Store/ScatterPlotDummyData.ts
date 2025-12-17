@@ -1,10 +1,14 @@
 import { ScatterPlotData, LabResult, BloodComponent } from '../Types/application';
 
 // Reference Lines Configuration
-export const SCATTER_PLOT_REFERENCE_LINES: Record<string, { value: number; label: string; color: string; direction: 'x' | 'y' }[]> = {
+export const SCATTER_PLOT_REFERENCE_LINES: Record<string, { value: number; label: string; color: string; direction: 'x' | 'y'; maxAdjustment?: number }[]> = {
     post_op_hgb: [
-        { value: 7, label: 'Target: 7 g/dL', color: '#22c55e', direction: 'y' },
-        { value: 10, label: 'Upper: 10 g/dL', color: '#f59e0b', direction: 'y' },
+        { value: 7, label: 'Restrictive Trigger: 7 g/dL', color: '#22c55e', direction: 'y', maxAdjustment: 0.5 },
+        { value: 10, label: 'Upper Limit for Intervention: 10 g/dL', color: '#f59e0b', direction: 'y', maxAdjustment: 0.5 },
+    ],
+    pre_op_hgb: [
+        { value: 13, label: 'Optimization Target: 13 g/dL', color: '#22c55e', direction: 'y' },
+        { value: 10, label: 'High-Risk Threshold: 10 g/dL', color: '#f59e0b', direction: 'y' },
     ],
     rbc_units: [
         { value: 2, label: 'Guideline: 2 units', color: '#22c55e', direction: 'y' },
@@ -27,8 +31,8 @@ const generateScatterData = (
     seriesName: string,
     color: string,
     numPoints: number = 20,
-): { [key: string]: number | boolean }[] => {
-    const data: { [key: string]: number | boolean }[] = [];
+): { [key: string]: number }[] => {
+    const data: { [key: string]: number }[] = [];
 
     // Determine x-axis range based on variable
     const isCellSaver = xVar === 'cell_saver_ml';
@@ -46,11 +50,11 @@ const generateScatterData = (
         const y = baseY + (Math.random() - 0.5) * 1.5;
 
         // Generate other random attributes for grouping
-        // Random boolean outcomes
-        const ecmo = Math.random() > 0.9; // 10% chance
-        const death = Math.random() > 0.95; // 5% chance
-        const vent = Math.random() > 0.8;
-        const stroke = Math.random() > 0.98;
+        // Random boolean outcomes (0 or 1)
+        const ecmo = Math.random() > 0.9 ? 1 : 0; // 10% chance
+        const death = Math.random() > 0.95 ? 1 : 0; // 5% chance
+        const vent = Math.random() > 0.8 ? 1 : 0;
+        const stroke = Math.random() > 0.98 ? 1 : 0;
 
         // Random blood product usage
         const rbc_units = Math.floor(Math.random() * 5);
@@ -66,41 +70,11 @@ const generateScatterData = (
         // Random length of stay
         const los = Math.floor(Math.random() * 15);
 
-        // Guideline adherence (booleans converted to strings or just booleans if supported)
-        const ffp_adherent = Math.random() > 0.5;
-
-        const point: any = {
-            [xVar]: Math.round(x * 10) / 10,
-            [yVar]: Math.max(yMin, Math.min(yMax, Math.round(y * 10) / 10)),
-            // Outcomes
-            ecmo,
-            death,
-            vent,
-            stroke,
-            // Blood Products (ensure these exist even if they aren't the axis var)
-            rbc_units,
-            ffp_units,
-            plt_units,
-            cryo_units,
-            cell_saver_ml,
-            // Costs & Indices
-            total_blood_product_cost,
-            case_mix_index,
-            // Other
-            los,
-            ffp_adherent,
-        };
-
-        // Ensure the main axis vars are definitely set (overwriting random generation if needed)
-        // (Though the logic above does this, it's safer to rely on the passed args for the main x/y)
-        // But since we are populating ALL fields, we might overwrite the main X/Y if we are not careful.
-        // Actually, the keys [xVar] and [yVar] will overwrite the specific fields if they match.
-        // For example if xVar is 'rbc_units', the first line `[xVar]: ...` sets it.
-        // Then `rbc_units` later might overwrite it?
-        // Let's construct `point` carefully.
+        // Guideline adherence (0 or 1)
+        const ffp_adherent = Math.random() > 0.5 ? 1 : 0;
 
         // Base Point
-        const basePoint = {
+        const basePoint: Record<string, number> = {
             // Default randoms for everything
             ecmo, death, vent, stroke,
             rbc_units, ffp_units, plt_units, cryo_units, cell_saver_ml,
@@ -339,5 +313,61 @@ export const SCATTER_PLOT_DUMMY_DATA: Record<string, ScatterPlotData> = {
                 { cell_saver_ml: 300, post_op_hgb: 10.4 },
             ],
         },
+    ],
+    // Pre-op Hemoglobin Data
+    // RBC Units vs Pre-op Hemoglobin
+    sum_pre_op_hgb_rbc_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    ],
+    avg_pre_op_hgb_rbc_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    ],
+    // FFP Units vs Pre-op Hemoglobin
+    sum_pre_op_hgb_ffp_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    ],
+    avg_pre_op_hgb_ffp_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    ],
+    // Platelet Units vs Pre-op Hemoglobin
+    sum_pre_op_hgb_plt_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    ],
+    avg_pre_op_hgb_plt_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    ],
+    // Cryo Units vs Pre-op Hemoglobin
+    sum_pre_op_hgb_cryo_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    ],
+    avg_pre_op_hgb_cryo_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    ],
+    // Cell Salvage Volume vs Pre-op Hemoglobin
+    sum_pre_op_hgb_cell_saver_ml: [
+        { name: 'Anesth 101', color: '#1770B8', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 101', '#1770B8') },
+        { name: 'Anesth 204', color: '#EF2026', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 204', '#EF2026') },
+        { name: 'Anesth 317', color: '#897BD3', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 317', '#897BD3') },
+    ],
+    avg_pre_op_hgb_cell_saver_ml: [
+        { name: 'Anesth 101', color: '#1770B8', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 101', '#1770B8') },
+        { name: 'Anesth 204', color: '#EF2026', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 204', '#EF2026') },
+        { name: 'Anesth 317', color: '#897BD3', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 317', '#897BD3') },
     ],
 };

@@ -17,7 +17,7 @@ import {
 import { BarChart } from '@mantine/charts';
 import { DateInput } from '@mantine/dates';
 import {
-  IconChartBar, IconCircle, IconCircleFilled, IconRestore,
+  IconChartBar, IconCircle, IconCircleFilled, IconRestore, IconSettings,
 } from '@tabler/icons-react';
 import { useContext } from 'react';
 import { useObserver } from 'mobx-react';
@@ -58,7 +58,12 @@ export function FilterPanel() {
     <Box>
       {/* Panel Header */}
       <Flex direction="row" justify="space-between" align="center" h={40}>
-        <Title order={3}>Filter Panel</Title>
+        <Flex direction="row" align="center" gap="sm">
+          <ActionIcon disabled variant="subtle" aria-label="Settings">
+            <IconSettings stroke={iconStroke} size={21} />
+          </ActionIcon>
+          <Title order={3}>Filter Panel</Title>
+        </Flex>
         <Flex direction="row" align="center">
           <ActionIcon
             aria-label="Reset all filters"
