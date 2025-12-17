@@ -86,7 +86,7 @@ export class RootStore {
     const query = `
       TRUNCATE TABLE filteredVisitIds;
       INSERT INTO filteredVisitIds
-        SELECT visit_no
+        SELECT DISTINCT visit_no
         FROM visits
         ${filtersToApply ? `WHERE ${filtersToApply}` : ''}
         ;
@@ -101,7 +101,7 @@ export class RootStore {
   async updateFilteredVisitsLength() {
     if (!this.duckDB) return;
 
-    const result = await this.duckDB.query('SELECT COUNT(visit_no) AS count FROM filteredVisitIds;');
+    const result = await this.duckDB.query('SELECT COUNT(DISTINCT visit_no) AS count FROM filteredVisitIds;');
     const row = result.toArray()[0].toJSON();
     this.filteredVisitsLength = Number(row.count);
   }
@@ -109,7 +109,7 @@ export class RootStore {
   async updateAllVisitsLength() {
     if (!this.duckDB) return;
 
-    const result = await this.duckDB.query('SELECT COUNT(visit_no) AS count FROM visits;');
+    const result = await this.duckDB.query('SELECT COUNT(DISTINCT visit_no) AS count FROM visits;');
     const row = result.toArray()[0].toJSON();
     this.allVisitsLength = Number(row.count);
   }

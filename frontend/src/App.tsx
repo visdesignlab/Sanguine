@@ -48,15 +48,16 @@ function App() {
           return;
         }
 
-        const res = await fetch(`${queryUrl}get_all_data`);
+        // Fetch visit attributes Parquet file from backend
+        const res = await fetch(`${queryUrl}get_visit_attributes`);
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
-        await db.registerFileBuffer('data.parquet', new Uint8Array(await res.arrayBuffer()));
+        await db.registerFileBuffer('visit_attributes.parquet', new Uint8Array(await res.arrayBuffer()));
 
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
-          SELECT * FROM read_parquet('data.parquet');
+          SELECT * FROM read_parquet('visit_attributes.parquet');
 
           CREATE TABLE IF NOT EXISTS costs (
             rbc_units_cost DOUBLE,
@@ -74,7 +75,7 @@ function App() {
           );
           
           CREATE TABLE IF NOT EXISTS filteredVisitIds AS
-          SELECT visit_no FROM visits;
+          SELECT DISTINCT visit_no FROM visits;
 
           CREATE VIEW IF NOT EXISTS filteredVisits AS
           SELECT
@@ -87,8 +88,49 @@ function App() {
           FROM visits v
           INNER JOIN filteredVisitIds fvi ON v.visit_no = fvi.visit_no
           CROSS JOIN costs c;
+
+          CREATE VIEW IF NOT EXISTS aggregatedVisits AS
+          SELECT
+            visit_no,
+            month,
+            quarter,
+            year,
+            dsch_dtm,
+            
+            -- Sum granular metrics across providers for the visit
+            SUM(rbc_units) as rbc_units,
+            SUM(ffp_units) as ffp_units,
+            SUM(plt_units) as plt_units,
+            SUM(cryo_units) as cryo_units,
+            -- SUM(whole_units) as whole_units,
+            SUM(cell_saver_ml) as cell_saver_ml,
+
+            SUM(rbc_units_cost) as rbc_units_cost,
+            SUM(ffp_units_cost) as ffp_units_cost,
+            SUM(plt_units_cost) as plt_units_cost,
+            SUM(cryo_units_cost) as cryo_units_cost,
+            SUM(cell_saver_cost) as cell_saver_cost,
+            
+            SUM(rbc_adherent) as rbc_adherent,
+            SUM(ffp_adherent) as ffp_adherent,
+            SUM(plt_adherent) as plt_adherent,
+            SUM(cryo_adherent) as cryo_adherent,
+            
+            -- Max visit-level attributes
+            MAX(los) as los,
+            MAX(death) as death,
+            MAX(vent) as vent,
+            MAX(stroke) as stroke,
+            MAX(ecmo) as ecmo,
+            
+            MAX(ms_drg_weight) as ms_drg_weight,
+            MAX(age_at_adm) as age_at_adm
+
+          FROM filteredVisits
+          GROUP BY visit_no, month, quarter, year, dsch_dtm;
         `);
 
+        // Update all stores
         await store.updateAllVisitsLength();
         await store.filtersStore.calculateDefaultFilterValues();
         await store.updateFilteredVisitsLength();

@@ -123,9 +123,9 @@ def whoami(request):
 @never_cache
 @require_http_methods(["HEAD", "GET"])
 @conditional_login_required
-def get_all_data(request):
+def get_visit_attributes(request):
     log_request(request)
-    file_path = Path(settings.BASE_DIR) / "parquet_cache" / "all_departments.parquet"
+    file_path = Path(settings.BASE_DIR) / "parquet_cache" / "visit_attributes.parquet"
     if not file_path.exists():
         return HttpResponse("Parquet file not found. Please generate it first.", status=404)
     return FileResponse(open(file_path, 'rb'), content_type='application/vnd.apache.arrow.file')

@@ -260,7 +260,7 @@ export class DashboardStore {
         year,
         COUNT(visit_no) AS visit_count,
         ${selectClauses.join(',\n')}
-      FROM filteredVisits
+      FROM aggregatedVisits
       GROUP BY month, quarter, year
       ORDER BY year, quarter, month;
     `;
@@ -439,7 +439,7 @@ export class DashboardStore {
     const mainStatsQuery = `
     SELECT
       ${statSelects}
-      FROM filteredVisits
+      FROM aggregatedVisits
       WHERE dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}';
     `;
 
@@ -486,7 +486,7 @@ export class DashboardStore {
     SELECT
       month,
       ${sparklineSelects.join(',\n')}
-    FROM filteredVisits
+    FROM aggregatedVisits
     WHERE month IN (${sparklineMonths.map((m) => `'${m}'`).join(', ')})
     GROUP BY month
     ORDER BY month;
