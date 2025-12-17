@@ -840,6 +840,7 @@ class Command(BaseCommand):
                     # Pick a provider from prepared list
                     prov_id, prov_name = segment_providers[i]
                     
+                    is_last = (i == num_provider_lines - 1)
                     if is_last:
                         # 10% chance of gap at end (1h to 24h)
                         gap = random.uniform(3600, 86400) if random.random() > 0.9 else 0
