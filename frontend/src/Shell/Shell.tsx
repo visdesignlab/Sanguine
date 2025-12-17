@@ -17,8 +17,12 @@ import {
   IconRestore, type IconProps,
   IconChartBar,
   IconClipboardList,
+  IconBug,
+  IconMenu2,
+  IconAt,
+  IconFilter,
+  IconSubtask,
 } from '@tabler/icons-react';
-import * as htmlToImage from 'html-to-image';
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
 import classes from './Shell.module.css';
@@ -190,7 +194,7 @@ export function Shell() {
               // --- User menu ---
               if (label === 'User') {
                 return (
-                  <Menu shadow="md" width={200} offset={12} trigger="hover" closeDelay={200} key="user-menu">
+                  <Menu shadow="md" width={200} offset={12} trigger="hover" key="user-menu">
                     <Menu.Target>
                       <ActionIcon aria-label="User">
                         <IconUser stroke={iconStroke} />
@@ -221,6 +225,73 @@ export function Shell() {
                 </Tooltip>
               );
             })}
+            <Menu position="bottom-end" offset={12} trigger="click-hover">
+              <Menu.Target>
+                <ActionIcon aria-label="Additional Options">
+                  <IconMenu2 stroke={iconStroke} />
+                </ActionIcon>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Label>Actions</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconFilter size={14} />}
+                  onClick={() => {
+                    store.filtersStore.resetAllFilters();
+                  }}
+                >
+                  Reset all filters
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconClipboardList size={14} />}
+                  onClick={() => {
+                    store.selectionsStore.clearAllSelectedVisits();
+                  }}
+                >
+                  Clear selected visits
+                </Menu.Item>
+
+                <Menu.Label>Help & Feedback</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconBook size={14} />}
+                  onClick={() => { window.open('https://docs.intelvia.app/', '_blank'); }}
+                  disabled
+                >
+                  Documentation
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconAt size={14} />}
+                  // Copy email to clipboard
+                  onClick={() => { navigator.clipboard.writeText('support@intelvia.io'); }}
+                >
+                  Copy Support Email
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconBug size={14} />}
+                  onClick={() => { window.open('https://github.com/visdesignlab/Sanguine/issues/', '_blank'); }}
+                >
+                  Report a Bug
+                </Menu.Item>
+
+                <Menu.Label>Session</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconSubtask size={14} />}
+                  disabled
+                >
+                  Manage Sessions
+                </Menu.Item>
+
+                <Menu.Label>Account</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconLogout size={14} />}
+                  onClick={async () => {
+                    await fetch(`${import.meta.env.VITE_QUERY_URL}accounts/logout`, { credentials: 'include' });
+                  }}
+                >
+                  Log out
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Group>
         </Group>
       </AppShell.Header>

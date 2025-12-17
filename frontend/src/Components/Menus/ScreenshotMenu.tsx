@@ -146,7 +146,6 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
         shadow="md"
         width={280}
         trigger="hover"
-        closeDelay={200}
         offset={12}
         opened={screenshotsMenuOpened}
         onOpen={() => setScreenshotsMenuOpened(true)}
