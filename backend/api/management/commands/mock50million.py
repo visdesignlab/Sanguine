@@ -16,7 +16,7 @@ from api.views.utils.utils import get_all_cpt_code_filters
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Scale mock counts to match real-data percentages.
-MOCK_TOTAL = 40 * 10**6  # Change to scale
+MOCK_TOTAL = 40 * 10**3  # Change to scale
 REAL_COUNTS = {
     "Patients": 303_000,
     "Visits": 704_000,
@@ -74,6 +74,11 @@ class Command(BaseCommand):
         self.stdout.write("Loading data into database...")
         # Perform the LOAD DATA LOCAL INFILE
         with connection.cursor() as cursor:
+            # Truncate table to prevent duplicates
+            cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+            cursor.execute(f"TRUNCATE TABLE {table_name};")
+            cursor.execute("SET FOREIGN_KEY_CHECKS=1;")
+            
             load_sql = f"""
                 LOAD DATA LOCAL INFILE '{tmpfile_path}'
                 INTO TABLE {table_name}
@@ -799,54 +804,88 @@ class Command(BaseCommand):
                 # Parse base dates
                 adm_time = datetime.strptime(visit["adm_dtm"], DATE_FORMAT)
                 dsch_time = datetime.strptime(visit["dsch_dtm"], DATE_FORMAT)
+                visit_duration = (dsch_time - adm_time).total_seconds()
                 
-                # Default: overlapping full duration
-                prov0_end = dsch_time
-                extra_start = adm_time
+                # Determine number of provider lines (provider attending instances during visit)
+                is_long_visit = visit_duration > 2 * 24 * 3600
+                if is_long_visit and random.random() < 0.01:
+                    num_provider_lines = random.randint(5, 60)
+                else:
+                    r = random.random()
+                    if r < 0.80:
+                        num_provider_lines = 1
+                    elif r < 0.95:
+                        num_provider_lines = 2
+                    else:
+                        num_provider_lines = 3
+
+                # Select providers for this visit (target ~70% unique, ~30% repeat)
+                # Number of unique providers
+                num_unique = max(1, int(num_provider_lines * 0.7))
+                num_unique = min(num_unique, len(provider_pool))
                 
-                # Secondary providers (lines 1, 2, etc.)
-                # 40% chance of having extra providers
-                has_extra = random.random() < 0.4
+                unique_pool = random.sample(provider_pool, k=num_unique)
                 
-                # If we have multiple providers, 50% chance that they don't fully overlap during visit
-                if has_extra and random.random() < 0.5:
-                    total_seconds = (dsch_time - adm_time).total_seconds()
-                    # Split point between 20% and 80% of stay
-                    split_offset = random.uniform(0.2, 0.8) * total_seconds
-                    split_time = adm_time + timedelta(seconds=split_offset)
+                # Ensure all unique providers are used at least once, then fill remainder with repeats
+                segment_providers = unique_pool[:]
+                while len(segment_providers) < num_provider_lines:
+                    segment_providers.append(random.choice(unique_pool))
+                
+                # Shuffle so the repeats/uniques are distributed randomly
+                random.shuffle(segment_providers)
+
+                current_start = adm_time
+                
+                for i in range(num_provider_lines):
+                    # Pick a provider from prepared list
+                    prov_id, prov_name = segment_providers[i]
                     
-                    # Provide a small overlap (e.g. 1 hour) or no overlap
-                    prov0_end = split_time + timedelta(hours=1)
-                    if prov0_end > dsch_time:
-                        prov0_end = dsch_time
-                        
-                    extra_start = split_time
-                    if extra_start < adm_time:
-                        extra_start = adm_time
+                    if is_last:
+                        # 10% chance of gap at end (1h to 24h)
+                        gap = random.uniform(3600, 86400) if random.random() > 0.9 else 0
+                        raw_end = dsch_time - timedelta(seconds=gap)
+                    else:
+                        remaining = (dsch_time - current_start).total_seconds()
+                        chunk = (remaining / (num_provider_lines - i)) * random.uniform(0.5, 1.5)
+                        raw_end = current_start + timedelta(seconds=chunk)
+                    
+                    # Clamp constraints: >= start+15m, <= dsch_time
+                    prov_line_end = min(dsch_time, max(raw_end, current_start + timedelta(minutes=15)))
 
-                # Primary attending provider (line 0)
-                prov_id, prov_name = random.choice(provider_pool)
-                yield {
-                    "visit_no": visit["visit_no"],
-                    "prov_id": prov_id,
-                    "prov_name": prov_name,
-                    "attend_start_dtm": visit["adm_dtm"],
-                    "attend_end_dtm": prov0_end.strftime(DATE_FORMAT),
-                    "attend_prov_line": 0,
-                }
+                    yield {
+                        "visit_no": visit["visit_no"],
+                        "prov_id": prov_id,
+                        "prov_name": prov_name,
+                        "attend_start_dtm": current_start.strftime(DATE_FORMAT),
+                        "attend_end_dtm": prov_line_end.strftime(DATE_FORMAT),
+                        "attend_prov_line": i,
+                    }
 
-                if has_extra:
-                    num_extra = random.randint(1, 2)
-                    for i in range(num_extra):
-                        other_prov_id, other_prov_name = random.choice(provider_pool)
-                        yield {
-                            "visit_no": visit["visit_no"],
-                            "prov_id": other_prov_id,
-                            "prov_name": other_prov_name,
-                            "attend_start_dtm": extra_start.strftime(DATE_FORMAT),
-                            "attend_end_dtm": visit["dsch_dtm"],
-                            "attend_prov_line": i + 1,
-                        }
+                    if is_last:
+                        break
+
+                    # Prepare start time for NEXT provider line transition                    
+                    rand_trans = random.random()
+                    if rand_trans < 0.70:
+                        # 70% Sequential (next starts exactly when prev ends)
+                        next_start = prov_line_end
+                    elif rand_trans < 0.85:
+                        # 15% Gap (next starts later)
+                        gap = random.uniform(3600, 24 * 3600)
+                        next_start = prov_line_end + timedelta(seconds=gap)
+                    else:
+                        # 15% Overlap (next starts earlier)
+                        overlap = random.uniform(900, 4 * 3600)
+                        next_start = prov_line_end - timedelta(seconds=overlap)
+                        # Don't overlap before current segment start (sanity check)
+                        if next_start < current_start:
+                            next_start = current_start + timedelta(minutes=5)
+
+                    # Ensure next_start doesn't exceed discharge
+                    if next_start >= dsch_time - timedelta(minutes=15):
+                        break # Stop if no time left
+                    
+                    current_start = next_start
         self.send_csv_to_db(gen_attending_providers(), fieldnames=attending_provider_fieldnames, table_name="AttendingProvider")
 
         # Generate Room Trace
