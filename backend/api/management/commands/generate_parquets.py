@@ -62,10 +62,10 @@ class Command(BaseCommand):
             pa.field("iron", pa.bool8(), nullable=True),
             pa.field("antifibrinolytic", pa.bool8(), nullable=True),
 
-            pa.field("rbc_adherent", pa.uint16(), nullable=False),
-            pa.field("ffp_adherent", pa.uint16(), nullable=False),
-            pa.field("plt_adherent", pa.uint16(), nullable=False),
-            pa.field("cryo_adherent", pa.uint16(), nullable=False),
+            pa.field("rbc_units_adherent", pa.uint16(), nullable=False),
+            pa.field("ffp_units_adherent", pa.uint16(), nullable=False),
+            pa.field("plt_units_adherent", pa.uint16(), nullable=False),
+            pa.field("cryo_units_adherent", pa.uint16(), nullable=False),
             pa.field("overall_adherent", pa.uint16(), nullable=False),
 
             pa.field("attending_provider", pa.string(), nullable=True),

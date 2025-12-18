@@ -695,6 +695,7 @@ class Command(BaseCommand):
 
         # Generate Transfusions
         transfusion_fieldnames = [
+            "id",
             "visit_no",
             "trnsfsn_dtm",
             "transfusion_rank",
@@ -713,6 +714,7 @@ class Command(BaseCommand):
         ]
 
         def gen_transfusions():
+            transfusion_id_counter = 1
             for rank, (surg, lab) in enumerate(labs):
                 num_transfusions = random.choices([0, 1, 2, 3, 4], weights=[0.2, 0.1, 0.05, 0.02, 0.01])[0]
                 for t in range(num_transfusions):
@@ -765,6 +767,7 @@ class Command(BaseCommand):
                     total_transfused = sum((x if x is not None else 0) for x in (rbcs, cell_saver, ffp, plt, cryo, whole))
                     if total_transfused > 0:
                         yield {
+                            "id": transfusion_id_counter,
                             "visit_no": surg["visit_no"],
                             "trnsfsn_dtm": make_aware(
                                 fake.date_time_between(
@@ -786,6 +789,7 @@ class Command(BaseCommand):
                             "whole_vol": whole * 450 if type == "vol" else None,
                             "cell_saver_ml": cell_saver
                         }
+                        transfusion_id_counter += 1
         self.send_csv_to_db(gen_transfusions(), fieldnames=transfusion_fieldnames, table_name="Transfusion")
 
         # Generate Attending Providers

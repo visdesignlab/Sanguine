@@ -91,10 +91,10 @@ class VisitAttributes(models.Model):
     iron = models.BooleanField()
     antifibrinolytic = models.BooleanField()
 
-    rbc_adherent = models.IntegerField()
-    ffp_adherent = models.IntegerField()
-    plt_adherent = models.IntegerField()
-    cryo_adherent = models.IntegerField()
+    rbc_units_adherent = models.IntegerField()
+    ffp_units_adherent = models.IntegerField()
+    plt_units_adherent = models.IntegerField()
+    cryo_units_adherent = models.IntegerField()
     overall_adherent = models.IntegerField()
 
     rbc_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
