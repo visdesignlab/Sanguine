@@ -454,6 +454,17 @@ class Command(BaseCommand):
                         "prov_name": surg["anesth_prov_name"],
                         "code_rank": rank + 2,
                     }
+                # Add bleeding/hemorrhage codes
+                if bad_pat and random.random() < 0.4:
+                    yield {
+                        "visit_no": surg["visit_no"],
+                        "cpt_code": "11000", # In range 10000-69999
+                        "cpt_code_desc": "CONTROL OF HEMORRHAGE",
+                        "proc_dtm": surg["surgery_start_dtm"],
+                        "prov_id": surg["surgeon_prov_id"],
+                        "prov_name": surg["surgeon_prov_name"],
+                        "code_rank": rank + 3,
+                    }
         self.send_csv_to_db(gen_billing_codes(), fieldnames=billing_code_fieldnames, table_name="BillingCode")
 
         # Generate Labs
@@ -733,13 +744,12 @@ class Command(BaseCommand):
 
                     rbcs = rcb_units
                     cell_saver = cell_saver_ml
-                    # FFP if INR > 2
                     ffp_units = 0
                     if lab["result_desc"] == "INR":
-                        if lab["result_value"] > 2:
-                            ffp_units = fake.random_int(min=2, max=4)
-                        elif lab["result_value"] > 4:
+                        if lab["result_value"] > 4:
                             ffp_units = fake.random_int(min=3, max=7)
+                        elif lab["result_value"] > 1.2:
+                            ffp_units = fake.random_int(min=2, max=4)
                     ffp = ffp_units
 
                     # PLT if PLT count below 10,000

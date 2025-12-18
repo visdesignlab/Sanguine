@@ -66,7 +66,7 @@ class Command(BaseCommand):
             pa.field("ffp_units_adherent", pa.uint16(), nullable=False),
             pa.field("plt_units_adherent", pa.uint16(), nullable=False),
             pa.field("cryo_units_adherent", pa.uint16(), nullable=False),
-            pa.field("overall_adherent", pa.uint16(), nullable=False),
+            pa.field("overall_units_adherent", pa.uint16(), nullable=False),
 
             pa.field("attending_provider", pa.string(), nullable=True),
             pa.field("attending_provider_id", pa.string(), nullable=True),

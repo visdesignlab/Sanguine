@@ -184,15 +184,25 @@ def create_materialize_proc(apps, schema_editor):
                             ) >= 1.8 THEN 1
                             
                             -- 2. Bleeding / Procedure (Surgery +/- 6h OR Major Bleeding Code)
-                            WHEN EXISTS (
-                                SELECT 1 FROM SurgeryCase sc 
-                                WHERE sc.visit_no = t.visit_no 
-                                AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 6 HOUR AND t.trnsfsn_dtm + INTERVAL 6 HOUR
-                            ) OR EXISTS (
-                                SELECT 1 FROM BillingCode bc
-                                WHERE bc.visit_no = t.visit_no
-                                AND (bc.cpt_code BETWEEN '10000' AND '69999') -- Restrict to Surgical Procedures
-                                AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%')
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                  AND UPPER(l.result_desc) = 'INR'
+                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) >= 1.5 
+                            AND (
+                                EXISTS (
+                                    SELECT 1 FROM SurgeryCase sc 
+                                    WHERE sc.visit_no = t.visit_no 
+                                    AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 6 HOUR AND t.trnsfsn_dtm + INTERVAL 6 HOUR
+                                ) OR EXISTS (
+                                    SELECT 1 FROM BillingCode bc
+                                    WHERE bc.visit_no = t.visit_no
+                                    AND (bc.cpt_code BETWEEN '10000' AND '69999') -- Restrict to Surgical Procedures
+                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%')
+                                )
                             ) THEN 1
                             
                             ELSE 0
