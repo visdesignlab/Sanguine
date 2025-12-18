@@ -247,6 +247,12 @@ export class DashboardStore {
           return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`;
         }
 
+        // Show adherence as a percentage of total units
+        if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
+          const baseUnit = yAxisVar.replace('_adherent', '');
+          return `${aggFn}(CASE WHEN ${baseUnit} > 0 THEN ${yAxisVar} / ${baseUnit} ELSE NULL END) AS ${aggregation}_${yAxisVar}`;
+        }
+
         // Return aggregated attribute. (E.g. "SUM(rbc_units) AS sum_rbc_units")
         return `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
       })
@@ -426,6 +432,18 @@ export class DashboardStore {
                   THEN ms_drg_weight ELSE NULL END) / visit_count_comparison_sum AS case_mix_index_comparison_${aggregation}
               `;
         }
+
+        // Custom aggregation for adherence (avg only)
+        if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
+          const baseUnit = yAxisVar.replace('_adherent', '');
+          return `
+            ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+              THEN (CASE WHEN ${baseUnit} > 0 THEN ${yAxisVar} / ${baseUnit} ELSE NULL END) ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
+            ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+              THEN (CASE WHEN ${baseUnit} > 0 THEN ${yAxisVar} / ${baseUnit} ELSE NULL END) ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
+          `;
+        }
+
         // Otherwise, return the cases in the current periods and cases in comparison periods
         return `
               ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
@@ -477,6 +495,16 @@ export class DashboardStore {
         );
         return;
       }
+
+      // Custom aggregation for adherence (avg only)
+      if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
+        const baseUnit = yAxisVar.replace('_adherent', '');
+        sparklineSelects.push(
+          `${aggFn}(CASE WHEN ${baseUnit} > 0 THEN ${yAxisVar} / ${baseUnit} ELSE NULL END) AS ${aggregation}_${yAxisVar}`,
+        );
+        return;
+      }
+
       sparklineSelects.push(
         `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
       );

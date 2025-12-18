@@ -192,10 +192,10 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Guideline Adherent RBC Units Transfused',
       sum: 'Total Guideline Adherent RBC Units Transfused',
-      avg: 'Average Guideline Adherent RBC Units Transfused Per Visit',
+      avg: 'RBC Guideline Adherence Percentage per Visit',
     },
     // Adherence units & decimal truncation for display
-    units: { sum: 'Adherent RBC Units', avg: 'Adherent RBC Units' },
+    units: { sum: 'Adherent RBC Units', avg: '%' },
     decimals: 0,
   },
   ffp: {
@@ -203,9 +203,9 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Guideline Adherent FFP Units Transfused',
       sum: 'Total Guideline Adherent FFP Units Transfused',
-      avg: 'Average Guideline Adherent FFP Units Transfused Per Visit',
+      avg: 'FFP Guideline Adherence Percentage per Visit',
     },
-    units: { sum: 'Adherent Plasma Units', avg: 'Adherent Plasma Units' },
+    units: { sum: 'Adherent Plasma Units', avg: '%' },
     decimals: 0,
   },
   plt: {
@@ -213,9 +213,9 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Guideline Adherent Platelet Units Transfused',
       sum: 'Total Guideline Adherent Platelet Units Transfused',
-      avg: 'Average Guideline Adherent Platelet Units Transfused Per Visit',
+      avg: 'Platelet Guideline Adherence Percentage per Visit',
     },
-    units: { sum: 'Adherent Platelet Units', avg: 'Adherent Platelet Units' },
+    units: { sum: 'Adherent Platelet Units', avg: '%' },
     decimals: 0,
   },
   cryo: {
@@ -223,9 +223,9 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Guideline Adherent Cryo Units Transfused',
       sum: 'Total Guideline Adherent Cryo Units Transfused',
-      avg: 'Average Guideline Adherent Cryo Units Transfused Per Visit',
+      avg: 'Cryo Guideline Adherence Percentage per Visit',
     },
-    units: { sum: 'Adherent Cryo Units', avg: 'Adherent Cryo Units' },
+    units: { sum: 'Adherent Cryo Units', avg: '%' },
     decimals: 0,
   },
 } as const;
@@ -236,9 +236,9 @@ export const OVERALL_GUIDELINE_ADHERENT = {
   label: {
     base: 'Guideline Adherent Units Transfused',
     sum: 'Total Guideline Adherent Units Transfused',
-    avg: 'Average Guideline Adherent Units Transfused Per Visit',
+    avg: 'Overall Guideline Adherence Percentage per Visit',
   },
-  units: { sum: 'Adherent Units', avg: 'Adherent Units' },
+  units: { sum: 'Adherent Units', avg: '%' },
   decimals: 0,
 } as const;
 
