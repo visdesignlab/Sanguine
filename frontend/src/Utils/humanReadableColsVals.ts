@@ -20,7 +20,7 @@ const columnNameMap: Record<string, string> = {
   los: 'Length of Stay',
   month: 'Month',
   mrn: 'MRN',
-  overall_adherent: '# Overall Units Adherent',
+  overall_units_adherent: '# Overall Units Adherent',
   overall_units: '# Overall Units',
   pat_class_desc: 'Patient Class Description',
   plt_units_adherent: '# Platelet Units Adherent',

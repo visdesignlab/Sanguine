@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
                 ('ffp_units_adherent', models.IntegerField()),
                 ('plt_units_adherent', models.IntegerField()),
                 ('cryo_units_adherent', models.IntegerField()),
-                ('overall_adherent', models.IntegerField()),
+                ('overall_units_adherent', models.IntegerField()),
                 ('rbc_units_cost', models.DecimalField(decimal_places=2, max_digits=6)),
                 ('ffp_units_cost', models.DecimalField(decimal_places=2, max_digits=6)),
                 ('plt_units_cost', models.DecimalField(decimal_places=2, max_digits=6)),

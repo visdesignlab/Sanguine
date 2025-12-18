@@ -232,7 +232,7 @@ export const GUIDELINE_ADHERENT = {
 
 // Total guideline adherence (Across all blood products)
 export const OVERALL_GUIDELINE_ADHERENT = {
-  value: 'overall_adherent',
+  value: 'overall_units_adherent',
   label: {
     base: 'Guideline Adherent Units Transfused',
     sum: 'Total Guideline Adherent Units Transfused',

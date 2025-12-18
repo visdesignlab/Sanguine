@@ -406,7 +406,7 @@ class Migration(migrations.Migration):
                 ffp_units_adherent SMALLINT UNSIGNED NOT NULL DEFAULT 0,
                 plt_units_adherent SMALLINT UNSIGNED NOT NULL DEFAULT 0,
                 cryo_units_adherent SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-                overall_adherent SMALLINT UNSIGNED AS (rbc_units_adherent + ffp_units_adherent + plt_units_adherent + cryo_units_adherent) STORED,
+                overall_units_adherent SMALLINT UNSIGNED AS (rbc_units_adherent + ffp_units_adherent + plt_units_adherent + cryo_units_adherent) STORED,
                 
                 rbc_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (rbc_units * 200.00) VIRTUAL,
                 ffp_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (ffp_units * 50.00) VIRTUAL,

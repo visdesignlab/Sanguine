@@ -115,7 +115,7 @@ function App() {
             SUM(ffp_units_adherent) as ffp_units_adherent,
             SUM(plt_units_adherent) as plt_units_adherent,
             SUM(cryo_units_adherent) as cryo_units_adherent,
-            SUM(overall_adherent) as overall_adherent,
+            SUM(overall_units_adherent) as overall_units_adherent,
             
             -- Max visit-level attributes
             MAX(los) as los,

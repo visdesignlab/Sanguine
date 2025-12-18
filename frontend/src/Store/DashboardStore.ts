@@ -247,6 +247,12 @@ export class DashboardStore {
           return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`;
         }
 
+        // Special case: Overall adherence
+        if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
+          const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
+          return `${aggFn}(CASE WHEN (${baseSum}) > 0 THEN ${yAxisVar} / (${baseSum}) ELSE NULL END) AS ${aggregation}_${yAxisVar}`;
+        }
+
         // Show adherence as a percentage of total units
         if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
           const baseUnit = yAxisVar.replace('_adherent', '');
@@ -433,6 +439,17 @@ export class DashboardStore {
               `;
         }
 
+        // Special case: Overall adherence
+        if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
+          const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
+          return `
+            ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+              THEN (CASE WHEN (${baseSum}) > 0 THEN ${yAxisVar} / (${baseSum}) ELSE NULL END) ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
+            ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+              THEN (CASE WHEN (${baseSum}) > 0 THEN ${yAxisVar} / (${baseSum}) ELSE NULL END) ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
+          `;
+        }
+
         // Custom aggregation for adherence (avg only)
         if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
           const baseUnit = yAxisVar.replace('_adherent', '');
@@ -492,6 +509,15 @@ export class DashboardStore {
       if (yAxisVar === 'case_mix_index') {
         sparklineSelects.push(
           `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`,
+        );
+        return;
+      }
+
+      // Special case: Overall adherence
+      if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
+        const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
+        sparklineSelects.push(
+          `${aggFn}(CASE WHEN (${baseSum}) > 0 THEN ${yAxisVar} / (${baseSum}) ELSE NULL END) AS ${aggregation}_${yAxisVar}`,
         );
         return;
       }

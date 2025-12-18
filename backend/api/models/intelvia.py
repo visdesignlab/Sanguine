@@ -95,7 +95,7 @@ class VisitAttributes(models.Model):
     ffp_units_adherent = models.IntegerField()
     plt_units_adherent = models.IntegerField()
     cryo_units_adherent = models.IntegerField()
-    overall_adherent = models.IntegerField()
+    overall_units_adherent = models.IntegerField()
 
     rbc_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
     ffp_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
