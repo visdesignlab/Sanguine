@@ -158,7 +158,7 @@ def create_materialize_proc(apps, schema_editor):
                                 SELECT 1 FROM BillingCode bc 
                                 WHERE bc.visit_no = t.visit_no 
                                 AND (bc.cpt_code BETWEEN '10000' AND '69999') -- Restrict to Surgical Procedures
-                                AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%')
+                                AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
                             ) OR (
                                 SELECT SUM(t2.rbc_units) 
                                 FROM Transfusion t2 
@@ -201,7 +201,7 @@ def create_materialize_proc(apps, schema_editor):
                                     SELECT 1 FROM BillingCode bc
                                     WHERE bc.visit_no = t.visit_no
                                     AND (bc.cpt_code BETWEEN '10000' AND '69999') -- Restrict to Surgical Procedures
-                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%')
+                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
                                 )
                             ) THEN 1
                             
@@ -240,7 +240,7 @@ def create_materialize_proc(apps, schema_editor):
                                     SELECT 1 FROM BillingCode bc
                                     WHERE bc.visit_no = t.visit_no
                                     AND (bc.cpt_code BETWEEN '10000' AND '69999') -- Restrict to Surgical Procedures
-                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%')
+                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
                                 )
                             ) THEN 1
 
@@ -258,11 +258,11 @@ def create_materialize_proc(apps, schema_editor):
                                     SELECT 1 FROM BillingCode bc 
                                     WHERE bc.visit_no = t.visit_no 
                                     AND (
-                                        bc.cpt_code LIKE '61%' OR -- Neuro: Intracranial (Skull, Meninges, Brain)
                                         bc.cpt_code LIKE '33%' OR -- Cardiac: Heart & Pericardium
+                                        bc.cpt_code LIKE '0%T' OR -- Cardiac: Transcatheter Valve Procedures (T-codes)
                                         (
                                             (bc.cpt_code BETWEEN '10000' AND '69999') AND -- Restrict to Surgical Procedures
-                                            (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%')
+                                            (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
                                         )
                                     )
                                 )
@@ -289,7 +289,7 @@ def create_materialize_proc(apps, schema_editor):
                                     SELECT 1 FROM BillingCode bc 
                                     WHERE bc.visit_no = t.visit_no 
                                     AND (bc.cpt_code BETWEEN '10000' AND '69999') -- Restrict to Surgical Procedures
-                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%')
+                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
                                 ) OR (
                                     SELECT SUM(t2.rbc_units) 
                                     FROM Transfusion t2 
