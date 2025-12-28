@@ -5,6 +5,16 @@ import { safeParseDate } from '../Utils/dates';
 
 const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
+// TODO change this to resonable amount?
+export const ProductMaximums = {
+  rbc_units: 5,
+  ffp_units: 5,
+  plt_units: 5,
+  cryo_units: 20,
+  cell_saver_ml: 5000,
+  los: 1000,
+};
+
 // This store contains all filters that can be applied to the data.
 export class FiltersStore {
   _rootStore: RootStore;
@@ -30,26 +40,7 @@ export class FiltersStore {
     ecmo: null as boolean | null,
   };
 
-  _filterValues: typeof this._initialFilterValues = {
-    dateFrom: new Date(new Date().getFullYear() - 5, 0, 1), // 5 years ago from today
-    dateTo: new Date(),
-
-    rbc_units: [0, MANUAL_INFINITY],
-    ffp_units: [0, MANUAL_INFINITY],
-    plt_units: [0, MANUAL_INFINITY],
-    cryo_units: [0, MANUAL_INFINITY],
-    cell_saver_ml: [0, MANUAL_INFINITY],
-
-    b12: null,
-    iron: null,
-    antifibrinolytic: null,
-
-    los: [0, MANUAL_INFINITY],
-    death: null,
-    vent: null,
-    stroke: null,
-    ecmo: null,
-  };
+  _filterValues = this._initialFilterValues;
 
   showFilterHistograms = false;
 
@@ -293,9 +284,10 @@ export class FiltersStore {
       await Promise.all(components.map(async (component) => {
         const [minRange, maxRange] = this._filterValues[component as keyof typeof this._filterValues] as [number, number];
         const numBins = Math.min(20, Math.max(1, maxRange - minRange));
+        const productMaximum = ProductMaximums[component as keyof typeof ProductMaximums] || maxRange;
         const result = await duckDB.query(`
           WITH bins AS (
-            SELECT equi_width_bins(min(${component}), max(${component}), ${numBins}, false) AS bin
+            SELECT equi_width_bins(min(${component}), LEAST(${productMaximum}, max(${component})), ${numBins}, false) AS bin
             FROM filteredVisits
           )
           SELECT HISTOGRAM(${component}, bins.bin) AS histogram,
