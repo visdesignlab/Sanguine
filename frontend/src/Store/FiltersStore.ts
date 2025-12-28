@@ -3,7 +3,7 @@ import { makeAutoObservable } from 'mobx';
 import type { RootStore } from './Store';
 import { safeParseDate } from '../Utils/dates';
 
-const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
+export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
 // TODO change this to resonable amount?
 export const ProductMaximums = {
