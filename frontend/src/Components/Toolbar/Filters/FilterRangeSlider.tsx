@@ -1,8 +1,10 @@
-import { useContext, useEffect, useState } from 'react';
-import { RangeSlider } from '@mantine/core';
+import {
+  useContext, useEffect, useMemo, useState,
+} from 'react';
+import { RangeSlider, RangeSliderValue } from '@mantine/core';
 import { useObserver } from 'mobx-react-lite';
 import { Store } from '../../../Store/Store';
-import { FiltersStore } from '../../../Store/FiltersStore';
+import { FiltersStore, MANUAL_INFINITY, ProductMaximums } from '../../../Store/FiltersStore';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 
 type NumberArrayKeys<T> = {
@@ -13,57 +15,68 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Filter
   const store = useContext(Store);
 
   const [value, setValue] = useState(store.filtersStore.filterValues[varName]);
+
+  // Hard set a max so that outliers will not cuase slider unuseable
+  const reasonableMax = useMemo(() => Math.min(ProductMaximums[varName] ?? MANUAL_INFINITY, store.filtersStore.initialFilterValues[varName][1]), [varName, store.filtersStore.initialFilterValues]);
+
+  // we only want to update this when the reasonableMax updates, which should only be when the actual data changes, not when the user is sliding
   useEffect(() => {
-    if (store.filtersStore.filterValues[varName][0] !== value[0] || store.filtersStore.filterValues[varName][1] !== value[1]) {
-      setValue(store.filtersStore.filterValues[varName]);
-    }
+    setValue([store.filtersStore.filterValues[varName][0], reasonableMax]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.filtersStore.filterValues[varName]]);
+  }, [reasonableMax]);
 
-  return useObserver(() => {
-    const initial = store.filtersStore.initialFilterValues[varName];
-    const [min, max] = initial;
-    const changed = value[0] !== initial[0] || value[1] !== initial[1];
+  function setStoreFilterValue(v: RangeSliderValue) {
+    if (v[1] === reasonableMax) {
+      store.filtersStore.setFilterValue(varName, [value[0], store.filtersStore.initialFilterValues[varName][1]]);
+    } else {
+      store.filtersStore.setFilterValue(varName, v);
+    }
+  }
 
-    return (
-      <RangeSlider
-        defaultValue={store.filtersStore.filterValues[varName]}
-        value={value}
-        size="sm"
-        onChange={setValue}
-        onChangeEnd={(v) => store.filtersStore.setFilterValue(varName, v)}
-        min={min}
-        max={max}
-        step={varName === 'cell_saver_ml' ? 50 : 1}
-        color={changed ? 'blue.6' : DEFAULT_DATA_COLOR}
-        marks={[
-          { value: min, label: String(min) },
-          { value: max, label: String(max) },
-        ]}
-        minRange={0}
-        mb="xl"
-        styles={{
-          label: {
-            backgroundColor: 'white',
-            color: changed ? 'var(--mantine-color-blue-6)' : DEFAULT_DATA_COLOR,
-            border: '1px solid var(--mantine-color-gray-4)',
-            boxShadow: changed
-              ? '0 1px 3px var(--mantine-color-blue-2)'
-              : '0 1px 3px rgba(0,0,0,0.15)',
-          },
-          track: {
-            height: 2,
-          },
-          bar: {
-            height: 2,
-          },
-          thumb: {
-            width: 12,
-            height: 12,
-            borderWidth: 2,
-          },
-        }}
-      />
-    );
-  });
+  const min = useMemo(() => store.filtersStore.initialFilterValues[varName][0], [varName, store.filtersStore.initialFilterValues]);
+
+  const changed = useMemo(() => value[0] !== min || value[1] !== reasonableMax, [value, min, reasonableMax]);
+
+  const actualMax = useMemo(() => store.filtersStore.filterValues[varName][1], [varName, store.filtersStore.filterValues]);
+
+  return useObserver(() => (
+    <RangeSlider
+      defaultValue={store.filtersStore.filterValues[varName]}
+      value={value}
+      size="sm"
+      onChange={setValue}
+      onChangeEnd={(v) => setStoreFilterValue(v)}
+      min={min}
+      max={reasonableMax}
+      step={varName === 'cell_saver_ml' ? 50 : 1}
+      color={changed ? 'blue.6' : DEFAULT_DATA_COLOR}
+      marks={[
+        { value: min, label: `${min}` },
+        { value: reasonableMax, label: `${reasonableMax}${actualMax > reasonableMax ? '+' : ''}` },
+      ]}
+      minRange={0}
+      mb="xl"
+      styles={{
+        label: {
+          backgroundColor: 'white',
+          color: changed ? 'var(--mantine-color-blue-6)' : DEFAULT_DATA_COLOR,
+          border: '1px solid var(--mantine-color-gray-4)',
+          boxShadow: changed
+            ? '0 1px 3px var(--mantine-color-blue-2)'
+            : '0 1px 3px rgba(0,0,0,0.15)',
+        },
+        track: {
+          height: 2,
+        },
+        bar: {
+          height: 2,
+        },
+        thumb: {
+          width: 12,
+          height: 12,
+          borderWidth: 2,
+        },
+      }}
+    />
+  ));
 }
