@@ -439,7 +439,7 @@ export class DashboardStore {
               `;
         }
 
-        // Special case: Overall adherence
+        // Special case: Overall adherence (avg. adherent units as percentage of total units)
         if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
           const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
           return `
@@ -450,7 +450,7 @@ export class DashboardStore {
           `;
         }
 
-        // Custom aggregation for adherence (avg only)
+        // Avg. adherent units as percentage of total units
         if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
           const baseUnit = yAxisVar.replace('_adherent', '');
           return `
@@ -513,7 +513,7 @@ export class DashboardStore {
         return;
       }
 
-      // Special case: Overall adherence
+      // Special case: Overall Adherence (Avg. adherent units as percentage of total units)
       if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
         const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
         sparklineSelects.push(
@@ -522,7 +522,7 @@ export class DashboardStore {
         return;
       }
 
-      // Custom aggregation for adherence (avg only)
+      // Avg. adherent units as percentage of total units
       if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
         const baseUnit = yAxisVar.replace('_adherent', '');
         sparklineSelects.push(
