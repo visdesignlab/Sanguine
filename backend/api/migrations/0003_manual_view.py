@@ -34,10 +34,10 @@ def create_materialize_proc(apps, schema_editor):
             b12,
             iron,
             antifibrinolytic,
-            rbc_adherent,
-            ffp_adherent,
-            plt_adherent,
-            cryo_adherent,
+            rbc_units_adherent,
+            ffp_units_adherent,
+            plt_units_adherent,
+            cryo_units_adherent,
             attending_provider,
             attending_provider_id,
             attending_provider_line,
@@ -76,11 +76,11 @@ def create_materialize_proc(apps, schema_editor):
             CASE WHEN pm.has_iron = 1 THEN TRUE ELSE FALSE END AS iron,
             CASE WHEN pm.has_antifibrinolytic = 1 THEN TRUE ELSE FALSE END AS antifibrinolytic,
 
-            -- Adherence per provider
-            COALESCE(pt.rbc_adherent, 0),
-            COALESCE(pt.ffp_adherent, 0),
-            COALESCE(pt.plt_adherent, 0),
-            COALESCE(pt.cryo_adherent, 0),
+            -- Adherence per provider (Sum of Adherent Units)
+            COALESCE(pt.rbc_units_adherent, 0),
+            COALESCE(pt.ffp_units_adherent, 0),
+            COALESCE(pt.plt_units_adherent, 0),
+            COALESCE(pt.cryo_units_adherent, 0),
 
             ap.prov_name,
             ap.prov_id,
@@ -90,95 +90,278 @@ def create_materialize_proc(apps, schema_editor):
         FROM AttendingProvider ap
         JOIN Visit v ON ap.visit_no = v.visit_no
         
-        -- Transfusions and Adherence Aggregated by Provider
-        -- Find all attending providers active at the time of transfusion.
-        -- Rank them by Responsibility (Line 1 > Line 2).
-        -- Assign the transfusion strictly to the #1 ranked provider to prevent double-counting.
+        /* Blood product units transfused, and adherence of those units, aggregated by provider's periods of attendance */
         LEFT JOIN (
             SELECT 
                 ranked.visit_no,
                 ranked.prov_id,
+                ranked.attend_prov_line,
+                -- Summing the transfused units for each provider's period of attendance
                 SUM(ranked.rbc_units) AS sum_rbc_units,
                 SUM(ranked.ffp_units) AS sum_ffp_units,
                 SUM(ranked.plt_units) AS sum_plt_units,
                 SUM(ranked.cryo_units) AS sum_cryo_units,
                 SUM(ranked.whole_units) AS sum_whole_units,
                 SUM(ranked.cell_saver_ml) AS sum_cell_saver_ml,
-                -- Adherence calculations remain same, but ensuring single counting
-                SUM(ranked.rbc_adherent) AS rbc_adherent,
-                SUM(ranked.ffp_adherent) AS ffp_adherent,
-                SUM(ranked.plt_adherent) AS plt_adherent,
-                SUM(ranked.cryo_adherent) AS cryo_adherent
+                -- Summing the ADHERENT transfused units for each provider's period of attendance
+                SUM(ranked.rbc_units_adherent) AS rbc_units_adherent,
+                SUM(ranked.ffp_units_adherent) AS ffp_units_adherent,
+                SUM(ranked.plt_units_adherent) AS plt_units_adherent,
+                SUM(ranked.cryo_units_adherent) AS cryo_units_adherent
             FROM (
                 SELECT 
                     ap_int.visit_no,
                     ap_int.prov_id,
+                    ap_int.attend_prov_line,
                     t.rbc_units,
                     t.ffp_units,
                     t.plt_units,
                     t.cryo_units,
                     t.whole_units,
                     t.cell_saver_ml,
-                    -- RBC Adherence Logic
-                    CASE WHEN (COALESCE(t.rbc_units, 0) > 0 OR COALESCE(t.rbc_vol, 0) > 0) THEN
-                        CASE WHEN (
-                            SELECT l.result_value
-                            FROM Lab l
-                            WHERE l.visit_no = t.visit_no
-                              AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
-                              AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                            ORDER BY l.lab_draw_dtm DESC
-                            LIMIT 1
-                        ) <= 7.5 THEN 1 ELSE 0 END
-                    ELSE 0 END AS rbc_adherent,
-                    -- FFP Adherence Logic
-                    CASE WHEN (COALESCE(t.ffp_units, 0) > 0 OR COALESCE(t.ffp_vol, 0) > 0) THEN
-                        CASE WHEN (
-                            SELECT l.result_value
-                            FROM Lab l
-                            WHERE l.visit_no = t.visit_no
-                              AND UPPER(l.result_desc) = 'INR'
-                              AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                            ORDER BY l.lab_draw_dtm DESC
-                            LIMIT 1
-                        ) >= 1.5 THEN 1 ELSE 0 END
-                    ELSE 0 END AS ffp_adherent,
-                    -- PLT Adherence Logic
-                    CASE WHEN (COALESCE(t.plt_units, 0) > 0 OR COALESCE(t.plt_vol, 0) > 0) THEN
-                        CASE WHEN (
-                            SELECT l.result_value
-                            FROM Lab l
-                            WHERE l.visit_no = t.visit_no
-                              AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
-                              AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                            ORDER BY l.lab_draw_dtm DESC
-                            LIMIT 1
-                        ) >= 15000 THEN 1 ELSE 0 END
-                    ELSE 0 END AS plt_adherent,
-                    -- Cryo Adherence Logic
-                    CASE WHEN (COALESCE(t.cryo_units, 0) > 0 OR COALESCE(t.cryo_vol, 0) > 0) THEN
-                        CASE WHEN (
-                            SELECT l.result_value
-                            FROM Lab l
-                            WHERE l.visit_no = t.visit_no
-                              AND UPPER(l.result_desc) = 'FIBRINOGEN'
-                              AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                            ORDER BY l.lab_draw_dtm DESC
-                            LIMIT 1
-                        ) >= 175 THEN 1 ELSE 0 END
-                    ELSE 0 END AS cryo_adherent,
                     
+                    /* RBC ADHERENCE LOGIC ============================*/
+                    CASE WHEN COALESCE(t.rbc_units, 0) > 0 THEN
+                        CASE 
+                            -- 1. Restrictive Threshold (Hb <= 7.0)
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                  AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
+                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) <= 7.0 THEN 1
+                            
+                            -- 2. High Risk (7.0 < Hb <= 8.0) AND ((CHF, CVD, or Surgery within 24hr) OR (Neuro OR Cardiac OR Obstetrics OR Vascular))
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                  AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
+                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) BETWEEN 7.0 AND 8.0
+                            AND (
+                                v.cci_chf > 0 OR v.cci_cvd > 0 OR
+                                EXISTS (
+                                    SELECT 1 FROM SurgeryCase sc 
+                                    WHERE sc.visit_no = t.visit_no 
+                                    AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm + INTERVAL 24 HOUR
+                                ) OR EXISTS (
+                                    SELECT 1 FROM BillingCode bc
+                                    WHERE bc.visit_no = t.visit_no
+                                    AND (
+                                        (bc.cpt_code BETWEEN '59000' AND '59899' AND bc.cpt_code NOT LIKE '%F') OR -- Obstetrics (Labor & Delivery)
+                                        (bc.cpt_code BETWEEN '92920' AND '92944' AND bc.cpt_code NOT LIKE '%F')    -- Interventional Cardiology (PCI/Stents)
+                                    )
+                                )
+                            ) THEN 1
+
+                            -- 3. Major Bleeding (BillingCode description matching BLEEDING or HEMORRHAGE) OR High Transfusion (>=4 RBC units within 4 hours)
+                            WHEN EXISTS (
+                                SELECT 1 FROM BillingCode bc 
+                                WHERE bc.visit_no = t.visit_no 
+                                AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F') -- Restrict to 'Surgery' CPT code mappings
+                                AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
+                            ) OR (
+                                SELECT SUM(t2.rbc_units) 
+                                FROM Transfusion t2 
+                                WHERE t2.visit_no = t.visit_no 
+                                AND t2.trnsfsn_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 4 HOUR AND t.trnsfsn_dtm + INTERVAL 4 HOUR
+                            ) >= 4 THEN 1
+                            
+                            ELSE 0 
+                        END * t.rbc_units
+                    ELSE 0 END AS rbc_units_adherent,
+
+                    /* FFP ADHERENCE LOGIC ============================*/
+                    CASE WHEN COALESCE(t.ffp_units, 0) > 0 THEN
+                        CASE
+                            -- 1. If Massive Bleeding Exception (> 3 FFP units within 4 hours, ignoring INR)
+                            WHEN (
+                                SELECT SUM(t2.ffp_units) 
+                                FROM Transfusion t2 
+                                WHERE t2.visit_no = t.visit_no 
+                                AND t2.trnsfsn_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 4 HOUR AND t.trnsfsn_dtm + INTERVAL 4 HOUR
+                            ) >= 3 THEN 1
+                        
+                            -- 2. Standard (INR >= 1.8)
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                AND UPPER(l.result_desc) = 'INR'
+                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) >= 1.8 THEN 1
+                            
+                            -- 3. Procedure (INR >= 1.5 AND Surgery/Bleeding Code)
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                AND UPPER(l.result_desc) = 'INR'
+                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) >= 1.5 
+                            AND (
+                                EXISTS (
+                                    SELECT 1 FROM SurgeryCase sc 
+                                    WHERE sc.visit_no = t.visit_no 
+                                    AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 6 HOUR AND t.trnsfsn_dtm + INTERVAL 6 HOUR
+                                ) OR EXISTS (
+                                    SELECT 1 FROM BillingCode bc
+                                    WHERE bc.visit_no = t.visit_no
+                                    AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F')
+                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
+                                )
+                            ) THEN 1
+                            
+                            ELSE 0
+                        END * t.ffp_units
+                    ELSE 0 END AS ffp_units_adherent,
+
+                    /* PLT ADHERENCE LOGIC ============================*/
+                    CASE WHEN COALESCE(t.plt_units, 0) > 0 THEN
+                        CASE
+                            -- 1. Prophylactic (Plt <= 10,000)
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                  AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
+                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) <= 10000 THEN 1
+
+                            -- 2. Procedure (Plt <= 50,000 AND (Surgery within 6h OR Bleeding))
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                  AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
+                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) <= 50000 
+                            AND (
+                                EXISTS (
+                                    SELECT 1 FROM SurgeryCase sc 
+                                    WHERE sc.visit_no = t.visit_no 
+                                    AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 6 HOUR AND t.trnsfsn_dtm + INTERVAL 6 HOUR
+                                ) OR EXISTS (
+                                    SELECT 1 FROM BillingCode bc
+                                    WHERE bc.visit_no = t.visit_no
+                                    AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F') -- Restrict to Surgical Procedures
+                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
+                                ) 
+                            ) THEN 1
+
+                            -- 3. High Risk (Plt <= 100,000 AND (Neuro OR Cardiac OR Obstetrics OR Vascular))
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                  AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
+                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) <= 100000
+                            AND (
+                                EXISTS (
+                                    SELECT 1 FROM BillingCode bc 
+                                    WHERE bc.visit_no = t.visit_no 
+                                    AND (
+                                        (bc.cpt_code LIKE '33%' AND bc.cpt_code NOT LIKE '%F') OR -- Cardiac: Heart & Pericardium
+                                        (bc.cpt_code BETWEEN '61000' AND '63999' AND bc.cpt_code NOT LIKE '%F') OR -- Neuro (Brain/Spine)
+                                        (bc.cpt_code BETWEEN '65000' AND '68899' AND bc.cpt_code NOT LIKE '%F') OR -- Ophthalmology (Eye)
+                                        (bc.cpt_code BETWEEN '62263' AND '62329' AND bc.cpt_code NOT LIKE '%F') OR -- Neuraxial (Epidurals/Spinals)
+                                        (bc.cpt_code BETWEEN '33860' AND '33999' AND bc.cpt_code NOT LIKE '%F') OR -- Vascular (Aorta)
+                                        (bc.cpt_code BETWEEN '34000' AND '34999' AND bc.cpt_code NOT LIKE '%F')    -- Vascular (Other)
+                                    )
+                                )
+                            ) THEN 1
+                            
+                            ELSE 0
+                        END * t.plt_units
+                    ELSE 0 END AS plt_units_adherent,
+
+                    /* CRYO ADHERENCE LOGIC ============================*/
+                    CASE WHEN COALESCE(t.cryo_units, 0) > 0 THEN
+                        CASE
+                            -- 1. If Massive Transfusion Exception (>=4 units), Cryo is auto-approved.
+                            WHEN (
+                                SELECT SUM(t2.rbc_units) 
+                                FROM Transfusion t2 
+                                WHERE t2.visit_no = t.visit_no 
+                                AND t2.trnsfsn_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 4 HOUR AND t.trnsfsn_dtm + INTERVAL 4 HOUR
+                            ) >= 4 THEN 1
+
+                            -- 2. If Fib < 100, Cryo is auto-approved.
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                AND UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
+                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) < 100 THEN 1
+
+                            -- 3. Obstetrics Exception (Fib < 200)
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                AND UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
+                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) < 200 
+                            AND EXISTS (
+                                SELECT 1 FROM BillingCode bc 
+                                WHERE bc.visit_no = t.visit_no 
+                                AND (bc.cpt_code BETWEEN '59000' AND '59899' AND bc.cpt_code NOT LIKE '%F') -- Obstetrics
+                            ) THEN 1
+
+                            -- 4. Standard Surgical/Bleeding (Fib < 150 + Surgery within 6hr or Bleeding)
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                AND UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
+                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) < 150 
+                            AND (
+                                EXISTS (
+                                    SELECT 1 FROM SurgeryCase sc 
+                                    WHERE sc.visit_no = t.visit_no 
+                                    AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 6 HOUR AND t.trnsfsn_dtm + INTERVAL 6 HOUR
+                                ) OR EXISTS (
+                                    SELECT 1 FROM BillingCode bc 
+                                    WHERE bc.visit_no = t.visit_no 
+                                    AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F')
+                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
+                                )
+                            ) THEN 1
+                            
+                            ELSE 0
+                        END * t.cryo_units
+                    ELSE 0 END AS cryo_units_adherent,
+                    
+                    /* Handle provider attendance overlaps by ranking line numbers (who was there first) */
                     ROW_NUMBER() OVER (
                         PARTITION BY t.id 
                         ORDER BY ap_int.attend_prov_line ASC
                     ) as rn
                 FROM AttendingProvider ap_int
+                /* Transfusions between a provider's attendance period */
                 JOIN Transfusion t ON ap_int.visit_no = t.visit_no
                     AND t.trnsfsn_dtm BETWEEN ap_int.attend_start_dtm AND ap_int.attend_end_dtm
+                JOIN Visit v ON v.visit_no = t.visit_no -- Need Visit for CCI risk factors
             ) ranked
             WHERE ranked.rn = 1
-            GROUP BY ranked.visit_no, ranked.prov_id
-        ) pt ON ap.visit_no = pt.visit_no AND ap.prov_id = pt.prov_id
+            /* Group by provider attendance periods */
+            GROUP BY ranked.visit_no, ranked.attend_prov_line, ranked.prov_id
+        ) pt ON ap.visit_no = pt.visit_no AND ap.attend_prov_line = pt.attend_prov_line
 
         -- Medications Aggregated by Provider
         -- Logic: Same as Transfusions. Assign to #1 ranked provider (Line 1 > Line 2)
@@ -256,12 +439,12 @@ class Migration(migrations.Migration):
                 quarter char(7),
                 year char(4),
 
-                rbc_units SMALLINT UNSIGNED DEFAULT 0,
-                ffp_units SMALLINT UNSIGNED DEFAULT 0,
-                plt_units SMALLINT UNSIGNED DEFAULT 0,
-                cryo_units SMALLINT UNSIGNED DEFAULT 0,
-                whole_units SMALLINT UNSIGNED DEFAULT 0,
-                cell_saver_ml MEDIUMINT UNSIGNED DEFAULT 0,
+                rbc_units SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+                ffp_units SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+                plt_units SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+                cryo_units SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+                whole_units SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+                cell_saver_ml MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
                 overall_units SMALLINT UNSIGNED AS (rbc_units + ffp_units + plt_units + cryo_units + whole_units) STORED,
 
                 los FLOAT,
@@ -274,11 +457,11 @@ class Migration(migrations.Migration):
                 iron BOOLEAN,
                 antifibrinolytic BOOLEAN,
 
-                rbc_adherent SMALLINT UNSIGNED DEFAULT 0,
-                ffp_adherent SMALLINT UNSIGNED DEFAULT 0,
-                plt_adherent SMALLINT UNSIGNED DEFAULT 0,
-                cryo_adherent SMALLINT UNSIGNED DEFAULT 0,
-                overall_adherent SMALLINT UNSIGNED AS (rbc_adherent + ffp_adherent + plt_adherent + cryo_adherent) STORED,
+                rbc_units_adherent SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+                ffp_units_adherent SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+                plt_units_adherent SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+                cryo_units_adherent SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+                overall_units_adherent SMALLINT UNSIGNED AS (rbc_units_adherent + ffp_units_adherent + plt_units_adherent + cryo_units_adherent) STORED,
                 
                 rbc_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (rbc_units * 200.00) VIRTUAL,
                 ffp_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (ffp_units * 50.00) VIRTUAL,

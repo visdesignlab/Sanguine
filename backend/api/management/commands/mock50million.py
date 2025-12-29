@@ -454,6 +454,17 @@ class Command(BaseCommand):
                         "prov_name": surg["anesth_prov_name"],
                         "code_rank": rank + 2,
                     }
+                # Add bleeding/hemorrhage codes
+                if bad_pat and random.random() < 0.4:
+                    yield {
+                        "visit_no": surg["visit_no"],
+                        "cpt_code": "11000", # In range 10000-69999
+                        "cpt_code_desc": "CONTROL OF HEMORRHAGE",
+                        "proc_dtm": surg["surgery_start_dtm"],
+                        "prov_id": surg["surgeon_prov_id"],
+                        "prov_name": surg["surgeon_prov_name"],
+                        "code_rank": rank + 3,
+                    }
         self.send_csv_to_db(gen_billing_codes(), fieldnames=billing_code_fieldnames, table_name="BillingCode")
 
         # Generate Labs
@@ -695,6 +706,7 @@ class Command(BaseCommand):
 
         # Generate Transfusions
         transfusion_fieldnames = [
+            "id",
             "visit_no",
             "trnsfsn_dtm",
             "transfusion_rank",
@@ -713,6 +725,7 @@ class Command(BaseCommand):
         ]
 
         def gen_transfusions():
+            transfusion_id_counter = 1
             for rank, (surg, lab) in enumerate(labs):
                 num_transfusions = random.choices([0, 1, 2, 3, 4], weights=[0.2, 0.1, 0.05, 0.02, 0.01])[0]
                 for t in range(num_transfusions):
@@ -731,13 +744,12 @@ class Command(BaseCommand):
 
                     rbcs = rcb_units
                     cell_saver = cell_saver_ml
-                    # FFP if INR > 2
                     ffp_units = 0
                     if lab["result_desc"] == "INR":
-                        if lab["result_value"] > 2:
-                            ffp_units = fake.random_int(min=2, max=4)
-                        elif lab["result_value"] > 4:
+                        if lab["result_value"] > 4:
                             ffp_units = fake.random_int(min=3, max=7)
+                        elif lab["result_value"] > 1.2:
+                            ffp_units = fake.random_int(min=2, max=4)
                     ffp = ffp_units
 
                     # PLT if PLT count below 10,000
@@ -765,6 +777,7 @@ class Command(BaseCommand):
                     total_transfused = sum((x if x is not None else 0) for x in (rbcs, cell_saver, ffp, plt, cryo, whole))
                     if total_transfused > 0:
                         yield {
+                            "id": transfusion_id_counter,
                             "visit_no": surg["visit_no"],
                             "trnsfsn_dtm": make_aware(
                                 fake.date_time_between(
@@ -786,6 +799,7 @@ class Command(BaseCommand):
                             "whole_vol": whole * 450 if type == "vol" else None,
                             "cell_saver_ml": cell_saver
                         }
+                        transfusion_id_counter += 1
         self.send_csv_to_db(gen_transfusions(), fieldnames=transfusion_fieldnames, table_name="Transfusion")
 
         # Generate Attending Providers
