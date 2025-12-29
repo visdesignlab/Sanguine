@@ -133,7 +133,7 @@ def create_materialize_proc(apps, schema_editor):
                                 ORDER BY l.lab_draw_dtm DESC LIMIT 1
                             ) <= 7.0 THEN 1
                             
-                            -- 2. High Risk (7.0 < Hb <= 8.0) AND (CHF, CVD, or Surgery within 24hr)
+                            -- 2. High Risk (7.0 < Hb <= 8.0) AND ((CHF, CVD, or Surgery within 24hr) OR (Neuro OR Cardiac OR Obstetrics OR Vascular))
                             WHEN (
                                 SELECT l.result_value 
                                 FROM Lab l 
@@ -148,6 +148,13 @@ def create_materialize_proc(apps, schema_editor):
                                     SELECT 1 FROM SurgeryCase sc 
                                     WHERE sc.visit_no = t.visit_no 
                                     AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm + INTERVAL 24 HOUR
+                                ) OR EXISTS (
+                                    SELECT 1 FROM BillingCode bc
+                                    WHERE bc.visit_no = t.visit_no
+                                    AND (
+                                        (bc.cpt_code BETWEEN '59000' AND '59899' AND bc.cpt_code NOT LIKE '%F') OR -- Obstetrics (Labor & Delivery)
+                                        (bc.cpt_code BETWEEN '92920' AND '92944' AND bc.cpt_code NOT LIKE '%F')    -- Interventional Cardiology (PCI/Stents)
+                                    )
                                 )
                             ) THEN 1
 
@@ -250,7 +257,7 @@ def create_materialize_proc(apps, schema_editor):
                                 ) 
                             ) THEN 1
 
-                            -- 3. High Risk Neuro/Cardiac (Plt <= 100,000 AND (Neuro OR Cardiac))
+                            -- 3. High Risk (Plt <= 100,000 AND (Neuro OR Cardiac OR Obstetrics OR Vascular))
                             WHEN (
                                 SELECT l.result_value 
                                 FROM Lab l 
@@ -265,7 +272,11 @@ def create_materialize_proc(apps, schema_editor):
                                     WHERE bc.visit_no = t.visit_no 
                                     AND (
                                         (bc.cpt_code LIKE '33%' AND bc.cpt_code NOT LIKE '%F') OR -- Cardiac: Heart & Pericardium
-                                        (bc.cpt_code BETWEEN '61000' AND '63999' AND bc.cpt_code NOT LIKE '%F') -- Neuro (Brain/Spine)
+                                        (bc.cpt_code BETWEEN '61000' AND '63999' AND bc.cpt_code NOT LIKE '%F') OR -- Neuro (Brain/Spine)
+                                        (bc.cpt_code BETWEEN '65000' AND '68899' AND bc.cpt_code NOT LIKE '%F') OR -- Ophthalmology (Eye)
+                                        (bc.cpt_code BETWEEN '62263' AND '62329' AND bc.cpt_code NOT LIKE '%F') OR -- Neuraxial (Epidurals/Spinals)
+                                        (bc.cpt_code BETWEEN '33860' AND '33999' AND bc.cpt_code NOT LIKE '%F') OR -- Vascular (Aorta)
+                                        (bc.cpt_code BETWEEN '34000' AND '34999' AND bc.cpt_code NOT LIKE '%F')    -- Vascular (Other)
                                     )
                                 )
                             ) THEN 1
@@ -295,7 +306,22 @@ def create_materialize_proc(apps, schema_editor):
                                 ORDER BY l.lab_draw_dtm DESC LIMIT 1
                             ) < 100 THEN 1
 
-                            -- 3. Standard Surgical/Bleeding (Fib < 150 + Surgery within 6hr or Bleeding)
+                            -- 3. Obstetrics Exception (Fib < 200)
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                AND UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
+                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) < 200 
+                            AND EXISTS (
+                                SELECT 1 FROM BillingCode bc 
+                                WHERE bc.visit_no = t.visit_no 
+                                AND (bc.cpt_code BETWEEN '59000' AND '59899' AND bc.cpt_code NOT LIKE '%F') -- Obstetrics
+                            ) THEN 1
+
+                            -- 4. Standard Surgical/Bleeding (Fib < 150 + Surgery within 6hr or Bleeding)
                             WHEN (
                                 SELECT l.result_value 
                                 FROM Lab l 
