@@ -265,8 +265,7 @@ def create_materialize_proc(apps, schema_editor):
                                     WHERE bc.visit_no = t.visit_no 
                                     AND (
                                         (bc.cpt_code LIKE '33%' AND bc.cpt_code NOT LIKE '%F') OR -- Cardiac: Heart & Pericardium
-                                        (bc.cpt_code BETWEEN '61000' AND '63999' AND bc.cpt_code NOT LIKE '%F') OR -- Neuro (Brain/Spine)
-                                        (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F') -- Restrict to Surgical Procedures
+                                        (bc.cpt_code BETWEEN '61000' AND '63999' AND bc.cpt_code NOT LIKE '%F') -- Neuro (Brain/Spine)
                                     )
                                 )
                             ) THEN 1
