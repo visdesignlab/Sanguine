@@ -151,9 +151,7 @@ def create_materialize_proc(apps, schema_editor):
                                 )
                             ) THEN 1
 
-                            -- 3. Major Bleeding / MTP
-                            -- Bleeding: BillingCode description matching BLEEDING or HEMORRHAGE
-                            -- OR High Transfusion: > 4 RBC units in +/- 4 hours
+                            -- 3. Major Bleeding (BillingCode description matching BLEEDING or HEMORRHAGE) OR High Transfusion (>=4 RBC units within 4 hours)
                             WHEN EXISTS (
                                 SELECT 1 FROM BillingCode bc 
                                 WHERE bc.visit_no = t.visit_no 
