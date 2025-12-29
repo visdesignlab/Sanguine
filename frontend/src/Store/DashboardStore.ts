@@ -253,7 +253,7 @@ export class DashboardStore {
           return `${aggFn}(CASE WHEN (${baseSum}) > 0 THEN ${yAxisVar} / (${baseSum}) ELSE NULL END) AS ${aggregation}_${yAxisVar}`;
         }
 
-        // Show adherence as a percentage of total units
+        // Show average adherence as a percentage of total units
         if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
           const baseUnit = yAxisVar.replace('_adherent', '');
           return `${aggFn}(CASE WHEN ${baseUnit} > 0 THEN ${yAxisVar} / ${baseUnit} ELSE NULL END) AS ${aggregation}_${yAxisVar}`;
