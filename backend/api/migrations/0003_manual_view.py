@@ -133,7 +133,7 @@ def create_materialize_proc(apps, schema_editor):
                                 ORDER BY l.lab_draw_dtm DESC LIMIT 1
                             ) <= 7.0 THEN 1
                             
-                            -- 2. High Risk (7.0 < Hb <= 8.0) AND (CHF, CVD, or Surgery +/- 24h)
+                            -- 2. High Risk (7.0 < Hb <= 8.0) AND (CHF, CVD, or Surgery within 24hr)
                             WHEN (
                                 SELECT l.result_value 
                                 FROM Lab l 
@@ -141,7 +141,7 @@ def create_materialize_proc(apps, schema_editor):
                                   AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
                                   AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
                                 ORDER BY l.lab_draw_dtm DESC LIMIT 1
-                            ) BETWEEN 7.0001 AND 8.0
+                            ) BETWEEN 7.0 AND 8.0
                             AND (
                                 v.cci_chf > 0 OR v.cci_cvd > 0 OR
                                 EXISTS (
@@ -153,11 +153,11 @@ def create_materialize_proc(apps, schema_editor):
 
                             -- 3. Major Bleeding / MTP
                             -- Bleeding: BillingCode description matching BLEEDING or HEMORRHAGE
-                            -- MTP Proxy: > 4 RBC units in +/- 4 hours
+                            -- OR High Transfusion: > 4 RBC units in +/- 4 hours
                             WHEN EXISTS (
                                 SELECT 1 FROM BillingCode bc 
                                 WHERE bc.visit_no = t.visit_no 
-                                AND (bc.cpt_code BETWEEN '10000' AND '69999') -- Restrict to Surgical Procedures
+                                AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F') -- Restrict to 'Surgery' CPT code mappings
                                 AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
                             ) OR (
                                 SELECT SUM(t2.rbc_units) 
@@ -173,23 +173,31 @@ def create_materialize_proc(apps, schema_editor):
                     /* FFP ADHERENCE LOGIC ============================*/
                     CASE WHEN COALESCE(t.ffp_units, 0) > 0 THEN
                         CASE
-                            -- 1. Standard (INR >= 1.8)
+                            -- 1. If Massive Bleeding Exception (> 3 FFP units within 4 hours, ignoring INR)
+                            WHEN (
+                                SELECT SUM(t2.ffp_units) 
+                                FROM Transfusion t2 
+                                WHERE t2.visit_no = t.visit_no 
+                                AND t2.trnsfsn_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 4 HOUR AND t.trnsfsn_dtm + INTERVAL 4 HOUR
+                            ) >= 3 THEN 1
+                        
+                            -- 2. Standard (INR >= 1.8)
                             WHEN (
                                 SELECT l.result_value 
                                 FROM Lab l 
                                 WHERE l.visit_no = t.visit_no 
-                                  AND UPPER(l.result_desc) = 'INR'
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                AND UPPER(l.result_desc) = 'INR'
+                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
                                 ORDER BY l.lab_draw_dtm DESC LIMIT 1
                             ) >= 1.8 THEN 1
                             
-                            -- 2. Bleeding / Procedure (Surgery +/- 6h OR Major Bleeding Code)
+                            -- 3. Procedure (INR >= 1.5 AND Surgery/Bleeding Code)
                             WHEN (
                                 SELECT l.result_value 
                                 FROM Lab l 
                                 WHERE l.visit_no = t.visit_no 
-                                  AND UPPER(l.result_desc) = 'INR'
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                AND UPPER(l.result_desc) = 'INR'
+                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
                                 ORDER BY l.lab_draw_dtm DESC LIMIT 1
                             ) >= 1.5 
                             AND (
@@ -200,7 +208,7 @@ def create_materialize_proc(apps, schema_editor):
                                 ) OR EXISTS (
                                     SELECT 1 FROM BillingCode bc
                                     WHERE bc.visit_no = t.visit_no
-                                    AND (bc.cpt_code BETWEEN '10000' AND '69999') -- Restrict to Surgical Procedures
+                                    AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F')
                                     AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
                                 )
                             ) THEN 1
@@ -222,7 +230,7 @@ def create_materialize_proc(apps, schema_editor):
                                 ORDER BY l.lab_draw_dtm DESC LIMIT 1
                             ) <= 10000 THEN 1
 
-                            -- 2. Therapeutic / Procedure (Plt <= 50,000 AND (Surgery +/- 6h OR Bleeding))
+                            -- 2. Procedure (Plt <= 50,000 AND (Surgery within 6h OR Bleeding))
                             WHEN (
                                 SELECT l.result_value 
                                 FROM Lab l 
@@ -239,12 +247,12 @@ def create_materialize_proc(apps, schema_editor):
                                 ) OR EXISTS (
                                     SELECT 1 FROM BillingCode bc
                                     WHERE bc.visit_no = t.visit_no
-                                    AND (bc.cpt_code BETWEEN '10000' AND '69999') -- Restrict to Surgical Procedures
+                                    AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F') -- Restrict to Surgical Procedures
                                     AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
-                                )
+                                ) 
                             ) THEN 1
 
-                            -- 3. High Risk Neuro/Cardiac (Plt <= 100,000 AND (Neuro OR Cardiac OR Bleeding))
+                            -- 3. High Risk Neuro/Cardiac (Plt <= 100,000 AND (Neuro OR Cardiac))
                             WHEN (
                                 SELECT l.result_value 
                                 FROM Lab l 
@@ -258,12 +266,9 @@ def create_materialize_proc(apps, schema_editor):
                                     SELECT 1 FROM BillingCode bc 
                                     WHERE bc.visit_no = t.visit_no 
                                     AND (
-                                        bc.cpt_code LIKE '33%' OR -- Cardiac: Heart & Pericardium
-                                        bc.cpt_code LIKE '0%T' OR -- Cardiac: Transcatheter Valve Procedures (T-codes)
-                                        (
-                                            (bc.cpt_code BETWEEN '10000' AND '69999') AND -- Restrict to Surgical Procedures
-                                            (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
-                                        )
+                                        (bc.cpt_code LIKE '33%' AND bc.cpt_code NOT LIKE '%F') OR -- Cardiac: Heart & Pericardium
+                                        (bc.cpt_code BETWEEN '61000' AND '63999' AND bc.cpt_code NOT LIKE '%F') OR -- Neuro (Brain/Spine)
+                                        (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F') -- Restrict to Surgical Procedures
                                     )
                                 )
                             ) THEN 1
@@ -275,27 +280,44 @@ def create_materialize_proc(apps, schema_editor):
                     /* CRYO ADHERENCE LOGIC ============================*/
                     CASE WHEN COALESCE(t.cryo_units, 0) > 0 THEN
                         CASE
-                            -- Fibrinogen < 150 AND (Bleeding OR MTP Proxy)
+                            -- 1. If Massive Transfusion Exception (>=4 units), Cryo is auto-approved.
+                            WHEN (
+                                SELECT SUM(t2.rbc_units) 
+                                FROM Transfusion t2 
+                                WHERE t2.visit_no = t.visit_no 
+                                AND t2.trnsfsn_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 4 HOUR AND t.trnsfsn_dtm + INTERVAL 4 HOUR
+                            ) >= 4 THEN 1
+
+                            -- 2. If Fib < 100, Cryo is auto-approved.
                             WHEN (
                                 SELECT l.result_value 
                                 FROM Lab l 
                                 WHERE l.visit_no = t.visit_no 
-                                  AND UPPER(l.result_desc) = 'FIBRINOGEN'
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                AND UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
+                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                            ) < 100 THEN 1
+
+                            -- 3. Standard Surgical/Bleeding (Fib < 150 + Surgery within 6hr or Bleeding)
+                            WHEN (
+                                SELECT l.result_value 
+                                FROM Lab l 
+                                WHERE l.visit_no = t.visit_no 
+                                AND UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
+                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
                                 ORDER BY l.lab_draw_dtm DESC LIMIT 1
                             ) < 150 
                             AND (
                                 EXISTS (
+                                    SELECT 1 FROM SurgeryCase sc 
+                                    WHERE sc.visit_no = t.visit_no 
+                                    AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 6 HOUR AND t.trnsfsn_dtm + INTERVAL 6 HOUR
+                                ) OR EXISTS (
                                     SELECT 1 FROM BillingCode bc 
                                     WHERE bc.visit_no = t.visit_no 
-                                    AND (bc.cpt_code BETWEEN '10000' AND '69999') -- Restrict to Surgical Procedures
+                                    AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F')
                                     AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
-                                ) OR (
-                                    SELECT SUM(t2.rbc_units) 
-                                    FROM Transfusion t2 
-                                    WHERE t2.visit_no = t.visit_no 
-                                    AND t2.trnsfsn_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 4 HOUR AND t.trnsfsn_dtm + INTERVAL 4 HOUR
-                                ) >= 4
+                                )
                             ) THEN 1
                             
                             ELSE 0
