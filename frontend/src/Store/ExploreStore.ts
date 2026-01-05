@@ -6,7 +6,7 @@ import {
   ExploreChartConfig, ExploreTableConfig, ExploreTableColumn, ExploreChartData,
 } from '../Types/application';
 
-import { dummyData, dummyDataTwoVals } from '../Components/Views/ExploreView/Charts/exploreTableDummyData';
+
 
 export class ExploreStore {
   _rootStore: RootStore;
@@ -163,10 +163,10 @@ export class ExploreStore {
         }
       }
       if (config.chartType === 'scatterPlot') {
-        data[config.chartId] = dummyData;
+        data[config.chartId] = [];
       }
       if (config.chartType === 'cost') {
-        data[config.chartId] = dummyData;
+        data[config.chartId] = [];
       }
     }
     this.chartData = data;
