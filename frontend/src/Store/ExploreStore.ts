@@ -143,14 +143,11 @@ export class ExploreStore {
           ORDER BY ${tableConfig.rowVar};
         `;
 
-        console.log('ExploreTable Query:', query);
-
         try {
           const startTime = performance.now();
           const queryResult = await this._rootStore.duckDB!.query(query);
           const rows = queryResult.toArray().map((row: any) => row.toJSON());
           const endTime = performance.now();
-          console.log(`Query execution time: ${endTime - startTime} ms`);
 
           // If twoValsPerRow is enabled, we need to transform the data
           // This would require a different query structure - TODO for now
@@ -172,7 +169,6 @@ export class ExploreStore {
         data[config.chartId] = dummyData;
       }
     }
-    console.log("ExploreStore chartData:", data);
     this.chartData = data;
   }
 
