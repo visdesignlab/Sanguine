@@ -8,6 +8,7 @@ frontend.service
 .venv/
 DW_LOOKUPS
 
+backend/api/db.sqlite3
 credential.json
 data.json
 api/db.sqlite3
