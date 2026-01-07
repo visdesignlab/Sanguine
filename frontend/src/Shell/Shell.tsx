@@ -30,7 +30,6 @@ import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/Select
 import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
 import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
-import { captureScreenshot } from '../Utils/screenshotUtils';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -72,44 +71,6 @@ export const Shell = observer(() => {
     // Restore to initial state via provenance
     store.restoreToInitialState();
     setResetModalOpened(false);
-  };
-
-  // Save State Modal -----------------------------
-  // Save State Modal -----------------------------
-  const [saveModalOpened, setSaveModalOpened] = useState(false);
-  const [stateName, setStateName] = useState('');
-
-  const handleSaveState = async () => {
-    if (stateName.trim()) {
-      // Close modal first
-      setSaveModalOpened(false);
-
-      // Wait for modal transition to finish (approx 300ms is usually safe for Mantine modals)
-      await new Promise((resolve) => { setTimeout(resolve, 300); });
-
-      // Capture screenshot now that modal is gone
-      const screenshot = await captureScreenshot(null, { pixelRatio: 1 });
-
-      store.saveState(stateName, screenshot);
-      setStateName('');
-    }
-  };
-
-  // Restore State Modal --------------------------
-  const [restoreModalOpened, setRestoreModalOpened] = useState(false);
-  const [stateToRestore, setStateToRestore] = useState<string | null>(null);
-
-  const handleRestoreState = () => {
-    if (stateToRestore) {
-      store.restoreState(stateToRestore);
-      setRestoreModalOpened(false);
-      setStateToRestore(null);
-    }
-  };
-
-  const confirmRestore = (id: string) => {
-    setStateToRestore(id);
-    setRestoreModalOpened(true);
   };
 
   // Toolbar & Left Panel states ----------------------
@@ -176,9 +137,19 @@ export const Shell = observer(() => {
 
   // Header toolbar icons
   const headerIcons = useMemo(() => [
-    { icon: IconArrowNarrowLeftDashed, label: 'Back', onClick: () => store.provenance?.undo(), disabled: !store.canUndo },
-    { icon: IconArrowNarrowRightDashed, label: 'Forward', onClick: () => store.provenance?.redo(), disabled: !store.canRedo },
-    { icon: IconDeviceFloppy, label: 'Save', onClick: () => setSaveModalOpened(true) },
+    {
+      icon: IconArrowNarrowLeftDashed,
+      label: 'Back',
+      onClick: () => store.provenance?.undo(),
+      disabled: !store.canUndo,
+    },
+    {
+      icon: IconArrowNarrowRightDashed,
+      label: 'Forward',
+      onClick: () => store.provenance?.redo(),
+      disabled: !store.canRedo,
+    },
+    { icon: IconDeviceFloppy, label: 'Save', disabled: true },
     { icon: IconCamera, label: 'Camera' },
     { icon: IconUser, label: 'User' },
   ], [store.provenance, store.canUndo, store.canRedo]);
@@ -308,9 +279,9 @@ export const Shell = observer(() => {
 
           {/** Left Panel Content */}
           {activeLeftPanel !== null && (
-          <Box style={{ flexGrow: 1 }} p="md">
-            {leftToolbarIcons[activeLeftPanel].content}
-          </Box>
+            <Box style={{ flexGrow: 1 }} p="md">
+              {leftToolbarIcons[activeLeftPanel].content}
+            </Box>
           )}
         </Flex>
       </AppShell.Navbar>
@@ -344,46 +315,6 @@ export const Shell = observer(() => {
           <Group justify="flex-end" mt="xs">
             <Button variant="default" onClick={() => setResetModalOpened(false)}>Cancel</Button>
             <Button color="red" onClick={handleConfirmReset}>Reset</Button>
-          </Group>
-        </Stack>
-      </Modal>
-
-      {/** Save State Modal */}
-      <Modal
-        opened={saveModalOpened}
-        onClose={() => setSaveModalOpened(false)}
-        title="Save Current State"
-        centered
-      >
-        <Stack gap="md">
-          <TextInput
-            label="State Name"
-            placeholder="Enter a name for this state"
-            value={stateName}
-            onChange={(event) => setStateName(event.currentTarget.value)}
-            data-autofocus
-          />
-          <Group justify="flex-end" mt="xs">
-            <Button variant="default" onClick={() => setSaveModalOpened(false)}>Cancel</Button>
-            <Button onClick={handleSaveState}>Save</Button>
-          </Group>
-        </Stack>
-      </Modal>
-
-      {/** Restore State Modal */}
-      <Modal
-        opened={restoreModalOpened}
-        onClose={() => setRestoreModalOpened(false)}
-        title="Restore State?"
-        centered
-      >
-        <Stack gap="md">
-          <Text size="sm">
-            Are you sure you want to restore this state? Unsaved changes will be lost.
-          </Text>
-          <Group justify="flex-end" mt="xs">
-            <Button variant="default" onClick={() => setRestoreModalOpened(false)}>Cancel</Button>
-            <Button color="red" onClick={handleRestoreState}>Restore</Button>
           </Group>
         </Stack>
       </Modal>
