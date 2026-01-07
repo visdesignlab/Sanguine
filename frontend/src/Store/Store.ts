@@ -7,7 +7,8 @@ import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
 import { initProvenance, Provenance, NodeID } from '@visdesignlab/trrack';
 import LZString from 'lz-string';
 import { Layout } from 'react-grid-layout';
-import * as ReactGridLayout from 'react-grid-layout';
+// @ts-expect-error: rgl utils not typed
+import { compact } from 'react-grid-layout/build/utils';
 
 import {
   AGGREGATION_OPTIONS,
@@ -28,9 +29,6 @@ import {
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
 import { expandTimePeriod } from '../Utils/expandTimePeriod';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const { utils } = ReactGridLayout as any;
 
 // endregion
 
@@ -765,8 +763,8 @@ export class RootStore {
     const filteredSm = (currentLayouts.sm || []).filter((layout) => layout.i !== chartId);
 
     const newLayouts = {
-      main: utils.compact(filteredMain, 'vertical', 2),
-      sm: utils.compact(filteredSm, 'vertical', 1),
+      main: compact(filteredMain, 'vertical', 2),
+      sm: compact(filteredSm, 'vertical', 1),
     };
     const newConfigs = currentConfigs.filter((config) => config.chartId !== chartId);
     this.actions.updateDashboardState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Chart');
@@ -791,8 +789,8 @@ export class RootStore {
 
     const newLayouts = {
       ...currentLayouts,
-      main: utils.compact(newMainLayouts, 'vertical', 2),
-      ...(currentLayouts.sm && { sm: utils.compact(newSmLayouts, 'vertical', 1) }),
+      main: compact(newMainLayouts, 'vertical', 2),
+      ...(currentLayouts.sm && { sm: compact(newSmLayouts, 'vertical', 1) }),
     };
 
     this.actions.updateDashboardState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Chart');
@@ -1117,7 +1115,7 @@ export class RootStore {
     shifted.unshift({
       i: config.chartId, x: 0, y: 0, w: 2, h: 1, maxH: 2,
     });
-    const newLayouts = { ...currentLayouts, main: utils.compact(shifted, 'vertical', 2) };
+    const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 2) };
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Explore Chart');
   }
 
@@ -1127,7 +1125,7 @@ export class RootStore {
     const newConfigs = currentConfigs.filter((config) => config.chartId !== chartId);
     const filteredMain = (currentLayouts.main || []).filter((layout) => layout.i !== chartId);
     const filteredSm = (currentLayouts.sm || []).filter((layout) => layout.i !== chartId);
-    const newLayouts = { ...currentLayouts, main: utils.compact(filteredMain, 'vertical', 2), ...(currentLayouts.sm ? { sm: utils.compact(filteredSm, 'vertical', 1) } : {}) };
+    const newLayouts = { ...currentLayouts, main: compact(filteredMain, 'vertical', 2), ...(currentLayouts.sm ? { sm: compact(filteredSm, 'vertical', 1) } : {}) };
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Explore Chart');
   }
   // endregion
