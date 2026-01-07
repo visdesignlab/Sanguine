@@ -352,12 +352,13 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
             </Box>
           </Box>
         </Menu.Dropdown>
-      </Menu>
+      </Menu >
 
       {/* Delete Confirmation Modal */}
-      <Modal
+      < Modal
         opened={deleteModalOpened}
-        onClose={() => { setDeleteModalOpened(false); setDeleteTargetIds([]); }}
+        onClose={() => { setDeleteModalOpened(false); setDeleteTargetIds([]); }
+        }
         title={(
           <Group align="center">
             <Title order={3}>Confirm Screenshot Deletion</Title>
@@ -399,7 +400,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
             <Button color="red" onClick={confirmDeleteSelected}>Delete</Button>
           </Group>
         </Stack>
-      </Modal>
+      </Modal >
     </>
   );
 }
