@@ -32,21 +32,6 @@ import { expandTimePeriod } from '../Utils/expandTimePeriod';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const { utils } = ReactGridLayout as any;
 
-// Helper for layout comparison
-const areLayoutsEqual = (l1: Layout[], l2: Layout[]) => {
-  if (l1.length !== l2.length) return false;
-  const sorted1 = [...l1].sort((a, b) => a.i.localeCompare(b.i));
-  const sorted2 = [...l2].sort((a, b) => a.i.localeCompare(b.i));
-  return sorted1.every((item, index) => {
-    const other = sorted2[index];
-    return item.i === other.i
-      && item.x === other.x
-      && item.y === other.y
-      && item.w === other.w
-      && item.h === other.h;
-  });
-};
-
 // endregion
 
 // region Constants
@@ -738,10 +723,6 @@ export class RootStore {
 
   set dashboardChartLayouts(input: { [key: string]: Layout[] }) {
     if (this.state.ui.activeTab !== 'Dashboard') return;
-    const current = this.dashboardChartLayouts;
-    const mainEqual = areLayoutsEqual(current.main || [], input.main || []);
-    const smEqual = areLayoutsEqual(current.sm || [], input.sm || []);
-    if (mainEqual && smEqual) return;
     this._baseDashboardLayouts = input;
   }
 
@@ -1111,9 +1092,6 @@ export class RootStore {
 
   set exploreChartLayouts(input: { [key: string]: Layout[] }) {
     if (this.state.ui.activeTab !== 'Explore') return;
-    const current = this.exploreChartLayouts;
-    const mainEqual = areLayoutsEqual(current.main || [], input.main || []);
-    if (mainEqual) return;
     this._transientExploreLayouts = input;
   }
 
