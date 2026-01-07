@@ -69,7 +69,6 @@ export function SelectedVisitsPanel() {
   const [loadingVisit, setLoadingVisit] = useState(false);
 
   // Selected Visit Number
-  const { selectedVisitNo } = store.state.ui;
   const setSelectedVisitNo = useCallback((visitNo: number | null) => {
     store.actions.setUiState({ selectedVisitNo: visitNo });
   }, [store.actions]);
@@ -81,20 +80,20 @@ export function SelectedVisitsPanel() {
 
   // When selected visits no longer include the current selection, clear it
   useEffect(() => {
-    if (selectedVisitNo != null && !store.selectedVisitNos.includes(selectedVisitNo)) {
+    if (store.state.ui.selectedVisitNo != null && !store.selectedVisitNos.includes(store.state.ui.selectedVisitNo)) {
       setSelectedVisitNo(null);
       setSelectedVisit(null);
     }
-  }, [store.selectedVisitNos, selectedVisitNo, setSelectedVisitNo]);
+  }, [store.selectedVisitNos, store.state.ui.selectedVisitNo, setSelectedVisitNo]);
 
   // Fetch details whenever a visit number is chosen
   useEffect(() => {
-    if (selectedVisitNo != null) {
-      store.getVisitInfo(selectedVisitNo).then(setSelectedVisit);
+    if (store.state.ui.selectedVisitNo != null) {
+      store.getVisitInfo(store.state.ui.selectedVisitNo).then(setSelectedVisit);
     } else {
       setSelectedVisit(null);
     }
-  }, [selectedVisitNo, store]);
+  }, [store.state.ui.selectedVisitNo, store]);
 
   // Filter visit details based on search query
   const [attributeSearchQuery, setAttributeSearchQuery] = useState('');
@@ -114,21 +113,21 @@ export function SelectedVisitsPanel() {
       ).toString().toLowerCase();
 
       return humanReadableKey.includes(searchTerm)
-             || humanReadableValue.includes(searchTerm)
-             || key.toLowerCase().includes(searchTerm);
+        || humanReadableValue.includes(searchTerm)
+        || key.toLowerCase().includes(searchTerm);
     });
   }, [selectedVisit, attributeSearchQuery]);
 
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const handleClickVisitNo = useCallback((visitNo: number) => {
     // Deselect if already selected
-    if (selectedVisitNo === visitNo) {
+    if (store.state.ui.selectedVisitNo === visitNo) {
       setSelectedVisitNo(null);
       return;
     }
 
     // Render loading overlay when changing selection
-    if (selectedVisitNo !== null) {
+    if (store.state.ui.selectedVisitNo !== null) {
       setLoadingVisit(true);
     }
     setSelectedVisitNo(visitNo);
@@ -140,7 +139,7 @@ export function SelectedVisitsPanel() {
 
     // Simulate loading delay for better UX
     loadingTimeoutRef.current = setTimeout(() => setLoadingVisit(false), 200);
-  }, [selectedVisitNo, setSelectedVisitNo]);
+  }, [store.state.ui.selectedVisitNo, setSelectedVisitNo]);
 
   return useObserver(() => (
     <Box>
@@ -186,14 +185,14 @@ export function SelectedVisitsPanel() {
             <NavLink
               label={filteredVisitNos[index]}
               key={filteredVisitNos[index]}
-              active={selectedVisitNo === filteredVisitNos[index]}
+              active={store.state.ui.selectedVisitNo === filteredVisitNos[index]}
               onClick={() => handleClickVisitNo(filteredVisitNos[index])}
               style={style}
             />
           )}
           rowProps={{
             visitNos: filteredVisitNos,
-            selectedVisitNo,
+            selectedVisitNo: store.state.ui.selectedVisitNo,
             setSelectedVisitNo,
           }}
           rowCount={filteredVisitNos.length}
