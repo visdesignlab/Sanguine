@@ -1,15 +1,19 @@
 import {
+  useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { useObserver } from 'mobx-react-lite';
 import {
+  ActionIcon,
   Badge,
   Box,
   Divider,
   Flex,
+  LoadingOverlay,
   NavLink,
   ScrollArea,
   Space,
@@ -17,15 +21,27 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from '@mantine/core';
 import { List } from 'react-window';
-import { IconSearch } from '@tabler/icons-react';
+import { IconRestore, IconSearch } from '@tabler/icons-react';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import {
   makeHumanReadableColumn,
   makeHumanReadableValues,
 } from '../../../Utils/humanReadableColsVals';
+import classes from '../../../Shell/Shell.module.css';
+
+function formatVisitCount(count: number): string {
+  if (count >= 1_000_000) {
+    return `${(count / 1_000_000).toFixed(1)} M`;
+  }
+  if (count >= 1_000) {
+    return `${(count / 1_000).toFixed(1)} K`;
+  }
+  return count.toString();
+}
 
 /**
  * SelectedVisitsPanel
@@ -34,7 +50,7 @@ import {
  * - Displays details for the currently selected visit
  */
 export function SelectedVisitsPanel() {
-  const { toolbarWidth } = useThemeConstants();
+  const { toolbarWidth, iconStroke } = useThemeConstants();
   const store = useContext(Store);
 
   // All selected visit numbers from the store
@@ -50,26 +66,35 @@ export function SelectedVisitsPanel() {
   }, [visitNos, searchQuery]);
 
   // Chosen visit from list
-  const selectedVisitNo = store.state.ui.selectedVisitNo;
-  const setSelectedVisitNo = (visitNo: number | null) => {
+  const [loadingVisit, setLoadingVisit] = useState(false);
+
+  // Use store UI state for selected visit to maintain consistency across the app
+  const { selectedVisitNo } = store.state.ui;
+  const setSelectedVisitNo = useCallback((visitNo: number | null) => {
     store.actions.setUiState({ selectedVisitNo: visitNo });
-  };
+  }, [store.actions]);
+
   const [selectedVisit, setSelectedVisit] = useState<{
     visit_no: number;
     [key: string]: unknown;
   } | null>(null);
 
-  // Choose first visit by default
-  const effectiveSelectedVisitNo = store.currentState.ui.selectedVisitNo ?? (filteredVisitNos.length > 0 ? filteredVisitNos[0] : null);
+  // When selected visits no longer include the current selection, clear it
+  useEffect(() => {
+    if (selectedVisitNo != null && !store.selectedVisitNos.includes(selectedVisitNo)) {
+      setSelectedVisitNo(null);
+      setSelectedVisit(null);
+    }
+  }, [store.selectedVisitNos, selectedVisitNo, setSelectedVisitNo]);
 
   // Fetch details whenever a visit number is chosen
   useEffect(() => {
-    if (effectiveSelectedVisitNo != null) {
-      store.getVisitInfo(effectiveSelectedVisitNo).then(setSelectedVisit);
+    if (selectedVisitNo != null) {
+      store.getVisitInfo(selectedVisitNo).then(setSelectedVisit);
     } else {
       setSelectedVisit(null);
     }
-  }, [effectiveSelectedVisitNo, store]);
+  }, [selectedVisitNo, store]);
 
   // Filter visit details based on search query
   const [attributeSearchQuery, setAttributeSearchQuery] = useState('');
@@ -81,10 +106,12 @@ export function SelectedVisitsPanel() {
     const searchTerm = attributeSearchQuery.toLowerCase().trim();
     return Object.entries(selectedVisit).filter(([key, value]) => {
       // Search in the human-readable column name
-      const humanReadableKey = makeHumanReadableColumn(key).toLowerCase();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const humanReadableKey = makeHumanReadableColumn(key as any).toLowerCase();
       // Search in the human-readable value
       const humanReadableValue = makeHumanReadableValues(
-        key as keyof typeof makeHumanReadableColumn,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        key as any,
         value,
       ).toString().toLowerCase();
 
@@ -94,17 +121,55 @@ export function SelectedVisitsPanel() {
     });
   }, [selectedVisit, attributeSearchQuery]);
 
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const handleClickVisitNo = useCallback((visitNo: number) => {
+    // Deselect if already selected
+    if (selectedVisitNo === visitNo) {
+      setSelectedVisitNo(null);
+      return;
+    }
+
+    // Render loading overlay when changing selection
+    if (selectedVisitNo !== null) {
+      setLoadingVisit(true);
+    }
+    setSelectedVisitNo(visitNo);
+
+    // Clear any existing timeout before starting a new one
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+
+    // Simulate loading delay for better UX
+    loadingTimeoutRef.current = setTimeout(() => setLoadingVisit(false), 200);
+  }, [selectedVisitNo, setSelectedVisitNo]);
+
   return useObserver(() => (
     <Box>
       {/* Panel Header */}
       <Flex direction="row" justify="space-between" align="center" h={40}>
         <Title order={3}>Selected Visits</Title>
         <Flex direction="row" align="center">
-          <Badge variant="light" size="sm">
-            {store.selectedVisitNos.length}
-            {' '}
-            Visits
-          </Badge>
+          <Tooltip label={`${store.selectedVisitNos.length} visits selected`} position="bottom">
+            <Badge
+              variant="light"
+              size="sm"
+            >
+              {formatVisitCount(store.selectedVisitNos.length)}
+              {' '}
+              Visits
+            </Badge>
+          </Tooltip>
+          <Tooltip label="Clear all selected visits" position="bottom">
+            <ActionIcon
+              aria-label="Reset all filters"
+              onClick={() => { store.resetSelections(); }}
+              className={classes.leftToolbarIcon}
+              ml={4}
+            >
+              <IconRestore stroke={iconStroke} size={21} />
+            </ActionIcon>
+          </Tooltip>
         </Flex>
       </Flex>
 
@@ -123,14 +188,14 @@ export function SelectedVisitsPanel() {
             <NavLink
               label={filteredVisitNos[index]}
               key={filteredVisitNos[index]}
-              active={effectiveSelectedVisitNo === filteredVisitNos[index]}
-              onClick={() => setSelectedVisitNo(filteredVisitNos[index])}
+              active={selectedVisitNo === filteredVisitNos[index]}
+              onClick={() => handleClickVisitNo(filteredVisitNos[index])}
               style={style}
             />
           )}
           rowProps={{
             visitNos: filteredVisitNos,
-            selectedVisitNo: effectiveSelectedVisitNo,
+            selectedVisitNo,
             setSelectedVisitNo,
           }}
           rowCount={filteredVisitNos.length}
@@ -141,6 +206,7 @@ export function SelectedVisitsPanel() {
         <Divider />
         {/* Details panel for the selected visit */}
         <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px - 250px - 30px - 40px - 40px)`}>
+          <LoadingOverlay visible={loadingVisit} overlayProps={{ blur: 2 }} />
           {selectedVisit ? (
             <Stack p="sm">
               {/* Search bar for visit attributes */}
@@ -157,10 +223,12 @@ export function SelectedVisitsPanel() {
               {filteredVisitAttributes.length > 0 ? (
                 filteredVisitAttributes.map(([key, value]) => (
                   <Stack key={key} gap={0}>
-                    <Title order={6}>{makeHumanReadableColumn(key)}</Title>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    <Title order={6}>{makeHumanReadableColumn(key as any)}</Title>
                     <Text>
                       {makeHumanReadableValues(
-                        key as keyof typeof makeHumanReadableColumn,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        key as any,
                         value,
                       )}
                     </Text>
