@@ -68,7 +68,7 @@ export function SelectedVisitsPanel() {
   // Chosen visit from list
   const [loadingVisit, setLoadingVisit] = useState(false);
 
-  // Use store UI state for selected visit to maintain consistency across the app
+  // Selected Visit Number
   const { selectedVisitNo } = store.state.ui;
   const setSelectedVisitNo = useCallback((visitNo: number | null) => {
     store.actions.setUiState({ selectedVisitNo: visitNo });
@@ -106,18 +106,16 @@ export function SelectedVisitsPanel() {
     const searchTerm = attributeSearchQuery.toLowerCase().trim();
     return Object.entries(selectedVisit).filter(([key, value]) => {
       // Search in the human-readable column name
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const humanReadableKey = makeHumanReadableColumn(key as any).toLowerCase();
+      const humanReadableKey = makeHumanReadableColumn(key).toLowerCase();
       // Search in the human-readable value
       const humanReadableValue = makeHumanReadableValues(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        key as any,
+        key,
         value,
       ).toString().toLowerCase();
 
       return humanReadableKey.includes(searchTerm)
-        || humanReadableValue.includes(searchTerm)
-        || key.toLowerCase().includes(searchTerm);
+             || humanReadableValue.includes(searchTerm)
+             || key.toLowerCase().includes(searchTerm);
     });
   }, [selectedVisit, attributeSearchQuery]);
 
@@ -223,12 +221,10 @@ export function SelectedVisitsPanel() {
               {filteredVisitAttributes.length > 0 ? (
                 filteredVisitAttributes.map(([key, value]) => (
                   <Stack key={key} gap={0}>
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <Title order={6}>{makeHumanReadableColumn(key as any)}</Title>
+                    <Title order={6}>{makeHumanReadableColumn(key)}</Title>
                     <Text>
                       {makeHumanReadableValues(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        key as any,
+                        key as keyof typeof makeHumanReadableColumn,
                         value,
                       )}
                     </Text>
