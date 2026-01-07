@@ -7,6 +7,8 @@ import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
 import { initProvenance, Provenance, NodeID } from '@visdesignlab/trrack';
 import LZString from 'lz-string';
 import { Layout } from 'react-grid-layout';
+import * as ReactGridLayout from 'react-grid-layout';
+
 import {
   AGGREGATION_OPTIONS,
   Cost,
@@ -25,8 +27,26 @@ import {
 } from '../Types/application';
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
-import { areLayoutsEqual, compactLayout } from '../Utils/layout';
 import { expandTimePeriod } from '../Utils/expandTimePeriod';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const { utils } = ReactGridLayout as any;
+
+// Helper for layout comparison
+const areLayoutsEqual = (l1: Layout[], l2: Layout[]) => {
+  if (l1.length !== l2.length) return false;
+  const sorted1 = [...l1].sort((a, b) => a.i.localeCompare(b.i));
+  const sorted2 = [...l2].sort((a, b) => a.i.localeCompare(b.i));
+  return sorted1.every((item, index) => {
+    const other = sorted2[index];
+    return item.i === other.i
+      && item.x === other.x
+      && item.y === other.y
+      && item.w === other.w
+      && item.h === other.h;
+  });
+};
+
 // endregion
 
 // region Constants
@@ -764,8 +784,8 @@ export class RootStore {
     const filteredSm = (currentLayouts.sm || []).filter((layout) => layout.i !== chartId);
 
     const newLayouts = {
-      main: compactLayout(filteredMain, 2),
-      sm: compactLayout(filteredSm, 1),
+      main: utils.compact(filteredMain, 'vertical', 2),
+      sm: utils.compact(filteredSm, 'vertical', 1),
     };
     const newConfigs = currentConfigs.filter((config) => config.chartId !== chartId);
     this.actions.updateDashboardState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Chart');
@@ -790,8 +810,8 @@ export class RootStore {
 
     const newLayouts = {
       ...currentLayouts,
-      main: compactLayout(newMainLayouts, 2),
-      ...(currentLayouts.sm && { sm: compactLayout(newSmLayouts, 1) }),
+      main: utils.compact(newMainLayouts, 'vertical', 2),
+      ...(currentLayouts.sm && { sm: utils.compact(newSmLayouts, 'vertical', 1) }),
     };
 
     this.actions.updateDashboardState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Chart');
@@ -1119,7 +1139,7 @@ export class RootStore {
     shifted.unshift({
       i: config.chartId, x: 0, y: 0, w: 2, h: 1, maxH: 2,
     });
-    const newLayouts = { ...currentLayouts, main: compactLayout(shifted, 2) };
+    const newLayouts = { ...currentLayouts, main: utils.compact(shifted, 'vertical', 2) };
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Explore Chart');
   }
 
@@ -1129,7 +1149,7 @@ export class RootStore {
     const newConfigs = currentConfigs.filter((config) => config.chartId !== chartId);
     const filteredMain = (currentLayouts.main || []).filter((layout) => layout.i !== chartId);
     const filteredSm = (currentLayouts.sm || []).filter((layout) => layout.i !== chartId);
-    const newLayouts = { ...currentLayouts, main: compactLayout(filteredMain, 2), ...(currentLayouts.sm ? { sm: compactLayout(filteredSm, 1) } : {}) };
+    const newLayouts = { ...currentLayouts, main: utils.compact(filteredMain, 'vertical', 2), ...(currentLayouts.sm ? { sm: utils.compact(filteredSm, 'vertical', 1) } : {}) };
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Explore Chart');
   }
   // endregion
