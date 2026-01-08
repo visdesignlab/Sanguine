@@ -571,15 +571,6 @@ export const ExploreTableColumnOptionsGrouped = [
     })),
   },
   {
-    group: 'Lab Results',
-    items: LAB_RESULT_OPTIONS.map((opt) => ({
-      value: opt.value,
-      label: opt.label.base,
-      units: { sum: opt.label.sum, avg: opt.label.avg },
-      decimals: opt.decimals,
-    })),
-  },
-  {
     group: 'Costs',
     items: COST_OPTIONS.map((opt) => ({
       value: opt.value,
