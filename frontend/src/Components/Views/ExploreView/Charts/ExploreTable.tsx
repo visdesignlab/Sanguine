@@ -226,7 +226,7 @@ const HistogramFooter = ({
 const NumericBarCell = ({
   value, max, colVar, opts = {}, setHoveredValue, agg,
 }: {
-  value: number;
+  value: number | null | undefined;
   max: number;
   colVar: string;
   setHoveredValue: SetHoveredValue;
@@ -241,9 +241,11 @@ const NumericBarCell = ({
     suffix,
   } = opts;
 
+  const isMissing = value === null || value === undefined;
+
   // Calculate the bar width as a percentage (0-100) of the maximum value
-  const barWidthPercent = Number.isFinite(max) && max > 0
-    ? Math.max(0, Math.min(100, (Number(value ?? 0) / max) * 100))
+  const barWidthPercent = !isMissing && Number.isFinite(max) && max > 0
+    ? Math.max(0, Math.min(100, (Number(value) / max) * 100))
     : 0;
 
   // Amount to clip from the right side to show only the filled portion
@@ -253,9 +255,9 @@ const NumericBarCell = ({
   const unitKey = (agg === 'avg') ? 'avg' : 'sum';
   const valueUnit = ExploreTableColumnOptions.find((opt) => opt.value === colVar)?.units?.[unitKey];
   const decimals = getDecimals(colVar, agg);
-  const formattedValue = Number(value ?? 0).toFixed(decimals);
-  const displayValue = `${formattedValue} ${valueUnit}`;
-  const hasValue = Number(value ?? 0) !== 0;
+  const formattedValue = isMissing ? '-' : Number(value).toFixed(decimals);
+  const displayValue = isMissing ? 'No data' : `${formattedValue} ${valueUnit ?? ''}`;
+  const hasValue = !isMissing && Number(value) !== 0;
 
   return (
     <Tooltip
@@ -268,7 +270,7 @@ const NumericBarCell = ({
         style={{
           padding,
         }}
-        onMouseEnter={() => setHoveredValue({ col: colVar, value })}
+        onMouseEnter={() => !isMissing && setHoveredValue({ col: colVar, value: value! })}
         onMouseLeave={() => setHoveredValue(null)}
       >
         <div className="numeric-bar-cell-inner" style={{ height: cellHeight }}>
@@ -278,7 +280,7 @@ const NumericBarCell = ({
             className="numeric-bar-cell-text-container"
           >
             <p className="numeric-bar-cell-text" style={{ lineHeight: `${cellHeight}px` }}>
-              {typeof suffix === 'string' ? `${formattedValue}${suffix}` : formattedValue}
+              {isMissing ? '-' : (typeof suffix === 'string' ? `${formattedValue}${suffix}` : formattedValue)}
             </p>
           </div>
           {/* Bar fill */}
@@ -299,7 +301,7 @@ const NumericBarCell = ({
             }}
           >
             <p className="numeric-bar-cell-text" style={{ lineHeight: `${cellHeight}px` }}>
-              {typeof suffix === 'string' ? `${formattedValue}${suffix}` : formattedValue}
+              {isMissing ? '-' : (typeof suffix === 'string' ? `${formattedValue}${suffix}` : formattedValue)}
             </p>
           </div>
         </div>
@@ -605,8 +607,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       column.render = (row: ExploreTableRow) => {
         if (chartConfig.twoValsPerRow) {
           const val = row[colVar] as [number, number] | undefined;
-          const v1 = val?.[0] ?? 0;
-          const v2 = val?.[1] ?? 0;
+          const v1 = val?.[0] ?? null;
+          const v2 = val?.[1] ?? null;
           return (
             <Stack gap={0} padding={0}>
               <NumericBarCell
@@ -630,7 +632,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         }
         return (
           <NumericBarCell
-            value={Number(row[colVar] ?? 0)}
+            value={row[colVar] as number | null | undefined}
             max={maxVal}
             colVar={colVar}
             setHoveredValue={setHoveredValue}
