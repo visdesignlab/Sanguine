@@ -465,206 +465,234 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     store.exploreStore.updateChartConfig(updatedConfig);
   };
 
-  const generateColumnDefs = (colConfigs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => colConfigs.map((colConfig) => {
-    const {
-      colVar, type, title, numericTextVisible,
-    } = colConfig;
+  const generateColumnDefs = (colConfigs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => {
+    // Compute global min/max for heatmap columns to normalize colors
+    let heatmapMin = Infinity;
+    let heatmapMax = -Infinity;
+    const heatmapCols = colConfigs.filter((c) => c.type === 'heatmap');
 
-    // Base column definition
-    const column: DataTableColumn<ExploreTableRow> = {
-      accessor: colVar,
-      title,
-      draggable: true,
-      resizable: false,
-      sortable: true,
-      render: (row: ExploreTableRow) => <div>{String(row[colVar] ?? '')}</div>,
-      noWrap: true,
-    };
-
-    // If accessor is 'cases', different size
-    if (colVar === 'cases') {
-      column.width = 90;
-      column.draggable = false;
+    if (heatmapCols.length > 0) {
+      rows.forEach((r) => {
+        heatmapCols.forEach((c) => {
+          const val = r[c.colVar];
+          const values = Array.isArray(val) ? val : [val];
+          values.forEach((v) => {
+            const n = Number(v ?? 0);
+            if (n < heatmapMin) heatmapMin = n;
+            if (n > heatmapMax) heatmapMax = n;
+          });
+        });
+      });
     }
 
-    // Primary text column (e.g. surgeon) has max width & no dragging
-    const textColumns = colConfigs.filter((c) => c.type === 'text');
-    if (textColumns.length === 1 && textColumns[0].colVar === colVar) {
-      column.width = 175;
-      column.draggable = false;
-    }
+    if (heatmapMin === Infinity) heatmapMin = 0;
+    if (heatmapMax === -Infinity) heatmapMax = 100;
+    if (heatmapMin === heatmapMax) heatmapMax = heatmapMin + 1;
 
-    // Extract values
-    const rawValues = rows.map((r) => r[colVar]);
-    const values = chartConfig.twoValsPerRow
-      ? rawValues.flat().map((v) => Number(v ?? 0))
-      : rawValues.map((r) => Number(r ?? 0));
+    return colConfigs.map((colConfig) => {
+      const {
+        colVar, type, title, numericTextVisible,
+      } = colConfig;
 
-    const maxVal = values.length ? Math.max(...values) : 0;
-
-    // Helper to create histogram footer
-    const createHistogramFooter = () => {
-      if (values.length === 0) return undefined;
-      const bins = computeHistogramBins(values, 10);
-      return (
-        <HistogramFooter
-          bins={bins}
-          colorInterpolator={type === 'heatmap' ? interpolateReds : undefined}
-          colVar={colVar}
-          agg={colConfig.aggregation}
-        />
-      );
-    };
-
-    // Helper to create numeric filter input
-    const createNumericFilterBtn = () => {
-      const filterState = numericFilters[colVar] ?? defaultNumericFilter;
-      return (
-        <TextInput
-          placeholder="Filter value"
-          size="xs"
-          value={filterState.query}
-          onChange={(e) => {
-            const val = e.currentTarget.value;
-            setNumericFilters((prev: Record<string, NumericFilter>) => {
-              const curr = prev[colVar] ?? defaultNumericFilter;
-              return { ...prev, [colVar]: { ...curr, query: val } };
-            });
-          }}
-          leftSection={(
-            <ActionIcon
-              size="xs"
-              onClick={() => {
-                const newCmp = filterState.cmp === '>' ? '<' : '>';
-                setNumericFilters((prev: Record<string, NumericFilter>) => {
-                  const curr = prev[colVar] ?? defaultNumericFilter;
-                  return { ...prev, [colVar]: { ...curr, cmp: newCmp } };
-                });
-              }}
-            >
-              {filterState.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
-            </ActionIcon>
-          )}
-        />
-      );
-    };
-
-    // --- Column Type Specific Logic ---
-
-
-    // Heatmap columns ---
-    if (type === 'heatmap') {
-      column.render = (row: ExploreTableRow) => {
-        const decimals = getDecimals(colVar, colConfig.aggregation);
-
-        const renderHeatmapCell = (val: number, padding: string, isSplit: boolean) => {
-          const formattedVal = Number(val ?? 0).toFixed(decimals);
-          return (
-            <Tooltip label={`${formattedVal}% of cases`} withArrow>
-              <div
-                onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
-                onMouseLeave={() => setHoveredValue(null)}
-                style={{ padding, width: '100%' }}
-              >
-                <div
-                  className={`heatmap-cell heatmap-cell-${isSplit ? 'split' : 'full'}`}
-                  data-visible={numericTextVisible}
-                  style={{
-                    backgroundColor: interpolateReds(val / 100),
-                    '--heatmap-text-color': val > 50 ? 'white' : 'black',
-                  }}
-                >
-                  {formattedVal}
-                  %
-                </div>
-              </div>
-            </Tooltip>
-          );
-        };
-
-        // Render two values per row if enabled
-        if (chartConfig.twoValsPerRow) {
-          const val = row[colVar] as [number, number] | undefined;
-          const v1 = val?.[0] ?? 0;
-          const v2 = val?.[1] ?? 0;
-          return (
-            <Stack gap={0} padding={0}>
-              {renderHeatmapCell(v1, '1.5px 1px 0.5px 1px', true)}
-              {renderHeatmapCell(v2, '0.5px 1px 1.5px 1px', true)}
-            </Stack>
-          );
-        }
-
-        // Otherwise, render a single heatmap cell
-        const val = Number(row[colVar] ?? 0);
-        return renderHeatmapCell(val, '1px 1px 1px 1px', false);
+      // Base column definition
+      const column: DataTableColumn<ExploreTableRow> = {
+        accessor: colVar,
+        title,
+        draggable: true,
+        resizable: false,
+        sortable: true,
+        render: (row: ExploreTableRow) => <div>{String(row[colVar] ?? '')}</div>,
+        noWrap: true,
       };
 
-      column.footer = createHistogramFooter();
-      column.filter = createNumericFilterBtn();
-    } else if (type === 'numeric') {
-      // Numeric columns ---
-      column.render = (row: ExploreTableRow) => {
-        if (chartConfig.twoValsPerRow) {
-          const val = row[colVar] as [number, number] | undefined;
-          const v1 = val?.[0] ?? null;
-          const v2 = val?.[1] ?? null;
-          return (
-            <Stack gap={0} padding={0}>
-              <NumericBarCell
-                value={v1}
-                max={maxVal}
-                colVar={colVar}
-                opts={{ padding: '1px 1px 0.5px 1px' }}
-                setHoveredValue={setHoveredValue}
-                agg={colConfig.aggregation}
-              />
-              <NumericBarCell
-                value={v2}
-                max={maxVal}
-                colVar={colVar}
-                opts={{ padding: '0.5px 1px 1px 1px' }}
-                setHoveredValue={setHoveredValue}
-                agg={colConfig.aggregation}
-              />
-            </Stack>
-          );
-        }
+      // If accessor is 'cases', different size
+      if (colVar === 'cases') {
+        column.width = 90;
+        column.draggable = false;
+      }
+
+      // Primary text column (e.g. surgeon) has max width & no dragging
+      const textColumns = colConfigs.filter((c) => c.type === 'text');
+      if (textColumns.length === 1 && textColumns[0].colVar === colVar) {
+        column.width = 175;
+        column.draggable = false;
+      }
+
+      // Extract values
+      const rawValues = rows.map((r) => r[colVar]);
+      const values = chartConfig.twoValsPerRow
+        ? rawValues.flat().map((v) => Number(v ?? 0))
+        : rawValues.map((r) => Number(r ?? 0));
+
+      const maxVal = values.length ? Math.max(...values) : 0;
+
+      // Helper to create histogram footer
+      const createHistogramFooter = () => {
+        if (values.length === 0) return undefined;
+        const bins = computeHistogramBins(values, 10);
         return (
-          <NumericBarCell
-            value={row[colVar] as number | null | undefined}
-            max={maxVal}
+          <HistogramFooter
+            bins={bins}
+            colorInterpolator={type === 'heatmap' ? interpolateReds : undefined}
             colVar={colVar}
-            setHoveredValue={setHoveredValue}
             agg={colConfig.aggregation}
           />
         );
       };
 
-      column.footer = createHistogramFooter();
-      column.filter = createNumericFilterBtn();
-    } else if (type === 'text') {
-      // Text columns ---
-      column.render = (row: ExploreTableRow) => (
-        <div style={{ marginRight: '10px', textAlign: 'right' }}>{String(row[colVar] ?? '')}</div>
-      );
+      // Helper to create numeric filter input
+      const createNumericFilterBtn = () => {
+        const filterState = numericFilters[colVar] ?? defaultNumericFilter;
+        return (
+          <TextInput
+            placeholder="Filter value"
+            size="xs"
+            value={filterState.query}
+            onChange={(e) => {
+              const val = e.currentTarget.value;
+              setNumericFilters((prev: Record<string, NumericFilter>) => {
+                const curr = prev[colVar] ?? defaultNumericFilter;
+                return { ...prev, [colVar]: { ...curr, query: val } };
+              });
+            }}
+            leftSection={(
+              <ActionIcon
+                size="xs"
+                onClick={() => {
+                  const newCmp = filterState.cmp === '>' ? '<' : '>';
+                  setNumericFilters((prev: Record<string, NumericFilter>) => {
+                    const curr = prev[colVar] ?? defaultNumericFilter;
+                    return { ...prev, [colVar]: { ...curr, cmp: newCmp } };
+                  });
+                }}
+              >
+                {filterState.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
+              </ActionIcon>
+            )}
+          />
+        );
+      };
 
-      const textFilterValue = textFilters[colVar] ?? '';
-      column.filter = (
-        <TextInput
-          placeholder="Search ..."
-          size="xs"
-          value={textFilterValue}
-          onChange={(e) => {
-            const val = e.currentTarget.value;
-            setTextFilters((prev: Record<string, string>) => ({ ...prev, [colVar]: val }));
-          }}
-        />
-      );
-    }
+      // --- Column Type Specific Logic ---
 
-    return column;
-  });
+
+      // Heatmap columns ---
+      if (type === 'heatmap') {
+        column.render = (row: ExploreTableRow) => {
+          const decimals = getDecimals(colVar, colConfig.aggregation);
+
+          const renderHeatmapCell = (val: number, padding: string, isSplit: boolean) => {
+            const formattedVal = Number(val ?? 0).toFixed(decimals);
+            // Normalize value for color scale
+            const normalizedVal = Math.max(0, Math.min(1, (val - heatmapMin) / (heatmapMax - heatmapMin)));
+
+            return (
+              <Tooltip label={`${formattedVal}% of cases`} withArrow>
+                <div
+                  onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
+                  onMouseLeave={() => setHoveredValue(null)}
+                  style={{ padding, width: '100%' }}
+                >
+                  <div
+                    className={`heatmap-cell heatmap-cell-${isSplit ? 'split' : 'full'}`}
+                    data-visible={numericTextVisible}
+                    style={{
+                      backgroundColor: interpolateReds(normalizedVal),
+                      '--heatmap-text-color': normalizedVal > 0.5 ? 'white' : 'black', // Switch text color based on background darkness
+                    }}
+                  >
+                    {formattedVal}
+                    %
+                  </div>
+                </div>
+              </Tooltip>
+            );
+          };
+
+          // Render two values per row if enabled
+          if (chartConfig.twoValsPerRow) {
+            const val = row[colVar] as [number, number] | undefined;
+            const v1 = val?.[0] ?? 0;
+            const v2 = val?.[1] ?? 0;
+            return (
+              <Stack gap={0} padding={0}>
+                {renderHeatmapCell(v1, '1.5px 1px 0.5px 1px', true)}
+                {renderHeatmapCell(v2, '0.5px 1px 1.5px 1px', true)}
+              </Stack>
+            );
+          }
+
+          // Otherwise, render a single heatmap cell
+          const val = Number(row[colVar] ?? 0);
+          return renderHeatmapCell(val, '1px 1px 1px 1px', false);
+        };
+
+        column.footer = createHistogramFooter();
+        column.filter = createNumericFilterBtn();
+      } else if (type === 'numeric') {
+        // Numeric columns ---
+        column.render = (row: ExploreTableRow) => {
+          if (chartConfig.twoValsPerRow) {
+            const val = row[colVar] as [number, number] | undefined;
+            const v1 = val?.[0] ?? null;
+            const v2 = val?.[1] ?? null;
+            return (
+              <Stack gap={0} padding={0}>
+                <NumericBarCell
+                  value={v1}
+                  max={maxVal}
+                  colVar={colVar}
+                  opts={{ padding: '1px 1px 0.5px 1px' }}
+                  setHoveredValue={setHoveredValue}
+                  agg={colConfig.aggregation}
+                />
+                <NumericBarCell
+                  value={v2}
+                  max={maxVal}
+                  colVar={colVar}
+                  opts={{ padding: '0.5px 1px 1px 1px' }}
+                  setHoveredValue={setHoveredValue}
+                  agg={colConfig.aggregation}
+                />
+              </Stack>
+            );
+          }
+          return (
+            <NumericBarCell
+              value={row[colVar] as number | null | undefined}
+              max={maxVal}
+              colVar={colVar}
+              setHoveredValue={setHoveredValue}
+              agg={colConfig.aggregation}
+            />
+          );
+        };
+
+        column.footer = createHistogramFooter();
+        column.filter = createNumericFilterBtn();
+      } else if (type === 'text') {
+        // Text columns ---
+        column.render = (row: ExploreTableRow) => (
+          <div style={{ marginRight: '10px', textAlign: 'right' }}>{String(row[colVar] ?? '')}</div>
+        );
+
+        const textFilterValue = textFilters[colVar] ?? '';
+        column.filter = (
+          <TextInput
+            placeholder="Search ..."
+            size="xs"
+            value={textFilterValue}
+            onChange={(e) => {
+              const val = e.currentTarget.value;
+              setTextFilters((prev: Record<string, string>) => ({ ...prev, [colVar]: val }));
+            }}
+          />
+        );
+      }
+
+      return column;
+    });
+  };
 
   // Data Table Columns -------
   const columnDefs = useMemo(
