@@ -127,10 +127,10 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
 
 // Histogram footer component
 const HistogramFooter = ({
-  bins, colorInterpolator, colVar, agg,
+  bins, colorScale, colVar, agg,
 }: {
   bins: HistogramBin[];
-  colorInterpolator?: (t: number) => string;
+  colorScale?: (val: number) => string;
   colVar?: string;
   agg?: string;
 }) => {
@@ -147,15 +147,12 @@ const HistogramFooter = ({
   const hoveredVal = hoveredValue?.value;
 
   // Base colors of histogram
-  const baseColors = useMemo(() => bins.map((bin, i) => {
-    if (colorInterpolator) {
-      const base = bins.length > 1 ? i / (bins.length - 1) : 0;
-      const scaledMax = Math.max(0, Math.min(1, maxVal / 100));
-      const t = Math.min(1, base * scaledMax);
-      return colorInterpolator(t);
+  const baseColors = useMemo(() => bins.map((bin) => {
+    if (colorScale) {
+      return colorScale((bin.binMin + bin.binMax) / 2);
     }
     return '#8c8c8c';
-  }), [bins, colorInterpolator, maxVal]);
+  }), [bins, colorScale]);
 
   // Final colors, coloring hovered bin
   const colors = useMemo(() => {
@@ -182,6 +179,9 @@ const HistogramFooter = ({
     color: colors[i]
   })), [bins, colors]);
 
+  // Theme color for ticks and lines (approx interpolateReds(0.5))
+  const themeColor = colorScale ? '#ef6548' : '#6f6f6f';
+
   // Render histogram ----
   return (
     <div className="histogram-footer-container">
@@ -206,16 +206,16 @@ const HistogramFooter = ({
       <div
         className="histogram-footer-line"
         style={{
-          borderTop: `1px solid ${colorInterpolator ? colorInterpolator(0.4) : '#6f6f6f'}`,
+          borderTop: `1px solid ${colorScale ? '#fc8d59' : '#6f6f6f'}`, // lighter red for line
         }}
       />
 
       {/* Min / Max ticks under the histogram */}
       <div className="histogram-footer-ticks">
-        <div className="histogram-footer-tick-min" style={{ color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>
+        <div className="histogram-footer-tick-min" style={{ color: themeColor }}>
           {colVar ? minVal.toFixed(getDecimals(colVar, agg)) : minVal}
         </div>
-        <div className="histogram-footer-tick-max" style={{ color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>
+        <div className="histogram-footer-tick-max" style={{ color: themeColor }}>
           {colVar ? maxVal.toFixed(getDecimals(colVar, agg)) : maxVal}
         </div>
       </div>
@@ -526,6 +526,14 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
       const maxVal = values.length ? Math.max(...values) : 0;
 
+      // Helper for color scale
+      const getNormalizedValue = (val: number) => {
+        if (heatmapMax === heatmapMin) return 0;
+        return Math.max(0, Math.min(1, (val - heatmapMin) / (heatmapMax - heatmapMin)));
+      };
+
+      const getHeatmapColor = (val: number) => interpolateReds(getNormalizedValue(val));
+
       // Helper to create histogram footer
       const createHistogramFooter = () => {
         if (values.length === 0) return undefined;
@@ -533,7 +541,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         return (
           <HistogramFooter
             bins={bins}
-            colorInterpolator={type === 'heatmap' ? interpolateReds : undefined}
+            colorScale={type === 'heatmap' ? getHeatmapColor : undefined}
             colVar={colVar}
             agg={colConfig.aggregation}
           />
@@ -584,7 +592,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           const renderHeatmapCell = (val: number, padding: string, isSplit: boolean) => {
             const formattedVal = Number(val ?? 0).toFixed(decimals);
             // Normalize value for color scale
-            const normalizedVal = Math.max(0, Math.min(1, (val - heatmapMin) / (heatmapMax - heatmapMin)));
+            const normalizedVal = getNormalizedValue(val);
 
             return (
               <Tooltip label={`${formattedVal}% of cases`} withArrow>
@@ -597,7 +605,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                     className={`heatmap-cell heatmap-cell-${isSplit ? 'split' : 'full'}`}
                     data-visible={numericTextVisible}
                     style={{
-                      backgroundColor: interpolateReds(normalizedVal),
+                      backgroundColor: getHeatmapColor(val),
                       '--heatmap-text-color': normalizedVal > 0.5 ? 'white' : 'black', // Switch text color based on background darkness
                     }}
                   >
