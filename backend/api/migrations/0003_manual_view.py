@@ -68,8 +68,8 @@ def create_materialize_proc(apps, schema_editor):
             CASE WHEN ap.attend_prov_line = 1 THEN v.clinical_los ELSE NULL END AS los,
             CASE WHEN ap.attend_prov_line = 1 THEN (CASE WHEN v.pat_expired_f = 'Y' THEN TRUE ELSE FALSE END) ELSE NULL END AS death,
             CASE WHEN ap.attend_prov_line = 1 THEN (CASE WHEN v.total_vent_mins > 1440 THEN TRUE ELSE FALSE END) ELSE NULL END AS vent,
-            CASE WHEN ap.attend_prov_line = 1 THEN (CASE WHEN bc.stroke = 1 THEN TRUE ELSE FALSE END) ELSE NULL END AS stroke,
-            CASE WHEN ap.attend_prov_line = 1 THEN (CASE WHEN bc.ecmo = 1 THEN TRUE ELSE FALSE END) ELSE NULL END AS ecmo,
+            CASE WHEN ap.attend_prov_line = 1 THEN (CASE WHEN bc_outcomes.stroke = 1 THEN TRUE ELSE FALSE END) ELSE NULL END AS stroke,
+            CASE WHEN ap.attend_prov_line = 1 THEN (CASE WHEN bc_outcomes.ecmo = 1 THEN TRUE ELSE FALSE END) ELSE NULL END AS ecmo,
 
             -- Medications per provider
             CASE WHEN pm.has_b12 = 1 THEN TRUE ELSE FALSE END AS b12,
@@ -89,6 +89,16 @@ def create_materialize_proc(apps, schema_editor):
 
         FROM AttendingProvider ap
         JOIN Visit v ON ap.visit_no = v.visit_no
+        
+        -- Billing Codes Metadata for Outcomes (Visit Level)
+        LEFT JOIN (
+            SELECT
+                visit_no,
+                MAX(CASE WHEN cpt_code in ('99291', '1065F', '1066F') THEN 1 ELSE 0 END) AS stroke,
+                MAX(CASE WHEN cpt_code in ('33946', '33947', '33948', '33949', '33952', '33953', '33954', '33955', '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965', '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) AS ecmo
+            FROM BillingCode
+            GROUP BY visit_no
+        ) bc_outcomes ON bc_outcomes.visit_no = v.visit_no
         
         /* Blood product units transfused, and adherence of those units, aggregated by provider's periods of attendance */
         LEFT JOIN (
@@ -124,52 +134,19 @@ def create_materialize_proc(apps, schema_editor):
                     CASE WHEN COALESCE(t.rbc_units, 0) > 0 THEN
                         CASE 
                             -- 1. Restrictive Threshold (Hb <= 7.0)
-                            WHEN (
-                                SELECT l.result_value 
-                                FROM Lab l 
-                                WHERE l.visit_no = t.visit_no 
-                                  AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
-                            ) <= 7.0 THEN 1
+                            WHEN lab_hgb.val <= 7.0 THEN 1
                             
-                            -- 2. High Risk (7.0 < Hb <= 8.0) AND ((CHF, CVD, or Surgery within 24hr) OR (Neuro OR Cardiac OR Obstetrics OR Vascular))
-                            WHEN (
-                                SELECT l.result_value 
-                                FROM Lab l 
-                                WHERE l.visit_no = t.visit_no 
-                                  AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
-                            ) BETWEEN 7.0 AND 8.0
+                            -- 2. high risk threshold of 8 with any risk factor
+                            -- (CHF, CVD, Surgery, Obstetrics, PCI)
+                            WHEN lab_hgb.val <= 8.0 
                             AND (
                                 v.cci_chf > 0 OR v.cci_cvd > 0 OR
-                                EXISTS (
-                                    SELECT 1 FROM SurgeryCase sc 
-                                    WHERE sc.visit_no = t.visit_no 
-                                    AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm + INTERVAL 24 HOUR
-                                ) OR EXISTS (
-                                    SELECT 1 FROM BillingCode bc
-                                    WHERE bc.visit_no = t.visit_no
-                                    AND (
-                                        (bc.cpt_code BETWEEN '59000' AND '59899' AND bc.cpt_code NOT LIKE '%F') OR -- Obstetrics (Labor & Delivery)
-                                        (bc.cpt_code BETWEEN '92920' AND '92944' AND bc.cpt_code NOT LIKE '%F')    -- Interventional Cardiology (PCI/Stents)
-                                    )
-                                )
+                                sc_ctx.has_surg_24h = 1 OR
+                                bc_ctx.flag_target_8_indicated = 1
                             ) THEN 1
 
-                            -- 3. Major Bleeding (BillingCode description matching BLEEDING or HEMORRHAGE) OR High Transfusion (>=4 RBC units within 4 hours)
-                            WHEN EXISTS (
-                                SELECT 1 FROM BillingCode bc 
-                                WHERE bc.visit_no = t.visit_no 
-                                AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F') -- Restrict to 'Surgery' CPT code mappings
-                                AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
-                            ) OR (
-                                SELECT SUM(t2.rbc_units) 
-                                FROM Transfusion t2 
-                                WHERE t2.visit_no = t.visit_no 
-                                AND t2.trnsfsn_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 4 HOUR AND t.trnsfsn_dtm + INTERVAL 4 HOUR
-                            ) >= 4 THEN 1
+                            -- 3. Massive Bleeding or High Transfusion
+                            WHEN bc_ctx.flag_bleeding = 1 OR trans_ctx.rbc_4h >= 4 THEN 1
                             
                             ELSE 0 
                         END * t.rbc_units
@@ -178,44 +155,17 @@ def create_materialize_proc(apps, schema_editor):
                     /* FFP ADHERENCE LOGIC ============================*/
                     CASE WHEN COALESCE(t.ffp_units, 0) > 0 THEN
                         CASE
-                            -- 1. If Massive Bleeding Exception (> 3 FFP units within 4 hours, ignoring INR)
-                            WHEN (
-                                SELECT SUM(t2.ffp_units) 
-                                FROM Transfusion t2 
-                                WHERE t2.visit_no = t.visit_no 
-                                AND t2.trnsfsn_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 4 HOUR AND t.trnsfsn_dtm + INTERVAL 4 HOUR
-                            ) >= 3 THEN 1
+                            -- 1. Strict Exception (> 3 FFP in 4h)
+                            WHEN trans_ctx.ffp_4h >= 3 THEN 1
                         
                             -- 2. Standard (INR >= 1.8)
-                            WHEN (
-                                SELECT l.result_value 
-                                FROM Lab l 
-                                WHERE l.visit_no = t.visit_no 
-                                AND UPPER(l.result_desc) = 'INR'
-                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
-                            ) >= 1.8 THEN 1
+                            WHEN lab_inr.val >= 1.8 THEN 1
                             
-                            -- 3. Procedure (INR >= 1.5 AND Surgery/Bleeding Code)
-                            WHEN (
-                                SELECT l.result_value 
-                                FROM Lab l 
-                                WHERE l.visit_no = t.visit_no 
-                                AND UPPER(l.result_desc) = 'INR'
-                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
-                            ) >= 1.5 
+                            -- 3. Procedure/Bleeding (INR >= 1.5)
+                            WHEN lab_inr.val >= 1.5 
                             AND (
-                                EXISTS (
-                                    SELECT 1 FROM SurgeryCase sc 
-                                    WHERE sc.visit_no = t.visit_no 
-                                    AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 6 HOUR AND t.trnsfsn_dtm + INTERVAL 6 HOUR
-                                ) OR EXISTS (
-                                    SELECT 1 FROM BillingCode bc
-                                    WHERE bc.visit_no = t.visit_no
-                                    AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F')
-                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
-                                )
+                                sc_ctx.has_surg_6h = 1 OR 
+                                bc_ctx.flag_bleeding = 1
                             ) THEN 1
                             
                             ELSE 0
@@ -226,60 +176,18 @@ def create_materialize_proc(apps, schema_editor):
                     CASE WHEN COALESCE(t.plt_units, 0) > 0 THEN
                         CASE
                             -- 1. Prophylactic (Plt <= 10,000)
-                            WHEN (
-                                SELECT l.result_value 
-                                FROM Lab l 
-                                WHERE l.visit_no = t.visit_no 
-                                  AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
-                            ) <= 10000 THEN 1
+                            WHEN lab_plt.val <= 10000 THEN 1
 
                             -- 2. Procedure (Plt <= 50,000 AND (Surgery within 6h OR Bleeding))
-                            WHEN (
-                                SELECT l.result_value 
-                                FROM Lab l 
-                                WHERE l.visit_no = t.visit_no 
-                                  AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
-                            ) <= 50000 
+                            WHEN lab_plt.val <= 50000 
                             AND (
-                                EXISTS (
-                                    SELECT 1 FROM SurgeryCase sc 
-                                    WHERE sc.visit_no = t.visit_no 
-                                    AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 6 HOUR AND t.trnsfsn_dtm + INTERVAL 6 HOUR
-                                ) OR EXISTS (
-                                    SELECT 1 FROM BillingCode bc
-                                    WHERE bc.visit_no = t.visit_no
-                                    AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F') -- Restrict to Surgical Procedures
-                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
-                                ) 
+                                sc_ctx.has_surg_6h = 1 OR
+                                bc_ctx.flag_bleeding = 1
                             ) THEN 1
 
-                            -- 3. High Risk (Plt <= 100,000 AND (Neuro OR Cardiac OR Obstetrics OR Vascular))
-                            WHEN (
-                                SELECT l.result_value 
-                                FROM Lab l 
-                                WHERE l.visit_no = t.visit_no 
-                                  AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
-                            ) <= 100000
-                            AND (
-                                EXISTS (
-                                    SELECT 1 FROM BillingCode bc 
-                                    WHERE bc.visit_no = t.visit_no 
-                                    AND (
-                                        (bc.cpt_code LIKE '33%' AND bc.cpt_code NOT LIKE '%F') OR -- Cardiac: Heart & Pericardium
-                                        (bc.cpt_code BETWEEN '61000' AND '63999' AND bc.cpt_code NOT LIKE '%F') OR -- Neuro (Brain/Spine)
-                                        (bc.cpt_code BETWEEN '65000' AND '68899' AND bc.cpt_code NOT LIKE '%F') OR -- Ophthalmology (Eye)
-                                        (bc.cpt_code BETWEEN '62263' AND '62329' AND bc.cpt_code NOT LIKE '%F') OR -- Neuraxial (Epidurals/Spinals)
-                                        (bc.cpt_code BETWEEN '33860' AND '33999' AND bc.cpt_code NOT LIKE '%F') OR -- Vascular (Aorta)
-                                        (bc.cpt_code BETWEEN '34000' AND '34999' AND bc.cpt_code NOT LIKE '%F')    -- Vascular (Other)
-                                    )
-                                )
-                            ) THEN 1
+                            -- 3. High Risk (Plt <= 100,000)
+                            -- (Neuro, Cardiac, Eye, Neuraxial, Vascular)
+                            WHEN lab_plt.val <= 100000 AND bc_ctx.flag_target_100_indicated = 1 THEN 1
                             
                             ELSE 0
                         END * t.plt_units
@@ -288,59 +196,20 @@ def create_materialize_proc(apps, schema_editor):
                     /* CRYO ADHERENCE LOGIC ============================*/
                     CASE WHEN COALESCE(t.cryo_units, 0) > 0 THEN
                         CASE
-                            -- 1. If Massive Transfusion Exception (>=4 units), Cryo is auto-approved.
-                            WHEN (
-                                SELECT SUM(t2.rbc_units) 
-                                FROM Transfusion t2 
-                                WHERE t2.visit_no = t.visit_no 
-                                AND t2.trnsfsn_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 4 HOUR AND t.trnsfsn_dtm + INTERVAL 4 HOUR
-                            ) >= 4 THEN 1
+                            -- 1. Massive Transfusion (>=4 RBC)
+                            WHEN trans_ctx.rbc_4h >= 4 THEN 1
 
-                            -- 2. If Fib < 100, Cryo is auto-approved.
-                            WHEN (
-                                SELECT l.result_value 
-                                FROM Lab l 
-                                WHERE l.visit_no = t.visit_no 
-                                AND UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
-                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
-                            ) < 100 THEN 1
+                            -- 2. Low Fibrinogen (< 100)
+                            WHEN lab_fib.val < 100 THEN 1
 
-                            -- 3. Obstetrics Exception (Fib < 200)
-                            WHEN (
-                                SELECT l.result_value 
-                                FROM Lab l 
-                                WHERE l.visit_no = t.visit_no 
-                                AND UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
-                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
-                            ) < 200 
-                            AND EXISTS (
-                                SELECT 1 FROM BillingCode bc 
-                                WHERE bc.visit_no = t.visit_no 
-                                AND (bc.cpt_code BETWEEN '59000' AND '59899' AND bc.cpt_code NOT LIKE '%F') -- Obstetrics
-                            ) THEN 1
+                            -- 3. Obstetrics (< 200)
+                            WHEN lab_fib.val < 200 AND bc_ctx.is_ob = 1 THEN 1
 
-                            -- 4. Standard Surgical/Bleeding (Fib < 150 + Surgery within 6hr or Bleeding)
-                            WHEN (
-                                SELECT l.result_value 
-                                FROM Lab l 
-                                WHERE l.visit_no = t.visit_no 
-                                AND UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
-                                AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC LIMIT 1
-                            ) < 150 
+                            -- 4. Surgical/Bleeding (< 150)
+                            WHEN lab_fib.val < 150
                             AND (
-                                EXISTS (
-                                    SELECT 1 FROM SurgeryCase sc 
-                                    WHERE sc.visit_no = t.visit_no 
-                                    AND sc.surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 6 HOUR AND t.trnsfsn_dtm + INTERVAL 6 HOUR
-                                ) OR EXISTS (
-                                    SELECT 1 FROM BillingCode bc 
-                                    WHERE bc.visit_no = t.visit_no 
-                                    AND (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F')
-                                    AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%')
-                                )
+                                sc_ctx.has_surg_6h = 1 OR
+                                bc_ctx.flag_bleeding = 1
                             ) THEN 1
                             
                             ELSE 0
@@ -356,7 +225,97 @@ def create_materialize_proc(apps, schema_editor):
                 /* Transfusions between a provider's attendance period */
                 JOIN Transfusion t ON ap_int.visit_no = t.visit_no
                     AND t.trnsfsn_dtm BETWEEN ap_int.attend_start_dtm AND ap_int.attend_end_dtm
-                JOIN Visit v ON v.visit_no = t.visit_no -- Need Visit for CCI risk factors
+                JOIN Visit v ON v.visit_no = t.visit_no 
+                
+                -- Billing Code Context (Pre-aggregated per visit)
+                LEFT JOIN (
+                    SELECT 
+                        visit_no,
+                        -- Helper flags for specific exceptions
+                        MAX(CASE WHEN cpt_code BETWEEN '59000' AND '59899' AND cpt_code NOT LIKE '%F' THEN 1 ELSE 0 END) as is_ob,
+                        
+                        -- Bleeding Exception (Surgery CPT + Keywords)
+                        MAX(CASE WHEN 
+                                (cpt_code BETWEEN '10000' AND '69999' AND cpt_code NOT LIKE '%F') AND
+                                (cpt_code_desc LIKE '%BLEEDING%' OR cpt_code_desc LIKE '%HEMORRHAGE%' OR cpt_code_desc LIKE '%HEMRRG%')
+                            THEN 1 ELSE 0 END) as flag_bleeding,
+
+                        -- Target 8.0 Indication (Obstetrics OR Cardiac PCI)
+                        MAX(CASE WHEN (
+                            (cpt_code BETWEEN '59000' AND '59899' AND cpt_code NOT LIKE '%F') OR -- Obstetrics
+                            (cpt_code BETWEEN '92920' AND '92944' AND cpt_code NOT LIKE '%F')    -- Interventional Cardiology
+                        ) THEN 1 ELSE 0 END) as flag_target_8_indicated,
+
+                        -- Target 100k Indication (Neuro, Cardiac Surg, Eye, Neuraxial, Vascular)
+                        MAX(CASE WHEN (
+                            (cpt_code LIKE '33%' AND cpt_code NOT LIKE '%F') OR -- Cardiac
+                            (cpt_code BETWEEN '61000' AND '63999' AND cpt_code NOT LIKE '%F') OR -- Neuro
+                            (cpt_code BETWEEN '65000' AND '68899' AND cpt_code NOT LIKE '%F') OR -- Eye
+                            (cpt_code BETWEEN '62263' AND '62329' AND cpt_code NOT LIKE '%F') OR -- Neuraxial
+                            (cpt_code BETWEEN '33860' AND '33999' AND cpt_code NOT LIKE '%F') OR -- Vascular Aorta
+                            (cpt_code BETWEEN '34000' AND '34999' AND cpt_code NOT LIKE '%F')    -- Vascular Other
+                        ) THEN 1 ELSE 0 END) as flag_target_100_indicated
+
+                    FROM BillingCode
+                    GROUP BY visit_no
+                ) bc_ctx ON bc_ctx.visit_no = t.visit_no
+                
+                -- Surgery Context
+                LEFT JOIN LATERAL (
+                    SELECT 
+                        MAX(CASE WHEN surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm + INTERVAL 24 HOUR THEN 1 ELSE 0 END) as has_surg_24h,
+                        MAX(CASE WHEN surgery_end_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 6 HOUR AND t.trnsfsn_dtm + INTERVAL 6 HOUR THEN 1 ELSE 0 END) as has_surg_6h
+                    FROM SurgeryCase sc
+                    WHERE sc.visit_no = t.visit_no
+                ) sc_ctx ON TRUE
+
+                -- Transfusion Context
+                LEFT JOIN LATERAL (
+                    SELECT 
+                        SUM(t2.rbc_units) as rbc_4h,
+                        SUM(t2.ffp_units) as ffp_4h
+                    FROM Transfusion t2
+                    WHERE t2.visit_no = t.visit_no
+                    AND t2.trnsfsn_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 4 HOUR AND t.trnsfsn_dtm + INTERVAL 4 HOUR
+                ) trans_ctx ON TRUE
+
+                -- Labs
+                LEFT JOIN LATERAL (
+                    SELECT result_value as val
+                    FROM Lab l 
+                    WHERE l.visit_no = t.visit_no 
+                      AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
+                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                    ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                ) lab_hgb ON TRUE
+                
+                LEFT JOIN LATERAL (
+                    SELECT result_value as val
+                    FROM Lab l 
+                    WHERE l.visit_no = t.visit_no 
+                      AND UPPER(l.result_desc) = 'INR'
+                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                    ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                ) lab_inr ON TRUE
+                
+                LEFT JOIN LATERAL (
+                    SELECT result_value as val
+                    FROM Lab l 
+                    WHERE l.visit_no = t.visit_no 
+                      AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
+                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                    ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                ) lab_plt ON TRUE
+                
+                LEFT JOIN LATERAL (
+                    SELECT result_value as val
+                    FROM Lab l 
+                    WHERE l.visit_no = t.visit_no 
+                      AND UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
+                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+                    ORDER BY l.lab_draw_dtm DESC LIMIT 1
+                ) lab_fib ON TRUE
+
             ) ranked
             WHERE ranked.rn = 1
             /* Group by provider attendance periods */
@@ -387,17 +346,7 @@ def create_materialize_proc(apps, schema_editor):
             ) ranked_med
             WHERE ranked_med.rn = 1
             GROUP BY ranked_med.visit_no, ranked_med.prov_id
-        ) pm ON ap.visit_no = pm.visit_no AND ap.prov_id = pm.prov_id
-
-        -- Billing Codes (Outcomes) - Visit Level
-        LEFT JOIN (
-            SELECT
-                visit_no,
-                MAX(CASE WHEN cpt_code in ('99291', '1065F', '1066F') THEN 1 ELSE 0 END) AS stroke,
-                MAX(CASE WHEN cpt_code in ('33946', '33947', '33948', '33949', '33952', '33953', '33954', '33955', '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965', '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) AS ecmo
-            FROM BillingCode
-            GROUP BY visit_no
-        ) bc ON bc.visit_no = v.visit_no;
+        ) pm ON ap.visit_no = pm.visit_no AND ap.prov_id = pm.prov_id;
     END;
     """
     conn = schema_editor.connection
