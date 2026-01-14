@@ -144,7 +144,7 @@ export interface StateAnnotation {
 
 export class RootStore {
   // region Initial State
-  provenance: Provenance<ApplicationState, string, StateAnnotation> | null = null;
+  provenance: Provenance<ApplicationState, string, { type: string; value: string }> | null = null;
 
   _provenanceAtom: IAtom;
 
@@ -504,7 +504,7 @@ export class RootStore {
     const initialState = JSON.parse(JSON.stringify(rawInitialState));
 
     // Create new provenance instance
-    this.provenance = initProvenance<ApplicationState, string, StateAnnotation>(initialState, {
+    this.provenance = initProvenance<ApplicationState, string, { type: string; value: string }>(initialState, {
       loadFromUrl: true,
     });
 
@@ -1168,15 +1168,19 @@ export class RootStore {
   }
 
   setFilterValue<T extends keyof typeof this._initialFilterValues>(key: T, value: typeof this._initialFilterValues[T]) {
-    let finalValue = value;
+    let finalValue: typeof this._initialFilterValues[T] = value;
     if ((key === 'dateFrom' || key === 'dateTo') && typeof value === 'string') {
-      finalValue = safeParseDate(value) as any;
+      finalValue = safeParseDate(value) as typeof this._initialFilterValues[T];
     }
-    let val: any = finalValue;
+    let val: ApplicationState['filterValues'][keyof ApplicationState['filterValues']];
+
     if (finalValue instanceof Date) {
       val = finalValue.toISOString();
+    } else {
+      val = finalValue as unknown as ApplicationState['filterValues'][keyof ApplicationState['filterValues']];
     }
-    this.actions.updateFilter(key as any, val);
+    // We cast key to allow dynamic property access compatible with the action signature
+    this.actions.updateFilter(key as keyof ApplicationState['filterValues'], val);
   }
 
   async calculateDefaultFilterValues() {
