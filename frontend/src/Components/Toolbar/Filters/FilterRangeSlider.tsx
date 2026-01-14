@@ -1,67 +1,71 @@
+import { RangeSliderValue, RangeSlider } from '@mantine/core';
+import { useObserver } from 'mobx-react';
 import {
-  useContext, useEffect, useMemo, useState,
+  useContext, useMemo, useState, useEffect,
 } from 'react';
-import { RangeSlider, RangeSliderValue } from '@mantine/core';
-import { useObserver } from 'mobx-react-lite';
+import { FiltersStore, ProductMaximums, MANUAL_INFINITY } from '../../../Store/FiltersStore';
 import { Store } from '../../../Store/Store';
-import { FiltersStore, MANUAL_INFINITY, ProductMaximums } from '../../../Store/FiltersStore';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 
 type NumberArrayKeys<T> = {
   [K in keyof T]: T[K] extends number[] ? K : never
 }[keyof T];
 
-export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<FiltersStore['filterValues']> }) {
+export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<FiltersStore['filterValues']>; }) {
   const store = useContext(Store);
 
-  const [value, setValue] = useState(store.filtersStore.filterValues[varName]);
+  // Initial filter range & store filter range
+  const [initialFilterMin, initialFilterMax] = store.filtersStore.initialFilterValues[varName];
+  const [currentFilterMin, currentFilterMax] = store.filtersStore.filterValues[varName];
 
-  // Hard set a max so that outliers will not cuase slider unuseable
-  const reasonableMax = useMemo(() => Math.min(ProductMaximums[varName] ?? MANUAL_INFINITY, store.filtersStore.initialFilterValues[varName][1]), [varName, store.filtersStore.initialFilterValues]);
+  // Clamp slider max value to prevent outliers
+  const clampedMax = useMemo(
+    () => Math.min(ProductMaximums[varName] ?? MANUAL_INFINITY, initialFilterMax),
+    [varName, initialFilterMax],
+  );
 
-  // we only want to update this when the reasonableMax updates, which should only be when the actual data changes, not when the user is sliding
-  useEffect(() => {
-    setValue([store.filtersStore.filterValues[varName][0], reasonableMax]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reasonableMax]);
+  // Local state for smooth sliding
+  const [sliderValues, setSliderValues] = useState<[number, number]>(
+    [currentFilterMin, Math.min(currentFilterMax, clampedMax)],
+  );
+
+  // Sync with store updates
+  useEffect(
+    () => setSliderValues([currentFilterMin, Math.min(currentFilterMax, clampedMax)]),
+    [currentFilterMin, currentFilterMax, clampedMax],
+  );
+
+  const isFilterActive = useMemo(
+    () => sliderValues[0] !== initialFilterMin || sliderValues[1] !== clampedMax,
+    [sliderValues, initialFilterMin, clampedMax],
+  );
 
   function setStoreFilterValue(v: RangeSliderValue) {
-    if (v[1] === reasonableMax) {
-      store.filtersStore.setFilterValue(varName, [value[0], store.filtersStore.initialFilterValues[varName][1]]);
-    } else {
-      store.filtersStore.setFilterValue(varName, v);
-    }
+    store.filtersStore.setFilterValue(varName, [v[0], v[1] === clampedMax ? initialFilterMax : v[1]]);
   }
-
-  const min = useMemo(() => store.filtersStore.initialFilterValues[varName][0], [varName, store.filtersStore.initialFilterValues]);
-
-  const changed = useMemo(() => value[0] !== min || value[1] !== reasonableMax, [value, min, reasonableMax]);
-
-  const actualMax = useMemo(() => store.filtersStore.filterValues[varName][1], [varName, store.filtersStore.filterValues]);
 
   return useObserver(() => (
     <RangeSlider
-      defaultValue={store.filtersStore.filterValues[varName]}
-      value={value}
+      value={sliderValues}
       size="sm"
-      onChange={setValue}
+      onChange={setSliderValues}
       onChangeEnd={(v) => setStoreFilterValue(v)}
-      min={min}
-      max={reasonableMax}
+      min={initialFilterMin}
+      max={clampedMax}
       step={varName === 'cell_saver_ml' ? 50 : 1}
-      color={changed ? 'blue.6' : DEFAULT_DATA_COLOR}
+      color={isFilterActive ? 'blue.6' : DEFAULT_DATA_COLOR}
       marks={[
-        { value: min, label: `${min}` },
-        { value: reasonableMax, label: `${reasonableMax}${actualMax > reasonableMax ? '+' : ''}` },
+        { value: initialFilterMin, label: `${initialFilterMin}` },
+        { value: clampedMax, label: `${clampedMax}${initialFilterMax > ProductMaximums[varName] ? '+' : ''}` },
       ]}
       minRange={0}
       mb="xl"
       styles={{
         label: {
           backgroundColor: 'white',
-          color: changed ? 'var(--mantine-color-blue-6)' : DEFAULT_DATA_COLOR,
+          color: isFilterActive ? 'var(--mantine-color-blue-6)' : DEFAULT_DATA_COLOR,
           border: '1px solid var(--mantine-color-gray-4)',
-          boxShadow: changed
+          boxShadow: isFilterActive
             ? '0 1px 3px var(--mantine-color-blue-2)'
             : '0 1px 3px rgba(0,0,0,0.15)',
         },

@@ -5,14 +5,13 @@ import { safeParseDate } from '../Utils/dates';
 
 export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
-// TODO change this to resonable amount?
 export const ProductMaximums = {
-  rbc_units: 5,
-  ffp_units: 5,
-  plt_units: 5,
-  cryo_units: 20,
-  cell_saver_ml: 5000,
-  los: 1000,
+  rbc_units: 10,
+  ffp_units: 10,
+  plt_units: 10,
+  cryo_units: 50,
+  cell_saver_ml: 10000,
+  los: 30,
 };
 
 // This store contains all filters that can be applied to the data.
@@ -40,7 +39,7 @@ export class FiltersStore {
     ecmo: null as boolean | null,
   };
 
-  _filterValues = this._initialFilterValues;
+  _filterValues = structuredClone(this._initialFilterValues);
 
   showFilterHistograms = false;
 
