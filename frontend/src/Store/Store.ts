@@ -1,6 +1,6 @@
 // region Imports
 import {
-  makeAutoObservable, reaction, runInAction, observable, computed,
+  makeAutoObservable, reaction, runInAction, observable, computed, createAtom, type IAtom,
 } from 'mobx';
 import { createContext } from 'react';
 import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
@@ -146,7 +146,7 @@ export class RootStore {
   // region Initial State
   provenance: Provenance<ApplicationState, string, StateAnnotation> | null = null;
 
-  graphVersion = 0;
+  _provenanceAtom: IAtom;
 
   deletedStateIds: Set<NodeID> = new Set();
 
@@ -289,9 +289,11 @@ export class RootStore {
 
   // region Constructor
   constructor() {
+    this._provenanceAtom = createAtom('provenance');
+
     makeAutoObservable(this, {
       provenance: false,
-      graphVersion: observable,
+      _provenanceAtom: false,
       savedStates: computed,
       canUndo: computed,
       canRedo: computed,
@@ -509,7 +511,7 @@ export class RootStore {
     // Set up observer
     this.provenance.addGlobalObserver((_graph, _changeType) => {
       runInAction(() => {
-        this.graphVersion += 1;
+        this._provenanceAtom.reportChanged();
       });
     });
 
@@ -568,7 +570,7 @@ export class RootStore {
 
     // Trigger reactivity so UI updates
     runInAction(() => {
-      this.graphVersion += 1;
+      this._provenanceAtom.reportChanged();
     });
   }
 
@@ -576,7 +578,7 @@ export class RootStore {
     this.deletedStateIds.add(nodeId);
     // Trigger reactivity
     runInAction(() => {
-      this.graphVersion += 1;
+      this._provenanceAtom.reportChanged();
     });
   }
 
@@ -585,13 +587,12 @@ export class RootStore {
     this.provenance.addArtifact({ type: 'name', value: newName }, nodeId);
     // Trigger reactivity
     runInAction(() => {
-      this.graphVersion += 1;
+      this._provenanceAtom.reportChanged();
     });
   }
 
   get savedStates() {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    this.graphVersion;
+    this._provenanceAtom.reportObserved();
 
     const { provenance } = this;
     // Return a list of nodes that have the 'name' artifact
@@ -618,8 +619,7 @@ export class RootStore {
   }
 
   get canUndo() {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    this.graphVersion;
+    this._provenanceAtom.reportObserved();
 
     if (!this.provenance) return false;
     const { current } = this.provenance;
@@ -630,8 +630,7 @@ export class RootStore {
   }
 
   get canRedo() {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    this.graphVersion;
+    this._provenanceAtom.reportObserved();
 
     if (!this.provenance) return false;
     const { current } = this.provenance;
@@ -639,8 +638,7 @@ export class RootStore {
   }
 
   get currentState(): ApplicationState {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    this.graphVersion;
+    this._provenanceAtom.reportObserved();
 
     if (!this.provenance) {
       // Return default/empty state if not initialized
