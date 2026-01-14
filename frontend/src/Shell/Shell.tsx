@@ -8,7 +8,6 @@ import {
   Button,
   Stack,
   Badge,
-  TextInput,
 } from '@mantine/core';
 import {
   IconDatabase, IconBook,
@@ -279,9 +278,9 @@ export const Shell = observer(() => {
 
           {/** Left Panel Content */}
           {activeLeftPanel !== null && (
-          <Box style={{ flexGrow: 1 }} p="md">
-            {leftToolbarIcons[activeLeftPanel].content}
-          </Box>
+            <Box style={{ flexGrow: 1 }} p="md">
+              {leftToolbarIcons[activeLeftPanel].content}
+            </Box>
           )}
         </Flex>
       </AppShell.Navbar>
