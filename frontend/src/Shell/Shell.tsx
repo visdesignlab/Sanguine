@@ -355,6 +355,7 @@ export const Shell = observer(() => {
         </Container>
       </AppShell.Main>
 
+
       <Modal
         opened={aboutModalOpened}
         onClose={() => setAboutModalOpened(false)}

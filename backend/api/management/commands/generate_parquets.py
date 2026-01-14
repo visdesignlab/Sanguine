@@ -13,11 +13,11 @@ class Command(BaseCommand):
         # Define output path
         cache_dir = Path(settings.BASE_DIR) / "parquet_cache"
         cache_dir.mkdir(exist_ok=True)
-        file_path = cache_dir / "all_departments.parquet"
+        visit_file_path = cache_dir / "visit_attributes.parquet"
 
-        visits = []
         # Refresh the materialized view using the stored procedure
         with connection.cursor() as cursor:
+            # Materialize VisitAttributes
             cursor.execute("CALL intelvia.materializeVisitAttributes()")
             self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
 
@@ -29,22 +29,20 @@ class Command(BaseCommand):
             for v in visits:
                 v["los"] = float(v["los"]) if v["los"] is not None else None
 
-        # Use pyarrow to create a Parquet file
-
-        # Define schema explicitly for type control
+        # Define schema for visit attributes
         visit_attributes_schema = pa.schema([
             pa.field("visit_no", pa.int64(), nullable=False),
             pa.field("mrn", pa.string(), nullable=False),
             pa.field("adm_dtm", pa.date32(), nullable=True),
             pa.field("dsch_dtm", pa.date32(), nullable=True),
-            pa.field("age_at_adm", pa.bool8(), nullable=True),            # TINYINT UNSIGNED
+            pa.field("age_at_adm", pa.bool8(), nullable=True),          
             pa.field("pat_class_desc", pa.string(), nullable=True),
             pa.field("apr_drg_weight", pa.float32(), nullable=True),
             pa.field("ms_drg_weight", pa.float32(), nullable=True),
 
-            pa.field("month", pa.string(), nullable=True),                 # char(8)
-            pa.field("quarter", pa.string(), nullable=True),               # char(7)
-            pa.field("year", pa.string(), nullable=True),                  # SMALLINT UNSIGNED
+            pa.field("month", pa.string(), nullable=True),                
+            pa.field("quarter", pa.string(), nullable=True),             
+            pa.field("year", pa.string(), nullable=True),        
 
             pa.field("rbc_units", pa.uint16(), nullable=False),
             pa.field("ffp_units", pa.uint16(), nullable=False),
@@ -52,7 +50,7 @@ class Command(BaseCommand):
             pa.field("cryo_units", pa.uint16(), nullable=False),
             pa.field("whole_units", pa.uint16(), nullable=False),
             pa.field("cell_saver_ml", pa.uint32(), nullable=False),
-            pa.field("overall_units", pa.uint16(), nullable=False),        # computed/stored
+            pa.field("overall_units", pa.uint16(), nullable=False),  
 
             pa.field("los", pa.float32(), nullable=True),
             pa.field("death", pa.bool8(), nullable=True),
@@ -68,10 +66,17 @@ class Command(BaseCommand):
             pa.field("ffp_adherent", pa.uint16(), nullable=False),
             pa.field("plt_adherent", pa.uint16(), nullable=False),
             pa.field("cryo_adherent", pa.uint16(), nullable=False),
-            pa.field("overall_adherent", pa.uint16(), nullable=False),     # computed/stored
+            pa.field("overall_adherent", pa.uint16(), nullable=False),
+
+            pa.field("attending_provider", pa.string(), nullable=True),
+            pa.field("attending_provider_id", pa.string(), nullable=True),
+            pa.field("attending_provider_line", pa.uint16(), nullable=False),
+            pa.field("is_admitting_attending", pa.bool8(), nullable=False)
         ])
 
-        table = pa.Table.from_pylist(visits, schema=visit_attributes_schema)
-        pq.write_table(table, file_path)
+        # Write Parquet file
+        visit_table = pa.Table.from_pylist(visits, schema=visit_attributes_schema)
 
-        self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {file_path}"))
+        pq.write_table(visit_table, visit_file_path)
+
+        self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {visit_file_path}"))

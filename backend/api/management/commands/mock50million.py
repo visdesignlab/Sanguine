@@ -9,6 +9,7 @@ from faker import Faker
 from faker.providers import date_time
 import random
 import tempfile
+import string
 
 from api.views.utils.utils import get_all_cpt_code_filters
 
@@ -73,6 +74,11 @@ class Command(BaseCommand):
         self.stdout.write("Loading data into database...")
         # Perform the LOAD DATA LOCAL INFILE
         with connection.cursor() as cursor:
+            # Truncate table to prevent duplicates
+            cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+            cursor.execute(f"TRUNCATE TABLE {table_name};")
+            cursor.execute("SET FOREIGN_KEY_CHECKS=1;")
+            
             load_sql = f"""
                 LOAD DATA LOCAL INFILE '{tmpfile_path}'
                 INTO TABLE {table_name}
@@ -99,10 +105,18 @@ class Command(BaseCommand):
         surgeries = []
         labs = []
         surgeons = [
-            (fake.unique.random_number(digits=10), fake.name()) for _ in range(50)
+            (
+                fake.unique.random_number(digits=10),
+                f"Dr. {fake.first_name()} {random.choice(string.ascii_uppercase)}. {fake.last_name()}"
+            )
+            for _ in range(50)
         ]
         anests = [
-            (fake.unique.random_number(digits=10), fake.name()) for _ in range(50)
+            (
+                fake.unique.random_number(digits=10),
+                f"Dr. {fake.first_name()} {random.choice(string.ascii_uppercase)}. {fake.last_name()}"
+            )
+            for _ in range(50)
         ]
 
         # Generate patients
@@ -298,6 +312,40 @@ class Command(BaseCommand):
         ]
 
         def gen_surgery_cases():
+            # Seed one surgery per surgeon so every provider has surgery_count >= 1
+            if visits:
+                for prov_id, prov_name in surgeons:
+                    pat, bad_pat, visit = random.choice(visits)
+                    # schedule somewhere during the stay
+                    start_time = make_aware(
+                        fake.date_time_between(
+                            start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT),
+                            end_date=datetime.strptime(visit["dsch_dtm"], DATE_FORMAT),
+                        )
+                    )
+                    end_time = start_time + timedelta(hours=3)
+                    anesth = fake.random_element(elements=anests)
+                    surgery = {
+                        "case_id": fake.unique.random_number(digits=10),
+                        "visit_no": visit["visit_no"],
+                        "mrn": pat["mrn"],
+                        "case_date": start_time.date().strftime("%Y-%m-%d"),
+                        "surgery_start_dtm": start_time.strftime(DATE_FORMAT),
+                        "surgery_end_dtm": end_time.strftime(DATE_FORMAT),
+                        "surgery_elap": (end_time - start_time).total_seconds() / 60,
+                        "surgery_type_desc": fake.random_element(elements=("Elective","Emergent","Urgent")),
+                        "surgeon_prov_id": prov_id,
+                        "surgeon_prov_name": prov_name,
+                        "anesth_prov_id": anesth[0],
+                        "anesth_prov_name": anesth[1],
+                        "prim_proc_desc": fake.sentence(),
+                        "postop_icu_los": fake.random_int(min=0, max=10),
+                        "sched_site_desc": fake.sentence(),
+                        "asa_code": fake.random_element(elements=("1","2","3","4","5","6")),
+                    }
+                    surgeries.append((pat, bad_pat, visit, surgery))
+                    yield surgery
+
             for pat, bad_pat, visit in visits:
                 # Randomly decide if this visit gets a surgery case, most don't
                 if not bad_pat and random.random() < 0.9:
@@ -751,15 +799,94 @@ class Command(BaseCommand):
         ]
 
         def gen_attending_providers():
-            for i in range(int(target_attending_provs_count)):
-                yield {
-                    "visit_no": (i % int(target_visits_count + 1)),
-                    "prov_id": f"PROV{i:05d}",
-                    "prov_name": f"Dr. Attending{i}",
-                    "attend_start_dtm": "2020-01-01 08:00:00",
-                    "attend_end_dtm": "2020-01-05 17:00:00",
-                    "attend_prov_line": float(i),
-                }
+            provider_pool = surgeons + anests
+            for pat, bad_pat, visit in visits:
+                # Parse base dates
+                adm_time = datetime.strptime(visit["adm_dtm"], DATE_FORMAT)
+                dsch_time = datetime.strptime(visit["dsch_dtm"], DATE_FORMAT)
+                visit_duration = (dsch_time - adm_time).total_seconds()
+                
+                # Determine number of provider lines (provider attending instances during visit)
+                is_long_visit = visit_duration > 2 * 24 * 3600
+                if is_long_visit and random.random() < 0.01:
+                    num_provider_lines = random.randint(5, 60)
+                else:
+                    r = random.random()
+                    if r < 0.80:
+                        num_provider_lines = 1
+                    elif r < 0.95:
+                        num_provider_lines = 2
+                    else:
+                        num_provider_lines = 3
+
+                # Select providers for this visit (target ~70% unique, ~30% repeat)
+                # Number of unique providers
+                num_unique = max(1, int(num_provider_lines * 0.7))
+                num_unique = min(num_unique, len(provider_pool))
+                
+                unique_pool = random.sample(provider_pool, k=num_unique)
+                
+                # Ensure all unique providers are used at least once, then fill remainder with repeats
+                segment_providers = unique_pool[:]
+                while len(segment_providers) < num_provider_lines:
+                    segment_providers.append(random.choice(unique_pool))
+                
+                # Shuffle so the repeats/uniques are distributed randomly
+                random.shuffle(segment_providers)
+
+                current_start = adm_time
+                
+                for i in range(num_provider_lines):
+                    # Pick a provider from prepared list
+                    prov_id, prov_name = segment_providers[i]
+                    
+                    is_last = (i == num_provider_lines - 1)
+                    if is_last:
+                        # 10% chance of gap at end (1h to 24h)
+                        gap = random.uniform(3600, 86400) if random.random() > 0.9 else 0
+                        raw_end = dsch_time - timedelta(seconds=gap)
+                    else:
+                        remaining = (dsch_time - current_start).total_seconds()
+                        chunk = (remaining / (num_provider_lines - i)) * random.uniform(0.5, 1.5)
+                        raw_end = current_start + timedelta(seconds=chunk)
+                    
+                    # Clamp constraints: >= start+15m, <= dsch_time
+                    prov_line_end = min(dsch_time, max(raw_end, current_start + timedelta(minutes=15)))
+
+                    yield {
+                        "visit_no": visit["visit_no"],
+                        "prov_id": prov_id,
+                        "prov_name": prov_name,
+                        "attend_start_dtm": current_start.strftime(DATE_FORMAT),
+                        "attend_end_dtm": prov_line_end.strftime(DATE_FORMAT),
+                        "attend_prov_line": i + 1,
+                    }
+
+                    if is_last:
+                        break
+
+                    # Prepare start time for NEXT provider line transition                    
+                    rand_trans = random.random()
+                    if rand_trans < 0.70:
+                        # 70% Sequential (next starts exactly when prev ends)
+                        next_start = prov_line_end
+                    elif rand_trans < 0.85:
+                        # 15% Gap (next starts later)
+                        gap = random.uniform(3600, 24 * 3600)
+                        next_start = prov_line_end + timedelta(seconds=gap)
+                    else:
+                        # 15% Overlap (next starts earlier)
+                        overlap = random.uniform(900, 4 * 3600)
+                        next_start = prov_line_end - timedelta(seconds=overlap)
+                        # Don't overlap before current segment start (sanity check)
+                        if next_start < current_start:
+                            next_start = current_start + timedelta(minutes=5)
+
+                    # Ensure next_start doesn't exceed discharge
+                    if next_start >= dsch_time - timedelta(minutes=15):
+                        break # Stop if no time left
+                    
+                    current_start = next_start
         self.send_csv_to_db(gen_attending_providers(), fieldnames=attending_provider_fieldnames, table_name="AttendingProvider")
 
         # Generate Room Trace

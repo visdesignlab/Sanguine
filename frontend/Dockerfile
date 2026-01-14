@@ -9,6 +9,7 @@ RUN apk add --no-cache git openssh
 
 # Set the environment variables for vite
 ARG VITE_QUERY_URL="/api/"
+ARG VITE_VERSION="development"
 
 # Copy only dependency files first for better caching
 COPY package.json yarn.lock ./
