@@ -59,9 +59,13 @@ We provide 2 docker-compose files to run the application, docker-compose.yml and
 
 #### Development Steps
 
-As you can guess by the docker-compose filename, we leverage the power of devcontainers to provide a consistent development environment for all developers. To run the devcontainer, you need to have Docker Desktop installed on your machine. Once you have Docker Desktop installed, you can use vscode or the CLI to run the devcontainer. Our preferred method is to use vscode, as it provides a seamless experience for developers.
+As you can guess by the docker-compose filename, we leverage the power of devcontainers to provide a consistent development environment for all developers. 
+To run the devcontainer, you need to have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed on your machine. Once you have Docker Desktop installed, you can use vscode or the CLI to run the devcontainer. Our preferred method is to use vscode, as it provides a seamless experience for developers.
 
-There are a couple of precursor steps to running the devcontainer using vscode. You will need to make a .env file, but you should be able to copy the default .env.default file to .env without modification. 
+There are a couple of precursor steps to running the devcontainer using vscode. 
+
+You will need to make a .env file, but you should be able to copy the default .env.default file (in the directory) to .env (or make one under the main directory) without modification. Also make sure there is one in `frontend` and one in `backend`, and for `frontend/.env`, update the last line to:
+`VITE_QUERY_URL=http://localhost:8000/api/ # Only used in development`
 
 Now, to run the devcontainer using vscode, follow these steps:
 
@@ -74,10 +78,10 @@ Now, to run the devcontainer using vscode, follow these steps:
     ```bash
     cd frontend
     yarn install
-    yarn start
+    yarn serve
     ```
 
-1. The frontend should now be running on http://localhost:3000. You can access the application by navigating to that URL in your browser.
+1. The frontend should now be running on http://localhost:3000. You can access the application by navigating to that URL in your browser. Note: On the first run, there is no data entry, so there will be an error on the web page.
 1. To populate the database with data, you will need to connect to the backend container and run the following command:
 
 ```bash
