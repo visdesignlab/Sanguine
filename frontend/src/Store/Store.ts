@@ -33,6 +33,17 @@ import { expandTimePeriod } from '../Utils/expandTimePeriod';
 // endregion
 
 // region Constants
+export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
+
+export const ProductMaximums = {
+  rbc_units: 10,
+  ffp_units: 10,
+  plt_units: 10,
+  cryo_units: 50,
+  cell_saver_ml: 10000,
+  los: 30,
+};
+
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
     {
@@ -236,15 +247,15 @@ export class RootStore {
   _initialFilterValues = {
     dateFrom: new Date(new Date().getFullYear() - 5, 0, 1),
     dateTo: new Date(),
-    rbc_units: [0, Number.MAX_SAFE_INTEGER] as [number, number],
-    ffp_units: [0, Number.MAX_SAFE_INTEGER] as [number, number],
-    plt_units: [0, Number.MAX_SAFE_INTEGER] as [number, number],
-    cryo_units: [0, Number.MAX_SAFE_INTEGER] as [number, number],
-    cell_saver_ml: [0, Number.MAX_SAFE_INTEGER] as [number, number],
+    rbc_units: [0, MANUAL_INFINITY] as [number, number],
+    ffp_units: [0, MANUAL_INFINITY] as [number, number],
+    plt_units: [0, MANUAL_INFINITY] as [number, number],
+    cryo_units: [0, MANUAL_INFINITY] as [number, number],
+    cell_saver_ml: [0, MANUAL_INFINITY] as [number, number],
     b12: null as boolean | null,
     iron: null as boolean | null,
     antifibrinolytic: null as boolean | null,
-    los: [0, Number.MAX_SAFE_INTEGER] as [number, number],
+    los: [0, MANUAL_INFINITY] as [number, number],
     death: null as boolean | null,
     vent: null as boolean | null,
     stroke: null as boolean | null,
@@ -1296,9 +1307,10 @@ export class RootStore {
     await Promise.all(components.map(async (component) => {
       const [minRange, maxRange] = filters[component as keyof typeof filters] as [number, number];
       const numBins = Math.min(20, Math.max(1, maxRange - minRange));
+      const productMaximum = ProductMaximums[component as keyof typeof ProductMaximums] || maxRange;
       const result = await this.duckDB!.query(`
         WITH bins AS (
-          SELECT equi_width_bins(min(${component}), max(${component}), ${numBins}, false) AS bin
+          SELECT equi_width_bins(min(${component}), LEAST(${productMaximum}, max(${component})), ${numBins}, false) AS bin
           FROM filteredVisits
         )
         SELECT HISTOGRAM(${component}, bins.bin) AS histogram,
