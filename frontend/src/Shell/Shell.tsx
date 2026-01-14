@@ -2,21 +2,29 @@ import { observer } from 'mobx-react-lite';
 import {
   ReactNode, useContext, useMemo, useState,
 } from 'react';
+import { useDisclosure } from '@mantine/hooks';
 import {
   AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
   Modal,
   Button,
   Stack,
   Badge,
+  Anchor,
 } from '@mantine/core';
 import {
   IconDatabase, IconBook,
   IconArrowNarrowLeftDashed,
   IconArrowNarrowRightDashed, IconDeviceFloppy,
-  IconCamera, IconLogout, IconUser, IconMenu,
+  IconCamera, IconLogout, IconMenu,
   IconRestore, type IconProps,
   IconChartBar,
   IconClipboardList,
+  IconBug,
+  IconMenu2,
+  IconAt,
+  IconFilter,
+  IconSubtask,
+  IconInfoSquareRounded,
 } from '@tabler/icons-react';
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
@@ -64,13 +72,8 @@ export const Shell = observer(() => {
     store.actions.setUiState({ activeTab: tab });
   };
 
-  // Reset to defaults modal ----------------------
-  const [resetModalOpened, setResetModalOpened] = useState(false);
-  const handleConfirmReset = () => {
-    // Restore to initial state via provenance
-    store.restoreToInitialState();
-    setResetModalOpened(false);
-  };
+  // About modal ----------------------
+  const [aboutModalOpened, setAboutModalOpened] = useState(false);
 
   // Toolbar & Left Panel states ----------------------
   // Width of the header toolbar & left toolbar
@@ -150,7 +153,6 @@ export const Shell = observer(() => {
     },
     { icon: IconDeviceFloppy, label: 'Save', disabled: true },
     { icon: IconCamera, label: 'Camera' },
-    { icon: IconUser, label: 'User' },
   ], [store.provenance, store.canUndo, store.canRedo]);
 
   return (
@@ -206,25 +208,6 @@ export const Shell = observer(() => {
                   <ScreenshotMenu key="screenshot-menu" activeTab={activeTab} />
                 );
               }
-              // --- User menu ---
-              if (label === 'User') {
-                return (
-                  <Menu shadow="md" width={200} offset={12} trigger="hover" closeDelay={200} key="user-menu">
-                    <Menu.Target>
-                      <ActionIcon aria-label="User">
-                        <IconUser stroke={iconStroke} />
-                      </ActionIcon>
-                    </Menu.Target>
-
-                    <Menu.Dropdown>
-                      <Menu.Label>User</Menu.Label>
-                      <Menu.Item leftSection={<IconLogout size={14} />}>
-                        Log out
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                );
-              }
               // Default header icon button
               return (
                 <Tooltip key={label} label={label}>
@@ -239,6 +222,80 @@ export const Shell = observer(() => {
                 </Tooltip>
               );
             })}
+            <Menu position="bottom-end" offset={12} trigger="click-hover">
+              <Menu.Target>
+                <ActionIcon aria-label="Additional Options">
+                  <IconMenu2 stroke={iconStroke} />
+                </ActionIcon>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Label>Actions</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconFilter size={14} />}
+                  onClick={() => {
+                    store.resetAllFilters();
+                  }}
+                >
+                  Reset all filters
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconClipboardList size={14} />}
+                  onClick={() => {
+                    store.resetSelections();
+                  }}
+                >
+                  Clear selected visits
+                </Menu.Item>
+
+                <Menu.Label>Session</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconSubtask size={14} />}
+                  disabled
+                >
+                  Manage Sessions
+                </Menu.Item>
+
+                <Menu.Label>Help & Feedback</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconInfoSquareRounded size={14} />}
+                  onClick={() => { setAboutModalOpened(true); }}
+                >
+                  About Intelvia
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconBook size={14} />}
+                  onClick={() => { window.open('https://docs.intelvia.app/', '_blank'); }}
+                  disabled
+                >
+                  Documentation
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconAt size={14} />}
+                  // Copy email to clipboard
+                  onClick={() => { navigator.clipboard.writeText('support@intelvia.io'); }}
+                >
+                  Copy Support Email
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconBug size={14} />}
+                  onClick={() => { window.open('https://github.com/visdesignlab/Sanguine/issues/', '_blank'); }}
+                >
+                  Report a Bug
+                </Menu.Item>
+
+                <Menu.Label>Account</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconLogout size={14} />}
+                  onClick={async () => {
+                    await fetch(`${import.meta.env.VITE_QUERY_URL}accounts/logout`, { credentials: 'include' });
+                  }}
+                  disabled
+                >
+                  Log out
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Group>
         </Group>
       </AppShell.Header>
@@ -298,22 +355,32 @@ export const Shell = observer(() => {
           ))}
         </Container>
       </AppShell.Main>
-      {/** Reset to Defaults Modal */}
+
       <Modal
-        opened={resetModalOpened}
-        onClose={() => setResetModalOpened(false)}
-        title="Are you sure you want to reset?"
+        opened={aboutModalOpened}
+        onClose={() => setAboutModalOpened(false)}
+        title="About Intelvia"
         centered
       >
         <Stack gap="md">
           <Text size="sm">
-            This action will reset to Intelvia&apos;s default state.
-            <br />
-            All custom charts and filters will be removed.
+            Intelvia is a visual analytics platform designed to help healthcare professionals explore and analyze transfusion data effectively. Our original research prototype, Sanguine, was developed at the University of Utah&apos;s Visualization Design Lab.
+          </Text>
+          <Text size="sm">
+            For more information, check out the
+            {' '}
+            <Anchor href="https://docs.intelvia.app/" target="_blank" rel="noopener noreferrer">documentation</Anchor>
+            .
+          </Text>
+          <Text size="sm">
+            Version:
+            {' '}
+            <Text component="span" ff="monospace">
+              {import.meta.env.VITE_VERSION || 'vX.YY.ZZ-alpha.AA'}
+            </Text>
           </Text>
           <Group justify="flex-end" mt="xs">
-            <Button variant="default" onClick={() => setResetModalOpened(false)}>Cancel</Button>
-            <Button color="red" onClick={handleConfirmReset}>Reset</Button>
+            <Button variant="default" onClick={() => setAboutModalOpened(false)}>Close</Button>
           </Group>
         </Stack>
       </Modal>

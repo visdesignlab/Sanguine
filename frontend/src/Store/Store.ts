@@ -1345,6 +1345,7 @@ export class RootStore {
     const months = this.selectedTimePeriods.filter((p) => monthRe.test(p));
     if (months.length === 0) {
       this.selectedVisits = [];
+      this.selectedVisitNos = [];
       return;
     }
     const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
