@@ -2,7 +2,6 @@ import { observer } from 'mobx-react-lite';
 import {
   ReactNode, useContext, useMemo, useState,
 } from 'react';
-import { useDisclosure } from '@mantine/hooks';
 import {
   AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
   Modal,
