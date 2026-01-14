@@ -434,6 +434,15 @@ export class RootStore {
         },
       }), initialFilters);
     },
+    clearSelection: () => {
+      this.applyAction('Clear Selected Visits', (state) => ({
+        ...state,
+        selections: {
+          ...state.selections,
+          selectedTimePeriods: [],
+        },
+      }), null);
+    },
   };
   // endregion
 
@@ -1342,7 +1351,7 @@ export class RootStore {
   }
 
   resetSelections() {
-    this.actions.updateSelection([]);
+    this.actions.clearSelection();
   }
 
   async getVisitInfo(visitNo: number) {
