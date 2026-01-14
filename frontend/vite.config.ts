@@ -9,4 +9,7 @@ export default defineConfig(() => ({
   optimizeDeps: {
     exclude: ['@duckdb/duckdb-wasm'], // prevent Vite from pre-bundling DuckDB
   },
+  server: {
+    // hmr: false, // Disables Hot Module Replacement
+  },
 }));

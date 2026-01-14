@@ -1,69 +1,86 @@
-import { useContext, useEffect, useState } from 'react';
-import { RangeSlider } from '@mantine/core';
-import { useObserver } from 'mobx-react-lite';
+import { RangeSliderValue, RangeSlider } from '@mantine/core';
+import { useObserver } from 'mobx-react';
+import {
+  useContext, useMemo, useState, useEffect,
+} from 'react';
+import { FiltersStore, ProductMaximums, MANUAL_INFINITY } from '../../../Store/FiltersStore';
 import { Store } from '../../../Store/Store';
-import { FiltersStore } from '../../../Store/FiltersStore';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 
 type NumberArrayKeys<T> = {
   [K in keyof T]: T[K] extends number[] ? K : never
 }[keyof T];
 
-export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<FiltersStore['filterValues']> }) {
+export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<FiltersStore['filterValues']>; }) {
   const store = useContext(Store);
 
-  const [value, setValue] = useState(store.filtersStore.filterValues[varName]);
-  useEffect(() => {
-    if (store.filtersStore.filterValues[varName][0] !== value[0] || store.filtersStore.filterValues[varName][1] !== value[1]) {
-      setValue(store.filtersStore.filterValues[varName]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.filtersStore.filterValues[varName]]);
+  // Initial filter range & store filter range
+  const [initialFilterMin, initialFilterMax] = store.filtersStore.initialFilterValues[varName];
+  const [currentFilterMin, currentFilterMax] = store.filtersStore.filterValues[varName];
 
-  return useObserver(() => {
-    const initial = store.filtersStore.initialFilterValues[varName];
-    const [min, max] = initial;
-    const changed = value[0] !== initial[0] || value[1] !== initial[1];
+  // Clamp slider max value to prevent outliers
+  const clampedMax = useMemo(
+    () => Math.min(ProductMaximums[varName] ?? MANUAL_INFINITY, initialFilterMax),
+    [varName, initialFilterMax],
+  );
 
-    return (
-      <RangeSlider
-        defaultValue={store.filtersStore.filterValues[varName]}
-        value={value}
-        size="sm"
-        onChange={setValue}
-        onChangeEnd={(v) => store.filtersStore.setFilterValue(varName, v)}
-        min={min}
-        max={max}
-        step={varName === 'cell_saver_ml' ? 50 : 1}
-        color={changed ? 'blue.6' : DEFAULT_DATA_COLOR}
-        marks={[
-          { value: min, label: String(min) },
-          { value: max, label: String(max) },
-        ]}
-        minRange={0}
-        mb="xl"
-        styles={{
-          label: {
-            backgroundColor: 'white',
-            color: changed ? 'var(--mantine-color-blue-6)' : DEFAULT_DATA_COLOR,
-            border: '1px solid var(--mantine-color-gray-4)',
-            boxShadow: changed
-              ? '0 1px 3px var(--mantine-color-blue-2)'
-              : '0 1px 3px rgba(0,0,0,0.15)',
-          },
-          track: {
-            height: 2,
-          },
-          bar: {
-            height: 2,
-          },
-          thumb: {
-            width: 12,
-            height: 12,
-            borderWidth: 2,
-          },
-        }}
-      />
-    );
-  });
+  // Local state for smooth sliding
+  const [sliderValues, setSliderValues] = useState<[number, number]>(
+    [currentFilterMin, Math.min(currentFilterMax, clampedMax)],
+  );
+
+  // Sync with store updates
+  useEffect(
+    () => setSliderValues([currentFilterMin, Math.min(currentFilterMax, clampedMax)]),
+    [currentFilterMin, currentFilterMax, clampedMax],
+  );
+
+  const isFilterActive = useMemo(
+    () => sliderValues[0] !== initialFilterMin || sliderValues[1] !== clampedMax,
+    [sliderValues, initialFilterMin, clampedMax],
+  );
+
+  function setStoreFilterValue(v: RangeSliderValue) {
+    store.filtersStore.setFilterValue(varName, [v[0], v[1] === clampedMax ? initialFilterMax : v[1]]);
+  }
+
+  return useObserver(() => (
+    <RangeSlider
+      value={sliderValues}
+      size="sm"
+      onChange={setSliderValues}
+      onChangeEnd={(v) => setStoreFilterValue(v)}
+      min={initialFilterMin}
+      max={clampedMax}
+      step={varName === 'cell_saver_ml' ? 50 : 1}
+      color={isFilterActive ? 'blue.6' : DEFAULT_DATA_COLOR}
+      marks={[
+        { value: initialFilterMin, label: `${initialFilterMin}` },
+        { value: clampedMax, label: `${clampedMax}${initialFilterMax > ProductMaximums[varName] ? '+' : ''}` },
+      ]}
+      minRange={0}
+      mb="xl"
+      styles={{
+        label: {
+          backgroundColor: 'white',
+          color: isFilterActive ? 'var(--mantine-color-blue-6)' : DEFAULT_DATA_COLOR,
+          border: '1px solid var(--mantine-color-gray-4)',
+          boxShadow: isFilterActive
+            ? '0 1px 3px var(--mantine-color-blue-2)'
+            : '0 1px 3px rgba(0,0,0,0.15)',
+        },
+        track: {
+          height: 2,
+        },
+        bar: {
+          height: 2,
+        },
+        thumb: {
+          width: 12,
+          height: 12,
+          borderWidth: 2,
+        },
+      }}
+    />
+  ));
 }
