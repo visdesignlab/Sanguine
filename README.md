@@ -80,13 +80,20 @@ Now, to run the devcontainer using vscode, follow these steps:
 1. The frontend should now be running on http://localhost:3000. You can access the application by navigating to that URL in your browser.
 1. To populate the database with data, you will need to connect to the backend container and run the following command:
 
-    ```bash
+```bash
+poetry run python manage.py recreatedatabase
+```
+
+To step through each step of the process instead, run these:
+
+```bash
     docker-compose exec -it backend bash
     poetry run python manage.py migrate api
     poetry run python manage.py mock50million
     poetry run python manage.py generate_parquets
-    ```
+```
 
+    
 1. The database should now be populated with mock data and you should be able to see it in the frontend by adding a chart to the dashboard.
 
 #### Setting up the vscode extensions to connect to the databases
