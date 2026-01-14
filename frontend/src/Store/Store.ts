@@ -1341,6 +1341,7 @@ export class RootStore {
 
   async updateSelectedVisits() {
     if (!this.duckDB) return;
+    // Only match month-level selections (e.g., 2020-Jan)
     const monthRe = /^\d{4}-[A-Za-z]{3}$/;
     const months = this.selectedTimePeriods.filter((p) => monthRe.test(p));
     if (months.length === 0) {
@@ -1348,6 +1349,7 @@ export class RootStore {
       this.selectedVisitNos = [];
       return;
     }
+    // Escape single quotes for SQL strings
     const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
     const result = await this.duckDB.query(`SELECT visit_no FROM filteredVisits WHERE month IN (${months.map(q).join(', ')})`);
     this.selectedVisitNos = result.toArray().map((row) => Number(row.toJSON().visit_no));
@@ -1406,8 +1408,8 @@ export class RootStore {
     await this.updateFilteredVisitsLength();
     await this.computeDashboardChartData();
     await this.computeDashboardStatData();
-    await this.generateHistogramData(); // added to ensure histograms update on filter change
-    await this.updateSelectedVisits(); // re-verify selections against new filters? maybe not needed but checking
+    await this.generateHistogramData();
+    await this.updateSelectedVisits();
   }
 
   async updateFilteredVisitsLength() {
