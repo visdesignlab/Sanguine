@@ -87,10 +87,10 @@ poetry run python manage.py recreatedatabase
 To step through each step of the process instead, run these:
 
 ```bash
-    docker-compose exec -it backend bash
-    poetry run python manage.py migrate api
-    poetry run python manage.py mock50million
-    poetry run python manage.py generate_parquets
+docker-compose exec -it backend bash
+poetry run python manage.py migrate api
+poetry run python manage.py mock50million
+poetry run python manage.py generate_parquets
 ```
 
     
