@@ -860,7 +860,7 @@ export class RootStore {
         year,
         COUNT(visit_no) AS visit_count,
         ${selectClauses.join(',\n')}
-      FROM filteredVisits
+      FROM aggregatedVisits
       GROUP BY month, quarter, year
       ORDER BY year, quarter, month;
     `;
@@ -1009,7 +1009,7 @@ export class RootStore {
     const mainStatsQuery = `
     SELECT
       ${statSelects}
-      FROM filteredVisits
+      FROM aggregatedVisits
       WHERE dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}';
     `;
     const mainStatsResult = await this.duckDB!.query(mainStatsQuery);
@@ -1053,7 +1053,7 @@ export class RootStore {
     SELECT
       month,
       ${sparklineSelects.join(',\n')}
-    FROM filteredVisits
+    FROM aggregatedVisits
     WHERE month IN (${sparklineMonths.map((m) => `'${m}'`).join(', ')})
     GROUP BY month
     ORDER BY month;
