@@ -85,6 +85,7 @@ Now, to run the devcontainer using vscode, follow these steps:
 1. To populate the database with data, you will need to connect to the backend container and run the following command:
 
 ```bash
+docker-compose exec -it backend bash
 poetry run python manage.py recreatedatabase
 ```
 
