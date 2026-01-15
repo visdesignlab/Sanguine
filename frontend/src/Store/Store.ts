@@ -136,10 +136,6 @@ export interface ApplicationState {
   };
 }
 
-export interface StateAnnotation {
-  type: string;
-  value: string;
-}
 // endregion
 
 export class RootStore {
@@ -529,7 +525,11 @@ export class RootStore {
           actionType: 'Regular',
           eventType: 'Regular',
           event: 'Initial State',
-        } as any),
+          meta: {
+            type: 'Regular',
+            value: 'Initial State',
+          },
+        }),
       }, 'Initial State');
     }
   }
@@ -553,7 +553,11 @@ export class RootStore {
           actionType: 'Regular',
           eventType: 'Regular',
           event: label,
-        } as any;
+          meta: {
+            type: 'Regular',
+            value: label,
+          },
+        };
       },
     }, label);
   }
@@ -747,6 +751,7 @@ export class RootStore {
     this._baseDashboardLayouts = null;
   }
 
+  /** @returns The current dashboard chart configurations */
   get dashboardChartConfigs() {
     const { state } = this;
     return (state && state.dashboard && state.dashboard.chartConfigs) ? state.dashboard.chartConfigs : DEFAULT_CHART_CONFIGS;
@@ -756,6 +761,7 @@ export class RootStore {
     this.actions.updateDashboardState({ chartConfigs: input }, 'Update Dashboard Config');
   }
 
+  /** @returns The current dashboard stat configurations */
   get dashboardStatConfigs() {
     const { state } = this;
     return (state && state.dashboard && state.dashboard.statConfigs) ? state.dashboard.statConfigs : DEFAULT_STAT_CONFIGS;
@@ -777,9 +783,12 @@ export class RootStore {
   removeDashboardChart(chartId: string) {
     const currentLayouts = this.dashboardChartLayouts;
     const currentConfigs = this.dashboardChartConfigs;
+
+    // Filter out the chart from the layouts
     const filteredMain = (currentLayouts.main || []).filter((layout) => layout.i !== chartId);
     const filteredSm = (currentLayouts.sm || []).filter((layout) => layout.i !== chartId);
 
+    // Update chart layouts
     const newLayouts = {
       main: compact(filteredMain, 'vertical', 2),
       sm: compact(filteredSm, 'vertical', 1),
@@ -788,11 +797,16 @@ export class RootStore {
     this.actions.updateDashboardState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Chart');
   }
 
+  /**
+   * Adds a new chart to the dashboard.
+   * @param config The chart configuration to add.
+   */
   addDashboardChart(config: DashboardChartConfig) {
     const currentConfigs = this.dashboardChartConfigs;
     const currentLayouts = this.dashboardChartLayouts;
     const newConfigs = [config, ...currentConfigs];
 
+    // Set new chart layouts for main and sm breakpoints
     const newMainLayouts = currentLayouts.main.map((layout) => ({ ...layout, y: layout.y + 1 }));
     newMainLayouts.unshift({
       i: config.chartId, x: 0, y: 0, w: 2, h: 1, maxH: 2,
@@ -805,6 +819,7 @@ export class RootStore {
       });
     }
 
+    // Assign new chart layouts
     const newLayouts = {
       ...currentLayouts,
       main: compact(newMainLayouts, 'vertical', 2),
@@ -814,13 +829,21 @@ export class RootStore {
     this.actions.updateDashboardState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Chart');
   }
 
+  /**
+   * Adds a new stat to the dashboard.
+   * @param statVar The variable to display on the y-axis.
+   * @param aggregation The aggregation function to use.
+   */
   addDashboardStat(statVar: DashboardStatConfig['yAxisVar'], aggregation: DashboardStatConfig['aggregation']) {
     const statId = `stat-${Date.now()}`;
+    // Get stat label
     const opt = dashboardYAxisOptions.find((o) => o.value === statVar);
     const title = opt?.label?.[aggregation || 'sum'] || statVar;
+    // Create new stat config
     const fullStatConfig: DashboardStatConfig = {
       statId, yAxisVar: statVar, aggregation, title,
     };
+    // Add new stat to dashboard
     const currentStats = this.dashboardStatConfigs;
     this.actions.updateDashboardState({ statConfigs: [...currentStats, fullStatConfig] }, 'Add Stat');
   }
@@ -841,6 +864,8 @@ export class RootStore {
   async computeDashboardChartData() {
     if (!this.duckDB) return;
     const result = {} as DashboardChartData;
+
+    // For each chart, build the 'select' clauses
     const selectClauses = this.dashboardChartConfigs.flatMap(({ yAxisVar }) => (
       Object.keys(AGGREGATION_OPTIONS).flatMap((aggregation) => {
         const aggFn = aggregation.toUpperCase();
@@ -860,6 +885,7 @@ export class RootStore {
       })
     ));
 
+    // Get the data from each chart, grouped by month, quarter, and year
     const query = `
       SELECT 
         month,
@@ -874,14 +900,19 @@ export class RootStore {
     const queryResult = await this.duckDB.query(query);
     const rows = queryResult.toArray().map((row) => row.toJSON());
 
+    // For each x-axis variable (month, quarter, year)...
     dashboardXAxisVars.forEach((xAxisVar) => {
       const timeAggregation = xAxisVar as TimeAggregation;
+      // For each y-axis variable (e.g. rbc_units)...
       this.dashboardChartConfigs.forEach(({ yAxisVar }) => {
+        // For each aggregation (sum, avg)
         Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
           const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
+          // Get the data for this chart
           const chartDatum = rows
             .map((row) => {
+              // Special case for total blood product cost
               if (yAxisVar === 'total_blood_product_cost') {
                 return {
                   timePeriod: row[timeAggregation] as TimePeriod,
@@ -895,16 +926,21 @@ export class RootStore {
                   counts_per_period: Number(row.visit_count || 0),
                 };
               }
+              // Otherwise, return the data for this chart
               return {
                 timePeriod: row[timeAggregation] as TimePeriod,
                 data: Number(row[aggVar] || 0),
                 counts_per_period: Number(row.visit_count || 0),
               };
             })
+            // Filter out null and undefined time periods
             .filter((entry) => entry.timePeriod !== null && entry.timePeriod !== undefined && !Number.isNaN(entry.data))
+            // Reduce the data to a single array of objects
             .reduce((acc, curr) => {
               const existing = acc.find((item) => item.timePeriod === curr.timePeriod);
+
               if (existing) {
+                // SUM: Accumulate values directly
                 if (aggType === 'sum') {
                   if (typeof existing.data === 'object' && typeof curr.data === 'object') {
                     existing.data = {
@@ -917,10 +953,12 @@ export class RootStore {
                   } else {
                     (existing.data as number) += curr.data as number;
                   }
+                  // AVG: Track raw data to re-calculate weighted average
                 } else if (aggType === 'avg') {
                   existing.counts_per_period!.push(curr.counts_per_period || 0);
                   existing.data_per_period!.push(curr.data);
                   const totalCount = existing.counts_per_period!.reduce((a, b) => a + b, 0);
+
                   if (typeof existing.data === 'object' && typeof curr.data === 'object') {
                     const costKeys = Object.keys(existing.data) as (keyof typeof existing.data)[];
                     const avgObj: Record<string, number> = {};
@@ -936,15 +974,18 @@ export class RootStore {
                   }
                 }
               } else {
+                // If new time period: Initialize tracking arrays
                 acc.push({ ...curr, counts_per_period: curr.counts_per_period ? [curr.counts_per_period] : [], data_per_period: [curr.data] });
               }
               return acc;
             }, [] as { timePeriod: TimePeriod; data: number | Record<Cost, number>, counts_per_period?: number[], data_per_period?: (number | Record<Cost, number>)[] }[])
+            // Remove counts_per_period and data_per_period to return the final chart data
             .map((entry) => {
               delete entry.counts_per_period;
               delete entry.data_per_period;
               return entry as { timePeriod: TimePeriod; data: number | Record<Cost, number> };
             })
+            // Sort the data by time period
             .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
 
           const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
@@ -958,13 +999,16 @@ export class RootStore {
   async computeDashboardStatData() {
     if (!this.duckDB) return;
     const result = {} as DashboardStatData;
+    // Get the latest date
     const latestDateQuery = 'SELECT MAX(dsch_dtm) as latest_date FROM filteredVisits';
     const latestDateResult = await this.duckDB.query(latestDateQuery);
     const latestDateRow = latestDateResult.toArray()[0];
     const latestDate = new Date(latestDateRow.latest_date as string);
+    // Get the start of the current period
     const currentPeriodStart = new Date(latestDate.getTime() - (30 * 24 * 60 * 60 * 1000));
     const currentPeriodStartMonth = currentPeriodStart.getMonth();
     const currentPeriodStartYear = currentPeriodStart.getFullYear();
+    // Get the start of the comparison period
     let comparisonMonth = currentPeriodStartMonth - 1;
     let comparisonYear = currentPeriodStartYear;
     if (comparisonMonth < 0) {
@@ -974,8 +1018,9 @@ export class RootStore {
     const comparisonPeriodStart = new Date(comparisonYear, comparisonMonth, 1);
     const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
     const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
-
+    // Build the select statements for the stats data
     const statSelects = [
+      // Visit counts
       `
       COUNT(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
         THEN visit_no ELSE NULL END) AS visit_count_current_sum,
@@ -986,8 +1031,10 @@ export class RootStore {
       COUNT(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
         THEN visit_no ELSE NULL END) AS visit_count_comparison_avg
       `,
+      // For each stat, add the appropriate select statement
       this.dashboardStatConfigs.map(({ yAxisVar, aggregation }) => {
         const aggFn = aggregation.toUpperCase();
+        // Exception: Total blood product cost
         if (yAxisVar === 'total_blood_product_cost') {
           return `
                 ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
@@ -996,6 +1043,7 @@ export class RootStore {
                   THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
               `;
         }
+        // Exception: Case mix index
         if (yAxisVar === 'case_mix_index') {
           return `
                 SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
@@ -1004,6 +1052,7 @@ export class RootStore {
                   THEN ms_drg_weight ELSE NULL END) / visit_count_comparison_sum AS case_mix_index_comparison_${aggregation}
               `;
         }
+        // Default: Other stats
         return `
               ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
                 THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
@@ -1013,6 +1062,7 @@ export class RootStore {
       }),
     ].join(',\n');
 
+    // Get the stats data within the correct time period
     const mainStatsQuery = `
     SELECT
       ${statSelects}
@@ -1022,6 +1072,7 @@ export class RootStore {
     const mainStatsResult = await this.duckDB!.query(mainStatsQuery);
     const statRow = mainStatsResult.toArray()[0];
 
+    // Get the sparkline months from the last 6 months
     const sparklineMonths: string[] = [];
     for (let i = 5; i >= 0; i -= 1) {
       const d = new Date(latestDate.getFullYear(), latestDate.getMonth() - i, 1);
@@ -1030,32 +1081,39 @@ export class RootStore {
       sparklineMonths.push(`${year}-${monthShort}`);
     }
 
+    // Build the select statements for the sparkline data
     const sparklineSelects: string[] = [];
+    // For each stat, add the appropriate select statement
     this.dashboardStatConfigs.forEach(({ yAxisVar, aggregation }) => {
       const aggFn = aggregation.toUpperCase();
+      // Exception: Total blood product cost
       if (yAxisVar === 'total_blood_product_cost') {
         sparklineSelects.push(
           `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
         );
         return;
       }
+      // Exception: Case mix index
       if (yAxisVar === 'dsch_dtm') {
         sparklineSelects.push(
           `COUNT(dsch_dtm) AS ${aggregation}_dsch_dtm`,
         );
         return;
       }
+      // Exception: Case mix index
       if (yAxisVar === 'case_mix_index') {
         sparklineSelects.push(
           `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`,
         );
         return;
       }
+      // Default: Other stats
       sparklineSelects.push(
         `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
       );
     });
 
+    // Get the sparkline data grouped by month
     const sparklineQuery = `
     SELECT
       month,
@@ -1068,23 +1126,30 @@ export class RootStore {
     const sparklineResult = await this.duckDB!.query(sparklineQuery);
     const sparklineRows = sparklineResult.toArray().map((row) => row.toJSON());
 
+    // Update the dashboard stats
     this.dashboardStatConfigs.forEach(({ yAxisVar, aggregation }) => {
+      // Key of the stat
       const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
       const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
+
+      // Get the current and comparison values to calculate the diff
       const currentValue = aggType === 'sum' ? Number(statRow[`${yAxisVar}_current_sum`]) : Number(statRow[`${yAxisVar}_current_avg`]);
       const comparisonValue = aggType === 'sum' ? Number(statRow[`${yAxisVar}_comparison_sum`]) : Number(statRow[`${yAxisVar}_comparison_avg`]);
       const diff = comparisonValue === 0 ? (currentValue > 0 ? 100 : 0) : ((currentValue - comparisonValue) / comparisonValue) * 100;
 
+      // Format the stat value
       let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
       if (yAxisVar.includes('adherent')) {
         formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
       }
 
+      // Get the sparkline data for each month
       const sparklineData = sparklineMonths.map((month) => {
         const row = sparklineRows.find((r) => r.month === month);
         return row ? Number(row[`${aggregation}_${yAxisVar}`]) || 0 : 0;
       });
 
+      // Add the stat to the result
       result[key] = {
         value: formattedValue,
         diff: Math.round(diff),
@@ -1141,6 +1206,7 @@ export class RootStore {
     const currentConfigs = this.exploreChartConfigs;
     const currentLayouts = this.exploreChartLayouts;
     const newConfigs = currentConfigs.filter((config) => config.chartId !== chartId);
+    // Filter the layouts for the main and sm breakpoints
     const filteredMain = (currentLayouts.main || []).filter((layout) => layout.i !== chartId);
     const filteredSm = (currentLayouts.sm || []).filter((layout) => layout.i !== chartId);
     const newLayouts = { ...currentLayouts, main: compact(filteredMain, 'vertical', 2), ...(currentLayouts.sm ? { sm: compact(filteredSm, 'vertical', 1) } : {}) };
@@ -1167,24 +1233,30 @@ export class RootStore {
     };
   }
 
+  /**
+   * Sets a filter value and updates the state
+   * @param key The key of the filter value to set
+   * @param value The value to set
+   */
   setFilterValue<T extends keyof typeof this._initialFilterValues>(key: T, value: typeof this._initialFilterValues[T]) {
-    let finalValue: typeof this._initialFilterValues[T] = value;
-    if ((key === 'dateFrom' || key === 'dateTo') && typeof value === 'string') {
-      finalValue = safeParseDate(value) as typeof this._initialFilterValues[T];
-    }
-    let val: ApplicationState['filterValues'][keyof ApplicationState['filterValues']];
+    let val: ApplicationState['filterValues'][keyof ApplicationState['filterValues']] | typeof this._initialFilterValues[T] = value;
 
-    if (finalValue instanceof Date) {
-      val = finalValue.toISOString();
-    } else {
-      val = finalValue as unknown as ApplicationState['filterValues'][keyof ApplicationState['filterValues']];
+    // If the key is dateFrom or dateTo, parse the value as a date
+    if (key === 'dateFrom' || key === 'dateTo') {
+      if (typeof value === 'string') {
+        val = safeParseDate(value).toISOString();
+      } else if (value instanceof Date) {
+        val = value.toISOString();
+      }
     }
-    // We cast key to allow dynamic property access compatible with the action signature
-    this.actions.updateFilter(key as keyof ApplicationState['filterValues'], val);
+
+    // Update the filter value
+    this.actions.updateFilter(key as keyof ApplicationState['filterValues'], val as ApplicationState['filterValues'][keyof ApplicationState['filterValues']]);
   }
 
   async calculateDefaultFilterValues() {
     if (!this.duckDB) return;
+    // Default filter values based on min and max values
     const result = await this.duckDB.query(`
       SELECT
         MIN(adm_dtm) AS min_adm, MAX(dsch_dtm) AS max_dsch,
@@ -1200,30 +1272,22 @@ export class RootStore {
 
     const dateFrom = safeParseDate(row.min_adm);
     const dateTo = safeParseDate(row.max_dsch);
-    /* eslint-disable camelcase */
-    const rbc_units: [number, number] = [Number(row.min_rbc), Number(row.max_rbc)];
-    const ffp_units: [number, number] = [Number(row.min_ffp), Number(row.max_ffp)];
-    const plt_units: [number, number] = [Number(row.min_plt), Number(row.max_plt)];
-    const cryo_units: [number, number] = [Number(row.min_cryo), Number(row.max_cryo)];
-    const cell_saver_ml: [number, number] = [Number(row.min_cell_saver), Number(row.max_cell_saver)];
-    /* eslint-enable camelcase */
-    const los: [number, number] = [Number(row.min_los), Number(row.max_los)];
-
     this._initialFilterValues = {
       ...this._initialFilterValues,
-      /* eslint-disable camelcase */
       dateFrom,
       dateTo,
-      rbc_units,
-      ffp_units,
-      plt_units,
-      cryo_units,
-      cell_saver_ml,
-      los,
-      /* eslint-enable camelcase */
+      rbc_units: [Number(row.min_rbc), Number(row.max_rbc)],
+      ffp_units: [Number(row.min_ffp), Number(row.max_ffp)],
+      plt_units: [Number(row.min_plt), Number(row.max_plt)],
+      cryo_units: [Number(row.min_cryo), Number(row.max_cryo)],
+      cell_saver_ml: [Number(row.min_cell_saver), Number(row.max_cell_saver)],
+      los: [Number(row.min_los), Number(row.max_los)],
     };
   }
 
+  /**
+   * Returns the number of date filters that are applied
+   */
   get dateFiltersAppliedCount(): number {
     const filters = this.filterValues;
     const dateFrom = safeParseDate(filters.dateFrom);
@@ -1233,6 +1297,9 @@ export class RootStore {
     return (dateFrom.getTime() !== initDateFrom.getTime() || dateTo.getTime() !== initDateTo.getTime()) ? 1 : 0;
   }
 
+  /**
+   * Returns the number of outcome filters that are applied
+   */
   get outcomeFiltersAppliedCount(): number {
     let count = 0;
     const filters = this.filterValues;
@@ -1245,6 +1312,9 @@ export class RootStore {
     return count;
   }
 
+  /**
+   * Returns the number of medication filters that are applied
+   */
   get medicationsFiltersAppliedCount(): number {
     let count = 0;
     const filters = this.filterValues;
@@ -1255,6 +1325,9 @@ export class RootStore {
     return count;
   }
 
+  /**
+   * Returns the number of blood component filters that are applied
+   */
   get bloodComponentFiltersAppliedCount(): number {
     let count = 0;
     const filters = this.filterValues;
@@ -1267,6 +1340,9 @@ export class RootStore {
     return count;
   }
 
+  /**
+   * Returns the total number of filters that are applied
+   */
   get totalFiltersAppliedCount(): number {
     return this.dateFiltersAppliedCount + this.bloodComponentFiltersAppliedCount + this.medicationsFiltersAppliedCount + this.outcomeFiltersAppliedCount;
   }
@@ -1310,15 +1386,22 @@ export class RootStore {
     });
   }
 
+  /**
+   * Generates histogram data for the filter sliders
+   */
   async generateHistogramData() {
     if (!this.duckDB) return;
     const components = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml', 'los'];
     const histogramData: Record<string, { units: string, count: number }[]> = {};
     const filters = this.filterValues;
+    // For each component, generate histogram data
     await Promise.all(components.map(async (component) => {
+      // Get the min and max values for the component, and the number of bins
       const [minRange, maxRange] = filters[component as keyof typeof filters] as [number, number];
       const numBins = Math.min(20, Math.max(1, maxRange - minRange));
+      // Cap the max range to the product maximum
       const productMaximum = ProductMaximums[component as keyof typeof ProductMaximums] || maxRange;
+      // Query to get the counts for each bin
       const result = await this.duckDB!.query(`
         WITH bins AS (
           SELECT equi_width_bins(min(${component}), LEAST(${productMaximum}, max(${component})), ${numBins}, false) AS bin
@@ -1327,6 +1410,7 @@ export class RootStore {
         SELECT HISTOGRAM(${component}, bins.bin) AS histogram,
         FROM filteredVisits, bins;
       `);
+      // Map the result to the histogram data
       histogramData[component] = result.toArray().flatMap((row) => {
         const { histogram } = row.toJSON();
         return Object.entries(histogram.toJSON()).map(([units, count]) => ({ units, count: Number(count) }));
@@ -1381,6 +1465,7 @@ export class RootStore {
 
   // region Reactions
 
+  // React to filter, selection, and configuration changes by updating the data
   initReactions() {
     reaction(
       () => this.state.filterValues,
@@ -1404,6 +1489,10 @@ export class RootStore {
     );
   }
 
+  // endregion
+
+  // region Data Update Functions
+
   async updateFilteredData() {
     if (!this.duckDB) return;
     const { filterValues } = this;
@@ -1411,6 +1500,7 @@ export class RootStore {
     const dateFrom = filterValues.dateFrom.toISOString();
     const dateTo = filterValues.dateTo.toISOString();
 
+    // Generate the filter conditions
     const filtersToApply = Object.entries(filterValues)
       .filter(([key, value]) => {
         const initVal = this._initialFilterValues[key as keyof typeof this._initialFilterValues];
@@ -1424,6 +1514,7 @@ export class RootStore {
       })
       .join(' AND ');
 
+    // Query to filter the filteredVisitIds table based on the filter conditions
     await this.duckDB.query(`
       TRUNCATE TABLE filteredVisitIds;
       INSERT INTO filteredVisitIds
@@ -1432,6 +1523,7 @@ export class RootStore {
         ${filtersToApply ? `WHERE ${filtersToApply}` : ''}
         ;
     `);
+    // Update all the data retrievers
     await this.updateFilteredVisitsLength();
     await this.computeDashboardChartData();
     await this.computeDashboardStatData();
