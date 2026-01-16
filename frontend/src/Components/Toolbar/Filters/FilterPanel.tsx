@@ -60,23 +60,27 @@ export function FilterPanel() {
       <Flex direction="row" justify="space-between" align="center" h={40}>
         <Title order={3}>Filter Panel</Title>
         <Flex direction="row" align="center">
-          <ActionIcon
-            aria-label="Reset all filters"
-            onClick={() => { store.resetAllFilters(); }}
-            className={classes.leftToolbarIcon}
-            ml="xs"
-          >
-            <IconRestore stroke={iconStroke} size={21} />
-          </ActionIcon>
-          <ActionIcon
-            aria-label="Toggle filter histograms"
-            onClick={() => { store.actions.setUiState({ showFilterHistograms: !store.state.ui.showFilterHistograms }); }}
-            data-active={store.state.ui.showFilterHistograms}
-            className={classes.leftToolbarIcon}
-            ml="xs"
-          >
-            <IconChartBar stroke={iconStroke} />
-          </ActionIcon>
+          <Tooltip label="Reset all filters" position="bottom">
+            <ActionIcon
+              aria-label="Reset all filters"
+              onClick={() => { store.resetAllFilters(); }}
+              className={classes.leftToolbarIcon}
+              ml="xs"
+            >
+              <IconRestore stroke={iconStroke} size={21} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Toggle filter histograms" position="bottom">
+            <ActionIcon
+              aria-label="Toggle filter histograms"
+              onClick={() => { store.actions.setUiState({ showFilterHistograms: !store.state.ui.showFilterHistograms }); }}
+              data-active={store.state.ui.showFilterHistograms}
+              className={classes.leftToolbarIcon}
+              ml="xs"
+            >
+              <IconChartBar stroke={iconStroke} />
+            </ActionIcon>
+          </Tooltip>
         </Flex>
       </Flex>
 
