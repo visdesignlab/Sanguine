@@ -1407,7 +1407,7 @@ export class RootStore {
           SELECT equi_width_bins(min(${component}), LEAST(${productMaximum}, max(${component})), ${numBins}, false) AS bin
           FROM filteredVisits
         )
-        SELECT HISTOGRAM(${component}, bins.bin) AS histogram,
+        SELECT HISTOGRAM(${component}, bins.bin) AS histogram
         FROM filteredVisits, bins;
       `);
       // Map the result to the histogram data
