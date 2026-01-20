@@ -468,6 +468,17 @@ export const chartColors = [
   '#73C3C5',
 ];
 
+// 'rbc_units_cost', 'plt_units_cost', 'ffp_units_cost', 'cryo_units_cost', 'cell_saver_cost';
+
+export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
+  rbc_units: '#8B1E1E',
+  ffp_units: '#C99700',
+  plt_units: '#F4D35E',
+  cryo_units: '#E6B800',
+  cell_saver_ml: '#C94A4A',
+  cell_saver: '#C94A4A',
+};
+
 // Explore View ----------------------------------------------------
 // Aggregation options for explore view
 const _AGGREGATIONS = ['surgeon_prov_id', 'anesth_prov_id', 'year', 'quarter'] as const;

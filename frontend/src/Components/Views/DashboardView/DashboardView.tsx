@@ -34,6 +34,7 @@ import {
   DashboardStatConfig,
   chartColors,
   Cost,
+  BLOOD_PRODUCT_COLOR_THEME,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
@@ -237,10 +238,9 @@ export function DashboardView() {
 
             const series = chartDataKeys.map((name, idx) => ({
               name,
-              color:
-                chartDataKeys.length === 1
-                  ? DEFAULT_DATA_COLOR // Or use a constant like DEFAULT_DATA_COLOR if defined
-                  : chartColors[idx % chartColors.length],
+              color: chartDataKeys.length === 1
+                ? (BLOOD_PRODUCT_COLOR_THEME[yAxisVar] || DEFAULT_DATA_COLOR)// Or use a constant like DEFAULT_DATA_COLOR if defined
+                : (BLOOD_PRODUCT_COLOR_THEME[chartDataKeys[idx].replace(/_cost$/, '')] || chartColors[idx % chartColors.length]),
               label: chartDataKeys.length === 1
                 ? 'Total'
                 : dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
