@@ -1192,6 +1192,11 @@ export class RootStore {
     this.actions.updateExploreState({ chartConfigs: input }, 'Update Explore Config');
   }
 
+  loadExplorePreset(configs: ExploreChartConfig[], layouts: { [key: string]: Layout[] }) {
+    this.actions.updateExploreState({ chartConfigs: configs, chartLayouts: layouts }, 'Load Explore Preset');
+    this._transientExploreLayouts = null;
+  }
+
   addExploreChart(config: ExploreChartConfig) {
     const currentConfigs = this.exploreChartConfigs;
     const currentLayouts = this.exploreChartLayouts;
@@ -1202,6 +1207,7 @@ export class RootStore {
     });
     const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 2) };
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Explore Chart');
+    this._transientExploreLayouts = null;
   }
 
   removeExploreChart(chartId: string) {
@@ -1213,6 +1219,7 @@ export class RootStore {
     const filteredSm = (currentLayouts.sm || []).filter((layout) => layout.i !== chartId);
     const newLayouts = { ...currentLayouts, main: compact(filteredMain, 'vertical', 2), ...(currentLayouts.sm ? { sm: compact(filteredSm, 'vertical', 1) } : {}) };
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Explore Chart');
+    this._transientExploreLayouts = null;
   }
   // endregion
 

@@ -47,12 +47,9 @@ export function ExploreView() {
   // Handler for clicking a preset card
   const handlePresetClick = (groupIdx: number, cardIdx: number) => {
     const { chartConfigs, chartLayouts } = presetStateCards[groupIdx].options[cardIdx];
-    // Add chart config to store
-    store.exploreChartConfigs = [...chartConfigs];
-    // Add chart layout to store
-    store.exploreChartLayouts = {
+    store.loadExplorePreset([...chartConfigs], {
       main: [...chartLayouts.main],
-    };
+    });
   };
 
   // Add Chart Modal State ---------------------------------
@@ -228,14 +225,11 @@ export function ExploreView() {
           rowHeight={300}
           containerPadding={[0, 0]}
           draggableHandle=".move-icon"
-          onLayoutChange={(currentLayout: Layout[], newLayouts: Record<string, Layout[]>) => {
-            store.exploreChartLayouts = newLayouts;
-          }}
           onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.updateExploreLayout(store.exploreChartLayouts);
+            store.updateExploreLayout({ main: _layout });
           }}
           onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.updateExploreLayout(store.exploreChartLayouts);
+            store.updateExploreLayout({ main: _layout });
           }}
           layouts={store.exploreChartLayouts}
         >
