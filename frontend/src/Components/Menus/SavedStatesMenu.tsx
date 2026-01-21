@@ -39,16 +39,12 @@ import {
 import { observer } from 'mobx-react-lite';
 import { captureScreenshot } from '../../Utils/screenshotUtils';
 import { useThemeConstants } from '../../Theme/mantineTheme';
+import { getReadableName, formatValue } from '../../Utils/attributeFormattingUtils';
+import { formatTimestamp } from '../../Utils/dates';
 import classes from '../../Shell/Shell.module.css';
 import { Store, ApplicationState } from '../../Store/Store';
 import {
-  BLOOD_COMPONENTS,
-  OUTCOMES,
-  PROPHYL_MEDS,
-  GUIDELINE_ADHERENT,
-  LAB_RESULTS,
-  COSTS,
-  TIME_AGGREGATION_OPTIONS,
+
   AGGREGATION_OPTIONS,
   DashboardChartConfig,
   ExploreChartConfig,
@@ -56,67 +52,7 @@ import {
   DEFAULT_UNIT_COSTS,
 } from '../../Types/application';
 
-// Helper to get readable names
-const getReadableName = (key: string): string => {
-  // Handle date fields specifically
-  if (key === 'dateFrom') return 'Date From';
-  if (key === 'dateTo') return 'Date To';
-
-  // Check Time Aggregations
-  const timeAgg = TIME_AGGREGATION_OPTIONS[key as keyof typeof TIME_AGGREGATION_OPTIONS];
-  if (timeAgg) return timeAgg.label;
-
-  // Search in all attributes that have a 'value' and 'label.base' or 'label'
-  const attributes = [
-    BLOOD_COMPONENTS,
-    OUTCOMES,
-    PROPHYL_MEDS,
-    Object.values(GUIDELINE_ADHERENT),
-    LAB_RESULTS,
-    Object.values(COSTS),
-  ];
-
-  let result: string | undefined;
-  attributes.forEach((attribute) => {
-    const found = (attribute as any[]).find((c) => c.value === key);
-    if (found && !result) {
-      result = found.label.base || found.label;
-    }
-  });
-
-  // Fallback to formatting the key
-  return key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-};
-
-const formatValue = (
-  value:
-    | string
-    | number
-    | boolean
-    | Date
-    | (number | string)[]
-    | null
-    | undefined,
-): string => {
-  if (value instanceof Date) {
-    return value.toLocaleDateString();
-  }
-  if (typeof value === 'boolean') {
-    return value ? 'Yes' : 'No';
-  }
-  if (Array.isArray(value)) {
-    if (value.length === 2 && typeof value[0] === 'number') {
-      return `${value[0]} - ${value[1]}`;
-    }
-    return value.join(', ');
-  }
-  if (value === null || value === undefined) {
-    return 'Any'; // Or 'None' depending on context, 'Any' usually fits filters better
-  }
-  return String(value);
-};
-
-// Helper types
+// Saved State Interface -----
 interface SavedState {
   id: string;
   name?: string;
@@ -124,11 +60,7 @@ interface SavedState {
   timestamp: number;
 }
 
-const formatTimestamp = (timestamp: number): string => new Date(timestamp).toLocaleString('en-US', {
-  year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric',
-});
-
-// Helper component for Zoomed State Modal
+// Helper component for Zoomed State Image Modal (Large Image Preview) -----
 function ZoomedStateModal({
   opened, onClose, state, onPrev, onNext, hasPrev, hasNext,
 }: {
@@ -165,6 +97,7 @@ function ZoomedStateModal({
         gap="xl"
         style={{ width: '100%', height: '100%', padding: '40px 0' }}
       >
+        {/** Zoomed State Image Preview */}
         <Image
           src={state.screenshot}
           fit="contain"
@@ -173,6 +106,7 @@ function ZoomedStateModal({
           }}
         />
         <Group gap="xl" align="center">
+          {/** Previous Image Button */}
           <ActionIcon
             variant="filled"
             color="dark"
@@ -184,6 +118,7 @@ function ZoomedStateModal({
           >
             <IconChevronLeft size={24} />
           </ActionIcon>
+          {/** State Name and Timestamp */}
           <Stack gap={0} align="center">
             <Title order={3} c="white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
               {state.name}
@@ -192,6 +127,7 @@ function ZoomedStateModal({
               {formatTimestamp(state.timestamp)}
             </Text>
           </Stack>
+          {/** Next Image Button */}
           <ActionIcon
             variant="filled"
             color="dark"
@@ -209,6 +145,9 @@ function ZoomedStateModal({
   );
 }
 
+/**
+ * Retrieve and display the details of a saved state (filters, selections, dashboard, explore, settings)
+ */
 function StateDetails({ state }: { state: ApplicationState }) {
   const store = useContext(Store);
   const {
@@ -234,7 +173,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
     return items;
   }, [dashboard]);
 
-  // Process Explore Charts
+  // Process Explore View Charts
   const exploreCharts = useMemo(() => {
     const items: string[] = [];
     if (explore?.chartConfigs) {

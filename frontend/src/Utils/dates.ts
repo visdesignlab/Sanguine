@@ -42,3 +42,7 @@ export function compareTimePeriods(a: TimePeriod, b: TimePeriod): number {
   // Year only - already compared above
   return 0;
 }
+
+export const formatTimestamp = (timestamp: number): string => new Date(timestamp).toLocaleString('en-US', {
+  year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric',
+});
