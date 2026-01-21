@@ -77,15 +77,22 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
 
 // Helper to get readable names
 export const formatStateDetailName = (key: string): string => {
-  // Handle date fields specifically
-  if (key === 'dateFrom') return 'Date From';
-  if (key === 'dateTo') return 'Date To';
+  // Handle date fields
+  const dateFields: Record<string, string> = {
+    dateFrom: 'Date From',
+    dateTo: 'Date To',
+  };
+
+  if (dateFields[key]) return dateFields[key];
 
   // Check Time Aggregations
   const timeAgg = TIME_AGGREGATION_OPTIONS[key as keyof typeof TIME_AGGREGATION_OPTIONS];
-  if (timeAgg) return timeAgg.label;
 
-  // Search in all attributes that have a 'value' and 'label.base' or 'label'
+  if (timeAgg) {
+    return timeAgg.label;
+  }
+
+  // Search for the label in the attributes
   const attributes = [
     BLOOD_COMPONENTS,
     OUTCOMES,
@@ -93,47 +100,30 @@ export const formatStateDetailName = (key: string): string => {
     Object.values(GUIDELINE_ADHERENT),
     LAB_RESULTS,
     Object.values(COSTS),
-  ];
+  ].flat();
+  const found = attributes.find((c) => c.value === key);
+  if (found) {
+    return found.label?.base || found.label;
+  }
 
-  let result: string | undefined;
-
-  // Find the attribute that matches the keys
-  attributes.forEach((attribute) => {
-    const found = (attribute as unknown as {
-      value: string;
-      label: string | { base: string };
-    }[]).find((c) => c.value === key);
-    if (found && !result) {
-      result = found.label.base || found.label;
-    }
-  });
-
-  if (result) return result;
-
-  // Check the column map from humanReadableColsVals
-  if (columnNameMap[key]) return columnNameMap[key];
+  // Check the column map
+  if (columnNameMap[key]) {
+    return columnNameMap[key];
+  }
 
   // Fallback to formatting the key
   return key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
 // Helper to format values
-export const formatStateDetailValue = (
-  value:
-    | string
-    | number
-    | boolean
-    | Date
-    | (number | string)[]
-    | null
-    | undefined,
-): string => {
+export const formatStateDetailValue = (value: unknown): string => {
   if (value instanceof Date) {
     return value.toLocaleDateString();
   }
   if (typeof value === 'boolean') {
     return value ? 'Yes' : 'No';
   }
+  // Handle arrays (e.g., [1, 2] -> "1 - 2")
   if (Array.isArray(value)) {
     if (value.length === 2 && typeof value[0] === 'number') {
       return `${value[0]} - ${value[1]}`;
