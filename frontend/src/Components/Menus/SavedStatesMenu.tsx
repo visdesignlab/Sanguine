@@ -39,7 +39,7 @@ import {
 import { observer } from 'mobx-react-lite';
 import { captureScreenshot } from '../../Utils/screenshotUtils';
 import { useThemeConstants } from '../../Theme/mantineTheme';
-import { getReadableName, formatValue } from '../../Utils/attributeFormattingUtils';
+import { getReadableName, formatValue } from '../../Utils/humanReadableColsVals';
 import { formatTimestamp } from '../../Utils/dates';
 import classes from '../../Shell/Shell.module.css';
 import { Store, ApplicationState } from '../../Store/Store';
@@ -273,13 +273,13 @@ function StateDetails({ state }: { state: ApplicationState }) {
       id: 'explore', content: exploreCharts, icon: IconChartScatter, color: 'grape', label: 'Explore View',
     },
     {
-      id: 'filters', content: activeFilters, icon: IconFilter, color: 'orange', label: 'Filters', type: 'kv',
+      id: 'filters', content: activeFilters, icon: IconFilter, color: 'orange', label: 'Filters', type: 'key-value',
     },
     {
       id: 'selections', content: selectedItems, icon: IconClick, color: 'green', label: 'Selections',
     },
     {
-      id: 'settings', content: activeSettings, icon: IconSettings, color: 'gray', label: 'Settings', type: 'kv',
+      id: 'settings', content: activeSettings, icon: IconSettings, color: 'gray', label: 'Settings', type: 'key-value',
     },
   ].filter((s) => s.content.length > 0);
 
@@ -312,7 +312,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
               <ScrollArea.Autosize mah={150}>
                 <Stack gap={4}>
                   {/** Key-Value Pairs of state details */}
-                  {section.type === 'kv' ? (
+                  {section.type === 'key-value' ? (
                     (section.content as { label: string, value: string }[]).map((item, i) => (
                       <Group key={i} justify="space-between" wrap="nowrap" align="flex-start">
                         <Text size="xs" c="dimmed" style={{ flex: 1 }}>
