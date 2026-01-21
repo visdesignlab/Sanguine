@@ -52,14 +52,6 @@ import {
   DEFAULT_UNIT_COSTS,
 } from '../../Types/application';
 
-// Saved State Interface -----
-interface SavedState {
-  id: string;
-  name?: string;
-  screenshot?: string;
-  timestamp: number;
-}
-
 // region Zoomed State Image
 /**
  * Helper component for Zoomed State Image Modal (Large Image Preview)
@@ -69,7 +61,12 @@ function ZoomedStateModal({
 }: {
   opened: boolean;
   onClose: () => void;
-  state: SavedState | undefined;
+  state: {
+    id: string;
+    name?: string;
+    screenshot?: string;
+    timestamp: number;
+  } | undefined;
   onPrev: () => void;
   onNext: () => void;
   hasPrev: boolean;

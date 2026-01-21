@@ -95,16 +95,15 @@ export const formatStateDetailName = (key: string): string => {
     Object.values(COSTS),
   ];
 
-  interface AttributeItem {
-    value: string;
-    label: string | { base: string };
-  }
-
   let result: string | undefined;
+
+  // Find the attribute that matches the keys
   attributes.forEach((attribute) => {
-    const found = (attribute as unknown as AttributeItem[]).find((c) => c.value === key);
+    const found = (attribute as unknown as {
+      value: string;
+      label: string | { base: string };
+    }[]).find((c) => c.value === key);
     if (found && !result) {
-      // @ts-expect-error - label might be string or object
       result = found.label.base || found.label;
     }
   });
