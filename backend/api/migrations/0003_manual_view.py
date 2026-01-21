@@ -133,19 +133,36 @@ def create_materialize_proc(apps, schema_editor):
                     /* RBC ADHERENCE LOGIC ============================*/
                     CASE WHEN COALESCE(t.rbc_units, 0) > 0 THEN
                         CASE 
-                            -- 1. Restrictive Threshold (Hb <= 7.0)
-                            WHEN lab_hgb.val <= 7.0 THEN 1
+                            -- 1. Restrictive Threshold (Hb < 7.0)
+                            WHEN lab_hgb.val < 7.0 THEN 1
                             
-                            -- 2. high risk threshold of 8 with any risk factor
-                            -- (CHF, CVD, Surgery, Obstetrics, PCI)
+                            -- 2. Neurocritical Care / TBI (Liberal < 9.0)
+                            -- Per 2025 Cochrane Review: Liberal strategy favored for neuro outcomes
+                            WHEN lab_hgb.val < 9.0 
+                            AND (bc_ctx.flag_neuro_critical = 1) THEN 1
+
+                            -- 3. Cardiac Surgery (Hb <= 7.5)
+                            WHEN lab_hgb.val <= 7.5 
+                            AND (bc_ctx.flag_cardiac_surg = 1) THEN 1
+                            
+                            -- 4. High Risk Threshold (Hb <= 8.0) with RECENT Comorbidity
+                            -- (CHF, CVD, Ortho Surgery)
                             WHEN lab_hgb.val <= 8.0 
                             AND (
-                                v.cci_chf > 0 OR v.cci_cvd > 0 OR
-                                sc_ctx.has_surg_24h = 1 OR
-                                bc_ctx.flag_target_8_indicated = 1
+                                v.cci_chf > 0 OR 
+                                v.cci_cvd > 0 OR
+                                sc_ctx.has_surg_24h = 1 
                             ) THEN 1
 
-                            -- 3. Massive Bleeding or High Transfusion
+                             -- 5. AMI / Interventional Cardiology (Hb < 10.0)
+                             -- Requires active/recent history of MI (CCI > 0) or PCI codes
+                            WHEN lab_hgb.val < 10.0
+                            AND (
+                                v.cci_mi > 0 OR 
+                                bc_ctx.flag_pci_indicated = 1
+                            ) THEN 1
+
+                            -- 6. Massive Bleeding or High Transfusion
                             WHEN bc_ctx.flag_bleeding = 1 OR trans_ctx.rbc_4h >= 4 THEN 1
                             
                             ELSE 0 
@@ -158,8 +175,8 @@ def create_materialize_proc(apps, schema_editor):
                             -- 1. Strict Exception (> 3 FFP in 4h)
                             WHEN trans_ctx.ffp_4h >= 3 THEN 1
                         
-                            -- 2. Standard (INR >= 1.8)
-                            WHEN lab_inr.val >= 1.8 THEN 1
+                            -- 2. Standard (INR >= 2.0)
+                            WHEN lab_inr.val >= 2.0 THEN 1
                             
                             -- 3. Procedure/Bleeding (INR >= 1.5)
                             WHEN lab_inr.val >= 1.5 
@@ -175,17 +192,21 @@ def create_materialize_proc(apps, schema_editor):
                     /* PLT ADHERENCE LOGIC ============================*/
                     CASE WHEN COALESCE(t.plt_units, 0) > 0 THEN
                         CASE
-                            -- 1. Prophylactic (Plt <= 10,000)
-                            WHEN lab_plt.val <= 10000 THEN 1
+                            -- 1. Prophylactic / CVC (Plt < 10,000)
+                            WHEN lab_plt.val < 10000 THEN 1
 
-                            -- 2. Procedure (Plt <= 50,000 AND (Surgery within 6h OR Bleeding))
-                            WHEN lab_plt.val <= 50000 
+                            -- 2. Lumbar Puncture (Plt < 20,000)
+                            WHEN lab_plt.val < 20000 AND bc_ctx.flag_lp = 1 THEN 1
+
+                            -- 3. Major Surgery (Plt < 50,000 AND (Surgery within 24h OR Bleeding))
+                            -- Excludes Neuraxial/Neuro which are caught in High Risk below
+                            WHEN lab_plt.val < 50000 
                             AND (
-                                sc_ctx.has_surg_6h = 1 OR
+                                sc_ctx.has_surg_24h = 1 OR
                                 bc_ctx.flag_bleeding = 1
                             ) THEN 1
 
-                            -- 3. High Risk (Plt <= 100,000)
+                            -- 4. High Risk (Plt <= 100,000)
                             -- (Neuro, Cardiac, Eye, Neuraxial, Vascular)
                             WHEN lab_plt.val <= 100000 AND bc_ctx.flag_target_100_indicated = 1 THEN 1
                             
@@ -240,11 +261,20 @@ def create_materialize_proc(apps, schema_editor):
                                 (cpt_code_desc LIKE '%BLEEDING%' OR cpt_code_desc LIKE '%HEMORRHAGE%' OR cpt_code_desc LIKE '%HEMRRG%')
                             THEN 1 ELSE 0 END) as flag_bleeding,
 
-                        -- Target 8.0 Indication (Obstetrics OR Cardiac PCI)
+                        -- Lumbar Puncture Flag (62270, 62272)
+                        MAX(CASE WHEN cpt_code IN ('62270', '62272') THEN 1 ELSE 0 END) as flag_lp,
+
+                        -- Neurocritical / Neurosurgery Flag (For RBC < 9.0)
+                        -- Includes Cranial and Spinal surgery ranges
                         MAX(CASE WHEN (
-                            (cpt_code BETWEEN '59000' AND '59899' AND cpt_code NOT LIKE '%F') OR -- Obstetrics
-                            (cpt_code BETWEEN '92920' AND '92944' AND cpt_code NOT LIKE '%F')    -- Interventional Cardiology
-                        ) THEN 1 ELSE 0 END) as flag_target_8_indicated,
+                            (cpt_code BETWEEN '61000' AND '63999' AND cpt_code NOT LIKE '%F') 
+                        ) THEN 1 ELSE 0 END) as flag_neuro_critical,
+
+                        -- Cardiac Surgery Flag
+                        MAX(CASE WHEN (cpt_code LIKE '33%' AND cpt_code NOT LIKE '%F') THEN 1 ELSE 0 END) as flag_cardiac_surg,
+
+                        -- PCI / Interventional Cardiology Flag
+                        MAX(CASE WHEN (cpt_code BETWEEN '92920' AND '92944' AND cpt_code NOT LIKE '%F') THEN 1 ELSE 0 END) as flag_pci_indicated,
 
                         -- Target 100k Indication (Neuro, Cardiac Surg, Eye, Neuraxial, Vascular)
                         MAX(CASE WHEN (
