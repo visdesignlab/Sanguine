@@ -66,7 +66,6 @@ export const Shell = observer(() => {
   const defaultTab = TABS[0].key;
 
   // Active tab in the view tabs
-  const activeTab = store.state.ui.activeTab;
   const setActiveTab = (tab: string) => {
     store.actions.setUiState({ activeTab: tab });
   };
@@ -82,16 +81,15 @@ export const Shell = observer(() => {
   const LEFT_PANEL_WIDTH = 6 * toolbarWidth;
 
   // Open and close the left toolbar, burger toggle visible on hover.
-  const leftToolbarOpened = store.state.ui.leftToolbarOpened;
+  // Open and close the left toolbar, burger toggle visible on hover.
   const toggleLeftToolbar = () => {
-    store.actions.setUiState({ leftToolbarOpened: !leftToolbarOpened });
+    store.actions.setUiState({ leftToolbarOpened: !store.state.ui.leftToolbarOpened });
   };
 
-  const activeLeftPanel = store.state.ui.activeLeftPanel;
   const setActiveLeftPanel = (index: number | null) => {
     store.actions.setUiState({ activeLeftPanel: index });
   };
-  const navbarWidth = useMemo(() => (activeLeftPanel === null ? toolbarWidth : LEFT_PANEL_WIDTH), [activeLeftPanel, LEFT_PANEL_WIDTH, toolbarWidth]);
+  const navbarWidth = useMemo(() => (store.state.ui.activeLeftPanel === null ? toolbarWidth : LEFT_PANEL_WIDTH), [store.state.ui.activeLeftPanel, LEFT_PANEL_WIDTH, toolbarWidth]);
 
   // Toolbar icons ----------------------
   // Left toolbar icons
@@ -160,7 +158,7 @@ export const Shell = observer(() => {
       navbar={{
         width: navbarWidth,
         breakpoint: 0,
-        collapsed: { desktop: !leftToolbarOpened },
+        collapsed: { desktop: !store.state.ui.leftToolbarOpened },
       }}
       padding="xs"
     >
@@ -179,14 +177,14 @@ export const Shell = observer(() => {
             {/** View Tabs */}
             <Tabs
               variant="outline"
-              value={activeTab}
+              value={store.state.ui.activeTab}
               onChange={(value) => {
                 if (value) setActiveTab(value);
               }}
               radius="md"
               defaultValue={defaultTab}
               classNames={{
-                tab: activeLeftPanel !== null ? classes.tabOutlineActive : undefined,
+                tab: store.state.ui.activeLeftPanel !== null ? classes.tabOutlineActive : undefined,
               }}
               pl="xs"
             >
@@ -204,7 +202,7 @@ export const Shell = observer(() => {
               // --- Hover Menu for Camera to show screenshots ---
               if (label === 'Camera') {
                 return (
-                  <ScreenshotMenu key="screenshot-menu" activeTab={activeTab} />
+                  <ScreenshotMenu key="screenshot-menu" activeTab={store.state.ui.activeTab} />
                 );
               }
               // Default header icon button
@@ -302,7 +300,7 @@ export const Shell = observer(() => {
       <AppShell.Navbar>
         {/** Left Toolbar Icons */}
         <Flex direction="row" h="100%" w={navbarWidth}>
-          <Box h="100%" style={{ borderRight: activeLeftPanel !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
+          <Box h="100%" style={{ borderRight: store.state.ui.activeLeftPanel !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
             <Group
               justify="center"
               w={toolbarWidth}
@@ -317,8 +315,8 @@ export const Shell = observer(() => {
                   <ActionIcon
                     key={label}
                     aria-label={label}
-                    onClick={() => (index === activeLeftPanel ? setActiveLeftPanel(null) : setActiveLeftPanel(index))}
-                    data-active={index === activeLeftPanel}
+                    onClick={() => (index === store.state.ui.activeLeftPanel ? setActiveLeftPanel(null) : setActiveLeftPanel(index))}
+                    data-active={index === store.state.ui.activeLeftPanel}
                     className={classes.leftToolbarIcon}
                     style={{ overflow: 'visible' }}
                     disabled={disabled}
@@ -333,9 +331,9 @@ export const Shell = observer(() => {
           </Box>
 
           {/** Left Panel Content */}
-          {activeLeftPanel !== null && (
+          {store.state.ui.activeLeftPanel !== null && (
             <Box style={{ flexGrow: 1 }} p="md">
-              {leftToolbarIcons[activeLeftPanel].content}
+              {leftToolbarIcons[store.state.ui.activeLeftPanel].content}
             </Box>
           )}
         </Flex>
@@ -347,7 +345,7 @@ export const Shell = observer(() => {
           {TABS.map((tab) => (
             <Box
               key={tab.key}
-              style={{ display: activeTab === tab.key ? 'block' : 'none' }}
+              style={{ display: store.state.ui.activeTab === tab.key ? 'block' : 'none' }}
             >
               {tab.content}
             </Box>
