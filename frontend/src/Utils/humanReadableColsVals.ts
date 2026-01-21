@@ -75,7 +75,11 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
   return `${value}`;
 }
 
-// Helper to get readable names
+/**
+ * Format a state detail name to be human-readable
+ * @param key The key to format (e.g. "dateFrom")
+ * @returns The formatted key (e.g. "Date From")
+ */
 export const formatStateDetailName = (key: string): string => {
   // Handle date fields
   const dateFields: Record<string, string> = {
@@ -115,7 +119,11 @@ export const formatStateDetailName = (key: string): string => {
   return key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
-// Helper to format values
+/**
+ * Format a state detail value to be human-readable
+ * @param value The value to format (e.g. [1,2])
+ * @returns The formatted value (e.g. "1 - 2")
+ */
 export const formatStateDetailValue = (value: unknown): string => {
   if (value instanceof Date) {
     return value.toLocaleDateString();
