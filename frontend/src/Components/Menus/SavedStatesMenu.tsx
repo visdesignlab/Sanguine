@@ -264,7 +264,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
     [selections],
   );
 
-  // Combine all sections into a config to allow iteration
+  // Combine all state details into a config for display
   const sections = [
     {
       id: 'dashboard', content: dashboardCharts, icon: IconChartBar, color: 'blue', label: 'Dashboard',
@@ -372,6 +372,7 @@ export const SavedStatesMenu = observer(
     const [manageModalOpened, setManageModalOpened] = useState(false);
     const [isMultiSelecting, setIsMultiSelecting] = useState(false);
     const [selectedStateIds, setSelectedStateIds] = useState<Set<string>>(new Set());
+
     // Sort states by timestamp descending (newest first)
     const sortedStates = useMemo(() => [...savedStates].sort(
       (a, b) => b.timestamp - a.timestamp,
@@ -546,10 +547,7 @@ export const SavedStatesMenu = observer(
           }
         } else {
           navigator.clipboard.writeText(url);
-          // alert('State URL copied to clipboard!');
         }
-      } else {
-        // alert('Could not generate share URL.');
       }
     };
     return (
