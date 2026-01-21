@@ -60,7 +60,10 @@ interface SavedState {
   timestamp: number;
 }
 
-// Helper component for Zoomed State Image Modal (Large Image Preview) -----
+// region Zoomed State Image
+/**
+ * Helper component for Zoomed State Image Modal (Large Image Preview)
+ */
 function ZoomedStateModal({
   opened, onClose, state, onPrev, onNext, hasPrev, hasNext,
 }: {
@@ -145,6 +148,9 @@ function ZoomedStateModal({
   );
 }
 
+// endregion
+
+// region State Details Display
 /**
  * Retrieve and display the details of a saved state (filters, selections, dashboard, explore, settings)
  */
@@ -154,7 +160,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
     filterValues, selections, dashboard, explore, settings,
   } = state;
 
-  // Process Dashboard Charts
+  // Find State's Dashboard Charts
   const dashboardCharts = useMemo(() => {
     const items: string[] = [];
     if (dashboard?.chartConfigs) {
@@ -173,7 +179,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
     return items;
   }, [dashboard]);
 
-  // Process Explore View Charts
+  // Find State's Explore View Charts
   const exploreCharts = useMemo(() => {
     const items: string[] = [];
     if (explore?.chartConfigs) {
@@ -186,7 +192,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
     return items;
   }, [explore]);
 
-  // Process Settings
+  // Find State's Settings
   const activeSettings = useMemo(() => {
     const items: { label: string; value: string }[] = [];
     if (settings?.unitCosts) {
@@ -203,14 +209,13 @@ function StateDetails({ state }: { state: ApplicationState }) {
     return items;
   }, [settings]);
 
-  // Process Filters
+  // Find State's Filters
   const activeFilters = useMemo(() => {
     const items: { label: string; value: string }[] = [];
     if (filterValues) {
-      const initialValues = store.initialFilterValues; // was store.filtersStore.initialFilterValues
+      const initialValues = store.initialFilterValues;
 
       Object.entries(filterValues).forEach(([key, value]) => {
-        // Skip if value indicates "all" or "none" effectively
         if (value === null) return;
 
         // Check against initial values
@@ -233,7 +238,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
           return; // Skip if matches initial
         }
 
-        // Special case
+        // Special case for date strings
         if (typeof value === 'string' && initialValue instanceof Date) {
           const dateVal = new Date(value);
           if (
@@ -253,7 +258,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
     return items;
   }, [filterValues, store.initialFilterValues]);
 
-  // Process Selections
+  // Find State's Selections
   const selectedItems = useMemo(
     () => selections?.selectedTimePeriods || [],
     [selections],
@@ -288,9 +293,11 @@ function StateDetails({ state }: { state: ApplicationState }) {
 
   return (
     <Stack gap="xs" w="100%">
+      {/** Accordion of state details (Dashboard, Explore, Filters, Selections, Settings) */}
       <Accordion variant="contained" radius="md" defaultValue={[]} multiple>
         {sections.map((section) => (
           <Accordion.Item value={section.id} key={section.id}>
+            {/** Section Label */}
             <Accordion.Control icon={<section.icon size={16} color={`var(--mantine-color-${section.color}-6)`} />}>
               <Text size="sm" fw={500}>
                 {section.label}
@@ -300,9 +307,11 @@ function StateDetails({ state }: { state: ApplicationState }) {
                 )
               </Text>
             </Accordion.Control>
+            {/** Section Content */}
             <Accordion.Panel>
               <ScrollArea.Autosize mah={150}>
                 <Stack gap={4}>
+                  {/** Key-Value Pairs of state details */}
                   {section.type === 'kv' ? (
                     (section.content as { label: string, value: string }[]).map((item, i) => (
                       <Group key={i} justify="space-between" wrap="nowrap" align="flex-start">
@@ -332,6 +341,8 @@ function StateDetails({ state }: { state: ApplicationState }) {
     </Stack>
   );
 }
+
+// region Main - Saved States Menu
 
 /**
  * SavedStatesMenu - Menu for saving, restoring, and deleting application states.
@@ -363,6 +374,7 @@ export const SavedStatesMenu = observer(
     const [saveModalOpened, setSaveModalOpened] = useState(false);
     const [stateName, setStateName] = useState('');
 
+    // Save State
     const handleSaveState = async () => {
       if (stateName.trim()) {
         setSaveModalOpened(false);
@@ -377,13 +389,14 @@ export const SavedStatesMenu = observer(
       }
     };
 
-    // Restore State Modal
+    // Restore Saved State Modal
     const [restoreModalOpened, setRestoreModalOpened] = useState(false);
     const [stateToRestore, setStateToRestore] = useState<string | null>(null);
 
-    // Reset State Modal
+    // Reset State to Default Modal
     const [resetModalOpened, setResetModalOpened] = useState(false);
 
+    // Restore a Saved State
     const handleRestoreState = () => {
       if (stateToRestore) {
         store.restoreState(stateToRestore);
@@ -393,6 +406,7 @@ export const SavedStatesMenu = observer(
       }
     };
 
+    // Confirm Restore
     const confirmRestore = (id: string) => {
       setStateToRestore(id);
       setRestoreModalOpened(true);
