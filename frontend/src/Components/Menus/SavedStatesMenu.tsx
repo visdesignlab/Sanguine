@@ -39,7 +39,7 @@ import {
 import { observer } from 'mobx-react-lite';
 import { captureScreenshot } from '../../Utils/screenshotUtils';
 import { useThemeConstants } from '../../Theme/mantineTheme';
-import { getReadableName, formatValue } from '../../Utils/humanReadableColsVals';
+import { formatStateDetailName, formatStateDetailValue } from '../../Utils/humanReadableColsVals';
 import { formatTimestamp } from '../../Utils/dates';
 import classes from '../../Shell/Shell.module.css';
 import { Store, ApplicationState } from '../../Store/Store';
@@ -165,8 +165,8 @@ function StateDetails({ state }: { state: ApplicationState }) {
     const items: string[] = [];
     if (dashboard?.chartConfigs) {
       dashboard.chartConfigs.forEach((config: DashboardChartConfig) => {
-        const yLabel = getReadableName(config.yAxisVar);
-        const xLabel = getReadableName(config.xAxisVar);
+        const yLabel = formatStateDetailName(config.yAxisVar);
+        const xLabel = formatStateDetailName(config.xAxisVar);
         const agg = AGGREGATION_OPTIONS[config.aggregation]?.label || config.aggregation;
         items.push(`Chart: ${agg} ${yLabel} by ${xLabel}`);
       });
@@ -184,8 +184,8 @@ function StateDetails({ state }: { state: ApplicationState }) {
     const items: string[] = [];
     if (explore?.chartConfigs) {
       explore.chartConfigs.forEach((config: ExploreChartConfig) => {
-        const xLabel = getReadableName(config.xAxisVar);
-        const yLabel = getReadableName(config.yAxisVar);
+        const xLabel = formatStateDetailName(config.xAxisVar);
+        const yLabel = formatStateDetailName(config.yAxisVar);
         items.push(`Chart: ${yLabel} vs ${xLabel}`);
       });
     }
@@ -200,7 +200,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
         const costKey = key as Cost;
         if (value !== DEFAULT_UNIT_COSTS[costKey]) {
           items.push({
-            label: getReadableName(key),
+            label: formatStateDetailName(key),
             value: `$${value}`,
           });
         }
@@ -250,8 +250,8 @@ function StateDetails({ state }: { state: ApplicationState }) {
         }
 
         items.push({
-          label: getReadableName(key),
-          value: formatValue(value),
+          label: formatStateDetailName(key),
+          value: formatStateDetailValue(value),
         });
       });
     }

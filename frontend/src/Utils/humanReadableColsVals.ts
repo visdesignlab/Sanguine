@@ -76,7 +76,7 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
 }
 
 // Helper to get readable names
-export const getReadableName = (key: string): string => {
+export const formatStateDetailName = (key: string): string => {
   // Handle date fields specifically
   if (key === 'dateFrom') return 'Date From';
   if (key === 'dateTo') return 'Date To';
@@ -119,7 +119,7 @@ export const getReadableName = (key: string): string => {
 };
 
 // Helper to format values
-export const formatValue = (
+export const formatStateDetailValue = (
   value:
     | string
     | number
