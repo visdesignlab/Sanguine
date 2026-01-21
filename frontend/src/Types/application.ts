@@ -331,6 +331,14 @@ export const COSTS = {
   },
 } as const;
 
+export const DEFAULT_UNIT_COSTS = {
+  rbc_units_cost: 200,
+  ffp_units_cost: 55,
+  plt_units_cost: 650,
+  cryo_units_cost: 70,
+  cell_saver_cost: 500,
+};
+
 // Values of prophylactic medications
 export type Cost = typeof COSTS[keyof typeof COSTS]['value'];
 // Readonly array of prophylactic medication options
@@ -448,7 +456,7 @@ export type DashboardStatConfig = {
   title: string;
 };
 
-export type DashboardStatData = Record<DashboardAggYAxisVar, {value: string, diff: number, comparedTo?: string, sparklineData: number[]} >;
+export type DashboardStatData = Record<DashboardAggYAxisVar, { value: string, diff: number, comparedTo?: string, sparklineData: number[] }>;
 
 // Chart colors (for up to 5 lines/bars)
 export const chartColors = [

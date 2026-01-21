@@ -3,20 +3,20 @@ import { createContext } from 'react';
 import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
 import {
   Cost,
+  DEFAULT_UNIT_COSTS,
 } from '../Types/application';
+import { ProvenanceStore } from './ProvenanceStore';
 import { DashboardStore } from './DashboardStore';
-import { FiltersStore } from './FiltersStore';
 import { ExploreStore } from './ExploreStore';
+import { FiltersStore } from './FiltersStore';
 import { SelectionsStore } from './SelectionsStore';
 
 export class RootStore {
-  // Provenance
+  provenanceStore: ProvenanceStore;
 
-  // // Stores
   dashboardStore: DashboardStore;
 
   exploreStore: ExploreStore;
-  // // providersStore:
 
   filtersStore: FiltersStore;
 
@@ -24,13 +24,7 @@ export class RootStore {
 
   duckDB: AsyncDuckDBConnection | null = null;
 
-  _unitCosts: Record<Cost, number> = {
-    rbc_units_cost: 200,
-    ffp_units_cost: 55,
-    plt_units_cost: 650,
-    cryo_units_cost: 70,
-    cell_saver_cost: 500,
-  };
+  _unitCosts: Record<Cost, number> = { ...DEFAULT_UNIT_COSTS };
 
   get unitCosts() {
     return this._unitCosts;
@@ -47,6 +41,7 @@ export class RootStore {
 
   constructor() {
     // Initialize stores
+    this.provenanceStore = new ProvenanceStore(this);
     this.dashboardStore = new DashboardStore(this);
     this.exploreStore = new ExploreStore(this);
     this.filtersStore = new FiltersStore(this);
@@ -80,6 +75,7 @@ export class RootStore {
         }
         return null;
       })
+      .filter(Boolean)
       .join(' AND ');
 
     // Update filteredVisits table in duckdb

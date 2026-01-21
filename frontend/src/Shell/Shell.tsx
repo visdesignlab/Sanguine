@@ -30,6 +30,7 @@ import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/Select
 import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
 import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
+import { SavedStatesMenu } from '../Components/Menus/SavedStatesMenu';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -212,6 +213,17 @@ export function Shell() {
                   </Menu>
                 );
               }
+              // --- Save / Saved States Menu ---
+              if (label === 'Save') {
+                return (
+                  <SavedStatesMenu
+                    key="save-menu"
+                    onSave={() => { }}
+                    onRestore={() => { }}
+                    onReset={() => setResetModalOpened(true)}
+                  />
+                );
+              }
               // Default header icon button
               return (
                 <Tooltip key={label} label={label}>
@@ -260,9 +272,9 @@ export function Shell() {
 
           {/** Left Panel Content */}
           {activeLeftPanel !== null && (
-          <Box style={{ flexGrow: 1 }} p="md">
-            {leftToolbarIcons[activeLeftPanel].content}
-          </Box>
+            <Box style={{ flexGrow: 1 }} p="md">
+              {leftToolbarIcons[activeLeftPanel].content}
+            </Box>
           )}
         </Flex>
       </AppShell.Navbar>
