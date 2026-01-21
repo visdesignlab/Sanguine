@@ -33,7 +33,7 @@ export function CostChart({ chartConfig }: { chartConfig: CostChartConfig }) {
     [chartConfig.aggregation, chartConfig.yAxisVar, chartConfig.xAxisVar],
   );
 
-  const rawData = useMemo(() => (store.exploreStore.chartData[dataKeyString] as CostBarData) || [], [store.exploreStore.chartData, dataKeyString]);
+  const rawData = useMemo(() => (store.exploreChartData[dataKeyString] as CostBarData) || [], [store.exploreChartData, dataKeyString]);
 
   // Sort data if needed
   const sortedData = useMemo(() => {
@@ -89,7 +89,7 @@ export function CostChart({ chartConfig }: { chartConfig: CostChartConfig }) {
           >
             {sortDescending ? <IconSortDescending size={18} /> : <IconSortAscending size={18} />}
           </ActionIcon>
-          <CloseButton onClick={() => { store.exploreStore.removeChart(chartConfig.chartId); }} />
+          <CloseButton onClick={() => { store.removeExploreChart(chartConfig.chartId); }} />
         </Flex>
       </Flex>
       <BarChart

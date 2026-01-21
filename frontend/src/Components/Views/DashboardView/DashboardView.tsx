@@ -56,8 +56,8 @@ export function DashboardView() {
 
   // Remove chart from dashboard
   const handleRemoveChart = useCallback((chartId: string) => {
-    store.dashboardStore.removeChart(chartId);
-  }, [store.dashboardStore]);
+    store.removeDashboardChart(chartId);
+  }, [store]);
 
   // Handle Chart Hover
   const [hoveredChartId, setHoveredChartId] = useState<string | null>(null);
@@ -89,9 +89,9 @@ export function DashboardView() {
 
   const addItemToDashboard = useCallback(() => {
     if (itemModalType === 'chart') {
-    // Infer chartType
+      // Infer chartType
       const chartType: DashboardChartConfig['chartType'] = 'line';
-      store.dashboardStore.addChart({
+      store.addDashboardChart({
         chartId: `chart-${Date.now()}`,
         xAxisVar: selectedXAxisVar as DashboardChartConfig['xAxisVar'],
         yAxisVar: selectedYAxisVar as DashboardChartConfig['yAxisVar'],
@@ -99,14 +99,14 @@ export function DashboardView() {
         chartType,
       });
     } else {
-    // Add stat
-      store.dashboardStore.addStat(
-      selectedYAxisVar as DashboardStatConfig['yAxisVar'],
-      selectedAggregation as DashboardStatConfig['aggregation'],
+      // Add stat
+      store.addDashboardStat(
+        selectedYAxisVar as DashboardStatConfig['yAxisVar'],
+        selectedAggregation as DashboardStatConfig['aggregation'],
       );
     }
     close();
-  }, [selectedAggregation, selectedXAxisVar, selectedYAxisVar, itemModalType, close, store.dashboardStore]);
+  }, [selectedAggregation, selectedXAxisVar, selectedYAxisVar, itemModalType, close, store]);
   // --- Render Dashboard ---
   return useObserver(() => {
     const chartRowHeight = 300;
@@ -213,18 +213,21 @@ export function DashboardView() {
           rowHeight={chartRowHeight}
           containerPadding={[0, 0]}
           draggableHandle=".move-icon"
-          onLayoutChange={(currentLayout: Layout[], newLayouts: Record<string, Layout[]>) => {
-            store.dashboardStore.chartLayouts = newLayouts;
+          onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+            store.updateDashboardLayout({ main: _layout });
           }}
-          layouts={store.dashboardStore.chartLayouts}
+          onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+            store.updateDashboardLayout({ main: _layout });
+          }}
+          layouts={store.dashboardChartLayouts}
         >
           {/** Render each chart - defined in the store's chart configs */}
-          {Object.values(store.dashboardStore.chartConfigs).map(({
+          {Object.values(store.dashboardChartConfigs).map(({
             chartId, yAxisVar, xAxisVar, aggregation, chartType,
           }) => {
-            const selectedSet = new Set(store.selectionsStore.selectedTimePeriods);
+            const selectedSet = new Set(store.selectedTimePeriods);
 
-            let chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
+            let chartData = store.dashboardChartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
             if (yAxisVar === 'total_blood_product_cost' && Array.isArray(chartData)) {
               chartData = chartData.map((data) => ({ timePeriod: data.timePeriod, ...data.data as Record<Cost, number> }));
             }
@@ -235,9 +238,9 @@ export function DashboardView() {
             const series = chartDataKeys.map((name, idx) => ({
               name,
               color:
-              chartDataKeys.length === 1
-                ? DEFAULT_DATA_COLOR // Or use a constant like DEFAULT_DATA_COLOR if defined
-                : chartColors[idx % chartColors.length],
+                chartDataKeys.length === 1
+                  ? DEFAULT_DATA_COLOR // Or use a constant like DEFAULT_DATA_COLOR if defined
+                  : chartColors[idx % chartColors.length],
               label: chartDataKeys.length === 1
                 ? 'Total'
                 : dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
@@ -275,7 +278,7 @@ export function DashboardView() {
                       <Tooltip label={`Change chart type to ${chartType === 'line' ? 'Bar' : 'Line'}`}>
                         <ActionIcon
                           variant="subtle"
-                          onClick={() => store.dashboardStore.setChartConfig(chartId, {
+                          onClick={() => store.setDashboardChartConfig(chartId, {
                             chartId, yAxisVar, xAxisVar, aggregation, chartType: chartType === 'line' ? 'bar' : 'line',
                           })}
                         >
@@ -291,7 +294,7 @@ export function DashboardView() {
                       <Tooltip label={`Change Y-Axis Aggregation to ${aggregation === 'sum' ? 'Average' : 'Sum'}`}>
                         <ActionIcon
                           variant="subtle"
-                          onClick={() => store.dashboardStore.setChartConfig(chartId, {
+                          onClick={() => store.setDashboardChartConfig(chartId, {
                             chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum', chartType,
                           })}
                         >
@@ -302,7 +305,7 @@ export function DashboardView() {
                       <Tooltip label={`Change X-Axis to ${xAxisVar === 'month' ? 'Quarter' : xAxisVar === 'quarter' ? 'Year' : 'Month'}`}>
                         <ActionIcon
                           variant="subtle"
-                          onClick={() => store.dashboardStore.setChartConfig(chartId, {
+                          onClick={() => store.setDashboardChartConfig(chartId, {
                             chartId, yAxisVar, xAxisVar: xAxisVar === 'month' ? 'quarter' : xAxisVar === 'quarter' ? 'year' : 'month', aggregation, chartType,
                           })}
                         >
@@ -324,7 +327,7 @@ export function DashboardView() {
                           if (selectedOption && selectedOption.units?.sum === '$') {
                             inferredChartType = 'bar';
                           }
-                          store.dashboardStore.setChartConfig(chartId, {
+                          store.setDashboardChartConfig(chartId, {
                             chartId,
                             xAxisVar,
                             yAxisVar: value as DashboardChartConfig['yAxisVar'],
@@ -339,7 +342,7 @@ export function DashboardView() {
                   </Flex>
                   <Box style={{ flex: 1, minHeight: 0, padding: '0 15px' }}>
                     <LoadingOverlay visible={chartData.length === 0} overlayProps={{ radius: 'sm', blur: 2 }} />
-                    { chartType === 'bar' ? (
+                    {chartType === 'bar' ? (
                       // Bar Chart
                       <BarChart
                         h="100%"
@@ -372,11 +375,11 @@ export function DashboardView() {
                           onClick: (data: { payload?: { timePeriod?: string } }) => {
                             const timePeriod = data?.payload?.timePeriod;
                             if (timePeriod) {
-                              const isSelected = store.selectionsStore.selectedTimePeriods.includes(timePeriod);
+                              const isSelected = store.selectedTimePeriods.includes(timePeriod);
                               if (isSelected) {
-                                store.selectionsStore.removeSelectedTimePeriod(timePeriod);
+                                store.removeSelectedTimePeriod(timePeriod);
                               } else {
-                                store.selectionsStore.addSelectedTimePeriod(timePeriod);
+                                store.addSelectedTimePeriod(timePeriod);
                               }
                             }
                           },
@@ -424,9 +427,9 @@ export function DashboardView() {
                               if (timePeriod) {
                                 const isSelected = selectedSet.has(timePeriod);
                                 if (isSelected) {
-                                  store.selectionsStore.removeSelectedTimePeriod(timePeriod);
+                                  store.removeSelectedTimePeriod(timePeriod);
                                 } else {
-                                  store.selectionsStore.addSelectedTimePeriod(timePeriod);
+                                  store.addSelectedTimePeriod(timePeriod);
                                 }
                               }
                             },

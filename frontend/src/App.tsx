@@ -131,12 +131,13 @@ function App() {
 
         // Update all stores
         await store.updateAllVisitsLength();
-        await store.filtersStore.calculateDefaultFilterValues();
+        await store.calculateDefaultFilterValues();
         await store.updateFilteredVisitsLength();
 
-        await store.filtersStore.generateHistogramData();
-        await store.dashboardStore.computeChartData();
-        await store.dashboardStore.computeStatData();
+        // Initialize provenance with the correct initial filter values
+        store.init();
+
+        await store.updateFilteredData();
       } catch (e) {
         console.error('Error fetching visits data:', e);
         setDataLoadingFailed(true);

@@ -3,20 +3,21 @@ import { useObserver } from 'mobx-react';
 import {
   useContext, useMemo, useState, useEffect,
 } from 'react';
-import { FiltersStore, ProductMaximums, MANUAL_INFINITY } from '../../../Store/FiltersStore';
-import { Store } from '../../../Store/Store';
+import {
+  Store, ProductMaximums, MANUAL_INFINITY, ApplicationState,
+} from '../../../Store/Store';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 
 type NumberArrayKeys<T> = {
   [K in keyof T]: T[K] extends number[] ? K : never
 }[keyof T];
 
-export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<FiltersStore['filterValues']>; }) {
+export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<ApplicationState['filterValues']>; }) {
   const store = useContext(Store);
 
   // Initial filter range & store filter range
-  const [initialFilterMin, initialFilterMax] = store.filtersStore.initialFilterValues[varName];
-  const [currentFilterMin, currentFilterMax] = store.filtersStore.filterValues[varName];
+  const [initialFilterMin, initialFilterMax] = store.initialFilterValues[varName];
+  const [currentFilterMin, currentFilterMax] = store.filterValues[varName];
 
   // Clamp slider max value to prevent outliers
   const clampedMax = useMemo(
@@ -41,7 +42,7 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Filter
   );
 
   function setStoreFilterValue(v: RangeSliderValue) {
-    store.filtersStore.setFilterValue(varName, [v[0], v[1] === clampedMax ? initialFilterMax : v[1]]);
+    store.setFilterValue(varName, [v[0], v[1] === clampedMax ? initialFilterMax : v[1]]);
   }
 
   return useObserver(() => (

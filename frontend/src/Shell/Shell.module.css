@@ -32,6 +32,7 @@
 .tabOutlineActive {
   border-bottom: 1px solid var(--mantine-color-gray-3) !important;
 }
+
 .menuLabelNoMargin {
   padding-left: 0 !important;
   margin-left: 0 !important;
@@ -53,4 +54,27 @@
   width: 100%;
   height: auto;
   object-fit: contain;
+}
+
+/* Header icons (Back/Forward arrows) */
+.forwardBackArrowIcon {
+  border-color: transparent;
+  background-color: transparent;
+
+  /* Enabled state - black arrow, no border */
+  svg {
+    stroke: light-dark(var(--mantine-color-black), var(--mantine-color-white)) !important;
+    fill: none;
+  }
+
+  /* Disabled state - gray arrow, no border */
+  &:disabled,
+  &[data-disabled] {
+    border-color: transparent;
+    background-color: transparent;
+
+    svg {
+      stroke: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-4)) !important;
+    }
+  }
 }

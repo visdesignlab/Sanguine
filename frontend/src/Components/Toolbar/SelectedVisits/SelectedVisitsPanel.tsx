@@ -54,7 +54,7 @@ export function SelectedVisitsPanel() {
   const store = useContext(Store);
 
   // All selected visit numbers from the store
-  const visitNos = store.selectionsStore.selectedVisitNos;
+  const visitNos = store.selectedVisitNos;
 
   // Filter visit numbers by search query
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,7 +67,12 @@ export function SelectedVisitsPanel() {
 
   // Chosen visit from list
   const [loadingVisit, setLoadingVisit] = useState(false);
-  const [selectedVisitNo, setSelectedVisitNo] = useState<number | null>(null);
+
+  // Selected Visit Number
+  const setSelectedVisitNo = useCallback((visitNo: number | null) => {
+    store.actions.setUiState({ selectedVisitNo: visitNo });
+  }, [store.actions]);
+
   const [selectedVisit, setSelectedVisit] = useState<{
     visit_no: number;
     [key: string]: unknown;
@@ -75,20 +80,20 @@ export function SelectedVisitsPanel() {
 
   // When selected visits no longer include the current selection, clear it
   useEffect(() => {
-    if (selectedVisitNo != null && !store.selectionsStore.selectedVisitNos.includes(selectedVisitNo)) {
+    if (store.state.ui.selectedVisitNo != null && !store.selectedVisitNos.includes(store.state.ui.selectedVisitNo)) {
       setSelectedVisitNo(null);
       setSelectedVisit(null);
     }
-  }, [store.selectionsStore.selectedVisitNos, selectedVisitNo]);
+  }, [store.selectedVisitNos, store.state.ui.selectedVisitNo, setSelectedVisitNo]);
 
   // Fetch details whenever a visit number is chosen
   useEffect(() => {
-    if (selectedVisitNo != null) {
-      store.selectionsStore.getVisitInfo(selectedVisitNo).then(setSelectedVisit);
+    if (store.state.ui.selectedVisitNo != null) {
+      store.getVisitInfo(store.state.ui.selectedVisitNo).then(setSelectedVisit);
     } else {
       setSelectedVisit(null);
     }
-  }, [selectedVisitNo, store.selectionsStore]);
+  }, [store.state.ui.selectedVisitNo, store]);
 
   // Filter visit details based on search query
   const [attributeSearchQuery, setAttributeSearchQuery] = useState('');
@@ -103,26 +108,26 @@ export function SelectedVisitsPanel() {
       const humanReadableKey = makeHumanReadableColumn(key).toLowerCase();
       // Search in the human-readable value
       const humanReadableValue = makeHumanReadableValues(
-        key as keyof typeof makeHumanReadableColumn,
+        key,
         value,
       ).toString().toLowerCase();
 
       return humanReadableKey.includes(searchTerm)
-             || humanReadableValue.includes(searchTerm)
-             || key.toLowerCase().includes(searchTerm);
+        || humanReadableValue.includes(searchTerm)
+        || key.toLowerCase().includes(searchTerm);
     });
   }, [selectedVisit, attributeSearchQuery]);
 
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const handleClickVisitNo = useCallback((visitNo: number) => {
     // Deselect if already selected
-    if (selectedVisitNo === visitNo) {
+    if (store.state.ui.selectedVisitNo === visitNo) {
       setSelectedVisitNo(null);
       return;
     }
 
     // Render loading overlay when changing selection
-    if (selectedVisitNo !== null) {
+    if (store.state.ui.selectedVisitNo !== null) {
       setLoadingVisit(true);
     }
     setSelectedVisitNo(visitNo);
@@ -134,7 +139,7 @@ export function SelectedVisitsPanel() {
 
     // Simulate loading delay for better UX
     loadingTimeoutRef.current = setTimeout(() => setLoadingVisit(false), 200);
-  }, [selectedVisitNo]);
+  }, [store.state.ui.selectedVisitNo, setSelectedVisitNo]);
 
   return useObserver(() => (
     <Box>
@@ -142,12 +147,12 @@ export function SelectedVisitsPanel() {
       <Flex direction="row" justify="space-between" align="center" h={40}>
         <Title order={3}>Selected Visits</Title>
         <Flex direction="row" align="center">
-          <Tooltip label={`${store.selectionsStore.selectedVisitNos.length} visits selected`} position="bottom">
+          <Tooltip label={`${store.selectedVisitNos.length} visits selected`} position="bottom">
             <Badge
               variant="light"
               size="sm"
             >
-              {formatVisitCount(store.selectionsStore.selectedVisitNos.length)}
+              {formatVisitCount(store.selectedVisitNos.length)}
               {' '}
               Visits
             </Badge>
@@ -155,7 +160,7 @@ export function SelectedVisitsPanel() {
           <Tooltip label="Clear all selected visits" position="bottom">
             <ActionIcon
               aria-label="Reset all filters"
-              onClick={() => { store.selectionsStore.clearAllSelectedVisits(); }}
+              onClick={() => { store.resetSelections(); }}
               className={classes.leftToolbarIcon}
               ml={4}
             >
@@ -180,14 +185,14 @@ export function SelectedVisitsPanel() {
             <NavLink
               label={filteredVisitNos[index]}
               key={filteredVisitNos[index]}
-              active={selectedVisitNo === filteredVisitNos[index]}
+              active={store.state.ui.selectedVisitNo === filteredVisitNos[index]}
               onClick={() => handleClickVisitNo(filteredVisitNos[index])}
               style={style}
             />
           )}
           rowProps={{
             visitNos: filteredVisitNos,
-            selectedVisitNo,
+            selectedVisitNo: store.state.ui.selectedVisitNo,
             setSelectedVisitNo,
           }}
           rowCount={filteredVisitNos.length}
