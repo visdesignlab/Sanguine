@@ -839,6 +839,10 @@ export const SavedStatesMenu = observer(
                         justifyContent: 'center',
                         overflow: 'hidden',
                         maxHeight: '300px',
+                        minHeight: '200px',
+                        width: '100%',
+                        backgroundColor: 'var(--mantine-color-gray-1)',
+                        borderRadius: 'var(--mantine-radius-md)',
                       }}
                     >
                       {activePreviewState.screenshot ? (

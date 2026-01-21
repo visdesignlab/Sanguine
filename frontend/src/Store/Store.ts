@@ -531,6 +531,9 @@ export class RootStore {
           },
         }),
       }, 'Initial State');
+
+      // Auto-save as Initial State so it appears in the menu
+      this.saveState('Initial State');
     }
   }
 
