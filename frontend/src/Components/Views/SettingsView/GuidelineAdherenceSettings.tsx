@@ -9,7 +9,7 @@ import { getIconForVar } from '../../../Utils/icons';
 export function GuidelineAdherenceSettings() {
   const [loading, _] = useState(false);
 
-  const ControlIcon = getIconForVar('rbc_adherent');
+  const ControlIcon = getIconForVar('rbc_units_adherent');
   return (
     <Accordion.Item value="guidelineAdherenceSettings">
       <Accordion.Control icon={<ControlIcon size={16} />} disabled>Guideline Adherence Settings</Accordion.Control>

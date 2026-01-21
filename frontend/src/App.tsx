@@ -110,10 +110,11 @@ function App() {
             SUM(cryo_units_cost) as cryo_units_cost,
             SUM(cell_saver_cost) as cell_saver_cost,
             
-            SUM(rbc_adherent) as rbc_adherent,
-            SUM(ffp_adherent) as ffp_adherent,
-            SUM(plt_adherent) as plt_adherent,
-            SUM(cryo_adherent) as cryo_adherent,
+            SUM(rbc_units_adherent) as rbc_units_adherent,
+            SUM(ffp_units_adherent) as ffp_units_adherent,
+            SUM(plt_units_adherent) as plt_units_adherent,
+            SUM(cryo_units_adherent) as cryo_units_adherent,
+            SUM(overall_units_adherent) as overall_units_adherent,
             
             -- Max visit-level attributes
             MAX(los) as los,

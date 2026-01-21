@@ -93,10 +93,10 @@ export class DashboardStore {
       statId: '4', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', title: 'Total Blood Product Costs',
     },
     {
-      statId: '5', yAxisVar: 'rbc_adherent', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
+      statId: '5', yAxisVar: 'rbc_units_adherent', aggregation: 'avg', title: 'Total Guideline Adherent RBC Units Transfused',
     },
     {
-      statId: '6', yAxisVar: 'plt_adherent', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
+      statId: '6', yAxisVar: 'plt_units_adherent', aggregation: 'avg', title: 'Total Guideline Adherent Platelet Units Transfused',
     },
   ];
 
@@ -245,6 +245,18 @@ export class DashboardStore {
 
         if (yAxisVar === 'case_mix_index') {
           return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`;
+        }
+
+        // Special case: Overall adherence
+        if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
+          const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
+          return `${aggFn}(CASE WHEN (${baseSum}) > 0 THEN ${yAxisVar} / (${baseSum}) ELSE NULL END) AS ${aggregation}_${yAxisVar}`;
+        }
+
+        // Show average adherence as a percentage of total units
+        if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
+          const baseUnit = yAxisVar.replace('_adherent', '');
+          return `${aggFn}(CASE WHEN ${baseUnit} > 0 THEN ${yAxisVar} / ${baseUnit} ELSE NULL END) AS ${aggregation}_${yAxisVar}`;
         }
 
         // Return aggregated attribute. (E.g. "SUM(rbc_units) AS sum_rbc_units")
@@ -426,6 +438,29 @@ export class DashboardStore {
                   THEN ms_drg_weight ELSE NULL END) / visit_count_comparison_sum AS case_mix_index_comparison_${aggregation}
               `;
         }
+
+        // Special case: Overall adherence (avg. adherent units as percentage of total units)
+        if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
+          const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
+          return `
+            ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+              THEN (CASE WHEN (${baseSum}) > 0 THEN ${yAxisVar} / (${baseSum}) ELSE NULL END) ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
+            ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+              THEN (CASE WHEN (${baseSum}) > 0 THEN ${yAxisVar} / (${baseSum}) ELSE NULL END) ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
+          `;
+        }
+
+        // Avg. adherent units as percentage of total units
+        if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
+          const baseUnit = yAxisVar.replace('_adherent', '');
+          return `
+            ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+              THEN (CASE WHEN ${baseUnit} > 0 THEN ${yAxisVar} / ${baseUnit} ELSE NULL END) ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
+            ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+              THEN (CASE WHEN ${baseUnit} > 0 THEN ${yAxisVar} / ${baseUnit} ELSE NULL END) ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
+          `;
+        }
+
         // Otherwise, return the cases in the current periods and cases in comparison periods
         return `
               ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
@@ -477,6 +512,25 @@ export class DashboardStore {
         );
         return;
       }
+
+      // Special case: Overall Adherence (Avg. adherent units as percentage of total units)
+      if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
+        const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
+        sparklineSelects.push(
+          `${aggFn}(CASE WHEN (${baseSum}) > 0 THEN ${yAxisVar} / (${baseSum}) ELSE NULL END) AS ${aggregation}_${yAxisVar}`,
+        );
+        return;
+      }
+
+      // Avg. adherent units as percentage of total units
+      if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
+        const baseUnit = yAxisVar.replace('_adherent', '');
+        sparklineSelects.push(
+          `${aggFn}(CASE WHEN ${baseUnit} > 0 THEN ${yAxisVar} / ${baseUnit} ELSE NULL END) AS ${aggregation}_${yAxisVar}`,
+        );
+        return;
+      }
+
       sparklineSelects.push(
         `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
       );
