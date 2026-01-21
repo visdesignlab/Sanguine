@@ -214,7 +214,7 @@ export const Shell = observer(() => {
                     aria-label={label}
                     onClick={onClick}
                     disabled={disabled}
-                    className={label === 'Back' || label === 'Forward' ? classes.headerIcon : undefined}
+                    className={label === 'Back' || label === 'Forward' ? classes.forwardBackArrowIcon : undefined}
                   >
                     <Icon stroke={iconStroke} />
                   </ActionIcon>
