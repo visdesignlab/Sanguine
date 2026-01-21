@@ -528,7 +528,7 @@ export const SavedStatesMenu = observer(
       setTempName('');
     };
 
-    // Share Handler -------
+    // Share State Handler -------
     const handleShareState = async (id: string) => {
       const url = store.getShareUrl(id);
       if (url) {
