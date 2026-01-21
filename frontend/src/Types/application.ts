@@ -457,7 +457,7 @@ export type DashboardStatConfig = {
   title: string;
 };
 
-export type DashboardStatData = Record<DashboardAggYAxisVar, {value: string, diff: number, comparedTo?: string, sparklineData: number[]} >;
+export type DashboardStatData = Record<DashboardAggYAxisVar, { value: string, diff: number, comparedTo?: string, sparklineData: number[] }>;
 
 // Chart colors (for up to 5 lines/bars)
 export const chartColors = [
@@ -506,3 +506,10 @@ export type CostBarData = CostBarDatum[];
 
 // TODO: Update ExploreChartData type
 export type ExploreChartData = Record<string, ScatterPlotData | CostBarData>;
+
+// Filter Counts ---------------------------------------------------
+export type FilterCountKey =
+  | 'dateFiltersAppliedCount'
+  | 'bloodComponentFiltersAppliedCount'
+  | 'medicationsFiltersAppliedCount'
+  | 'outcomeFiltersAppliedCount';

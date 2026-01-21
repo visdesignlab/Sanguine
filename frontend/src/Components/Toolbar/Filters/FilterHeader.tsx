@@ -4,12 +4,13 @@ import {
 import { useContext } from 'react';
 import { IconRestore } from '@tabler/icons-react';
 import { useObserver } from 'mobx-react';
-import { RootStore, Store } from '../../../Store/Store';
+import { Store } from '../../../Store/Store';
+import { FilterCountKey } from '../../../Types/application';
 
 export function FilterHeader({
   countName, title, tooltipLabel, resetFunc,
 }: {
-  countName: keyof RootStore, title: string, tooltipLabel: string, resetFunc: () => void
+  countName: FilterCountKey, title: string, tooltipLabel: string, resetFunc: () => void
 }) {
   const store = useContext(Store);
 
