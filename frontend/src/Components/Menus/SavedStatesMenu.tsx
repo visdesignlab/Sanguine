@@ -23,7 +23,6 @@ import {
   IconFolderSearch,
   IconEdit,
   IconTrash,
-  IconSquareCheck,
   IconCheck,
   IconX,
   IconChartBar,
@@ -366,7 +365,6 @@ export const SavedStatesMenu = observer(
 
     // Manage Saved States Modal -------
     const [manageModalOpened, setManageModalOpened] = useState(false);
-    const [isMultiSelecting, setIsMultiSelecting] = useState(false);
     const [selectedStateIds, setSelectedStateIds] = useState<Set<string>>(new Set());
 
     // Sort states by timestamp descending (newest first)
@@ -491,7 +489,6 @@ export const SavedStatesMenu = observer(
       if (deleteConfirmation.type === 'multi') {
         selectedStateIds.forEach((id) => store.removeState(id));
         clearSelections();
-        setIsMultiSelecting(false);
         // Reset preview if deleted
         if (previewStateId && selectedStateIds.has(previewStateId)) {
           setPreviewStateId(null);
@@ -595,7 +592,6 @@ export const SavedStatesMenu = observer(
           onClose={() => {
             setManageModalOpened(false);
             clearSelections();
-            setIsMultiSelecting(false);
           }}
           withCloseButton={false}
           size="xl"
@@ -607,7 +603,7 @@ export const SavedStatesMenu = observer(
                 <Group justify="space-between">
                   {/** Title and Select All */}
                   <Group gap="xs">
-                    {isMultiSelecting && sortedStates.length > 0 && (
+                    {sortedStates.length > 0 && (
                       <Checkbox
                         checked={
                           selectedStateIds.size === sortedStates.length
@@ -627,7 +623,7 @@ export const SavedStatesMenu = observer(
                   </Group>
                   <Group gap="xs">
                     {/* Delete Multiple Button */}
-                    {isMultiSelecting && selectedStateIds.size > 0 && (
+                    {selectedStateIds.size > 0 && (
                       <Button
                         color="red"
                         size="xs"
@@ -636,22 +632,6 @@ export const SavedStatesMenu = observer(
                       >
                         {selectedStateIds.size}
                       </Button>
-                    )}
-                    {/* Multi-select toggle */}
-                    {sortedStates.length > 0 && (
-                      <ActionIcon
-                        variant={isMultiSelecting ? 'filled' : 'subtle'}
-                        color={isMultiSelecting ? 'blue' : 'gray'}
-                        onClick={() => {
-                          setIsMultiSelecting(!isMultiSelecting);
-                          if (isMultiSelecting) clearSelections();
-                        }}
-                        title="Toggle Multi-select"
-                        size={22}
-                        mr={4}
-                      >
-                        <IconSquareCheck size={18} />
-                      </ActionIcon>
                     )}
                   </Group>
                 </Group>
@@ -667,7 +647,6 @@ export const SavedStatesMenu = observer(
                   onClick={() => {
                     setManageModalOpened(false);
                     clearSelections();
-                    setIsMultiSelecting(false);
                   }}
                 />
               </Box>
@@ -707,9 +686,6 @@ export const SavedStatesMenu = observer(
                           onMouseEnter={() => setHoveredStateId(state.id)}
                           onMouseLeave={() => setHoveredStateId(null)}
                           onClick={() => {
-                            if (isMultiSelecting) {
-                              toggleSelectionFor(state.id);
-                            }
                             setPreviewStateId(state.id);
                           }}
                         >
@@ -718,15 +694,13 @@ export const SavedStatesMenu = observer(
                             style={{ flex: 1, minWidth: 0 }}
                             wrap="nowrap"
                           >
-                            {/** State gets checkbox if in multi-select mode */}
-                            {isMultiSelecting && (
-                              <Checkbox
-                                checked={selectedStateIds.has(state.id)}
-                                onChange={() => toggleSelectionFor(state.id)}
-                                onClick={(e) => e.stopPropagation()}
-                                style={{ flexShrink: 0 }}
-                              />
-                            )}
+                            {/** State gets checkbox */}
+                            <Checkbox
+                              checked={selectedStateIds.has(state.id)}
+                              onChange={() => toggleSelectionFor(state.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ flexShrink: 0 }}
+                            />
                             {/** State gets text input if in edit mode */}
                             {editingStateId === state.id ? (
                               <TextInput
