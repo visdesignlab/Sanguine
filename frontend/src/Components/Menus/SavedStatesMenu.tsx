@@ -455,6 +455,7 @@ export const SavedStatesMenu = observer(
     const [previewStateId, setPreviewStateId] = useState<string | null>(null);
     const [hoveredStateId, setHoveredStateId] = useState<string | null>(null);
     const [zoomedStateId, setZoomedStateId] = useState<string | null>(null);
+    const [isPreviewHovered, setIsPreviewHovered] = useState(false);
 
     // Save State Modal
     const [saveModalOpened, setSaveModalOpened] = useState(false);
@@ -968,10 +969,17 @@ export const SavedStatesMenu = observer(
                           radius="md"
                           className={classes.clickableScreenshot}
                           onClick={() => setZoomedStateId(activePreviewState.id)}
+                          onMouseEnter={() => setIsPreviewHovered(true)}
+                          onMouseLeave={() => setIsPreviewHovered(false)}
                           style={{
                             maxHeight: '100%',
                             maxWidth: '100%',
                             objectFit: 'contain',
+                            border: isPreviewHovered
+                              ? '2px solid var(--mantine-color-blue-5)'
+                              : '2px solid transparent',
+                            cursor: 'pointer',
+                            transition: 'border 0.2s ease',
                           }}
                         />
                       ) : (
