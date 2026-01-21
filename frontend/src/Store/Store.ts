@@ -648,7 +648,9 @@ export class RootStore {
       // Return default/empty state if not initialized
       return {
         filterValues: {},
-        selections: {},
+        selections: {
+          selectedTimePeriods: [],
+        },
         dashboard: {},
         explore: {},
         settings: {},
@@ -727,7 +729,7 @@ export class RootStore {
   }
 
   get selectedTimePeriods() {
-    return this.state.selections.selectedTimePeriods;
+    return this.state.selections?.selectedTimePeriods || [];
   }
   // endregion
 
