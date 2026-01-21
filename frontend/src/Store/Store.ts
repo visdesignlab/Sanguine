@@ -1509,21 +1509,32 @@ export class RootStore {
     const dateFrom = filterValues.dateFrom.toISOString();
     const dateTo = filterValues.dateTo.toISOString();
 
-    // Generate the filter conditions
-    const filtersToApply = Object.entries(filterValues)
+    // Generate the filter conditions --------
+    const filterConditions = Object.entries(filterValues)
+      // Filter out date filters (handled separately)
       .filter(([key, value]) => {
+        if (key === 'dateFrom' || key === 'dateTo') return false;
         const initVal = this._initialFilterValues[key as keyof typeof this._initialFilterValues];
         return JSON.stringify(value) !== JSON.stringify(initVal);
       })
+      // Map the filter values to SQL conditions
       .map(([key, value]) => {
         if (Array.isArray(value)) return `${key} BETWEEN ${value[0]} AND ${value[1]}`;
         if (typeof value === 'boolean') return `${key} = ${value ? 1 : 0}`;
-        if (value instanceof Date) return `adm_dtm BETWEEN '${dateFrom}' AND '${dateTo}'`;
         return null;
       })
-      .join(' AND ');
+      // Filter out null values
+      .filter((c): c is string => !!c);
 
-    // Query to filter the filteredVisitIds table based on the filter conditions
+    // Add date filters if applied
+    if (this.dateFiltersAppliedCount > 0) {
+      filterConditions.push(`adm_dtm BETWEEN '${dateFrom}' AND '${dateTo}'`);
+    }
+
+    // Join the filter conditions with AND
+    const filtersToApply = filterConditions.join(' AND ');
+
+    // Query to filter the filteredVisitIds table based on the filter conditions --------
     await this.duckDB.query(`
       TRUNCATE TABLE filteredVisitIds;
       INSERT INTO filteredVisitIds
