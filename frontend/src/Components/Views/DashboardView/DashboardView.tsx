@@ -214,10 +214,10 @@ export function DashboardView() {
           containerPadding={[0, 0]}
           draggableHandle=".move-icon"
           onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.updateDashboardLayout({ 'main': _layout });
+            store.updateDashboardLayout({ main: _layout });
           }}
           onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.updateDashboardLayout({ 'main': _layout });
+            store.updateDashboardLayout({ main: _layout });
           }}
           layouts={store.dashboardChartLayouts}
         >
