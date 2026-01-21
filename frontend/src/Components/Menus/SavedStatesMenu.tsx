@@ -44,7 +44,6 @@ import { formatTimestamp } from '../../Utils/dates';
 import classes from '../../Shell/Shell.module.css';
 import { Store, ApplicationState } from '../../Store/Store';
 import {
-
   AGGREGATION_OPTIONS,
   DashboardChartConfig,
   ExploreChartConfig,
