@@ -137,9 +137,7 @@ function App() {
         // Initialize provenance with the correct initial filter values
         store.init();
 
-        await store.generateHistogramData();
-        await store.computeDashboardChartData();
-        await store.computeDashboardStatData();
+        await store.updateFilteredData();
       } catch (e) {
         console.error('Error fetching visits data:', e);
         setDataLoadingFailed(true);
