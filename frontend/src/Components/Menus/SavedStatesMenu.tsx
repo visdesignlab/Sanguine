@@ -359,22 +359,44 @@ export const SavedStatesMenu = observer(
   }) => {
     const store = useContext(Store);
     const { iconStroke } = useThemeConstants();
+    const { savedStates } = store;
 
+    // Menu Opened -------
+    const [menuOpened, setMenuOpened] = useState(false);
+
+    // Save a State Modal -------
+    const [saveModalOpened, setSaveModalOpened] = useState(false);
+    const [stateName, setStateName] = useState('');
+
+    // Manage Saved States Modal -------
     const [manageModalOpened, setManageModalOpened] = useState(false);
     const [isMultiSelecting, setIsMultiSelecting] = useState(false);
-    const [selectedStateIds, setSelectedStateIds] = useState<Set<string>>(
-      new Set(),
-    );
+    const [selectedStateIds, setSelectedStateIds] = useState<Set<string>>(new Set());
+    // Sort states by timestamp descending (newest first)
+    const sortedStates = useMemo(() => [...savedStates].sort(
+      (a, b) => b.timestamp - a.timestamp,
+    ), [savedStates]);
+
+    // Saved States Preview and Visualize States
     const [previewStateId, setPreviewStateId] = useState<string | null>(null);
     const [hoveredStateId, setHoveredStateId] = useState<string | null>(null);
     const [zoomedStateId, setZoomedStateId] = useState<string | null>(null);
     const [isPreviewHovered, setIsPreviewHovered] = useState(false);
 
-    // Save State Modal
-    const [saveModalOpened, setSaveModalOpened] = useState(false);
-    const [stateName, setStateName] = useState('');
+    // Saved States Operations (Restore/Reset/Edit/Delete)
+    const [restoreModalOpened, setRestoreModalOpened] = useState(false);
+    const [stateToRestore, setStateToRestore] = useState<string | null>(null);
+    const [resetModalOpened, setResetModalOpened] = useState(false);
+    const [editingStateId, setEditingStateId] = useState<string | null>(null);
+    const [tempName, setTempName] = useState('');
+    const [deleteConfirmation, setDeleteConfirmation] = useState<{
+      isOpen: boolean;
+      type: 'single' | 'multi';
+      id?: string;
+      name?: string;
+    }>({ isOpen: false, type: 'single' });
 
-    // Save State
+    // Save State Handlers -------
     const handleSaveState = async () => {
       if (stateName.trim()) {
         setSaveModalOpened(false);
@@ -389,14 +411,7 @@ export const SavedStatesMenu = observer(
       }
     };
 
-    // Restore Saved State Modal
-    const [restoreModalOpened, setRestoreModalOpened] = useState(false);
-    const [stateToRestore, setStateToRestore] = useState<string | null>(null);
-
-    // Reset State to Default Modal
-    const [resetModalOpened, setResetModalOpened] = useState(false);
-
-    // Restore a Saved State
+    // Restore State & Reset To Default Handlers -------
     const handleRestoreState = () => {
       if (stateToRestore) {
         store.restoreState(stateToRestore);
@@ -406,40 +421,12 @@ export const SavedStatesMenu = observer(
       }
     };
 
-    // Confirm Restore
     const confirmRestore = (id: string) => {
       setStateToRestore(id);
       setRestoreModalOpened(true);
     };
 
-    // Editing State
-    const [editingStateId, setEditingStateId] = useState<string | null>(null);
-    const [tempName, setTempName] = useState('');
-
-    // Delete Confirmation State
-    const [deleteConfirmation, setDeleteConfirmation] = useState<{
-      isOpen: boolean;
-      type: 'single' | 'multi';
-      id?: string;
-      name?: string;
-    }>({ isOpen: false, type: 'single' });
-
-    const { savedStates } = store;
-
-    // Sort states by timestamp descending (newest first)
-    const sortedStates = [...savedStates].sort(
-      (a, b) => b.timestamp - a.timestamp,
-    );
-
-    // Auto-select most recent state when modal opens
-    const handleOpenModal = () => {
-      setManageModalOpened(true);
-      if (sortedStates.length > 0) {
-        setPreviewStateId(sortedStates[0].id);
-      }
-    };
-
-    // Select multiple states
+    // Select States Handlers -------
     const toggleSelectionFor = (id: string) => {
       setSelectedStateIds((prev) => {
         const next = new Set(prev);
@@ -451,11 +438,11 @@ export const SavedStatesMenu = observer(
         return next;
       });
     };
+
     const clearSelections = () => setSelectedStateIds(new Set());
+
     const toggleSelectAll = () => {
-      if (sortedStates.length === 0) {
-        return;
-      }
+      if (sortedStates.length === 0) return;
       if (selectedStateIds.size === sortedStates.length) {
         clearSelections();
       } else {
@@ -463,7 +450,29 @@ export const SavedStatesMenu = observer(
       }
     };
 
-    // Delete States Logic
+    // Modal & Image Preview Handlers -------
+    // Auto-select most recent state when modal opens
+    const handleOpenModal = () => {
+      setManageModalOpened(true);
+      if (sortedStates.length > 0) {
+        setPreviewStateId(sortedStates[0].id);
+      }
+    };
+
+    // Get preview image for the right side of the modal
+    const activePreviewState = (hoveredStateId
+      ? sortedStates.find((s) => s.id === hoveredStateId)
+      : null)
+      || (previewStateId
+        ? sortedStates.find((s) => s.id === previewStateId)
+        : null);
+
+    // Retrieve full state for details
+    const activeFullState = activePreviewState
+      ? store.provenance?.getState(activePreviewState.id)
+      : null;
+
+    // Delete States Handlers -------
     const requestDeleteSelected = () => {
       if (selectedStateIds.size === 0) return;
       setDeleteConfirmation({
@@ -502,8 +511,8 @@ export const SavedStatesMenu = observer(
       setDeleteConfirmation({ isOpen: false, type: 'single' });
     };
 
-    // Rename Logic
-    const startEditing = (id: string, currentName: string) => {
+    // Rename State Handlers -------
+    const startEditingStateName = (id: string, currentName: string) => {
       setEditingStateId(id);
       setTempName(currentName);
     };
@@ -521,7 +530,7 @@ export const SavedStatesMenu = observer(
       setTempName('');
     };
 
-    // Share State Logic
+    // Share Handler -------
     const handleShareState = async (id: string) => {
       const url = store.getShareUrl(id);
       if (url) {
@@ -543,21 +552,6 @@ export const SavedStatesMenu = observer(
         // alert('Could not generate share URL.');
       }
     };
-
-    // Get preview image for the right side of the modal
-    const activePreviewState = (hoveredStateId
-      ? sortedStates.find((s) => s.id === hoveredStateId)
-      : null)
-      || (previewStateId
-        ? sortedStates.find((s) => s.id === previewStateId)
-        : null);
-
-    // Retrieve full state for details
-    const activeFullState = activePreviewState
-      ? store.provenance?.getState(activePreviewState.id)
-      : null;
-
-    const [menuOpened, setMenuOpened] = useState(false);
     return (
       <>
         {/* Save State Menu */}
@@ -825,7 +819,7 @@ export const SavedStatesMenu = observer(
                                   variant="subtle"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    startEditing(state.id, state.name || '');
+                                    startEditingStateName(state.id, state.name || '');
                                   }}
                                 >
                                   <IconEdit size={14} />
