@@ -62,35 +62,27 @@ const getReadableName = (key: string): string => {
   if (key === 'dateFrom') return 'Date From';
   if (key === 'dateTo') return 'Date To';
 
-  // Check Blood Components
-  const bloodComp = BLOOD_COMPONENTS.find((c) => c.value === key);
-  if (bloodComp) return bloodComp.label.base;
-
-  // Check Outcomes
-  const outcome = OUTCOMES.find((c) => c.value === key);
-  if (outcome) return outcome.label.base;
-
-  // Check Prophyl Meds
-  const prophyl = PROPHYL_MEDS.find((c) => c.value === key);
-  if (prophyl) return prophyl.label.base;
-
-  // Check Guideline Adherence
-  const adherence = Object.values(GUIDELINE_ADHERENT).find(
-    (c) => c.value === key,
-  );
-  if (adherence) return adherence.label.base;
-
-  // Check Lab Results
-  const lab = LAB_RESULTS.find((c) => c.value === key);
-  if (lab) return lab.label.base;
-
-  // Check Costs
-  const cost = Object.values(COSTS).find((c) => c.value === key);
-  if (cost) return cost.label.base;
-
   // Check Time Aggregations
   const timeAgg = TIME_AGGREGATION_OPTIONS[key as keyof typeof TIME_AGGREGATION_OPTIONS];
   if (timeAgg) return timeAgg.label;
+
+  // Search in all attributes that have a 'value' and 'label.base' or 'label'
+  const attributes = [
+    BLOOD_COMPONENTS,
+    OUTCOMES,
+    PROPHYL_MEDS,
+    Object.values(GUIDELINE_ADHERENT),
+    LAB_RESULTS,
+    Object.values(COSTS),
+  ];
+
+  let result: string | undefined;
+  attributes.forEach((attribute) => {
+    const found = (attribute as any[]).find((c) => c.value === key);
+    if (found && !result) {
+      result = found.label.base || found.label;
+    }
+  });
 
   // Fallback to formatting the key
   return key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
@@ -124,13 +116,98 @@ const formatValue = (
   return String(value);
 };
 
+// Helper types
+interface SavedState {
+  id: string;
+  name?: string;
+  screenshot?: string;
+  timestamp: number;
+}
+
 const formatTimestamp = (timestamp: number): string => new Date(timestamp).toLocaleString('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: 'numeric',
+  year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric',
 });
+
+// Helper component for Zoomed State Modal
+function ZoomedStateModal({
+  opened, onClose, state, onPrev, onNext, hasPrev, hasNext,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  state: SavedState | undefined;
+  onPrev: () => void;
+  onNext: () => void;
+  hasPrev: boolean;
+  hasNext: boolean;
+}) {
+  if (!state) return null;
+  return (
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      size="90%"
+      centered
+      zIndex={2000}
+      withCloseButton
+      styles={{
+        body: {
+          display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 0, backgroundColor: 'transparent', position: 'relative',
+        },
+        content: { backgroundColor: 'transparent', boxShadow: 'none' },
+        header: {
+          backgroundColor: 'transparent', color: 'white', position: 'absolute', top: 0, right: 0, zIndex: 2001,
+        },
+      }}
+    >
+      <Stack
+        align="center"
+        justify="center"
+        gap="xl"
+        style={{ width: '100%', height: '100%', padding: '40px 0' }}
+      >
+        <Image
+          src={state.screenshot}
+          fit="contain"
+          style={{
+            maxHeight: '75vh', maxWidth: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', borderRadius: 8,
+          }}
+        />
+        <Group gap="xl" align="center">
+          <ActionIcon
+            variant="filled"
+            color="dark"
+            size="xl"
+            radius="xl"
+            disabled={!hasPrev}
+            style={{ opacity: hasPrev ? 1 : 0, cursor: hasPrev ? 'pointer' : 'default' }}
+            onClick={(e) => { e.stopPropagation(); onPrev(); }}
+          >
+            <IconChevronLeft size={24} />
+          </ActionIcon>
+          <Stack gap={0} align="center">
+            <Title order={3} c="white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+              {state.name}
+            </Title>
+            <Text c="dimmed" size="sm" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+              {formatTimestamp(state.timestamp)}
+            </Text>
+          </Stack>
+          <ActionIcon
+            variant="filled"
+            color="dark"
+            size="xl"
+            radius="xl"
+            disabled={!hasNext}
+            style={{ opacity: hasNext ? 1 : 0, cursor: hasNext ? 'pointer' : 'default' }}
+            onClick={(e) => { e.stopPropagation(); onNext(); }}
+          >
+            <IconChevronRight size={24} />
+          </ActionIcon>
+        </Group>
+      </Stack>
+    </Modal>
+  );
+}
 
 function StateDetails({ state }: { state: ApplicationState }) {
   const store = useContext(Store);
@@ -243,13 +320,26 @@ function StateDetails({ state }: { state: ApplicationState }) {
     [selections],
   );
 
-  if (
-    dashboardCharts.length === 0
-    && exploreCharts.length === 0
-    && activeFilters.length === 0
-    && selectedItems.length === 0
-    && activeSettings.length === 0
-  ) {
+  // Combine all sections into a config to allow iteration
+  const sections = [
+    {
+      id: 'dashboard', content: dashboardCharts, icon: IconChartBar, color: 'blue', label: 'Dashboard',
+    },
+    {
+      id: 'explore', content: exploreCharts, icon: IconChartScatter, color: 'grape', label: 'Explore View',
+    },
+    {
+      id: 'filters', content: activeFilters, icon: IconFilter, color: 'orange', label: 'Filters', type: 'kv',
+    },
+    {
+      id: 'selections', content: selectedItems, icon: IconClick, color: 'green', label: 'Selections',
+    },
+    {
+      id: 'settings', content: activeSettings, icon: IconSettings, color: 'gray', label: 'Settings', type: 'kv',
+    },
+  ].filter((s) => s.content.length > 0);
+
+  if (sections.length === 0) {
     return (
       <Text size="sm" c="dimmed" fs="italic">
         No specific state details (default view).
@@ -260,172 +350,45 @@ function StateDetails({ state }: { state: ApplicationState }) {
   return (
     <Stack gap="xs" w="100%">
       <Accordion variant="contained" radius="md" defaultValue={[]} multiple>
-        {dashboardCharts.length > 0 && (
-          <Accordion.Item value="dashboard">
-            <Accordion.Control
-              icon={
-                <IconChartBar size={16} color="var(--mantine-color-blue-6)" />
-              }
-            >
+        {sections.map((section) => (
+          <Accordion.Item value={section.id} key={section.id}>
+            <Accordion.Control icon={<section.icon size={16} color={`var(--mantine-color-${section.color}-6)`} />}>
               <Text size="sm" fw={500}>
-                Dashboard (
-                {dashboardCharts.length}
+                {section.label}
+                {' '}
+                (
+                {section.content.length}
                 )
               </Text>
             </Accordion.Control>
             <Accordion.Panel>
               <ScrollArea.Autosize mah={150}>
                 <Stack gap={4}>
-                  {dashboardCharts.map((chart, i) => (
-                    <Text key={i} size="xs" c="dimmed">
-                      •
-                      {chart}
-                    </Text>
-                  ))}
-                </Stack>
-              </ScrollArea.Autosize>
-            </Accordion.Panel>
-          </Accordion.Item>
-        )}
-        {exploreCharts.length > 0 && (
-          <Accordion.Item value="explore">
-            <Accordion.Control
-              icon={(
-                <IconChartScatter
-                  size={16}
-                  color="var(--mantine-color-grape-6)"
-                />
-              )}
-            >
-              <Text size="sm" fw={500}>
-                Explore View (
-                {exploreCharts.length}
-                )
-              </Text>
-            </Accordion.Control>
-            <Accordion.Panel>
-              <ScrollArea.Autosize mah={150}>
-                <Stack gap={4}>
-                  {exploreCharts.map((chart, i) => (
-                    <Text key={i} size="xs" c="dimmed">
-                      •
-                      {chart}
-                    </Text>
-                  ))}
-                </Stack>
-              </ScrollArea.Autosize>
-            </Accordion.Panel>
-          </Accordion.Item>
-        )}
-        {activeFilters.length > 0 && (
-          <Accordion.Item value="filters">
-            <Accordion.Control
-              icon={
-                <IconFilter size={16} color="var(--mantine-color-orange-6)" />
-              }
-            >
-              <Text size="sm" fw={500}>
-                Filters (
-                {activeFilters.length}
-                )
-              </Text>
-            </Accordion.Control>
-            <Accordion.Panel>
-              <ScrollArea.Autosize mah={150}>
-                <Stack gap={4}>
-                  {activeFilters.map((filter, i) => (
-                    <Group
-                      key={i}
-                      justify="space-between"
-                      wrap="nowrap"
-                      align="flex-start"
-                    >
-                      <Text size="xs" c="dimmed" style={{ flex: 1 }}>
-                        {filter.label}
-                        :
+                  {section.type === 'kv' ? (
+                    (section.content as { label: string, value: string }[]).map((item, i) => (
+                      <Group key={i} justify="space-between" wrap="nowrap" align="flex-start">
+                        <Text size="xs" c="dimmed" style={{ flex: 1 }}>
+                          {item.label}
+                          :
+                        </Text>
+                        <Text size="xs" fw={500} style={{ flex: 1, textAlign: 'right' }}>
+                          {item.value}
+                        </Text>
+                      </Group>
+                    ))
+                  ) : (
+                    (section.content as string[]).map((item, i) => (
+                      <Text key={i} size="xs" c="dimmed">
+                        •
+                        {item}
                       </Text>
-                      <Text
-                        size="xs"
-                        fw={500}
-                        style={{ flex: 1, textAlign: 'right' }}
-                      >
-                        {filter.value}
-                      </Text>
-                    </Group>
-                  ))}
+                    ))
+                  )}
                 </Stack>
               </ScrollArea.Autosize>
             </Accordion.Panel>
           </Accordion.Item>
-        )}
-        {selectedItems.length > 0 && (
-          <Accordion.Item value="selections">
-            <Accordion.Control
-              icon={
-                <IconClick size={16} color="var(--mantine-color-green-6)" />
-              }
-            >
-              <Text size="sm" fw={500}>
-                Selections (
-                {selectedItems.length}
-                )
-              </Text>
-            </Accordion.Control>
-            <Accordion.Panel>
-              <ScrollArea.Autosize mah={150}>
-                <Stack gap={4}>
-                  {selectedItems.map((item, i) => (
-                    <Text key={i} size="xs" c="dimmed">
-                      •
-                      {item}
-                    </Text>
-                  ))}
-                </Stack>
-              </ScrollArea.Autosize>
-            </Accordion.Panel>
-          </Accordion.Item>
-        )}
-        {activeSettings.length > 0 && (
-          <Accordion.Item value="settings">
-            <Accordion.Control
-              icon={
-                <IconSettings size={16} color="var(--mantine-color-gray-6)" />
-              }
-            >
-              <Text size="sm" fw={500}>
-                Settings (
-                {activeSettings.length}
-                )
-              </Text>
-            </Accordion.Control>
-            <Accordion.Panel>
-              <ScrollArea.Autosize mah={150}>
-                <Stack gap={4}>
-                  {activeSettings.map((setting, i) => (
-                    <Group
-                      key={i}
-                      justify="space-between"
-                      wrap="nowrap"
-                      align="flex-start"
-                    >
-                      <Text size="xs" c="dimmed" style={{ flex: 1 }}>
-                        {setting.label}
-                        :
-                      </Text>
-                      <Text
-                        size="xs"
-                        fw={500}
-                        style={{ flex: 1, textAlign: 'right' }}
-                      >
-                        {setting.value}
-                      </Text>
-                    </Group>
-                  ))}
-                </Stack>
-              </ScrollArea.Autosize>
-            </Accordion.Panel>
-          </Accordion.Item>
-        )}
+        ))}
       </Accordion>
     </Stack>
   );
@@ -1090,135 +1053,22 @@ export const SavedStatesMenu = observer(
             </Group>
           </Stack>
         </Modal>
-        {/** Zoomed Screenshot Modal (Click for closer look at state screenshot) */}
-        <Modal
+        {/* Zoomed Screenshot Modal */}
+        <ZoomedStateModal
           opened={!!zoomedStateId}
           onClose={() => setZoomedStateId(null)}
-          size="90%"
-          centered
-          zIndex={2000}
-          withCloseButton
-          styles={{
-            body: {
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: 0,
-              backgroundColor: 'transparent',
-              position: 'relative',
-            },
-            content: {
-              backgroundColor: 'transparent',
-              boxShadow: 'none',
-            },
-            header: {
-              backgroundColor: 'transparent',
-              color: 'white',
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              zIndex: 2001,
-            },
+          state={sortedStates.find((s) => s.id === zoomedStateId)}
+          onPrev={() => {
+            const idx = sortedStates.findIndex((s) => s.id === zoomedStateId);
+            if (idx > 0) setZoomedStateId(sortedStates[idx - 1].id);
           }}
-        >
-          {zoomedStateId
-            && (() => {
-              const zoomedState = sortedStates.find(
-                (s) => s.id === zoomedStateId,
-              );
-              const currentIndex = sortedStates.findIndex(
-                (s) => s.id === zoomedStateId,
-              );
-              const hasPrev = currentIndex > 0;
-              const hasNext = currentIndex < sortedStates.length - 1;
-
-              // Click to see previous and next state screenshots
-              const handlePrev = () => {
-                if (hasPrev) setZoomedStateId(sortedStates[currentIndex - 1].id);
-              };
-              const handleNext = () => {
-                if (hasNext) setZoomedStateId(sortedStates[currentIndex + 1].id);
-              };
-              return (
-                <Stack
-                  align="center"
-                  justify="center"
-                  gap="xl"
-                  style={{ width: '100%', height: '100%', padding: '40px 0' }}
-                >
-                  {zoomedState && (
-                    <>
-                      <Image
-                        src={zoomedState.screenshot}
-                        fit="contain"
-                        style={{
-                          maxHeight: '75vh',
-                          maxWidth: '100%',
-                          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                          borderRadius: 8,
-                        }}
-                      />
-                      <Group gap="xl" align="center">
-                        {/** Previous State */}
-                        <ActionIcon
-                          variant="filled"
-                          color="dark"
-                          size="xl"
-                          radius="xl"
-                          disabled={!hasPrev}
-                          style={{
-                            opacity: hasPrev ? 1 : 0,
-                            cursor: hasPrev ? 'pointer' : 'default',
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePrev();
-                          }}
-                        >
-                          <IconChevronLeft size={24} />
-                        </ActionIcon>
-                        {/** State name and Timestamp */}
-                        <Stack gap={0} align="center">
-                          <Title
-                            order={3}
-                            c="white"
-                            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
-                          >
-                            {zoomedState.name}
-                          </Title>
-                          <Text
-                            c="dimmed"
-                            size="sm"
-                            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
-                          >
-                            {formatTimestamp(zoomedState.timestamp)}
-                          </Text>
-                        </Stack>
-                        {/** Next State */}
-                        <ActionIcon
-                          variant="filled"
-                          color="dark"
-                          size="xl"
-                          radius="xl"
-                          disabled={!hasNext}
-                          style={{
-                            opacity: hasNext ? 1 : 0,
-                            cursor: hasNext ? 'pointer' : 'default',
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleNext();
-                          }}
-                        >
-                          <IconChevronRight size={24} />
-                        </ActionIcon>
-                      </Group>
-                    </>
-                  )}
-                </Stack>
-              );
-            })()}
-        </Modal>
+          onNext={() => {
+            const idx = sortedStates.findIndex((s) => s.id === zoomedStateId);
+            if (idx < sortedStates.length - 1) setZoomedStateId(sortedStates[idx + 1].id);
+          }}
+          hasPrev={sortedStates.findIndex((s) => s.id === zoomedStateId) > 0}
+          hasNext={sortedStates.findIndex((s) => s.id === zoomedStateId) < sortedStates.length - 1}
+        />
         {/* Delete Confirmation Modal */}
         <Modal
           opened={deleteConfirmation.isOpen}
