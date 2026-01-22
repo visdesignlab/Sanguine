@@ -19,7 +19,6 @@ import {
 } from '@mantine/core';
 import {
   IconFolder,
-  IconFolderPlus,
   IconFolderSearch,
   IconEdit,
   IconTrash,
@@ -359,10 +358,6 @@ export const SavedStatesMenu = observer(
     // Menu Opened -------
     const [menuOpened, setMenuOpened] = useState(false);
 
-    // Save a State Modal -------
-    const [saveModalOpened, setSaveModalOpened] = useState(false);
-    const [stateName, setStateName] = useState('');
-
     // Manage Saved States Modal -------
     const [manageModalOpened, setManageModalOpened] = useState(false);
     const [selectedStateIds, setSelectedStateIds] = useState<Set<string>>(new Set());
@@ -377,6 +372,7 @@ export const SavedStatesMenu = observer(
     const [hoveredStateId, setHoveredStateId] = useState<string | null>(null);
     const [zoomedStateId, setZoomedStateId] = useState<string | null>(null);
     const [isPreviewHovered, setIsPreviewHovered] = useState(false);
+    const [justSavedId, setJustSavedId] = useState<string | null>(null); // To show "Saved" text
 
     // Saved States Operations (Restore/Reset/Edit/Delete)
     const [restoreModalOpened, setRestoreModalOpened] = useState(false);
@@ -391,18 +387,25 @@ export const SavedStatesMenu = observer(
       name?: string;
     }>({ isOpen: false, type: 'single' });
 
+    // Get preview image for the right side of the modal
+    const activeStateId = hoveredStateId ?? previewStateId;
+    const activePreviewState = activeStateId
+      ? sortedStates.find((s) => s.uniqueId === activeStateId)
+      : null;
+
+    // Retrieve full state for details
+    const activeFullState = activePreviewState
+      ? store.provenance?.getState(activePreviewState.id)
+      : null;
+
     // Save State Handlers -------
-    const handleSaveState = async () => {
-      if (stateName.trim()) {
-        setSaveModalOpened(false);
-        // Wait for modal transition
-        await new Promise((resolve) => {
-          setTimeout(resolve, 300);
-        });
-        // Capture screenshot
-        const screenshot = await captureScreenshot(null, { pixelRatio: 1 });
-        store.saveState(stateName, screenshot);
-        setStateName('');
+    // Used for the Green 'Save Current State' button behavior (renaming 'Current State' -> 'State N')
+    const handleSaveCurrentState = () => {
+      if (activePreviewState && activePreviewState.name === 'Current State') {
+        const newName = store.saveCurrentStateAsNew(activePreviewState.id);
+        const newUniqueId = store.getUniqueStateId(activePreviewState.id, newName);
+        setJustSavedId(newUniqueId);
+        setPreviewStateId(newUniqueId);
       }
     };
 
@@ -441,31 +444,25 @@ export const SavedStatesMenu = observer(
       if (selectedStateIds.size === sortedStates.length) {
         clearSelections();
       } else {
-        setSelectedStateIds(new Set(sortedStates.map((s) => s.id)));
+        setSelectedStateIds(new Set(sortedStates.map((s) => s.uniqueId)));
       }
     };
 
     // Modal & Image Preview Handlers -------
-    // Auto-select most recent state when modal opens
-    const handleOpenModal = () => {
+    const handleManageStates = async () => {
+      // 1. Capture screenshot of current view
+      const screenshot = await captureScreenshot(null, { pixelRatio: 1 });
+
+      // 2. Delegate logic to Store (checks Initial State, removes old Current State, saves new)
+      store.saveTemporaryState(screenshot);
+
       setManageModalOpened(true);
-      if (sortedStates.length > 0) {
-        setPreviewStateId(sortedStates[0].id);
+      if (store.savedStates.length > 0) {
+        // Sort again just to be sure we get the latest
+        const resortedStates = [...store.savedStates].sort((a, b) => b.timestamp - a.timestamp);
+        setPreviewStateId(resortedStates[0].uniqueId);
       }
     };
-
-    // Get preview image for the right side of the modal
-    const activePreviewState = (hoveredStateId
-      ? sortedStates.find((s) => s.id === hoveredStateId)
-      : null)
-      || (previewStateId
-        ? sortedStates.find((s) => s.id === previewStateId)
-        : null);
-
-    // Retrieve full state for details
-    const activeFullState = activePreviewState
-      ? store.provenance?.getState(activePreviewState.id)
-      : null;
 
     // Delete States Handlers -------
     const requestDeleteSelected = () => {
@@ -487,7 +484,12 @@ export const SavedStatesMenu = observer(
 
     const confirmDelete = () => {
       if (deleteConfirmation.type === 'multi') {
-        selectedStateIds.forEach((id) => store.removeState(id));
+        selectedStateIds.forEach((uniqueId) => {
+          const state = store.savedStates.find((s) => s.uniqueId === uniqueId);
+          if (state) {
+            store.removeState(state.id, state.name);
+          }
+        });
         clearSelections();
         // Reset preview if deleted
         if (previewStateId && selectedStateIds.has(previewStateId)) {
@@ -496,9 +498,11 @@ export const SavedStatesMenu = observer(
       } else if (
         deleteConfirmation.type === 'single'
         && deleteConfirmation.id
+        && deleteConfirmation.name
       ) {
-        store.removeState(deleteConfirmation.id);
-        if (previewStateId === deleteConfirmation.id) {
+        store.removeState(deleteConfirmation.id, deleteConfirmation.name);
+        const deletedUniqueId = store.getUniqueStateId(deleteConfirmation.id, deleteConfirmation.name);
+        if (previewStateId === deletedUniqueId) {
           setPreviewStateId(null);
         }
       }
@@ -513,7 +517,10 @@ export const SavedStatesMenu = observer(
 
     const saveRename = () => {
       if (editingStateId && tempName.trim()) {
-        store.renameState(editingStateId, tempName.trim());
+        const state = store.savedStates.find((s) => s.uniqueId === editingStateId);
+        if (state) {
+          store.renameState(state.id, state.name, tempName.trim());
+        }
         setEditingStateId(null);
         setTempName('');
       }
@@ -564,16 +571,10 @@ export const SavedStatesMenu = observer(
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<IconFolderPlus size={16} />}
-              onClick={() => setSaveModalOpened(true)}
-            >
-              Save Current State
-            </Menu.Item>
-            <Menu.Item
               leftSection={<IconFolderSearch size={16} />}
-              onClick={handleOpenModal}
+              onClick={handleManageStates}
             >
-              Show Saved States
+              Manage Saved States
             </Menu.Item>
             <Menu.Divider />
             <Menu.Label c="red">Danger Zone</Menu.Label>
@@ -615,8 +616,8 @@ export const SavedStatesMenu = observer(
                         }
                         onChange={toggleSelectAll}
                         size="sm"
-                        ml={12.5}
-                        mr={2}
+                        ml={16}
+                        mr={5}
                       />
                     )}
                     <Title order={3}>Saved States</Title>
@@ -661,156 +662,154 @@ export const SavedStatesMenu = observer(
                     </Text>
                   ) : (
                     <Stack gap={4}>
-                      {sortedStates.map((state) => (
-                        <Box
-                          key={state.id}
-                          className={classes.savedStateItem}
-                          style={{
-                            padding: '8px 12px',
-                            borderRadius: 4,
-                            cursor: 'pointer',
-                            backgroundColor:
-                              previewStateId === state.id
-                                || selectedStateIds.has(state.id)
-                                || hoveredStateId === state.id
-                                ? 'var(--mantine-color-gray-1)'
-                                : 'transparent',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            border:
-                              previewStateId === state.id
-                                ? '1px solid var(--mantine-color-blue-2)'
-                                : '1px solid transparent',
-                          }}
-                          onMouseEnter={() => setHoveredStateId(state.id)}
-                          onMouseLeave={() => setHoveredStateId(null)}
-                          onClick={() => {
-                            setPreviewStateId(state.id);
-                          }}
-                        >
-                          <Group
-                            gap="sm"
-                            style={{ flex: 1, minWidth: 0 }}
-                            wrap="nowrap"
+                      {sortedStates.map((state) => {
+                        const isCheckboxSelected = selectedStateIds.has(state.uniqueId);
+                        const isHovered = hoveredStateId === state.uniqueId;
+                        const isActive = previewStateId === state.uniqueId;
+
+                        return (
+                          <Box
+                            key={state.uniqueId}
+                            onMouseEnter={() => setHoveredStateId(state.uniqueId)}
+                            onMouseLeave={() => setHoveredStateId(null)}
+                            onClick={() => setPreviewStateId(state.uniqueId)}
+                            style={{
+                              padding: '8px 12px',
+                              cursor: 'pointer',
+                              backgroundColor: isActive
+                                ? 'var(--mantine-color-blue-0)'
+                                : isHovered
+                                  ? 'var(--mantine-color-gray-0)'
+                                  : 'transparent',
+                              borderLeft: isActive
+                                ? '4px solid var(--mantine-color-blue-6)'
+                                : '4px solid transparent',
+                              transition: 'background-color 0.15s ease',
+                            }}
                           >
-                            {/** State gets checkbox */}
-                            <Checkbox
-                              checked={selectedStateIds.has(state.id)}
-                              onChange={() => toggleSelectionFor(state.id)}
-                              onClick={(e) => e.stopPropagation()}
-                              style={{ flexShrink: 0 }}
-                            />
-                            {/** State gets text input if in edit mode */}
-                            {editingStateId === state.id ? (
-                              <TextInput
-                                value={tempName}
-                                onChange={(e) => setTempName(e.currentTarget.value)}
+                            <Group wrap="nowrap" align="center">
+                              <Checkbox
+                                checked={isCheckboxSelected}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  toggleSelectionFor(state.uniqueId);
+                                }}
                                 onClick={(e) => e.stopPropagation()}
-                                size="sm"
-                                autoFocus
-                                styles={{
-                                  input: {
-                                    fontWeight: 500,
-                                    width: `${Math.max(tempName.length + 2, 10)}ch`,
-                                    borderColor: 'var(--mantine-color-blue-2)',
-                                  },
-                                  root: { width: 'auto' },
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') saveRename();
-                                  if (e.key === 'Escape') cancelEditing();
-                                }}
                               />
-                            ) : (
-                              // Normal state display
-                              <Stack gap={0} style={{ minWidth: 0 }}>
-                                <Text
-                                  size="sm"
-                                  fw={500}
-                                  style={{
-                                    wordBreak: 'break-word',
-                                    lineHeight: 1.2,
-                                  }}
-                                >
-                                  {state.name}
-                                </Text>
-                                <Text size="xs" c="dimmed">
-                                  {formatTimestamp(state.timestamp)}
-                                </Text>
-                              </Stack>
-                            )}
-                          </Group>
-                          <Group gap={4}>
-                            {/** Edit, delete, share buttons */}
-                            {editingStateId === state.id ? (
-                              <Group gap={4}>
-                                <ActionIcon
-                                  size="sm"
-                                  variant="subtle"
-                                  color="green"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    saveRename();
-                                  }}
-                                >
-                                  <IconCheck size={14} />
-                                </ActionIcon>
-                                <ActionIcon
-                                  size="sm"
-                                  variant="subtle"
-                                  color="gray"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    cancelEditing();
-                                  }}
-                                >
-                                  <IconX size={14} />
-                                </ActionIcon>
+                              <Group justify="space-between" align="center" style={{ flex: 1, minWidth: 0 }} wrap="nowrap">
+                                <Box style={{ minWidth: 0, flex: 1 }}>
+                                  {editingStateId === state.uniqueId ? (
+                                    <TextInput
+                                      value={tempName}
+                                      onChange={(e) => setTempName(e.currentTarget.value)}
+                                      onClick={(e) => e.stopPropagation()}
+                                      size="sm"
+                                      autoFocus
+                                      styles={{
+                                        input: {
+                                          fontWeight: 500,
+                                          width: `${Math.max(tempName.length + 2, 10)}ch`,
+                                          borderColor: 'var(--mantine-color-blue-2)',
+                                        },
+                                        root: { width: 'auto' },
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') saveRename();
+                                        if (e.key === 'Escape') cancelEditing();
+                                      }}
+                                    />
+                                  ) : (
+                                    <Stack gap={0} style={{ minWidth: 0 }}>
+                                      <Text
+                                        size="sm"
+                                        fw={500}
+                                        style={{
+                                          wordBreak: 'break-word',
+                                          lineHeight: 1.2,
+                                        }}
+                                      >
+                                        {state.name}
+                                      </Text>
+                                      <Text size="xs" c="dimmed">
+                                        {formatTimestamp(state.timestamp)}
+                                      </Text>
+                                    </Stack>
+                                  )}
+                                </Box>
+
+                                <Group gap={4} style={{ flexShrink: 0 }}>
+                                  {/** Edit, delete, share buttons */}
+                                  {editingStateId === state.uniqueId ? (
+                                    <Group gap={4}>
+                                      <ActionIcon
+                                        size="sm"
+                                        variant="subtle"
+                                        color="green"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          saveRename();
+                                        }}
+                                      >
+                                        <IconCheck size={14} />
+                                      </ActionIcon>
+                                      <ActionIcon
+                                        size="sm"
+                                        variant="subtle"
+                                        color="gray"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          cancelEditing();
+                                        }}
+                                      >
+                                        <IconX size={14} />
+                                      </ActionIcon>
+                                    </Group>
+                                  ) : (
+                                    <Group gap={4}>
+                                      <Tooltip label="Share State URL">
+                                        <ActionIcon
+                                          size="sm"
+                                          variant="subtle"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleShareState(state.id);
+                                          }}
+                                        >
+                                          <IconShare size={14} />
+                                        </ActionIcon>
+                                      </Tooltip>
+                                      <ActionIcon
+                                        size="sm"
+                                        variant="subtle"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          startEditingStateName(state.uniqueId, state.name || '');
+                                        }}
+                                      >
+                                        <IconEdit size={14} />
+                                      </ActionIcon>
+                                      <ActionIcon
+                                        size="sm"
+                                        variant="subtle"
+                                        color="red"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          requestDeleteSingle(
+                                            state.id,
+                                            state.name || 'State',
+                                          );
+                                        }}
+                                      >
+                                        <IconTrash size={14} />
+                                      </ActionIcon>
+                                    </Group>
+                                  )}
+                                </Group>
                               </Group>
-                            ) : (
-                              <Group gap={4}>
-                                <Tooltip label="Share State URL">
-                                  <ActionIcon
-                                    size="sm"
-                                    variant="subtle"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleShareState(state.id);
-                                    }}
-                                  >
-                                    <IconShare size={14} />
-                                  </ActionIcon>
-                                </Tooltip>
-                                <ActionIcon
-                                  size="sm"
-                                  variant="subtle"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    startEditingStateName(state.id, state.name || '');
-                                  }}
-                                >
-                                  <IconEdit size={14} />
-                                </ActionIcon>
-                                <ActionIcon
-                                  size="sm"
-                                  variant="subtle"
-                                  color="red"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    requestDeleteSingle(
-                                      state.id,
-                                      state.name || 'State',
-                                    );
-                                  }}
-                                >
-                                  <IconTrash size={14} />
-                                </ActionIcon>
-                              </Group>
-                            )}
-                          </Group>
-                        </Box>
-                      ))}
+                            </Group>
+                          </Box>
+                        );
+                      })}
                     </Stack>
                   )}
                 </ScrollArea>
@@ -893,14 +892,44 @@ export const SavedStatesMenu = observer(
                           {formatTimestamp(activePreviewState.timestamp)}
                         </Text>
                       </Stack>
-                      <Button
-                        onClick={() => {
-                          if (activePreviewState) confirmRestore(activePreviewState.id);
-                        }}
-                        style={{ flexShrink: 0 }}
-                      >
-                        Restore State
-                      </Button>
+                      <Group gap="xs">
+                        {/* Logic:
+                            1. Name is 'Current State' AND it's the MOST RECENT state -> Show green 'Save Current State' button
+                            2. Equal to store.currentState -> Show text "Same as current"
+                            3. Else -> Show 'Restore State' button
+                        */}
+                        {(activePreviewState.name === 'Current State' && sortedStates[0]?.uniqueId === activePreviewState.uniqueId) ? (
+                          <Button
+                            color="green"
+                            onClick={handleSaveCurrentState}
+                            style={{ flexShrink: 0 }}
+                          >
+                            Save Current State
+                          </Button>
+                        ) : (
+                          // Check equality
+                          (activeFullState && store.areStatesEqual(activeFullState, store.currentState)) ? (
+                            <Stack gap={0} align="flex-end">
+                              {justSavedId === activePreviewState.uniqueId && (
+                                <Group gap={4} align="center">
+                                  <Text size="xs" c="dimmed">Saved</Text>
+                                  <IconCheck size={12} color="var(--mantine-color-dimmed)" />
+                                </Group>
+                              )}
+                              <Text c="dimmed" fs="italic" size="sm">Same as current</Text>
+                            </Stack>
+                          ) : (
+                            <Button
+                              onClick={() => {
+                                if (activePreviewState) confirmRestore(activePreviewState.id);
+                              }}
+                              style={{ flexShrink: 0 }}
+                            >
+                              Restore State
+                            </Button>
+                          )
+                        )}
+                      </Group>
                     </Group>
                   </Stack>
                 ) : (
@@ -916,33 +945,6 @@ export const SavedStatesMenu = observer(
                   </Box>
                 )}
               </Box>
-            </Group>
-          </Stack>
-        </Modal>
-
-        {/** Save State Modal */}
-        <Modal
-          opened={saveModalOpened}
-          onClose={() => setSaveModalOpened(false)}
-          title="Save Current State"
-          centered
-        >
-          <Stack gap="md">
-            <TextInput
-              label="State Name"
-              placeholder="Enter a name for this state"
-              value={stateName}
-              onChange={(event) => setStateName(event.currentTarget.value)}
-              data-autofocus
-            />
-            <Group justify="flex-end" mt="xs">
-              <Button
-                variant="default"
-                onClick={() => setSaveModalOpened(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSaveState}>Save</Button>
             </Group>
           </Stack>
         </Modal>
