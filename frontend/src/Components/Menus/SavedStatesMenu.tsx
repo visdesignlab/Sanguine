@@ -534,7 +534,7 @@ export const SavedStatesMenu = observer(
         >
           <Stack align="center" gap="md" py="lg">
             <Loader size="lg" />
-            <Text fw={500}>Saving current state...</Text>
+            <Text fw={500}>Updating current state...</Text>
           </Stack>
         </Modal>
         {/* Saved States Modal */}
