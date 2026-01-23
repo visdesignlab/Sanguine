@@ -506,7 +506,7 @@ export const SavedStatesMenu = observer(
               leftSection={<IconFolderSearch size={16} />}
               onClick={handleManageStates}
             >
-              Manage Saved States
+              Manage States
             </Menu.Item>
             <Menu.Divider />
             <Menu.Label c="red">Danger Zone</Menu.Label>
