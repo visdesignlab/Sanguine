@@ -365,23 +365,33 @@ export const SavedStatesMenu = observer(
 
     // Modal & Image Preview Handlers -------
     const handleManageStates = async () => {
-      // Show loading modal
-      setIsSnapshotting(true);
+      // If our current state matches the "Initial State", we skip saving a new "Current State"
+      const initialStateNode = store.savedStates.find((s) => s.name === 'Initial State');
+      const isInitial = initialStateNode && store.provenance
+        ? store.areStatesEqual(store.currentState, store.provenance.getState(initialStateNode.id))
+        : false;
 
-      // Wait for the modal to render before capturing the screenshot
-      await new Promise((resolve) => {
-        setTimeout(resolve, 50);
-      });
+      if (!isInitial) {
+        // Show loading modal
+        setIsSnapshotting(true);
+
+        // Wait for the modal to render before capturing the screenshot
+        await new Promise((resolve) => {
+          setTimeout(resolve, 50);
+        });
+      }
 
       try {
-        // 1. Capture screenshot of current view
-        const screenshot = await captureScreenshot(null, {
-          pixelRatio: 1,
-          hideSelector: '.hide-from-screenshot',
-        });
+        if (!isInitial) {
+          // 1. Capture screenshot of current view
+          const screenshot = await captureScreenshot(null, {
+            pixelRatio: 1,
+            hideSelector: '.hide-from-screenshot',
+          });
 
-        // 2. Add or update "Current State". If our "Current State" is "Initial State", do nothing.
-        store.saveTempCurrentState(screenshot);
+          // 2. Add or update "Current State".
+          store.saveTempCurrentState(screenshot);
+        }
 
         // 3. Open the modal
         setManageModalOpened(true);
