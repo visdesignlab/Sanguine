@@ -506,7 +506,7 @@ export const SavedStatesMenu = observer(
               leftSection={<IconFolderSearch size={16} />}
               onClick={handleManageStates}
             >
-              Manage States
+              Manage Intelvia States
             </Menu.Item>
             <Menu.Divider />
             <Menu.Label c="red">Danger Zone</Menu.Label>
@@ -570,7 +570,7 @@ export const SavedStatesMenu = observer(
                         mr={5}
                       />
                     )}
-                    <Title order={3}>Saved States</Title>
+                    <Title order={3}>Intelvia States</Title>
                   </Group>
                   <Group gap="xs">
                     {/* Delete Multiple Button */}
