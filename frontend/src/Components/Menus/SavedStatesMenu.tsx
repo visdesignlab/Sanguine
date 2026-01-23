@@ -494,7 +494,7 @@ export const SavedStatesMenu = observer(
     };
     return (
       <>
-        {/* Save State Menu */}
+        {/* Intelvia States Menu */}
         <Menu
           shadow="md"
           width={220}
@@ -505,8 +505,8 @@ export const SavedStatesMenu = observer(
           onChange={setMenuOpened}
         >
           <Menu.Target>
-            <Tooltip label="Save State" disabled={menuOpened}>
-              <ActionIcon aria-label="Save State Menu">
+            <Tooltip label="Manage Intelvia States" disabled={menuOpened}>
+              <ActionIcon aria-label="Manage Intelvia States">
                 <IconFolder stroke={iconStroke} />
               </ActionIcon>
             </Tooltip>
