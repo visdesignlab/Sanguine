@@ -516,6 +516,7 @@ export class RootStore {
     // Check for provState key
     const hasUrlParam = window.location.search.includes('provState') || window.location.hash.includes('provState');
 
+    // If we're at the root, create an initial state
     if (this.provenance.current.id === this.provenance.root.id && !hasUrlParam) {
       this.provenance.apply({
         apply: (state: ApplicationState) => ({
@@ -574,15 +575,23 @@ export class RootStore {
     return `${nodeId}|${name}`;
   }
 
+  /**
+   * Save the current state as a named state.
+   */
   saveState(name: string, screenshot?: string) {
     if (!this.provenance) return;
     const currentNodeId = this.provenance.current.id;
+
+    // Add the name and screenshot as artifacts to the current node (state)
     this.provenance.addArtifact({ type: 'name', value: name }, currentNodeId);
     if (screenshot) {
       this.provenance.addArtifact({ type: 'screenshot', value: screenshot }, currentNodeId);
     }
 
+    // Generate a unique key for the state
     const key = this.getUniqueStateId(currentNodeId, name);
+
+    // If the state has been deleted, remove it from the deleted states set
     if (this.deletedStateKeys.has(key)) {
       this.deletedStateKeys.delete(key);
     }
@@ -700,7 +709,6 @@ export class RootStore {
     const { current } = this.provenance;
     const { root } = this.provenance;
 
-    // Disable undo if at root OR if at the "Initial State" node (our artificial root)
     return current.id !== root.id && current.label !== 'Initial State';
   }
 
