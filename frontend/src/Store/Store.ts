@@ -620,8 +620,8 @@ export class RootStore {
     // 2. If NOT Initial State, Save (or Update) "Current State"
     if (!isInitial) {
       // Remove any existing "Current State" entries to keep it transient
-      const manualCurrentStates = this.savedStates.filter((s) => s.name === 'Current State');
-      manualCurrentStates.forEach((s) => this.removeState(s.id, s.name!));
+      const existingCurrentStates = this.savedStates.filter((s) => s.name === 'Current State');
+      existingCurrentStates.forEach((s) => this.removeState(s.id, s.name!));
 
       this.saveState('Current State', screenshot);
     }
