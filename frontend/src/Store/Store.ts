@@ -657,56 +657,40 @@ export class RootStore {
    * Filters out states that have been explicitly deleted.
    */
   get savedStates() {
-    // Report observation for MobX tracking
     this._provenanceAtom.reportObserved();
 
     const { provenance } = this;
     if (!provenance) return [];
 
-    const allGraphNodes = Object.values(provenance.graph.nodes);
-    const savedStatesList: {
-      id: string;
-      name: string;
-      screenshot?: string;
-      timestamp: number;
-      uniqueId: string
-    }[] = [];
+    // For each node (state) in the provenance graph ...
+    return Object.values(provenance.graph.nodes)
+      .flatMap((node) => {
+        // Get all artifacts (names and screenshots) associated with this node
+        const artifacts = provenance.getAllArtifacts(node.id);
+        if (!artifacts.length) return [];
 
-    // Iterate through each node in the provenance graph to find saved artifacts
-    allGraphNodes.forEach((node) => {
-      const nodeArtifacts = provenance.getAllArtifacts(node.id);
+        const timestamp = (node as any).createdOn || node.metadata?.createdOn || 0;
+        const screenshot = artifacts.find((a) => a.artifact.type === 'screenshot')?.artifact.value;
+        const names = new Set(
+          artifacts
+            .filter((a) => a.artifact.type === 'name' && a.artifact.value)
+            .map((a) => a.artifact.value as string),
+        );
 
-      // Extract artifacts of type 'name' and 'screenshot'
-      const nameArtifacts = nodeArtifacts.filter((a) => a.artifact.type === 'name');
-      const screenshotArtifact = nodeArtifacts.find((a) => a.artifact.type === 'screenshot');
-
-      // Determine the timestamp of the state
-      const timestamp = (node as any).createdOn || node.metadata?.createdOn || 0;
-
-      // Collect all unique names assigned to this single state node
-      const uniqueNamesForNode = new Set<string>();
-      nameArtifacts.forEach((a) => {
-        if (a.artifact.value) uniqueNamesForNode.add(a.artifact.value);
-      });
-
-      // Add each valid, non-deleted state name to the result list
-      uniqueNamesForNode.forEach((name) => {
-        const uniqueStateId = this.getUniqueStateId(node.id, name);
-
-        // Skip if this specific state name combination has been marked as deleted
-        if (!this.deletedStateKeys.has(uniqueStateId)) {
-          savedStatesList.push({
+        // Return an array of saved states for this node
+        return Array.from(names)
+          .map((name) => ({
             id: node.id,
             name,
-            screenshot: screenshotArtifact?.artifact.value,
+            screenshot,
             timestamp,
-            uniqueId: uniqueStateId,
-          });
-        }
-      });
-    });
-
-    return savedStatesList;
+            uniqueId: this.getUniqueStateId(node.id, name),
+          }))
+          // Filter out deleted states
+          .filter((state) => !this.deletedStateKeys.has(state.uniqueId));
+      })
+      // Sort by timestamp
+      .sort((a, b) => a.timestamp - b.timestamp);
   }
 
   get canUndo() {
