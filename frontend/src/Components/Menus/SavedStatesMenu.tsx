@@ -16,6 +16,7 @@ import {
   CloseButton,
   TextInput,
   Accordion,
+  Loader,
 } from '@mantine/core';
 import {
   IconFolder,
@@ -298,6 +299,9 @@ export const SavedStatesMenu = observer(
       name?: string;
     }>({ isOpen: false, type: 'single' });
 
+    // Snapshot Loading State
+    const [isSnapshotting, setIsSnapshotting] = useState(false);
+
     // Get preview image for the right side of the modal
     const activeStateId = hoveredStateId ?? previewStateId;
     const activePreviewState = activeStateId
@@ -361,17 +365,34 @@ export const SavedStatesMenu = observer(
 
     // Modal & Image Preview Handlers -------
     const handleManageStates = async () => {
-      // 1. Capture screenshot of current view
-      const screenshot = await captureScreenshot(null, { pixelRatio: 1 });
+      // Show loading modal
+      setIsSnapshotting(true);
 
-      // 2. Delegate logic to Store (checks Initial State, removes old Current State, saves new)
-      store.saveTemporaryState(screenshot);
+      // Wait for the modal to render before capturing the screenshot
+      await new Promise((resolve) => {
+        setTimeout(resolve, 50);
+      });
 
-      setManageModalOpened(true);
-      if (store.savedStates.length > 0) {
-        // Sort again just to be sure we get the latest
-        const resortedStates = [...store.savedStates].sort((a, b) => b.timestamp - a.timestamp);
-        setPreviewStateId(resortedStates[0].uniqueId);
+      try {
+        // 1. Capture screenshot of current view
+        const screenshot = await captureScreenshot(null, {
+          pixelRatio: 1,
+          hideSelector: '.hide-from-screenshot',
+        });
+
+        // 2. Add or update "Current State". If our "Current State" is "Initial State", do nothing.
+        store.saveTempCurrentState(screenshot);
+
+        // 3. Open the modal
+        setManageModalOpened(true);
+
+        // 4. Sort states again by timestamp descending (newest first)
+        if (store.savedStates.length > 0) {
+          const resortedStates = [...store.savedStates].sort((a, b) => b.timestamp - a.timestamp);
+          setPreviewStateId(resortedStates[0].uniqueId);
+        }
+      } finally {
+        setIsSnapshotting(false);
       }
     };
 
@@ -498,6 +519,24 @@ export const SavedStatesMenu = observer(
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>
+        {/* Loading Modal for Screenshot */}
+        <Modal
+          opened={isSnapshotting}
+          onClose={() => { }}
+          withCloseButton={false}
+          centered
+          className="hide-from-screenshot"
+          overlayProps={{ className: 'hide-from-screenshot' }}
+          closeOnClickOutside={false}
+          closeOnEscape={false}
+          size="sm"
+          transitionProps={{ duration: 0 }}
+        >
+          <Stack align="center" gap="md" py="lg">
+            <Loader size="lg" />
+            <Text fw={500}>Saving current state...</Text>
+          </Stack>
+        </Modal>
         {/* Saved States Modal */}
         <Modal
           opened={manageModalOpened}
@@ -902,7 +941,7 @@ export const SavedStatesMenu = observer(
           hasNext={sortedStates.findIndex((s) => s.id === zoomedStateId) < sortedStates.length - 1}
         />
         {/* Delete Confirmation Modal */}
-        <Modal
+        < Modal
           opened={deleteConfirmation.isOpen}
           onClose={() => setDeleteConfirmation({ ...deleteConfirmation, isOpen: false })}
           title="Confirm Deletion"

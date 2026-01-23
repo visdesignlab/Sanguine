@@ -605,7 +605,7 @@ export class RootStore {
    * Auto-save the current state as "Current State" if it differs from "Initial State".
    * Removes any existing transient "Current State" entries.
    */
-  saveTemporaryState(screenshot?: string) {
+  saveTempCurrentState(screenshot?: string) {
     // 1. Check if current state matches "Initial State"
     const initialStateNode = this.savedStates.find((s) => s.name === 'Initial State');
     let isInitial = false;
