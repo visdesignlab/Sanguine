@@ -468,15 +468,13 @@ export const chartColors = [
   '#73C3C5',
 ];
 
-// 'rbc_units_cost', 'plt_units_cost', 'ffp_units_cost', 'cryo_units_cost', 'cell_saver_cost';
-
 export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
-  rbc_units: '#8B1E1E',
+  rbc_units: '#8C2D1C',
   ffp_units: '#C99700',
-  plt_units: '#F4D35E',
+  plt_units: '#F7E7B4',
   cryo_units: '#E6B800',
-  cell_saver_ml: '#C94A4A',
-  cell_saver: '#C94A4A',
+  cell_saver_ml: '#E4572E',
+  cell_saver: '#E4572E',
 };
 
 // Explore View ----------------------------------------------------

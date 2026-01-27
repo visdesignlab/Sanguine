@@ -26,6 +26,7 @@ import { FilterRangeSlider } from './FilterRangeSlider';
 import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
 import classes from '../../../Shell/Shell.module.css';
+import { BLOOD_PRODUCT_COLOR_THEME } from '../../../Types/application';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
 
@@ -158,7 +159,7 @@ export function FilterPanel() {
                       withYAxis={false}
                       withTooltip={false}
                       gridAxis="none"
-                      series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
+                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.rbc_units }]}
                       ml={1}
                     />
                   </Flex>
@@ -186,7 +187,7 @@ export function FilterPanel() {
                       withYAxis={false}
                       withTooltip={false}
                       gridAxis="none"
-                      series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
+                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.ffp_units }]}
                       ml={1}
                     />
                   </Flex>
@@ -214,7 +215,7 @@ export function FilterPanel() {
                       withYAxis={false}
                       withTooltip={false}
                       gridAxis="none"
-                      series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
+                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.plt_units }]}
                       ml={1}
                     />
                   </Flex>
@@ -242,7 +243,7 @@ export function FilterPanel() {
                       withYAxis={false}
                       withTooltip={false}
                       gridAxis="none"
-                      series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
+                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.cryo_units }]}
                       ml={1}
                     />
                   </Flex>
@@ -270,7 +271,7 @@ export function FilterPanel() {
                       withYAxis={false}
                       withTooltip={false}
                       gridAxis="none"
-                      series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
+                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.cell_saver_ml }]}
                       ml={1}
                     />
                   </Flex>
