@@ -471,6 +471,15 @@ export const CASE_MIX_INDEX = {
   decimals: { sum: 2, avg: 2 },
 };
 
+// Costs -----------------------------------------------------------
+export const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
+  rbc_units_cost: 200,
+  ffp_units_cost: 55,
+  plt_units_cost: 650,
+  cryo_units_cost: 70,
+  cell_saver_cost: 500,
+};
+
 // CPT Codes -------------------------------------------------------
 export const CPT_CODES = {
   stroke: ['99291', '1065F', '1066F'],
