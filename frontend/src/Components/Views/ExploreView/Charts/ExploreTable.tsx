@@ -1,7 +1,7 @@
 import {
   useContext, useEffect, useState, useMemo, useRef, memo, useCallback, CSSProperties,
 } from 'react';
-import { observer, useLocalObservable } from 'mobx-react-lite';
+import { observer, useLocalObservable, Observer } from 'mobx-react-lite';
 import {
   MultiSelect,
   CloseButton,
@@ -122,104 +122,7 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
   return result;
 };
 
-// Histogram footer component
-const HistogramFooter = observer(({
-  bins, colorScale, colVar, agg, hoverState,
-}: {
-  bins: HistogramBin[];
-  colorScale?: (val: number) => string;
-  colVar?: string;
-  agg?: string;
-  hoverState: { current: HoveredValue };
-}) => {
-  if (!bins || bins.length === 0) {
-    return null;
-  }
 
-  const minVal = bins[0]?.binMin ?? 0;
-  const maxVal = bins[bins.length - 1]?.binMax ?? 0;
-
-  // Check if this column is hovered
-  const hoveredValue = hoverState.current;
-  const isHoveredCol = hoveredValue?.col === colVar;
-  const hoveredVal = hoveredValue?.value;
-
-  // Base colors of histogram
-  const baseColors = useMemo(() => bins.map((bin) => {
-    if (colorScale) {
-      return colorScale((bin.binMin + bin.binMax) / 2);
-    }
-    return '#8c8c8c';
-  }), [bins, colorScale]);
-
-  // Final colors, coloring hovered bin
-  const colors = useMemo(() => {
-    if (!isHoveredCol || hoveredVal === undefined) {
-      return baseColors;
-    }
-
-    return bins.map((bin, i) => {
-      const isMatch = hoveredVal >= bin.binMin && hoveredVal <= bin.binMax;
-      if (isMatch) {
-        return smallHoverColor;
-      }
-      return baseColors[i];
-    });
-  }, [bins, isHoveredCol, hoveredVal, baseColors]);
-
-  // Data for histogram, colored by bin ---
-  const data = useMemo(() => [
-    Object.fromEntries(bins.map((bin, i) => [`bin${i}`, bin.count]))
-  ], [bins]);
-
-  const series = useMemo(() => bins.map((_, i) => ({
-    name: `bin${i}`,
-    color: colors[i]
-  })), [bins, colors]);
-
-  // Theme color for ticks and lines (approx interpolateReds(0.5))
-  const themeColor = colorScale ? '#ef6548' : '#6f6f6f';
-
-  // Render histogram ----
-  return (
-    <div className="histogram-footer-container">
-      <BarChart
-        data={data}
-        series={series}
-        w="calc(126%)"
-        h={25}
-        dataKey="bin"
-        barChartProps={{ barGap: '0.5%' }}
-        withXAxis={false}
-        withYAxis={false}
-        gridAxis="none"
-        className="histogram-footer-chart"
-        style={{
-          angle: 25,
-        }}
-        withTooltip={false}
-      />
-
-      {/* Bottom line of histogram */}
-      <div
-        className="histogram-footer-line"
-        style={{
-          borderTop: `1px solid ${colorScale ? '#fc8d59' : '#6f6f6f'}`, // lighter red for line
-        }}
-      />
-
-      {/* Min / Max ticks under the histogram */}
-      <div className="histogram-footer-ticks">
-        <div className="histogram-footer-tick-min" style={{ color: themeColor }}>
-          {colVar ? minVal.toFixed(getDecimals(colVar, agg)) : minVal}
-        </div>
-        <div className="histogram-footer-tick-max" style={{ color: themeColor }}>
-          {colVar ? maxVal.toFixed(getDecimals(colVar, agg)) : maxVal}
-        </div>
-      </div>
-    </div>
-  );
-});
 
 const NumericBarCell = ({
   value, max, colVar, opts = {}, setHoveredValue, agg,
@@ -544,16 +447,70 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       const createHistogramFooter = () => {
         if (values.length === 0) return undefined;
         const bins = computeHistogramBins(values, 10);
-        return (
 
-          <HistogramFooter
-            bins={bins}
-            colorScale={type === 'heatmap' ? getHeatmapColor : undefined}
-            colVar={colVar}
-            agg={colConfig.aggregation}
-            hoverState={hoverState}
-          />
+        return (
+          <Observer>
+            {() => {
+              const minVal = bins[0]?.binMin ?? 0;
+              const maxVal = bins[bins.length - 1]?.binMax ?? 0;
+
+              // Check if this column is hovered
+              const hoveredValStr = hoverState.current;
+              const isHoveredCol = hoveredValStr?.col === colVar;
+              const hoveredVal = hoveredValStr?.value;
+
+              const colorScale = type === 'heatmap' ? getHeatmapColor : undefined;
+              const agg = colConfig.aggregation;
+
+              // Base colors
+              const baseColors = bins.map((bin) => {
+                if (colorScale) return colorScale((bin.binMin + bin.binMax) / 2);
+                return '#8c8c8c';
+              });
+
+              // Final colors
+              const colors = (!isHoveredCol || hoveredVal === undefined)
+                ? baseColors
+                : bins.map((bin, i) => {
+                  const isMatch = hoveredVal >= bin.binMin && hoveredVal <= bin.binMax;
+                  return isMatch ? smallHoverColor : baseColors[i];
+                });
+
+              const data = [Object.fromEntries(bins.map((bin, i) => [`bin${i}`, bin.count]))];
+              const series = bins.map((_, i) => ({ name: `bin${i}`, color: colors[i] }));
+              const themeColor = colorScale ? '#ef6548' : '#6f6f6f';
+
+              return (
+                <div className="histogram-footer-container">
+                  <BarChart
+                    data={data}
+                    series={series}
+                    w="calc(126%)"
+                    h={25}
+                    dataKey="bin"
+                    barChartProps={{ barGap: '0.5%' }}
+                    withXAxis={false}
+                    withYAxis={false}
+                    gridAxis="none"
+                    className="histogram-footer-chart"
+                    style={{ angle: 25 }}
+                    withTooltip={false}
+                  />
+                  <div className="histogram-footer-line" style={{ borderTop: `1px solid ${colorScale ? '#fc8d59' : '#6f6f6f'}` }} />
+                  <div className="histogram-footer-ticks">
+                    <div className="histogram-footer-tick-min" style={{ color: themeColor }}>
+                      {colVar ? minVal.toFixed(getDecimals(colVar, agg)) : minVal}
+                    </div>
+                    <div className="histogram-footer-tick-max" style={{ color: themeColor }}>
+                      {colVar ? maxVal.toFixed(getDecimals(colVar, agg)) : maxVal}
+                    </div>
+                  </div>
+                </div>
+              );
+            }}
+          </Observer>
         );
+
       };
 
       // Helper to create numeric filter input
