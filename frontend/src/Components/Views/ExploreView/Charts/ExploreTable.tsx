@@ -1,7 +1,7 @@
 import {
-  useContext, useEffect, useState, useMemo, useRef, createContext, memo, useCallback, CSSProperties,
+  useContext, useEffect, useState, useMemo, useRef, memo, useCallback, CSSProperties,
 } from 'react';
-import { observer } from 'mobx-react-lite';
+import { observer, useLocalObservable } from 'mobx-react-lite';
 import {
   MultiSelect,
   CloseButton,
@@ -35,9 +35,6 @@ type HoveredValue = { col: string; value: number } | null;
 type HistogramBin = { binMin: number; binMax: number; count: number };
 type SetHoveredValue = (val: HoveredValue) => void;
 
-
-// Context to pass hovered value to footers without re-rendering columns
-const HoverContext = createContext<HoveredValue>(null);
 
 // Helper to get decimals
 const getDecimals = (colVar: string, agg: string = 'sum'): number => {
@@ -126,13 +123,17 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
 };
 
 // Histogram footer component
-const HistogramFooter = ({
-  bins, colorScale, colVar, agg,
+const HistogramFooter = observer(({
+  bins, colorScale, colVar, agg, hoverStore,
 }: {
   bins: HistogramBin[];
   colorScale?: (val: number) => string;
   colVar?: string;
   agg?: string;
+  hoverStore: {
+    hoveredValue: HoveredValue;
+    setHoveredValue: (val: HoveredValue) => void;
+  };
 }) => {
   if (!bins || bins.length === 0) {
     return null;
@@ -142,7 +143,7 @@ const HistogramFooter = ({
   const maxVal = bins[bins.length - 1]?.binMax ?? 0;
 
   // Check if this column is hovered
-  const hoveredValue = useContext(HoverContext);
+  const hoveredValue = hoverStore?.hoveredValue;
   const isHoveredCol = hoveredValue?.col === colVar;
   const hoveredVal = hoveredValue?.value;
 
@@ -221,7 +222,7 @@ const HistogramFooter = ({
       </div>
     </div>
   );
-};
+});
 
 const NumericBarCell = ({
   value, max, colVar, opts = {}, setHoveredValue, agg,
@@ -329,7 +330,13 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   const [textFilters, setTextFilters] = useState<Record<string, string>>({});
 
   // Interaction
-  const [hoveredValue, setHoveredValue] = useState<HoveredValue>(null);
+  const hoverStore = useLocalObservable(() => ({
+    hoveredValue: null as HoveredValue,
+    setHoveredValue(val: HoveredValue) {
+      this.hoveredValue = val;
+    },
+  }));
+  const setHoveredValue = (val: HoveredValue) => hoverStore.setHoveredValue(val);
 
   // Sorting
   const defaultSortCol = chartConfig.columns[0]?.colVar || 'surgeon_prov_id';
@@ -546,11 +553,13 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         if (values.length === 0) return undefined;
         const bins = computeHistogramBins(values, 10);
         return (
+
           <HistogramFooter
             bins={bins}
             colorScale={type === 'heatmap' ? getHeatmapColor : undefined}
             colVar={colVar}
             agg={colConfig.aggregation}
+            hoverStore={hoverStore}
           />
         );
       };
@@ -799,24 +808,22 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
       {/** Data Table */}
       <Box style={{ minHeight: 0, width: '100%' }}>
-        <HoverContext.Provider value={hoveredValue}>
-          <DataTable<ExploreTableRow>
-            className="explore-table-data-table"
-            borderRadius="sm"
-            striped
-            withTableBorder={false}
-            highlightOnHover
-            withRowBorders={false}
-            highlightOnHoverColor={backgroundHoverColor}
-            records={rows}
-            sortStatus={sortStatus}
-            onSortStatusChange={setSortStatus}
-            storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
-            columns={effectiveColumns}
-            style={useMemo(() => ({ fontStyle: 'italic' }), [])}
-            onRowClick={useCallback(() => { }, [])}
-          />
-        </HoverContext.Provider>
+        <DataTable<ExploreTableRow>
+          className="explore-table-data-table"
+          borderRadius="sm"
+          striped
+          withTableBorder={false}
+          highlightOnHover
+          withRowBorders={false}
+          highlightOnHoverColor={backgroundHoverColor}
+          records={rows}
+          sortStatus={sortStatus}
+          onSortStatusChange={setSortStatus}
+          storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
+          columns={effectiveColumns}
+          style={useMemo(() => ({ fontStyle: 'italic' }), [])}
+          onRowClick={useCallback(() => { }, [])}
+        />
       </Box>
     </Stack>
   );
