@@ -158,18 +158,26 @@ const NumericBarCell = ({
   const shortKey = (agg === 'avg') ? 'avgShort' : 'sumShort';
 
   const unitString = unitConfig?.[shortKey] ?? unitConfig?.[aggKey] ?? '';
+  const tooltipUnitString = unitConfig?.[aggKey] ?? unitConfig?.[shortKey] ?? '';
+
   const type = unitConfig?.type ?? 'suffix';
   const prefix = type === 'prefix' ? unitString : '';
   const suffix = type === 'suffix' ? unitString : '';
+
+  const tooltipPrefix = type === 'prefix' ? tooltipUnitString : '';
+  const tooltipSuffix = type === 'suffix' ? tooltipUnitString : '';
+
   const decimals = getDecimals(colVar, agg);
   const formattedValue = isMissing ? '-' : Number(value).toFixed(decimals);
 
   const textValue = isMissing ? '-' : `${prefix}${formattedValue}${suffix}`;
+  const tooltipTextValue = isMissing ? '-' : `${tooltipPrefix}${formattedValue}${tooltipSuffix}`;
+
   const hasValue = !isMissing && Number(value) !== 0;
 
   return (
     <Tooltip
-      label={hasValue ? textValue : 'No data'}
+      label={hasValue ? tooltipTextValue : 'No data'}
       position="top"
       withArrow
     >

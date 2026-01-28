@@ -197,7 +197,7 @@ export const PROPHYL_MEDS = [
       sum: 'Total Visits Used B12 Pre-Surgery',
       avg: 'Percentage of Visits Used B12 Pre-Surgery',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
   {
@@ -208,7 +208,7 @@ export const PROPHYL_MEDS = [
       sum: 'Total Visits Used Iron Pre-Surgery',
       avg: 'Percentage of Visits Used Iron Pre-Surgery',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
   {
@@ -219,7 +219,7 @@ export const PROPHYL_MEDS = [
       sum: 'Total Visits Used Antifibrinolytics Pre-Surgery',
       avg: 'Percentage of Visits Used Antifibrinolytics Pre-Surgery',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
 ] as const;
