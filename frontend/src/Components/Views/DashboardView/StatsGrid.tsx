@@ -34,17 +34,17 @@ export function StatsGrid() {
 
   // Remove stat handler
   const handleRemoveStat = useCallback((statId: string) => {
-    store.dashboardStore.removeStat(statId);
-  }, [store.dashboardStore]);
+    store.removeDashboardStat(statId);
+  }, [store]);
 
   return useObserver(() => {
     // For every stat config, create a card describing it.
-    const statCards = store.dashboardStore._statConfigs.map((statConfig, idx) => {
+    const statCards = store.dashboardStatConfigs.map((statConfig, idx) => {
       // Get the stat value from statData
       const aggregationKey = statConfig.aggregation || 'sum';
-      const dataKey = `${aggregationKey}_${statConfig.yAxisVar}` as keyof typeof store.dashboardStore.statData;
+      const dataKey = `${aggregationKey}_${statConfig.yAxisVar}` as keyof typeof store.dashboardStatData;
       // Stat data for this card
-      const statData = store.dashboardStore.statData[dataKey] as DashboardStatData[DashboardAggYAxisVar];
+      const statData = store.dashboardStatData[dataKey] as DashboardStatData[DashboardAggYAxisVar];
       const statValue = statData?.value || '0';
       const diff = statData?.diff || 0;
       const statSparklineData = statData?.sparklineData || [];

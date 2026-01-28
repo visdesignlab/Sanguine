@@ -756,3 +756,10 @@ export type ExploreTableData = ExploreTableRow[]; // E.g. [{ attending_provider:
 // --- Explore Chart ---
 export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData>;
 export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig;
+
+// Filter Counts ---------------------------------------------------
+export type FilterCountKey =
+  | 'dateFiltersAppliedCount'
+  | 'bloodComponentFiltersAppliedCount'
+  | 'medicationsFiltersAppliedCount'
+  | 'outcomeFiltersAppliedCount';

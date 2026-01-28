@@ -230,7 +230,7 @@ const NumericBarCell = ({
 
 const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfig }) => {
   const store = useContext(Store);
-  const chartData = store.exploreStore.chartData[chartConfig.chartId] as ExploreTableData;
+  const chartData = store.exploreChartData[chartConfig.chartId] as ExploreTableData;
 
   // Filters
   const defaultNumericFilter: NumericFilter = { query: '', cmp: '>' };
@@ -331,7 +331,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       rowVar: value,
       columns: newColumns,
     };
-    store.exploreStore.updateChartConfig(updatedConfig);
+    store.updateExploreChartConfig(updatedConfig);
   };
 
   const availableColumnOptions = useMemo(() => {
@@ -379,7 +379,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       ...chartConfig,
       columns: newCols,
     };
-    store.exploreStore.updateChartConfig(updatedConfig);
+    store.updateExploreChartConfig(updatedConfig);
   };
 
   const generateColumnDefs = (colConfigs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => {
@@ -759,7 +759,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             }}
           />
           {/** Close Chart */}
-          <CloseButton onClick={() => { store.exploreStore.removeChart(chartConfig.chartId); }} />
+          <CloseButton onClick={() => { store.removeExploreChart(chartConfig.chartId); }} />
         </Flex>
       </Flex>
 

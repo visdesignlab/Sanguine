@@ -1,7 +1,7 @@
+import { observer } from 'mobx-react-lite';
 import {
   ReactNode, useContext, useMemo, useState,
 } from 'react';
-import { useDisclosure } from '@mantine/hooks';
 import {
   AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
   Modal,
@@ -41,7 +41,7 @@ import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
  * Shell component that provides the main layout for the application.
  * Includes a header toolbar (Intelvia), left toolbar, and main content area.
  */
-export function Shell() {
+export const Shell = observer(() => {
   const store = useContext(Store);
   // View tabs -----------------
   const TABS = [
@@ -66,7 +66,9 @@ export function Shell() {
   const defaultTab = TABS[0].key;
 
   // Active tab in the view tabs
-  const [activeTab, setActiveTab] = useState<string>(defaultTab);
+  const setActiveTab = (tab: string) => {
+    store.actions.setUiState({ activeTab: tab });
+  };
 
   // About modal ----------------------
   const [aboutModalOpened, setAboutModalOpened] = useState(false);
@@ -79,9 +81,15 @@ export function Shell() {
   const LEFT_PANEL_WIDTH = 6 * toolbarWidth;
 
   // Open and close the left toolbar, burger toggle visible on hover.
-  const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
-  const [activeLeftPanel, setActiveLeftPanel] = useState<number | null>(null);
-  const navbarWidth = useMemo(() => (activeLeftPanel === null ? toolbarWidth : LEFT_PANEL_WIDTH), [activeLeftPanel, LEFT_PANEL_WIDTH, toolbarWidth]);
+  // Open and close the left toolbar, burger toggle visible on hover.
+  const toggleLeftToolbar = () => {
+    store.actions.setUiState({ leftToolbarOpened: !store.state.ui.leftToolbarOpened });
+  };
+
+  const setActiveLeftPanel = (index: number | null) => {
+    store.actions.setUiState({ activeLeftPanel: index });
+  };
+  const navbarWidth = useMemo(() => (store.state.ui.activeLeftPanel === null ? toolbarWidth : LEFT_PANEL_WIDTH), [store.state.ui.activeLeftPanel, LEFT_PANEL_WIDTH, toolbarWidth]);
 
   // Toolbar icons ----------------------
   // Left toolbar icons
@@ -91,10 +99,10 @@ export function Shell() {
       label: 'Filter Panel',
       content: <FilterPanel />,
       actionButtons: [
-        <ActionIcon key="reset-filters" aria-label="Reset all filters" onClick={() => { store.filtersStore.resetAllFilters(); }} className={classes.leftToolbarIcon}>
+        <ActionIcon key="reset-filters" aria-label="Reset all filters" onClick={() => { store.resetAllFilters(); }} className={classes.leftToolbarIcon}>
           <IconRestore stroke={iconStroke} size={21} />
         </ActionIcon>,
-        <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.filtersStore.showFilterHistograms = !store.filtersStore.showFilterHistograms; }} data-active={store.filtersStore.showFilterHistograms} className={classes.leftToolbarIcon}>
+        <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.actions.setUiState({ showFilterHistograms: !store.state.ui.showFilterHistograms }); }} data-active={store.state.ui.showFilterHistograms} className={classes.leftToolbarIcon}>
           <IconChartBar stroke={iconStroke} />
         </ActionIcon>,
       ],
@@ -105,7 +113,7 @@ export function Shell() {
       content: <SelectedVisitsPanel />,
       actionButtons: [
         <Badge key="selected-visits-badge" variant="light" size="sm">
-          {store.selectionsStore.selectedVisitNos.length}
+          {store.selectedVisitNos.length}
           {' '}
           Visits
         </Badge>,
@@ -127,12 +135,22 @@ export function Shell() {
   ];
 
   // Header toolbar icons
-  const headerIcons: { icon: React.ComponentType<IconProps>; label: string; onClick?: () => void }[] = [
-    { icon: IconArrowNarrowLeftDashed, label: 'Back' },
-    { icon: IconArrowNarrowRightDashed, label: 'Forward' },
-    { icon: IconDeviceFloppy, label: 'Save' },
+  const headerIcons = useMemo(() => [
+    {
+      icon: IconArrowNarrowLeftDashed,
+      label: 'Back',
+      onClick: () => store.provenance?.undo(),
+      disabled: !store.canUndo,
+    },
+    {
+      icon: IconArrowNarrowRightDashed,
+      label: 'Forward',
+      onClick: () => store.provenance?.redo(),
+      disabled: !store.canRedo,
+    },
+    { icon: IconDeviceFloppy, label: 'Save', disabled: true },
     { icon: IconCamera, label: 'Camera' },
-  ];
+  ], [store.provenance, store.canUndo, store.canRedo]);
 
   return (
     <AppShell
@@ -140,7 +158,7 @@ export function Shell() {
       navbar={{
         width: navbarWidth,
         breakpoint: 0,
-        collapsed: { desktop: !leftToolbarOpened },
+        collapsed: { desktop: !store.state.ui.leftToolbarOpened },
       }}
       padding="xs"
     >
@@ -159,14 +177,14 @@ export function Shell() {
             {/** View Tabs */}
             <Tabs
               variant="outline"
-              value={activeTab}
+              value={store.state.ui.activeTab}
               onChange={(value) => {
                 if (value) setActiveTab(value);
               }}
               radius="md"
               defaultValue={defaultTab}
               classNames={{
-                tab: activeLeftPanel !== null ? classes.tabOutlineActive : undefined,
+                tab: store.state.ui.activeLeftPanel !== null ? classes.tabOutlineActive : undefined,
               }}
               pl="xs"
             >
@@ -180,17 +198,22 @@ export function Shell() {
           </Group>
           {/** All Header Icons, right-aligned */}
           <Group gap="sm" pr="md" wrap="nowrap">
-            {headerIcons.map(({ icon: Icon, label, onClick }) => {
+            {headerIcons.map(({ icon: Icon, label, onClick, disabled }) => {
               // --- Hover Menu for Camera to show screenshots ---
               if (label === 'Camera') {
                 return (
-                  <ScreenshotMenu key="screenshot-menu" activeTab={activeTab} />
+                  <ScreenshotMenu key="screenshot-menu" activeTab={store.state.ui.activeTab} />
                 );
               }
               // Default header icon button
               return (
                 <Tooltip key={label} label={label}>
-                  <ActionIcon aria-label={label} onClick={onClick}>
+                  <ActionIcon
+                    aria-label={label}
+                    onClick={onClick}
+                    disabled={disabled}
+                    className={label === 'Back' || label === 'Forward' ? classes.forwardBackArrowIcon : undefined}
+                  >
                     <Icon stroke={iconStroke} />
                   </ActionIcon>
                 </Tooltip>
@@ -208,7 +231,7 @@ export function Shell() {
                 <Menu.Item
                   leftSection={<IconFilter size={14} />}
                   onClick={() => {
-                    store.filtersStore.resetAllFilters();
+                    store.resetAllFilters();
                   }}
                 >
                   Reset all filters
@@ -216,7 +239,7 @@ export function Shell() {
                 <Menu.Item
                   leftSection={<IconClipboardList size={14} />}
                   onClick={() => {
-                    store.selectionsStore.clearAllSelectedVisits();
+                    store.resetSelections();
                   }}
                 >
                   Clear selected visits
@@ -277,7 +300,7 @@ export function Shell() {
       <AppShell.Navbar>
         {/** Left Toolbar Icons */}
         <Flex direction="row" h="100%" w={navbarWidth}>
-          <Box h="100%" style={{ borderRight: activeLeftPanel !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
+          <Box h="100%" style={{ borderRight: store.state.ui.activeLeftPanel !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
             <Group
               justify="center"
               w={toolbarWidth}
@@ -292,8 +315,8 @@ export function Shell() {
                   <ActionIcon
                     key={label}
                     aria-label={label}
-                    onClick={() => (index === activeLeftPanel ? setActiveLeftPanel(null) : setActiveLeftPanel(index))}
-                    data-active={index === activeLeftPanel}
+                    onClick={() => (index === store.state.ui.activeLeftPanel ? setActiveLeftPanel(null) : setActiveLeftPanel(index))}
+                    data-active={index === store.state.ui.activeLeftPanel}
                     className={classes.leftToolbarIcon}
                     style={{ overflow: 'visible' }}
                     disabled={disabled}
@@ -308,10 +331,10 @@ export function Shell() {
           </Box>
 
           {/** Left Panel Content */}
-          {activeLeftPanel !== null && (
-          <Box style={{ flexGrow: 1 }} p="md">
-            {leftToolbarIcons[activeLeftPanel].content}
-          </Box>
+          {store.state.ui.activeLeftPanel !== null && (
+            <Box style={{ flexGrow: 1 }} p="md">
+              {leftToolbarIcons[store.state.ui.activeLeftPanel].content}
+            </Box>
           )}
         </Flex>
       </AppShell.Navbar>
@@ -322,13 +345,14 @@ export function Shell() {
           {TABS.map((tab) => (
             <Box
               key={tab.key}
-              style={{ display: activeTab === tab.key ? 'block' : 'none' }}
+              style={{ display: store.state.ui.activeTab === tab.key ? 'block' : 'none' }}
             >
               {tab.content}
             </Box>
           ))}
         </Container>
       </AppShell.Main>
+
 
       <Modal
         opened={aboutModalOpened}
@@ -360,4 +384,4 @@ export function Shell() {
       </Modal>
     </AppShell>
   );
-}
+});

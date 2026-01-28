@@ -6,7 +6,6 @@ import { Shell } from './Shell/Shell';
 import { Store } from './Store/Store';
 import { mantineTheme } from './Theme/mantineTheme';
 import { logoutHandler, whoamiAPICall } from './Store/UserManagement';
-import { BrowserWarning } from './Components/Modals/BrowserWarning';
 import { DataRetrieval } from './Components/Modals/DataRetrieval';
 import { initDuckDB } from './duckdb';
 
@@ -132,12 +131,13 @@ function App() {
 
         // Update all stores
         await store.updateAllVisitsLength();
-        await store.filtersStore.calculateDefaultFilterValues();
+        await store.calculateDefaultFilterValues();
         await store.updateFilteredVisitsLength();
 
-        await store.filtersStore.generateHistogramData();
-        await store.dashboardStore.computeChartData();
-        await store.dashboardStore.computeStatData();
+        // Initialize provenance with the correct initial filter values
+        store.init();
+
+        await store.updateFilteredData();
       } catch (e) {
         console.error('Error fetching visits data:', e);
         setDataLoadingFailed(true);
@@ -156,8 +156,6 @@ function App() {
       {/** App Shell (Header, Main Content, etc.) */}
       <Shell />
       <>
-        {/** Browser incompatibility warning modal */}
-        <BrowserWarning />
         { /* Data loading modal */}
         <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
       </>
