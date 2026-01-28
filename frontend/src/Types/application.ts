@@ -26,7 +26,12 @@ export const BLOOD_COMPONENTS = [
       sum: 'Total RBCs Transfused',
       avg: 'Average RBCs Transfused Per Visit',
     },
-    units: { sum: 'RBC Units', avg: 'RBC Units' },
+    units: {
+      sum: 'RBC Units',
+      avg: 'RBC Units',
+      sumShort: ' Units',
+      avgShort: ' Units',
+    },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
@@ -37,7 +42,12 @@ export const BLOOD_COMPONENTS = [
       sum: 'Total FFP Transfused',
       avg: 'Average FFP Transfused Per Visit',
     },
-    units: { sum: 'Plasma Units', avg: 'Plasma Units' },
+    units: {
+      sum: 'Plasma Units',
+      avg: 'Plasma Units',
+      sumShort: ' Units',
+      avgShort: ' Units',
+    },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
@@ -48,7 +58,12 @@ export const BLOOD_COMPONENTS = [
       sum: 'Total Platelets Transfused',
       avg: 'Average Platelets Transfused Per Visit',
     },
-    units: { sum: 'Platelet Units', avg: 'Platelet Units' },
+    units: {
+      sum: 'Platelet Units',
+      avg: 'Platelet Units',
+      sumShort: ' Units',
+      avgShort: ' Units',
+    },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
@@ -59,7 +74,12 @@ export const BLOOD_COMPONENTS = [
       sum: 'Total Cryo Transfused',
       avg: 'Average Cryo Transfused Per Visit',
     },
-    units: { sum: 'Cryo Units', avg: 'Cryo Units' },
+    units: {
+      sum: 'Cryo Units',
+      avg: 'Cryo Units',
+      sumShort: ' Units',
+      avgShort: ' Units',
+    },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
@@ -70,7 +90,12 @@ export const BLOOD_COMPONENTS = [
       sum: 'Total Cell Salvage Volume (ml) Used',
       avg: 'Average Cell Salvage Volume (ml) Used Per Visit',
     },
-    units: { sum: 'mL', avg: 'mL' },
+    units: {
+      sum: 'mL',
+      avg: 'mL',
+      sumShort: ' mL',
+      avgShort: ' mL',
+    },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
 ] as const;
@@ -94,7 +119,7 @@ export const OUTCOMES = [
       sum: 'Total Length of Stay',
       avg: 'Average Length of Stay',
     },
-    units: { sum: 'Days', avg: 'Days' },
+    units: { sum: 'Days', avg: 'Days', sumShort: ' days', avgShort: ' days' },
     decimals: { sum: 0, avg: 2 },
   },
   {
@@ -105,7 +130,11 @@ export const OUTCOMES = [
       sum: 'Total Deaths',
       avg: 'Percentage of Visits with Death',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: {
+      sum: 'Visits',
+      avg: '% of Visits',
+      avgShort: '%',
+    },
     decimals: { sum: 0, avg: 1 },
   },
   {
@@ -116,7 +145,7 @@ export const OUTCOMES = [
       sum: 'Total Ventilator >24hr',
       avg: 'Percentage of Visits with Ventilator >24hr',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
   {
@@ -127,7 +156,7 @@ export const OUTCOMES = [
       sum: 'Total Stroke',
       avg: 'Percentage of Visits with Stroke',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
   {
@@ -138,7 +167,7 @@ export const OUTCOMES = [
       sum: 'Total ECMO',
       avg: 'Percentage of Visits with ECMO',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
 ] as const;
@@ -148,7 +177,13 @@ export type Outcome = typeof OUTCOMES[number]['value'];
 export const OUTCOME_OPTIONS = OUTCOMES as ReadonlyArray<{
   value: Outcome;
   label: { short: string; base: string; sum: string; avg: string };
-  units: { sum: string; avg: string };
+  units: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
   decimals: number | { sum: number; avg: number };
 }>;
 
@@ -209,7 +244,11 @@ export const GUIDELINE_ADHERENT = {
       avg: 'Percentage of Guideline Adherent RBC Transfusions',
     },
     // Adherence units & decimal truncation for display
-    units: { sum: 'Adherent RBC Transfusions', avg: '% Adherent RBC Transfusions' },
+    units: {
+      sum: 'Adherent RBC Transfusions',
+      avg: '% Adherent RBC Transfusions',
+      avgShort: '%',
+    },
     decimals: 0,
   },
   ffp: {
@@ -220,7 +259,11 @@ export const GUIDELINE_ADHERENT = {
       sum: 'Total Guideline Adherent FFP Transfusions',
       avg: 'Percentage of Guideline Adherent FFP Transfusions',
     },
-    units: { sum: 'Adherent Plasma Transfusions', avg: '% Adherent Plasma Transfusions' },
+    units: {
+      sum: 'Adherent Plasma Transfusions',
+      avg: '% Adherent Plasma Transfusions',
+      avgShort: '%',
+    },
     decimals: 0,
   },
   plt: {
@@ -231,7 +274,11 @@ export const GUIDELINE_ADHERENT = {
       sum: 'Total Guideline Adherent Platelet Transfusions',
       avg: 'Percentage of Adherent Platelet Transfusions',
     },
-    units: { sum: 'Adherent Platelet Transfusions', avg: '% Adherent Platelet Transfusions' },
+    units: {
+      sum: 'Adherent Platelet Transfusions',
+      avg: '% Adherent Platelet Transfusions',
+      avgShort: '%',
+    },
     decimals: 0,
   },
   cryo: {
@@ -242,7 +289,11 @@ export const GUIDELINE_ADHERENT = {
       sum: 'Total Guideline Adherent Cryo Transfusions',
       avg: 'Percentage of Guideline Adherent Cryo Transfusions',
     },
-    units: { sum: 'Adherent Cryo Transfusions', avg: '% Adherent Cryo Transfusions' },
+    units: {
+      sum: 'Adherent Cryo Transfusions',
+      avg: '% Adherent Cryo Transfusions',
+      avgShort: '%',
+    },
     decimals: 0,
   },
 } as const;
@@ -256,7 +307,11 @@ export const OVERALL_GUIDELINE_ADHERENT = {
     sum: 'Total Guideline Adherent Transfusions',
     avg: 'Percentage of Guideline Adherent Transfusions',
   },
-  units: { sum: 'Adherent Transfusions', avg: '% Adherent Transfusions' },
+  units: {
+    sum: 'Adherent Transfusions',
+    avg: '% Adherent Transfusions',
+    avgShort: '%',
+  },
   decimals: 0,
 } as const;
 
@@ -305,7 +360,7 @@ export const COSTS = {
       sum: 'Total RBC Cost',
       avg: 'Average RBC Cost Per Visit',
     },
-    units: { sum: '$', avg: '$' },
+    units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
     decimals: { sum: 0, avg: 0 },
   },
   ffp_units_cost: {
@@ -316,7 +371,7 @@ export const COSTS = {
       sum: 'Total FFP Cost',
       avg: 'Average FFP Cost Per Visit',
     },
-    units: { sum: '$', avg: '$' },
+    units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
     decimals: { sum: 0, avg: 0 },
   },
   plt_units_cost: {
@@ -327,7 +382,7 @@ export const COSTS = {
       sum: 'Total Platelet Cost',
       avg: 'Average Platelet Cost Per Visit',
     },
-    units: { sum: '$', avg: '$' },
+    units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
     decimals: { sum: 0, avg: 0 },
   },
   cryo_units_cost: {
@@ -338,7 +393,7 @@ export const COSTS = {
       sum: 'Total Cryo Cost',
       avg: 'Average Cryo Cost Per Visit',
     },
-    units: { sum: '$', avg: '$' },
+    units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
     decimals: { sum: 0, avg: 0 },
   },
   // TODO: Unit cost is wrong
@@ -350,7 +405,7 @@ export const COSTS = {
       sum: 'Total Cell Saver Cost',
       avg: 'Average Cell Saver Cost Per Visit',
     },
-    units: { sum: '$', avg: '$' },
+    units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
     decimals: { sum: 0, avg: 0 },
   },
 } as const;
@@ -361,7 +416,13 @@ export type Cost = typeof COSTS[keyof typeof COSTS]['value'];
 export const COST_OPTIONS = Object.values(COSTS) as ReadonlyArray<{
   value: Cost;
   label: { short: string; base: string; sum: string; avg: string };
-  units: { sum: string; avg: string };
+  units: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
   decimals: { sum: number; avg: number };
 }>;
 
@@ -373,7 +434,7 @@ export const OVERALL_BLOOD_PRODUCT_COST = {
     sum: 'Total Blood Product Costs',
     avg: 'Average Blood Product Costs Per Visit',
   },
-  units: { sum: '$', avg: '$' },
+  units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
   decimals: { sum: 0, avg: 0 },
 } as const;
 
@@ -387,7 +448,12 @@ export const VISIT_COUNT = {
     sum: 'Total Number of Visits',
     avg: 'Average Number of Visits',
   },
-  units: { sum: 'Visits', avg: 'Visits' },
+  units: {
+    sum: 'Visits',
+    avg: 'Visits',
+    sumShort: ' Cases',
+    avgShort: '%', // Ensure cases column is treated correctly in table if it's percentage
+  },
   decimals: { sum: 0, avg: 0 },
 } as const;
 
@@ -539,7 +605,13 @@ export const ExploreTableColumnOptionsGrouped = [
     items: BLOOD_COMPONENT_OPTIONS.map((opt) => ({
       value: opt.value,
       label: opt.label.base,
-      units: { sum: opt.label.sum, avg: opt.label.avg },
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: (opt.units as any).sumShort,
+        avgShort: (opt.units as any).avgShort,
+        type: (opt.units as any).type,
+      },
       decimals: opt.decimals,
     })),
   },
@@ -548,7 +620,13 @@ export const ExploreTableColumnOptionsGrouped = [
     items: OUTCOME_OPTIONS.map((opt) => ({
       value: opt.value,
       label: opt.label.base,
-      units: { sum: opt.label.sum, avg: opt.label.avg },
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: (opt.units as any).sumShort,
+        avgShort: (opt.units as any).avgShort,
+        type: (opt.units as any).type,
+      },
       decimals: opt.decimals,
     })),
   },
@@ -557,7 +635,13 @@ export const ExploreTableColumnOptionsGrouped = [
     items: PROPHYL_MED_OPTIONS.map((opt) => ({
       value: opt.value,
       label: opt.label.base,
-      units: { sum: opt.label.sum, avg: opt.label.avg },
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: (opt.units as any).sumShort,
+        avgShort: (opt.units as any).avgShort,
+        type: (opt.units as any).type,
+      },
       decimals: opt.decimals,
     })),
   },
@@ -566,7 +650,13 @@ export const ExploreTableColumnOptionsGrouped = [
     items: GUIDELINE_ADHERENT_OPTIONS.map((opt) => ({
       value: opt.value,
       label: opt.label.base,
-      units: { sum: opt.label.sum, avg: opt.label.avg },
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: (opt.units as any).sumShort,
+        avgShort: (opt.units as any).avgShort,
+        type: (opt.units as any).type,
+      },
       decimals: opt.decimals,
     })),
   },
@@ -575,7 +665,13 @@ export const ExploreTableColumnOptionsGrouped = [
     items: COST_OPTIONS.map((opt) => ({
       value: opt.value,
       label: opt.label.base,
-      units: { sum: opt.label.sum, avg: opt.label.avg },
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: (opt.units as any).sumShort,
+        avgShort: (opt.units as any).avgShort,
+        type: (opt.units as any).type,
+      },
       decimals: opt.decimals,
     })),
   },
@@ -592,14 +688,36 @@ export const ExploreTableColumnOptionsGrouped = [
       {
         value: 'cases',
         label: 'Cases',
-        units: { sum: 'cases', avg: '% of cases' },
+        units: { sum: 'cases', avg: '% of cases', sumShort: ' Cases', avgShort: '%' },
         decimals: 0,
       },
     ],
   },
 ];
 
-export const ExploreTableColumnOptions: { value: string; label: string, units?: { sum: string, avg: string }, decimals?: number | { sum: number, avg: number } }[] = ExploreTableColumnOptionsGrouped.flatMap(g => g.items);
+export const ExploreTableColumnOptions: {
+  value: string;
+  label: string;
+  units?: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
+  decimals?: number | { sum: number; avg: number };
+}[] = ExploreTableColumnOptionsGrouped.flatMap(g => g.items as {
+  value: string;
+  label: string;
+  units?: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
+  decimals?: number | { sum: number; avg: number };
+}[]);
 
 // Row options
 export const ExploreTableRowOptions: { value: string; label: string }[] = [

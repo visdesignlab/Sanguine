@@ -1,5 +1,5 @@
 import {
-  useContext, useEffect, useState, useMemo, useRef, createContext, memo, useCallback,
+  useContext, useEffect, useState, useMemo, useRef, createContext, memo, useCallback, CSSProperties,
 } from 'react';
 import { observer } from 'mobx-react-lite';
 import {
@@ -45,7 +45,7 @@ const getDecimals = (colVar: string, agg: string = 'sum'): number => {
   if (!option || option.decimals === undefined) return 0;
   if (typeof option.decimals === 'number') return option.decimals;
   const key = (agg === 'avg') ? 'avg' : 'sum';
-  return (option.decimals as { sum: number; avg: number })[key] ?? 0;
+  return (option?.decimals as { sum: number; avg: number })?.[key] ?? 0;
 };
 
 // When adding column, infer column type from attribute
@@ -230,7 +230,8 @@ const NumericBarCell = ({
   max: number;
   colVar: string;
   setHoveredValue: SetHoveredValue;
-  opts?: { suffix?: string; padding?: string; cellHeight?: number; fillColor?: string };
+
+  opts?: { padding?: string; cellHeight?: number; fillColor?: string };
   agg?: string;
 }) => {
   // Default Options
@@ -238,7 +239,6 @@ const NumericBarCell = ({
     cellHeight = 21,
     fillColor = '#8c8c8c',
     padding = '1px 1px 1px 1px',
-    suffix,
   } = opts;
 
   const isMissing = value === null || value === undefined;
@@ -252,16 +252,23 @@ const NumericBarCell = ({
   const clipRightAmount = `${Math.max(0, 100 - barWidthPercent)}%`;
 
   // The actual numeric value to display
-  const unitKey = (agg === 'avg') ? 'avg' : 'sum';
-  const valueUnit = ExploreTableColumnOptions.find((opt) => opt.value === colVar)?.units?.[unitKey];
+  const unitConfig = ExploreTableColumnOptions.find((opt) => opt.value === colVar)?.units;
+  const aggKey = (agg === 'avg') ? 'avg' : 'sum';
+  const shortKey = (agg === 'avg') ? 'avgShort' : 'sumShort';
+
+  const unitString = unitConfig?.[shortKey] ?? unitConfig?.[aggKey] ?? '';
+  const type = unitConfig?.type ?? 'suffix';
+  const prefix = type === 'prefix' ? unitString : '';
+  const suffix = type === 'suffix' ? unitString : '';
   const decimals = getDecimals(colVar, agg);
   const formattedValue = isMissing ? '-' : Number(value).toFixed(decimals);
-  const displayValue = isMissing ? 'No data' : `${formattedValue} ${valueUnit ?? ''}`;
+
+  const textValue = isMissing ? '-' : `${prefix}${formattedValue}${suffix}`;
   const hasValue = !isMissing && Number(value) !== 0;
 
   return (
     <Tooltip
-      label={hasValue ? `${displayValue}` : 'No data'}
+      label={hasValue ? textValue : 'No data'}
       position="top"
       withArrow
     >
@@ -280,7 +287,7 @@ const NumericBarCell = ({
             className="numeric-bar-cell-text-container"
           >
             <p className="numeric-bar-cell-text" style={{ lineHeight: `${cellHeight}px` }}>
-              {isMissing ? '-' : (typeof suffix === 'string' ? `${formattedValue}${suffix}` : formattedValue)}
+              {textValue}
             </p>
           </div>
           {/* Bar fill */}
@@ -301,7 +308,7 @@ const NumericBarCell = ({
             }}
           >
             <p className="numeric-bar-cell-text" style={{ lineHeight: `${cellHeight}px` }}>
-              {isMissing ? '-' : (typeof suffix === 'string' ? `${formattedValue}${suffix}` : formattedValue)}
+              {textValue}
             </p>
           </div>
         </div>
@@ -594,6 +601,28 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             // Normalize value for color scale
             const normalizedVal = getNormalizedValue(val);
 
+            if (val === 0) {
+              return (
+                <Tooltip label={`${formattedVal}% of cases`} withArrow>
+                  <div
+                    onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
+                    onMouseLeave={() => setHoveredValue(null)}
+                    style={{
+                      padding,
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      height: '100%',
+                      color: '#8c8c8c', // Greyish color for dash
+                    }}
+                  >
+                    &mdash;
+                  </div>
+                </Tooltip>
+              );
+            }
+
             return (
               <Tooltip label={`${formattedVal}% of cases`} withArrow>
                 <div
@@ -607,7 +636,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                     style={{
                       backgroundColor: getHeatmapColor(val),
                       '--heatmap-text-color': normalizedVal > 0.5 ? 'white' : 'black', // Switch text color based on background darkness
-                    }}
+                    } as CSSProperties}
                   >
                     {formattedVal}
                     %
@@ -623,7 +652,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             const v1 = val?.[0] ?? 0;
             const v2 = val?.[1] ?? 0;
             return (
-              <Stack gap={0} padding={0}>
+              <Stack gap={0} p={0}>
                 {renderHeatmapCell(v1, '1.5px 1px 0.5px 1px', true)}
                 {renderHeatmapCell(v2, '0.5px 1px 1.5px 1px', true)}
               </Stack>
@@ -645,7 +674,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             const v1 = val?.[0] ?? null;
             const v2 = val?.[1] ?? null;
             return (
-              <Stack gap={0} padding={0}>
+              <Stack gap={0} p={0}>
                 <NumericBarCell
                   value={v1}
                   max={maxVal}
