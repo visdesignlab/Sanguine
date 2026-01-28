@@ -124,16 +124,13 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
 
 // Histogram footer component
 const HistogramFooter = observer(({
-  bins, colorScale, colVar, agg, hoverStore,
+  bins, colorScale, colVar, agg, hoverState,
 }: {
   bins: HistogramBin[];
   colorScale?: (val: number) => string;
   colVar?: string;
   agg?: string;
-  hoverStore: {
-    hoveredValue: HoveredValue;
-    setHoveredValue: (val: HoveredValue) => void;
-  };
+  hoverState: { current: HoveredValue };
 }) => {
   if (!bins || bins.length === 0) {
     return null;
@@ -143,7 +140,7 @@ const HistogramFooter = observer(({
   const maxVal = bins[bins.length - 1]?.binMax ?? 0;
 
   // Check if this column is hovered
-  const hoveredValue = hoverStore?.hoveredValue;
+  const hoveredValue = hoverState.current;
   const isHoveredCol = hoveredValue?.col === colVar;
   const hoveredVal = hoveredValue?.value;
 
@@ -330,13 +327,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   const [textFilters, setTextFilters] = useState<Record<string, string>>({});
 
   // Interaction
-  const hoverStore = useLocalObservable(() => ({
-    hoveredValue: null as HoveredValue,
-    setHoveredValue(val: HoveredValue) {
-      this.hoveredValue = val;
-    },
-  }));
-  const setHoveredValue = (val: HoveredValue) => hoverStore.setHoveredValue(val);
+  const hoverState = useLocalObservable(() => ({ current: null }));
+  const setHoveredValue = (val: HoveredValue) => { hoverState.current = val; };
 
   // Sorting
   const defaultSortCol = chartConfig.columns[0]?.colVar || 'surgeon_prov_id';
@@ -559,7 +551,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             colorScale={type === 'heatmap' ? getHeatmapColor : undefined}
             colVar={colVar}
             agg={colConfig.aggregation}
-            hoverStore={hoverStore}
+            hoverState={hoverState}
           />
         );
       };
