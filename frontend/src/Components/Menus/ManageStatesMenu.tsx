@@ -313,17 +313,6 @@ export const SavedStatesMenu = observer(
       ? store.provenance?.getState(activePreviewState.id)
       : null;
 
-    // Save State Handlers -------
-    // Used for the Green 'Save Current State' button behavior (renaming 'Current State' -> 'State N')
-    const handleSaveCurrentState = () => {
-      if (activePreviewState && activePreviewState.name === 'Current State') {
-        const newName = store.saveCurrentStateAsNew(activePreviewState.id);
-        const newUniqueId = store.getUniqueStateId(activePreviewState.id, newName);
-        setJustSavedId(newUniqueId);
-        setPreviewStateId(newUniqueId);
-      }
-    };
-
     // Restore State & Reset To Default Handlers -------
     const handleRestoreState = () => {
       if (stateToRestore) {
@@ -462,6 +451,15 @@ export const SavedStatesMenu = observer(
         const state = store.savedStates.find((s) => s.uniqueId === editingStateId);
         if (state) {
           store.renameState(state.id, state.name, tempName.trim());
+
+          // Calculate new unique ID to keep selection valid
+          const newUniqueId = store.getUniqueStateId(state.id, tempName.trim());
+          setPreviewStateId(newUniqueId);
+
+          // If this was the "just saved" state, update that reference so the "Saved" text persists
+          if (justSavedId === editingStateId) {
+            setJustSavedId(newUniqueId);
+          }
         }
         setEditingStateId(null);
         setTempName('');
@@ -471,6 +469,17 @@ export const SavedStatesMenu = observer(
     const cancelEditing = () => {
       setEditingStateId(null);
       setTempName('');
+    };
+
+    // Used for the Green 'Save As ...' button behavior (renaming 'Current State' -> 'State N')
+    const handleSaveCurrentState = () => {
+      if (activePreviewState && activePreviewState.name === 'Current State') {
+        const newName = store.saveCurrentStateAsNew(activePreviewState.id);
+        const newUniqueId = store.getUniqueStateId(activePreviewState.id, newName);
+        setJustSavedId(newUniqueId);
+        setPreviewStateId(newUniqueId);
+        startEditingStateName(newUniqueId, newName);
+      }
     };
 
     // Share State Handler -------
@@ -864,7 +873,7 @@ export const SavedStatesMenu = observer(
                             onClick={handleSaveCurrentState}
                             style={{ flexShrink: 0 }}
                           >
-                            Save Current State
+                            Save As ...
                           </Button>
                         ) : (
                           // Check equality
@@ -951,7 +960,7 @@ export const SavedStatesMenu = observer(
           hasNext={sortedStates.findIndex((s) => s.id === zoomedStateId) < sortedStates.length - 1}
         />
         {/* Delete Confirmation Modal */}
-        < Modal
+        <Modal
           opened={deleteConfirmation.isOpen}
           onClose={() => setDeleteConfirmation({ ...deleteConfirmation, isOpen: false })}
           title="Confirm Deletion"
