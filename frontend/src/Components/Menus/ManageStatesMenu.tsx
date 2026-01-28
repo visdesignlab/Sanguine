@@ -476,8 +476,11 @@ export const SavedStatesMenu = observer(
       if (activePreviewState && activePreviewState.name === 'Current State') {
         const newName = store.saveCurrentStateAsNew(activePreviewState.id);
         const newUniqueId = store.getUniqueStateId(activePreviewState.id, newName);
+        // Set the new state as the just saved state
         setJustSavedId(newUniqueId);
+        // Set the new state as the preview state
         setPreviewStateId(newUniqueId);
+        // Start editing the new state's name
         startEditingStateName(newUniqueId, newName);
       }
     };
