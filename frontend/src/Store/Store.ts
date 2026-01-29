@@ -1571,8 +1571,10 @@ export class RootStore {
 
         const sourceTable = (!isFiltered && !usesCostColumns) ? 'visits' : 'filteredVisits';
 
+
         tableConfig.columns.forEach((col) => {
-          const { colVar, aggregation } = col;
+          const { colVar } = col;
+          const colAggregation = tableConfig.aggregation || col.aggregation;
 
           // Special case: percent_*_rbc columns
           // These require calculating percentages from RBC unit counts
@@ -1589,10 +1591,14 @@ export class RootStore {
               }
 
               // Calculate percentage of visits matching the condition
-              if (aggregation === 'avg' || aggregation === 'sum') {
+              if (colAggregation === 'avg') {
                 // Use COUNT FILTER which is faster than SUM CASE
                 columnClauses.push(
                   `(COUNT(*) FILTER (WHERE ${condition}) * 100.0 / COUNT(*)) AS ${colVar}`,
+                );
+              } else if (colAggregation === 'sum') {
+                columnClauses.push(
+                  `COUNT(*) FILTER (WHERE ${condition}) AS ${colVar}`,
                 );
               } else {
                 // For 'none', we'd need individual visit data - use array aggregation
@@ -1603,7 +1609,7 @@ export class RootStore {
             }
           } else if (colVar === 'cases') {
             // Special case: cases (visit count)
-            if (aggregation === 'none') {
+            if (colAggregation === 'none') {
               // For violin/heatmap, return individual counts as array
               columnClauses.push(`LIST(1) AS ${colVar}`);
             } else {
@@ -1620,16 +1626,22 @@ export class RootStore {
             }
           } else {
             // Standard numeric fields with aggregation
-            const aggFn = aggregation === 'none' ? 'LIST' : aggregation.toUpperCase();
+            const aggFn = colAggregation === 'none' ? 'LIST' : colAggregation.toUpperCase();
 
             // Handle boolean fields (convert to percentage for sum/avg)
             const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
-            if (booleanFields.includes(colVar) && (aggregation === 'avg' || aggregation === 'sum')) {
+            if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
               // Convert boolean to percentage
-              columnClauses.push(
-                `(COUNT(*) FILTER (WHERE ${colVar} = TRUE) * 100.0 / COUNT(*)) AS ${colVar}`
-              );
-            } else if (aggregation === 'none') {
+              if (colAggregation === 'avg') {
+                columnClauses.push(
+                  `(COUNT(*) FILTER (WHERE ${colVar} = TRUE) * 100.0 / COUNT(*)) AS ${colVar}`
+                );
+              } else {
+                columnClauses.push(
+                  `COUNT(*) FILTER (WHERE ${colVar} = TRUE) AS ${colVar}`
+                );
+              }
+            } else if (colAggregation === 'none') {
               // For violin/heatmap visualization, collect all values
               columnClauses.push(`LIST(${colVar}) AS ${colVar}`);
             } else {

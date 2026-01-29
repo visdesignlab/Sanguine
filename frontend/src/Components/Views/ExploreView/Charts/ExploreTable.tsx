@@ -15,7 +15,7 @@ import {
   Select,
 } from '@mantine/core';
 import {
-  IconGripVertical, IconMathGreater, IconMathLower,
+  IconGripVertical, IconMathGreater, IconMathLower, IconPercentage,
 } from '@tabler/icons-react';
 import {
   DataTable, DataTableColumn, useDataTableColumns, type DataTableSortStatus,
@@ -745,6 +745,27 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         </Flex>
 
         <Flex direction="row" align="center" gap="sm">
+          {/** Aggregation Toggle */}
+          <Tooltip label={`Change values to ${chartConfig.aggregation === 'sum' ? 'average' : 'sum'}`}>
+            <ActionIcon
+              variant="subtle"
+              onClick={() => {
+                const newAgg = chartConfig.aggregation === 'sum' ? 'avg' : 'sum';
+                const newCols = chartConfig.columns.map((c) => ({
+                  ...c,
+                  aggregation: (c.type === 'text' || c.aggregation === 'none') ? c.aggregation : newAgg,
+                }));
+
+                store.updateExploreChartConfig({
+                  ...chartConfig,
+                  aggregation: newAgg,
+                  columns: newCols,
+                });
+              }}
+            >
+              <IconPercentage size={18} />
+            </ActionIcon>
+          </Tooltip>
           {/** Row Selection */}
           <Select
             placeholder="Rows"

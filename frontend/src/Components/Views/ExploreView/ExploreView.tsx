@@ -97,6 +97,7 @@ export function ExploreView() {
         chartType: 'exploreTable',
         title: `RBC Transfusions per ${groupLabel}`,
         rowVar: exploreTableGroupVar,
+        aggregation,
         columns: [
           {
             colVar: exploreTableGroupVar,
@@ -112,31 +113,31 @@ export function ExploreView() {
           },
           {
             colVar: 'percent_1_rbc',
-            aggregation: 'avg',
+            aggregation: aggregation as 'sum' | 'avg',
             type: 'heatmap',
             title: '1 RBC',
           },
           {
             colVar: 'percent_2_rbc',
-            aggregation: 'avg',
+            aggregation: aggregation as 'sum' | 'avg',
             type: 'heatmap',
             title: '2 RBC',
           },
           {
             colVar: 'percent_3_rbc',
-            aggregation: 'avg',
+            aggregation: aggregation as 'sum' | 'avg',
             type: 'heatmap',
             title: '3 RBC',
           },
           {
             colVar: 'percent_4_rbc',
-            aggregation: 'avg',
+            aggregation: aggregation as 'sum' | 'avg',
             type: 'heatmap',
             title: '4 RBC',
           },
           {
             colVar: 'percent_above_5_rbc',
-            aggregation: 'avg',
+            aggregation: aggregation as 'sum' | 'avg',
             type: 'heatmap',
             title: '5 RBC',
           },

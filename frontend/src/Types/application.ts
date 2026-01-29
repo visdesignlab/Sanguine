@@ -755,6 +755,7 @@ export type ExploreTableConfig = {
   chartType: 'exploreTable';
   rowVar: typeof ExploreTableRowVars[number];
   columns: ExploreTableColumn[];
+  aggregation?: 'sum' | 'avg';
   twoValsPerRow?: boolean;
 };
 
