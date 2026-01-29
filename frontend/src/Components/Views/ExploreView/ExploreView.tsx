@@ -21,7 +21,7 @@ import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
 import {
-  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS,
+  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS, ExploreTableRowOptions, ExploreChartConfig,
 } from '../../../Types/application';
 import { CostChart } from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
@@ -55,9 +55,10 @@ export function ExploreView() {
 
   // Add Chart Modal State ---------------------------------
   const [isAddModalOpen, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
-  const [chartType, setChartType] = useState<'cost' | 'scatter'>('cost');
+  const [chartType, setChartType] = useState<'cost' | 'scatter' | 'exploreTable'>('cost');
   const [aggregation, setAggregation] = useState<'sum' | 'avg'>('sum');
   const [costGroupVar, setCostGroupVar] = useState<string>('');
+  const [exploreTableGroupVar, setExploreTableGroupVar] = useState<string>('');
   const [scatterXAxisVar, setScatterXAxisVar] = useState<string>('quarter');
   const [scatterYAxisVar, setScatterYAxisVar] = useState<string>('');
 
@@ -65,6 +66,7 @@ export function ExploreView() {
     setChartType('cost');
     setAggregation('sum');
     setCostGroupVar('');
+    setExploreTableGroupVar('');
     setScatterXAxisVar('quarter');
     setScatterYAxisVar('');
   }, []);
@@ -85,6 +87,62 @@ export function ExploreView() {
         yAxisVar: costGroupVar as typeof costYAxisVars[number],
         aggregation,
       });
+    } else if (chartType === 'exploreTable') {
+      if (!exploreTableGroupVar) return;
+
+      const groupLabel = ExploreTableRowOptions.find((o) => o.value === exploreTableGroupVar)?.label || exploreTableGroupVar;
+
+      store.addExploreChart({
+        chartId: id,
+        chartType: 'exploreTable',
+        title: `RBC Transfusions per ${groupLabel}`,
+        rowVar: exploreTableGroupVar,
+        columns: [
+          {
+            colVar: exploreTableGroupVar,
+            aggregation: 'none',
+            type: 'text',
+            title: groupLabel,
+          },
+          {
+            colVar: 'cases',
+            aggregation: 'sum',
+            type: 'numeric',
+            title: 'Cases',
+          },
+          {
+            colVar: 'percent_1_rbc',
+            aggregation: 'avg',
+            type: 'heatmap',
+            title: '1 RBC',
+          },
+          {
+            colVar: 'percent_2_rbc',
+            aggregation: 'avg',
+            type: 'heatmap',
+            title: '2 RBC',
+          },
+          {
+            colVar: 'percent_3_rbc',
+            aggregation: 'avg',
+            type: 'heatmap',
+            title: '3 RBC',
+          },
+          {
+            colVar: 'percent_4_rbc',
+            aggregation: 'avg',
+            type: 'heatmap',
+            title: '4 RBC',
+          },
+          {
+            colVar: 'percent_above_5_rbc',
+            aggregation: 'avg',
+            type: 'heatmap',
+            title: '5 RBC',
+          },
+        ],
+        twoValsPerRow: false,
+      } as unknown as ExploreChartConfig); // TODO: Type assertion needed until ExploreChartConfig full union is refined or matches exactly
     } else {
       if (!scatterXAxisVar || !scatterYAxisVar) return;
       store.addExploreChart({
@@ -166,8 +224,15 @@ export function ExploreView() {
             data={[
               { value: 'cost', label: 'Costs & Savings' },
               { value: 'scatter', label: 'Scatter' },
+              { value: 'exploreTable', label: 'Heatmap' },
             ]}
-            onChange={(v) => setChartType((v as 'cost' | 'scatter') || 'cost')}
+            onChange={(v) => {
+              const val = (v as 'cost' | 'scatter' | 'exploreTable') || 'cost';
+              setChartType(val);
+              if (val === 'exploreTable') {
+                setAggregation('avg');
+              }
+            }}
           />
           <Select
             label="Aggregation"
@@ -183,6 +248,14 @@ export function ExploreView() {
               value={costGroupVar}
               data={costGroupOptions}
               onChange={(v) => setCostGroupVar(v || '')}
+            />
+          ) : chartType === 'exploreTable' ? (
+            <Select
+              label="Group By"
+              placeholder="Choose grouping variable"
+              value={exploreTableGroupVar}
+              data={ExploreTableRowOptions}
+              onChange={(v) => setExploreTableGroupVar(v || '')}
             />
           ) : (
             <>
@@ -206,6 +279,7 @@ export function ExploreView() {
             onClick={handleAddChart}
             disabled={
               (chartType === 'cost' && !costGroupVar)
+              || (chartType === 'exploreTable' && !exploreTableGroupVar)
               || (chartType === 'scatter' && (!scatterXAxisVar || !scatterYAxisVar))
             }
             fullWidth

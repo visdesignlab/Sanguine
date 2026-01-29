@@ -1,5 +1,5 @@
 import {
-  useContext, useEffect, useState, useMemo, useRef, memo, useCallback, CSSProperties,
+  useContext, useEffect, useState, useMemo, useRef, useCallback, CSSProperties,
 } from 'react';
 import { observer, useLocalObservable, Observer } from 'mobx-react-lite';
 import {
@@ -41,7 +41,7 @@ const getDecimals = (colVar: string, agg: string = 'sum'): number => {
   if (!option || option.decimals === undefined) return 0;
   if (typeof option.decimals === 'number') return option.decimals;
   const key = (agg === 'avg') ? 'avg' : 'sum';
-  return (option?.decimals as { sum: number; avg: number })?.[key] ?? 0;
+  return option.decimals[key] ?? 0;
 };
 
 // When adding column, infer column type from attribute
@@ -63,15 +63,28 @@ const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColum
 };
 
 // Helper function to sort rows
-const sortRows = <T,>(data: T[], getter: (item: T) => any): T[] => {
+function sortRows<T>(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] {
   return [...data].sort((a, b) => {
     const valueA = getter(a);
     const valueB = getter(b);
-    if (valueA < valueB) return -1;
-    if (valueA > valueB) return 1;
+
+    if (valueA === valueB) return 0;
+    if (valueA === null || valueA === undefined) return 1;
+    if (valueB === null || valueB === undefined) return -1;
+
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      if (valueA < valueB) return -1;
+      if (valueA > valueB) return 1;
+      return 0;
+    }
+
+    const strA = String(valueA);
+    const strB = String(valueB);
+    if (strA < strB) return -1;
+    if (strA > strB) return 1;
     return 0;
   });
-};
+}
 
 // Compute histogram bins for a given set of values
 const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
@@ -182,7 +195,7 @@ function NumericBarCell({
         style={{
           padding,
         }}
-        onMouseEnter={() => !isMissing && setHoveredValue({ col: colVar, value: value! })}
+        onMouseEnter={() => !isMissing && setHoveredValue({ col: colVar, value })}
         onMouseLeave={() => setHoveredValue(null)}
       >
         <div className="numeric-bar-cell-inner" style={{ height: cellHeight }}>
@@ -234,7 +247,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   const [textFilters, setTextFilters] = useState<Record<string, string>>({});
 
   // Interaction
-  const hoverState = useLocalObservable(() => ({ current: null }));
+  const hoverState = useLocalObservable(() => ({ current: null as HoveredValue }));
   const setHoveredValue = (val: HoveredValue) => { hoverState.current = val; };
 
   // Sorting
@@ -255,13 +268,13 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Text Filters
       const matchesText = Object.entries(textFilters).every(([key, query]) => {
         const val = String(row[key] ?? '').toLowerCase();
-        return val.includes((query as string).toLowerCase());
+        return val.includes(query.toLowerCase());
       });
       if (!matchesText) return false;
 
       // Numeric Filters
       const matchesNumeric = Object.entries(numericFilters).every(([key, filter]) => {
-        const { query, cmp } = filter as NumericFilter;
+        const { query, cmp } = filter;
         if (!query) return true;
         const threshold = Number(query);
         const rawVal = row[key];
@@ -286,7 +299,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       return val;
     };
 
-    const sorted = sortRows(filteredData, getSortValue) as ExploreTableRow[];
+    const sorted = sortRows(filteredData, getSortValue);
     return sortStatus.direction === 'desc' ? sorted.reverse() : sorted;
   }, [
     sortStatus,
@@ -300,10 +313,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     if (!value) return;
 
     const rowOptions = ExploreTableRowOptions.map((o) => o.value);
-    let newColumns = chartConfig.columns.filter((c) => {
-      // Keep the column if it's NOT a row option OR if it matches the NEW value
-      return !rowOptions.includes(c.colVar) || c.colVar === value;
-    });
+    // Keep the column if it's NOT a row option OR if it matches the NEW value
+    let newColumns = chartConfig.columns.filter((c) => !rowOptions.includes(c.colVar) || c.colVar === value);
 
     // Ensure the new row variable is included as a column
     const isRowVarPresent = newColumns.some((c) => c.colVar === value);
@@ -322,10 +333,15 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       }
     }
 
+    // Generate new title
+    const groupLabel = ExploreTableRowOptions.find((o) => o.value === value)?.label || value;
+    const newTitle = `RBC Transfusions per ${groupLabel}`;
+
     const updatedConfig: ExploreTableConfig = {
       ...chartConfig,
       rowVar: value,
       columns: newColumns,
+      title: newTitle,
     };
     store.updateExploreChartConfig(updatedConfig);
   };
@@ -455,8 +471,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         return (
           <Observer>
             {() => {
-              const minVal = bins[0]?.binMin ?? 0;
-              const maxVal = bins[bins.length - 1]?.binMax ?? 0;
+              const histogramMinVal = bins[0]?.binMin ?? 0;
+              const histogramMaxVal = bins[bins.length - 1]?.binMax ?? 0;
 
               // Check if this column is hovered
               const hoveredValStr = hoverState.current;
@@ -503,10 +519,10 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                   <div className="histogram-footer-line" style={{ borderTop: `1px solid ${colorScale ? '#fc8d59' : '#6f6f6f'}` }} />
                   <div className="histogram-footer-ticks">
                     <div className="histogram-footer-tick-min" style={{ color: themeColor }}>
-                      {colVar ? minVal.toFixed(getDecimals(colVar, agg)) : minVal}
+                      {colVar ? histogramMinVal.toFixed(getDecimals(colVar, agg)) : histogramMinVal}
                     </div>
                     <div className="histogram-footer-tick-max" style={{ color: themeColor }}>
-                      {colVar ? maxVal.toFixed(getDecimals(colVar, agg)) : maxVal}
+                      {colVar ? histogramMaxVal.toFixed(getDecimals(colVar, agg)) : histogramMaxVal}
                     </div>
                   </div>
                 </div>
@@ -514,7 +530,6 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             }}
           </Observer>
         );
-
       };
 
       // Helper to create numeric filter input
@@ -549,9 +564,6 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           />
         );
       };
-
-      // --- Column Type Specific Logic ---
-
 
       // Heatmap columns ---
       if (type === 'heatmap') {
@@ -696,6 +708,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   // Data Table Columns -------
   const columnDefs = useMemo(
     () => generateColumnDefs(chartConfig.columns),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       chartConfig.columns,
       chartConfig.twoValsPerRow,
