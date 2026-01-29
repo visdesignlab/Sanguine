@@ -35,7 +35,6 @@ type HoveredValue = { col: string; value: number } | null;
 type HistogramBin = { binMin: number; binMax: number; count: number };
 type SetHoveredValue = (val: HoveredValue) => void;
 
-
 // Helper to get decimals
 const getDecimals = (colVar: string, agg: string = 'sum'): number => {
   const option = ExploreTableColumnOptions.find((opt) => opt.value === colVar);
@@ -118,13 +117,10 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
     result[binIdx].count += 1;
   });
 
-
   return result;
 };
 
-
-
-const NumericBarCell = ({
+function NumericBarCell({
   value, max, colVar, opts = {}, setHoveredValue, agg,
 }: {
   value: number | null | undefined;
@@ -134,7 +130,7 @@ const NumericBarCell = ({
 
   opts?: { padding?: string; cellHeight?: number; fillColor?: string };
   agg?: string;
-}) => {
+}) {
   // Default Options
   const {
     cellHeight = 21,
@@ -224,7 +220,7 @@ const NumericBarCell = ({
       </div>
     </Tooltip>
   );
-};
+}
 
 // MARK: - ExploreTable
 
