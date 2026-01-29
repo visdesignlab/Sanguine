@@ -21,7 +21,6 @@ import {
   ExploreChartConfig,
   ExploreChartData,
   ExploreTableConfig,
-  ExploreTableColumn,
   TimeAggregation,
   TimePeriod,
   dashboardXAxisVars,
@@ -1559,9 +1558,7 @@ export class RootStore {
   }
 
   async computeExploreChartData(): Promise<void> {
-    const data: ExploreChartData = {};
-
-    for (const config of this.exploreChartConfigs) {
+    const promises = this.exploreChartConfigs.map(async (config) => {
       if (config.chartType === 'exploreTable') {
         const tableConfig = config as ExploreTableConfig;
 
@@ -1595,27 +1592,25 @@ export class RootStore {
               if (aggregation === 'avg' || aggregation === 'sum') {
                 // Use COUNT FILTER which is faster than SUM CASE
                 columnClauses.push(
-                  `(COUNT(*) FILTER (WHERE ${condition}) * 100.0 / COUNT(*)) AS ${colVar}`
+                  `(COUNT(*) FILTER (WHERE ${condition}) * 100.0 / COUNT(*)) AS ${colVar}`,
                 );
               } else {
                 // For 'none', we'd need individual visit data - use array aggregation
                 columnClauses.push(
-                  `LIST(CASE WHEN ${condition} THEN 100 ELSE 0 END) AS ${colVar}`
+                  `LIST(CASE WHEN ${condition} THEN 100 ELSE 0 END) AS ${colVar}`,
                 );
               }
             }
-          }
-          // Special case: cases (visit count)
-          else if (colVar === 'cases') {
+          } else if (colVar === 'cases') {
+            // Special case: cases (visit count)
             if (aggregation === 'none') {
               // For violin/heatmap, return individual counts as array
               columnClauses.push(`LIST(1) AS ${colVar}`);
             } else {
               columnClauses.push(`COUNT(*) AS ${colVar}`);
             }
-          }
-          // Special case: attending_provider, year, quarter (text/categorical fields, should be in GROUP BY)
-          else if (['attending_provider', 'year', 'quarter'].includes(colVar)) {
+          } else if (['attending_provider', 'year', 'quarter'].includes(colVar)) {
+            // Special case: attending_provider, year, quarter (text/categorical fields, should be in GROUP BY)
             if (colVar === tableConfig.rowVar) {
               columnClauses.push(`${colVar}`);
             } else {
@@ -1623,9 +1618,8 @@ export class RootStore {
               // Use DISTINCT and avoid massive string composition if possible, but STRING_AGG is needed for "list of values" if not grouping by it
               columnClauses.push(`STRING_AGG(DISTINCT CAST(${colVar} AS STRING), ', ') AS ${colVar}`);
             }
-          }
-          // Standard numeric fields with aggregation
-          else {
+          } else {
+            // Standard numeric fields with aggregation
             const aggFn = aggregation === 'none' ? 'LIST' : aggregation.toUpperCase();
 
             // Handle boolean fields (convert to percentage for sum/avg)
@@ -1659,10 +1653,8 @@ export class RootStore {
         `;
 
         try {
-          const startTime = performance.now();
           const queryResult = await this.duckDB!.query(query);
           const rows = queryResult.toArray().map((row: any) => row.toJSON());
-          const endTime = performance.now();
 
           // If twoValsPerRow is enabled, we need to transform the data
           // This would require a different query structure - TODO for now
@@ -1671,22 +1663,23 @@ export class RootStore {
             console.warn('twoValsPerRow is not yet fully implemented, using basic data');
           }
 
-          data[config.chartId] = rows;
+          return { id: config.chartId, data: rows };
         } catch (error) {
           console.error('Error executing explore table query:', error);
-          data[config.chartId] = [];
+          return { id: config.chartId, data: [] };
         }
       }
-      if (config.chartType === 'scatterPlot') {
-        data[config.chartId] = [];
-      }
-      if (config.chartType === 'cost') {
-        data[config.chartId] = [];
-      }
-    }
+      return { id: config.chartId, data: [] };
+    });
+
+    const results = await Promise.all(promises);
+    const data: ExploreChartData = {};
+    results.forEach(({ id, data: d }) => {
+      data[id] = d;
+    });
+
     this.exploreChartData = data;
   }
-
 
   async updateFilteredVisitsLength() {
     if (!this.duckDB) return;
