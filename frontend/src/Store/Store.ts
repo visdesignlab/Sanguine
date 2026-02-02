@@ -1566,71 +1566,62 @@ export class RootStore {
         // Build column selection clauses based on config.columns
         const columnClauses: string[] = [];
 
+        // Iterate over the columns and build the column selection clauses
         tableConfig.columns.forEach((col) => {
           const { colVar } = col;
-          const colAggregation = tableConfig.aggregation || col.aggregation;
+          const colAggregation = config.aggregation || col.aggregation;
+          const aggFn = colAggregation.toUpperCase();
 
           // Special case: percent_*_rbc columns
           if (colVar.startsWith('percent_')) {
             const match = colVar.match(/percent_(\d+|above_5)_rbc/);
             if (match) {
               const count = match[1];
-              let condition: string;
+              const condition = count === 'above_5' ? 'rbc_units >= 5' : `rbc_units = ${count}`;
 
-              // Condition: Visits where >= x RBC units
-              if (count === 'above_5') {
-                condition = 'rbc_units >= 5';
-              } else {
-                condition = `rbc_units = ${count}`;
-              }
-
-              // Calculate percentage of visits >= x RBC units
               if (colAggregation === 'avg') {
-                columnClauses.push(
-                  `(COUNT(*) FILTER (WHERE ${condition}) * 100.0 / COUNT(*)) AS ${colVar}`,
-                );
-                // Calculate the total number of visits >= x RBC units
+                columnClauses.push(`AVG(CAST(${condition} AS INT)) * 100.0 AS ${colVar}`);
               } else if (colAggregation === 'sum') {
-                columnClauses.push(
-                  `COUNT(*) FILTER (WHERE ${condition}) AS ${colVar}`,
-                );
+                columnClauses.push(`SUM(CAST(${condition} AS INT)) AS ${colVar}`);
               }
             }
-          } else if (colVar === 'cases') {
-            // Special case: cases (visit count)
+            return;
+          }
+
+          // Special case: cases (visit count)
+          if (colVar === 'cases') {
             columnClauses.push(`COUNT(*) AS ${colVar}`);
-          } else if (['attending_provider', 'year', 'quarter'].includes(colVar)) {
-            // Special case: attending_provider, year, quarter: For these columns, just show the string value (e.g. Dr. Provider)
+            return;
+          }
+
+          // Special case: identity columns (attending_provider, year, quarter) - return strings (e.g. Dr. Provider)
+          if (['attending_provider', 'year', 'quarter'].includes(colVar)) {
             if (colVar === tableConfig.rowVar) {
               columnClauses.push(`${colVar}`);
             } else {
               columnClauses.push(`STRING_AGG(DISTINCT CAST(${colVar} AS STRING), ', ') AS ${colVar}`);
             }
-          } else {
-            // Standard numeric fields with aggregation
-            const aggFn = colAggregation.toUpperCase();
+            return;
+          }
 
-            // Handle boolean fields (convert to percentage for sum/avg)
-            const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
-            if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
-              // Convert boolean to percentage
-              if (colAggregation === 'avg') {
-                columnClauses.push(
-                  `(COUNT(*) FILTER (WHERE ${colVar} = TRUE) * 100.0 / COUNT(*)) AS ${colVar}`,
-                );
-              } else {
-                columnClauses.push(
-                  `COUNT(*) FILTER (WHERE ${colVar} = TRUE) AS ${colVar}`,
-                );
-              }
+          // Standard numeric & boolean fields
+          const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
+          if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
+            if (colAggregation === 'avg') {
+              // Calculate percentage: AVG(1|0) * 100
+              columnClauses.push(`AVG(CAST(${colVar} AS INT)) * 100.0 AS ${colVar}`);
             } else {
-              columnClauses.push(`${aggFn}(${colVar}) AS ${colVar}`);
+              // Count occurrences: SUM(1|0)
+              columnClauses.push(`SUM(CAST(${colVar} AS INT)) AS ${colVar}`);
             }
+          } else {
+            // Standard numeric aggregation
+            columnClauses.push(`${aggFn}(${colVar}) AS ${colVar}`);
           }
         });
 
-        // Add the rowVar to the SELECT (it will be in GROUP BY)
-        if (!columnClauses.includes(tableConfig.rowVar)) {
+        // Ensure the grouping variable is selected
+        if (!columnClauses.some((clause) => clause.includes(tableConfig.rowVar) && !clause.includes('STRING_AGG'))) {
           columnClauses.unshift(tableConfig.rowVar);
         }
 
