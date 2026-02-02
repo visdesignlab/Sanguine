@@ -1560,73 +1560,55 @@ export class RootStore {
   async computeExploreChartData(): Promise<void> {
     const promises = this.exploreChartConfigs.map(async (config) => {
       if (config.chartType === 'exploreTable') {
+        // Configuration of table (rowVar, columns, aggregation, etc.)
         const tableConfig = config as ExploreTableConfig;
 
         // Build column selection clauses based on config.columns
         const columnClauses: string[] = [];
-
-        const isFiltered = this.filteredVisitsLength !== this.allVisitsLength;
-        const costColumns = ['rbc_units_cost', 'ffp_units_cost', 'plt_units_cost', 'cryo_units_cost', 'cell_saver_cost'];
-        const usesCostColumns = tableConfig.columns.some((col) => costColumns.includes(col.colVar));
-
-        const sourceTable = (!isFiltered && !usesCostColumns) ? 'visits' : 'filteredVisits';
-
 
         tableConfig.columns.forEach((col) => {
           const { colVar } = col;
           const colAggregation = tableConfig.aggregation || col.aggregation;
 
           // Special case: percent_*_rbc columns
-          // These require calculating percentages from RBC unit counts
           if (colVar.startsWith('percent_')) {
             const match = colVar.match(/percent_(\d+|above_5)_rbc/);
             if (match) {
               const count = match[1];
               let condition: string;
 
+              // Condition: Visits where >= x RBC units
               if (count === 'above_5') {
                 condition = 'rbc_units >= 5';
               } else {
                 condition = `rbc_units = ${count}`;
               }
 
-              // Calculate percentage of visits matching the condition
+              // Calculate percentage of visits >= x RBC units
               if (colAggregation === 'avg') {
-                // Use COUNT FILTER which is faster than SUM CASE
                 columnClauses.push(
                   `(COUNT(*) FILTER (WHERE ${condition}) * 100.0 / COUNT(*)) AS ${colVar}`,
                 );
+                // Calculate the total number of visits >= x RBC units
               } else if (colAggregation === 'sum') {
                 columnClauses.push(
                   `COUNT(*) FILTER (WHERE ${condition}) AS ${colVar}`,
-                );
-              } else {
-                // For 'none', we'd need individual visit data - use array aggregation
-                columnClauses.push(
-                  `LIST(CASE WHEN ${condition} THEN 100 ELSE 0 END) AS ${colVar}`,
                 );
               }
             }
           } else if (colVar === 'cases') {
             // Special case: cases (visit count)
-            if (colAggregation === 'none') {
-              // For violin/heatmap, return individual counts as array
-              columnClauses.push(`LIST(1) AS ${colVar}`);
-            } else {
-              columnClauses.push(`COUNT(*) AS ${colVar}`);
-            }
+            columnClauses.push(`COUNT(*) AS ${colVar}`);
           } else if (['attending_provider', 'year', 'quarter'].includes(colVar)) {
-            // Special case: attending_provider, year, quarter (text/categorical fields, should be in GROUP BY)
+            // Special case: attending_provider, year, quarter: For these columns, just show the string value (e.g. Dr. Provider)
             if (colVar === tableConfig.rowVar) {
               columnClauses.push(`${colVar}`);
             } else {
-              // Cast to string to ensure consistency (especially for numerical years)
-              // Use DISTINCT and avoid massive string composition if possible, but STRING_AGG is needed for "list of values" if not grouping by it
               columnClauses.push(`STRING_AGG(DISTINCT CAST(${colVar} AS STRING), ', ') AS ${colVar}`);
             }
           } else {
             // Standard numeric fields with aggregation
-            const aggFn = colAggregation === 'none' ? 'LIST' : colAggregation.toUpperCase();
+            const aggFn = colAggregation.toUpperCase();
 
             // Handle boolean fields (convert to percentage for sum/avg)
             const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
@@ -1634,16 +1616,13 @@ export class RootStore {
               // Convert boolean to percentage
               if (colAggregation === 'avg') {
                 columnClauses.push(
-                  `(COUNT(*) FILTER (WHERE ${colVar} = TRUE) * 100.0 / COUNT(*)) AS ${colVar}`
+                  `(COUNT(*) FILTER (WHERE ${colVar} = TRUE) * 100.0 / COUNT(*)) AS ${colVar}`,
                 );
               } else {
                 columnClauses.push(
-                  `COUNT(*) FILTER (WHERE ${colVar} = TRUE) AS ${colVar}`
+                  `COUNT(*) FILTER (WHERE ${colVar} = TRUE) AS ${colVar}`,
                 );
               }
-            } else if (colAggregation === 'none') {
-              // For violin/heatmap visualization, collect all values
-              columnClauses.push(`LIST(${colVar}) AS ${colVar}`);
             } else {
               columnClauses.push(`${aggFn}(${colVar}) AS ${colVar}`);
             }
@@ -1659,7 +1638,7 @@ export class RootStore {
         const query = `
           SELECT 
             ${columnClauses.join(',\n            ')}
-          FROM ${sourceTable}
+          FROM filteredVisits
           GROUP BY ${tableConfig.rowVar}
           ORDER BY ${tableConfig.rowVar};
         `;
@@ -1668,10 +1647,7 @@ export class RootStore {
           const queryResult = await this.duckDB!.query(query);
           const rows = queryResult.toArray().map((row: any) => row.toJSON());
 
-          // If twoValsPerRow is enabled, we need to transform the data
-          // This would require a different query structure - TODO for now
           if (tableConfig.twoValsPerRow) {
-            // For now, use dummy data transformation similar to exploreTableDummyData
             console.warn('twoValsPerRow is not yet fully implemented, using basic data');
           }
 
