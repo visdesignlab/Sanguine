@@ -171,7 +171,6 @@ function NumericBarCell({
 
   const type = unitConfig?.type ?? 'suffix';
   const prefix = type === 'prefix' ? unitString : '';
-  const suffix = type === 'suffix' ? unitString : '';
 
   const tooltipPrefix = type === 'prefix' ? tooltipUnitString : '';
   const tooltipSuffix = type === 'suffix' ? tooltipUnitString : '';
@@ -179,8 +178,9 @@ function NumericBarCell({
   const decimals = getDecimals(colVar, agg);
   const formattedValue = isMissing ? '-' : Number(value).toFixed(decimals);
 
-  const textValue = isMissing ? '-' : `${prefix}${formattedValue}${suffix}`;
-  const tooltipTextValue = isMissing ? '-' : `${tooltipPrefix}${formattedValue}${tooltipSuffix}`;
+  const space = tooltipSuffix.trim().startsWith('%') ? '' : ' ';
+  const textValue = isMissing ? '-' : `${prefix}${formattedValue}${space}${tooltipSuffix}`;
+  const tooltipTextValue = isMissing ? '-' : `${tooltipPrefix}${formattedValue}${space}${tooltipSuffix}`;
 
   const hasValue = !isMissing && Number(value) !== 0;
 
@@ -293,9 +293,19 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
     const getSortValue = (row: ExploreTableRow) => {
       const val = row[accessor];
+
       if (chartConfig.twoValsPerRow && Array.isArray(val) && typeof val[0] === 'number') {
         return (val as number[]).reduce((sum, n) => sum + n, 0);
       }
+
+      // Check column config to see if we should force numeric sort
+      const colConfig = chartConfig.columns.find((c) => c.colVar === accessor);
+      if (colConfig?.type === 'numeric' || colConfig?.type === 'heatmap') {
+        if (val === null || val === undefined) return val;
+        // Force conversion to number for sorting
+        return Number(val);
+      }
+
       return val;
     };
 
@@ -307,6 +317,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     textFilters,
     numericFilters,
     chartConfig.twoValsPerRow,
+    chartConfig.columns,
   ]);
 
   const handleRowChange = (value: string | null) => {
