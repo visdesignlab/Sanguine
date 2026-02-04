@@ -717,6 +717,7 @@ export const SavedStatesMenu = observer(
                                         size="sm"
                                         variant="subtle"
                                         color="green"
+                                        aria-label="Confirm Rename"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           saveRename();
@@ -728,6 +729,7 @@ export const SavedStatesMenu = observer(
                                         size="sm"
                                         variant="subtle"
                                         color="gray"
+                                        aria-label="Cancel Rename"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           cancelEditing();
@@ -742,6 +744,7 @@ export const SavedStatesMenu = observer(
                                         <ActionIcon
                                           size="sm"
                                           variant="subtle"
+                                          aria-label="Share State URL"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleShareState(state.id);
@@ -753,6 +756,7 @@ export const SavedStatesMenu = observer(
                                       <ActionIcon
                                         size="sm"
                                         variant="subtle"
+                                        aria-label="Rename State"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           startEditingStateName(state.uniqueId, state.name || '');
@@ -764,6 +768,7 @@ export const SavedStatesMenu = observer(
                                         size="sm"
                                         variant="subtle"
                                         color="red"
+                                        aria-label="Delete State"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           requestDeleteSingle(
