@@ -60,6 +60,7 @@ export function ZoomedStateModal({
         {/** Zoomed State Image Preview */}
         <Image
           src={state.screenshot}
+          alt={`Screenshot of state: ${state.name} created on ${formatTimestamp(state.timestamp)}`}
           fit="contain"
           style={{
             maxHeight: '75vh', maxWidth: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', borderRadius: 8,
