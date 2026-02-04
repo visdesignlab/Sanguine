@@ -157,7 +157,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
 
         items.push({
           label: formatStateDetailName(key),
-          value: formatStateDetailValue(value),
+          value: formatStateDetailValue(value, key),
         });
       });
     }
@@ -354,8 +354,13 @@ export const SavedStatesMenu = observer(
 
     // Modal & Image Preview Handlers -------
     const handleManageStates = async () => {
-      // If our current state matches the "Initial State", we skip saving a new "Current State"
-      const initialStateNode = store.savedStates.find((s) => s.name === 'Initial State');
+      // If our current state matches the initial saved state, we skip saving a new "Current State"
+      const initialStateNode = store.savedStates.length > 0
+        ? store.savedStates.reduce(
+          (earliest, s) => (s.timestamp < earliest.timestamp ? s : earliest),
+          store.savedStates[0],
+        )
+        : undefined;
       const isInitial = initialStateNode && store.provenance
         ? store.areStatesEqual(store.currentState, store.provenance.getState(initialStateNode.id))
         : false;
