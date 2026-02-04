@@ -74,6 +74,7 @@ export function ZoomedStateModal({
             size="xl"
             radius="xl"
             disabled={!hasPrev}
+            aria-label="Previous state screenshot"
             style={{ opacity: hasPrev ? 1 : 0, cursor: hasPrev ? 'pointer' : 'default' }}
             onClick={(e) => { e.stopPropagation(); onPrev(); }}
           >
@@ -95,6 +96,7 @@ export function ZoomedStateModal({
             size="xl"
             radius="xl"
             disabled={!hasNext}
+            aria-label="Next state screenshot"
             style={{ opacity: hasNext ? 1 : 0, cursor: hasNext ? 'pointer' : 'default' }}
             onClick={(e) => { e.stopPropagation(); onNext(); }}
           >
