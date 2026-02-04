@@ -122,9 +122,18 @@ export const formatStateDetailName = (key: string): string => {
 /**
  * Format a state detail value to be human-readable
  * @param value The value to format (e.g. [1,2])
+ * @param key Optional key to help with formatting (e.g. "dateFrom")
  * @returns The formatted value (e.g. "1 - 2")
  */
-export const formatStateDetailValue = (value: unknown): string => {
+export const formatStateDetailValue = (value: unknown, key?: string): string => {
+  // Handle date strings based on key
+  if ((key === 'dateFrom' || key === 'dateTo') && typeof value === 'string') {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleDateString();
+    }
+  }
+
   if (value instanceof Date) {
     return value.toLocaleDateString();
   }
