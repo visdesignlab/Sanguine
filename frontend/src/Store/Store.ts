@@ -144,7 +144,7 @@ export class RootStore {
 
   _provenanceAtom: IAtom;
 
-  deletedStateIds: Set<NodeID> = new Set();
+  deletedStateKeys: Set<string> = new Set();
 
   duckDB: AsyncDuckDBConnection | null = null;
 
@@ -516,6 +516,7 @@ export class RootStore {
     // Check for provState key
     const hasUrlParam = window.location.search.includes('provState') || window.location.hash.includes('provState');
 
+    // If we're at the root, create an initial state
     if (this.provenance.current.id === this.provenance.root.id && !hasUrlParam) {
       this.provenance.apply({
         apply: (state: ApplicationState) => ({
@@ -531,6 +532,9 @@ export class RootStore {
           },
         }),
       }, 'Initial State');
+
+      // Auto-save as Initial State so it appears in the menu
+      this.saveState('Initial State');
     }
   }
 
@@ -564,12 +568,32 @@ export class RootStore {
 
   // Save/Restore --------------------------------------------------------------
 
+  /**
+   * Helper to generate consistent composite keys for states.
+   */
+  getUniqueStateId(nodeId: string, name: string) {
+    return `${nodeId}|${name}`;
+  }
+
+  /**
+   * Save the current state as a named state.
+   */
   saveState(name: string, screenshot?: string) {
     if (!this.provenance) return;
     const currentNodeId = this.provenance.current.id;
+
+    // Add the name and screenshot as artifacts to the current node (state)
     this.provenance.addArtifact({ type: 'name', value: name }, currentNodeId);
     if (screenshot) {
       this.provenance.addArtifact({ type: 'screenshot', value: screenshot }, currentNodeId);
+    }
+
+    // Generate a unique key for the state
+    const key = this.getUniqueStateId(currentNodeId, name);
+
+    // If the state has been deleted, remove it from the deleted states set
+    if (this.deletedStateKeys.has(key)) {
+      this.deletedStateKeys.delete(key);
     }
 
     // Trigger reactivity so UI updates
@@ -578,48 +602,104 @@ export class RootStore {
     });
   }
 
-  removeState(nodeId: NodeID) {
-    this.deletedStateIds.add(nodeId);
+  removeState(nodeId: NodeID, name: string) {
+    this.deletedStateKeys.add(this.getUniqueStateId(nodeId, name));
     // Trigger reactivity
     runInAction(() => {
       this._provenanceAtom.reportChanged();
     });
   }
 
-  renameState(nodeId: NodeID, newName: string) {
+  /**
+   * Auto-save the current state as "Current State" if it differs from "Initial State".
+   * Removes any existing transient "Current State" entries.
+   */
+  saveTempCurrentState(screenshot?: string) {
+    // 1. Check if current state matches "Initial State"
+    const initialStateNode = this.savedStates.find((s) => s.name === 'Initial State');
+    let isInitial = false;
+
+    if (initialStateNode) {
+      const initialState = this.provenance?.getState(initialStateNode.id);
+      if (initialState && this.areStatesEqual(this.currentState, initialState)) {
+        isInitial = true;
+      }
+    }
+
+    // 2. If NOT Initial State, Save (or Update) "Current State"
+    if (!isInitial) {
+      // Remove any existing "Current State" entries to keep it transient
+      const existingCurrentStates = this.savedStates.filter((s) => s.name === 'Current State');
+      existingCurrentStates.forEach((s) => this.removeState(s.id, s.name!));
+
+      this.saveState('Current State', screenshot);
+    }
+  }
+
+  /**
+   * Promotes a state (renames it) to the next available "State N".
+   */
+  saveCurrentStateAsNew(id: string): string {
+    const newName = this.getNextStateName();
+    this.renameState(id, 'Current State', newName); // Explicitly rename "Current State"
+    return newName;
+  }
+
+  renameState(nodeId: NodeID, oldName: string, newName: string) {
     if (!this.provenance) return;
+
+    // "Delete" the old name
+    this.deletedStateKeys.add(this.getUniqueStateId(nodeId, oldName));
+
     this.provenance.addArtifact({ type: 'name', value: newName }, nodeId);
+    // Ensure new name isn't deleted
+    this.deletedStateKeys.delete(this.getUniqueStateId(nodeId, newName));
+
     // Trigger reactivity
     runInAction(() => {
       this._provenanceAtom.reportChanged();
     });
   }
 
+  /**
+   * Returns the list of saved states derived from the provenance graph.
+   * Filters out states that have been explicitly deleted.
+   */
   get savedStates() {
     this._provenanceAtom.reportObserved();
 
     const { provenance } = this;
-    // Return a list of nodes that have the 'name' artifact
     if (!provenance) return [];
-    const nodes = Object.values(provenance.graph.nodes);
 
-    return nodes.filter((node) => {
-      if (this.deletedStateIds.has(node.id)) return false;
-      const artifacts = provenance.getAllArtifacts(node.id);
-      return artifacts.some((a) => a.artifact.type === 'name');
-    })
-      .map((node) => {
+    // For each node (state) in the provenance graph ...
+    return Object.values(provenance.graph.nodes)
+      .flatMap((node) => {
+        // Get all artifacts (names and screenshots) associated with this node
         const artifacts = provenance.getAllArtifacts(node.id);
-        // Find the latest name artifact
-        const nameArtifact = artifacts.filter((a) => a.artifact.type === 'name').pop();
-        const screenshotArtifact = artifacts.find((a) => a.artifact.type === 'screenshot');
-        return {
-          id: node.id,
-          name: nameArtifact?.artifact.value,
-          screenshot: screenshotArtifact?.artifact.value,
-          timestamp: (node as any).createdOn || node.metadata?.createdOn || 0, // eslint-disable-line @typescript-eslint/no-explicit-any
-        };
-      });
+        if (!artifacts.length) return [];
+
+        const timestamp = (node as any).createdOn || node.metadata?.createdOn || 0;
+        const screenshot = artifacts.find((a) => a.artifact.type === 'screenshot')?.artifact.value;
+        const names = new Set(
+          artifacts
+            .filter((a) => a.artifact.type === 'name' && a.artifact.value)
+            .map((a) => a.artifact.value as string),
+        );
+
+        // Return an array of saved states for this node
+        return Array.from(names)
+          .map((name) => ({
+            id: node.id,
+            name,
+            screenshot,
+            timestamp,
+            uniqueId: this.getUniqueStateId(node.id, name),
+          }))
+          // Filter out deleted states
+          .filter((state) => !this.deletedStateKeys.has(state.uniqueId));
+      })
+      // Sort by timestamp
+      .sort((a, b) => a.timestamp - b.timestamp);
   }
 
   get canUndo() {
@@ -629,7 +709,6 @@ export class RootStore {
     const { current } = this.provenance;
     const { root } = this.provenance;
 
-    // Disable undo if at root OR if at the "Initial State" node (our artificial root)
     return current.id !== root.id && current.label !== 'Initial State';
   }
 
@@ -639,6 +718,62 @@ export class RootStore {
     if (!this.provenance) return false;
     const { current } = this.provenance;
     return current.children.length > 0;
+  }
+
+  /**
+   * Generates the next default state name (e.g. "State 1", "State 2")
+   */
+  getNextStateName(): string {
+    const savedNames = this.savedStates.map((s) => s.name || '');
+    let maxNum = 0;
+    const regex = /^State (\d+)$/;
+
+    // Find the highest currently numbered state (e.g. State 2)
+    savedNames.forEach((name) => {
+      const match = name.match(regex);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!Number.isNaN(num) && num > maxNum) {
+          maxNum = num;
+        }
+      }
+    });
+
+    // Return the next state name (e.g. State 3)
+    return `State ${maxNum + 1}`;
+  }
+
+  /**
+   * Deeply compares two application states to see if they are effectively the same.
+   * Ignores UI state (active tab, etc.) as that is transient.
+   */
+  areStatesEqual(stateA: ApplicationState, stateB: ApplicationState): boolean {
+    // Helper for deep equality
+    const isEqual = (a: unknown, b: unknown): boolean => {
+      if (a === b) return true;
+      if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false;
+
+      const objA = a as Record<string, unknown>;
+      const objB = b as Record<string, unknown>;
+
+      const keysA = Object.keys(objA);
+      const keysB = Object.keys(objB);
+
+      if (keysA.length !== keysB.length) return false;
+
+      for (const key of keysA) {
+        if (!keysB.includes(key)) return false;
+        if (!isEqual(objA[key], objB[key])) return false;
+      }
+      return true;
+    };
+
+    // Compare relevant sections
+    return isEqual(stateA.filterValues, stateB.filterValues)
+      && isEqual(stateA.selections, stateB.selections)
+      && isEqual(stateA.dashboard, stateB.dashboard)
+      && isEqual(stateA.explore, stateB.explore)
+      && isEqual(stateA.settings, stateB.settings);
   }
 
   get currentState(): ApplicationState {

@@ -1,3 +1,13 @@
+import {
+  BLOOD_COMPONENTS,
+  OUTCOMES,
+  PROPHYL_MEDS,
+  GUIDELINE_ADHERENT,
+  LAB_RESULTS,
+  COSTS,
+  TIME_AGGREGATION_OPTIONS,
+} from '../Types/application';
+
 const columnNameMap: Record<string, string> = {
   adm_dtm: 'Admission Date',
   age_at_adm: 'Age at Admission',
@@ -64,3 +74,81 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
   }
   return `${value}`;
 }
+
+/**
+ * Format a state detail name to be human-readable
+ * @param key The key to format (e.g. "dateFrom")
+ * @returns The formatted key (e.g. "Date From")
+ */
+export const formatStateDetailName = (key: string): string => {
+  // Handle date fields
+  const dateFields: Record<string, string> = {
+    dateFrom: 'Date From',
+    dateTo: 'Date To',
+  };
+
+  if (dateFields[key]) return dateFields[key];
+
+  // Check Time Aggregations
+  const timeAgg = TIME_AGGREGATION_OPTIONS[key as keyof typeof TIME_AGGREGATION_OPTIONS];
+
+  if (timeAgg) {
+    return timeAgg.label;
+  }
+
+  // Search for the label in the attributes
+  const attributes = [
+    BLOOD_COMPONENTS,
+    OUTCOMES,
+    PROPHYL_MEDS,
+    Object.values(GUIDELINE_ADHERENT),
+    LAB_RESULTS,
+    Object.values(COSTS),
+  ].flat();
+  const found = attributes.find((c) => c.value === key);
+  if (found) {
+    return found.label?.base || found.label;
+  }
+
+  // Check the column map
+  if (columnNameMap[key]) {
+    return columnNameMap[key];
+  }
+
+  // Fallback to formatting the key
+  return key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
+/**
+ * Format a state detail value to be human-readable
+ * @param value The value to format (e.g. [1,2])
+ * @param key Optional key to help with formatting (e.g. "dateFrom")
+ * @returns The formatted value (e.g. "1 - 2")
+ */
+export const formatStateDetailValue = (value: unknown, key?: string): string => {
+  // Handle date strings based on key
+  if ((key === 'dateFrom' || key === 'dateTo') && typeof value === 'string') {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleDateString();
+    }
+  }
+
+  if (value instanceof Date) {
+    return value.toLocaleDateString();
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'Yes' : 'No';
+  }
+  // Handle arrays (e.g., [1, 2] -> "1 - 2")
+  if (Array.isArray(value)) {
+    if (value.length === 2 && typeof value[0] === 'number') {
+      return `${value[0]} - ${value[1]}`;
+    }
+    return value.join(', ');
+  }
+  if (value === null || value === undefined) {
+    return 'None';
+  }
+  return String(value);
+};

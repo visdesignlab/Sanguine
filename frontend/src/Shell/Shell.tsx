@@ -36,6 +36,7 @@ import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/Select
 import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
 import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
+import { SavedStatesMenu } from '../Components/Menus/ManageStatesMenu';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -148,7 +149,7 @@ export const Shell = observer(() => {
       onClick: () => store.provenance?.redo(),
       disabled: !store.canRedo,
     },
-    { icon: IconDeviceFloppy, label: 'Save', disabled: true },
+    { icon: IconDeviceFloppy, label: 'Save State' },
     { icon: IconCamera, label: 'Camera' },
   ], [store.provenance, store.canUndo, store.canRedo]);
 
@@ -198,11 +199,22 @@ export const Shell = observer(() => {
           </Group>
           {/** All Header Icons, right-aligned */}
           <Group gap="sm" pr="md" wrap="nowrap">
-            {headerIcons.map(({ icon: Icon, label, onClick, disabled }) => {
+            {headerIcons.map(({
+              icon: Icon, label, onClick, disabled,
+            }) => {
               // --- Hover Menu for Camera to show screenshots ---
               if (label === 'Camera') {
                 return (
                   <ScreenshotMenu key="screenshot-menu" activeTab={store.state.ui.activeTab} />
+                );
+              }
+              // --- Save State Menu ---
+              if (label === 'Save State') {
+                return (
+                  <SavedStatesMenu
+                    key="saved-states-menu"
+                    onReset={() => store.restoreToInitialState()}
+                  />
                 );
               }
               // Default header icon button
@@ -352,7 +364,6 @@ export const Shell = observer(() => {
           ))}
         </Container>
       </AppShell.Main>
-
 
       <Modal
         opened={aboutModalOpened}
