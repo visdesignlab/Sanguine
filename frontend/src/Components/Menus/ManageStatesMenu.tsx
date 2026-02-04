@@ -830,7 +830,7 @@ export const SavedStatesMenu = observer(
                         <Image
                           src={activePreviewState.screenshot}
                           radius="md"
-                          onClick={() => setZoomedStateId(activePreviewState.id)}
+                          onClick={() => setZoomedStateId(activePreviewState.uniqueId)}
                           onMouseEnter={() => setIsPreviewHovered(true)}
                           onMouseLeave={() => setIsPreviewHovered(false)}
                           style={{
