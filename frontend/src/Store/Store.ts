@@ -1599,7 +1599,7 @@ export class RootStore {
             if (colVar === tableConfig.rowVar) {
               columnClauses.push(`${colVar}`);
             } else {
-              columnClauses.push(`STRING_AGG(DISTINCT CAST(${colVar} AS STRING), ', ') AS ${colVar}`);
+              columnClauses.push(`string_agg(DISTINCT CAST(${colVar} AS VARCHAR), ', ') AS ${colVar}`);
             }
             return;
           }
