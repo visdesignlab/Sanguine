@@ -1663,7 +1663,7 @@ export class RootStore {
     });
 
     const results = await Promise.all(promises);
-    const data: ExploreChartData = {};
+    const data: ExploreChartData = { ...this.exploreDummyData };
     results.forEach(({ id, data: d }) => {
       data[id] = d;
     });
