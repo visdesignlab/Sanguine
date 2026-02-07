@@ -1569,8 +1569,19 @@ export class RootStore {
         // Iterate over the columns and build the column selection clauses
         tableConfig.columns.forEach((col) => {
           const { colVar } = col;
-          const colAggregation = config.aggregation || col.aggregation;
+          let colAggregation = config.aggregation || col.aggregation;
+
+          if (colAggregation === 'none' && colVar !== tableConfig.rowVar) {
+            colAggregation = 'sum';
+          }
+
           const aggFn = colAggregation.toUpperCase();
+
+          // If this column is the grouping variable, select it directly
+          if (colVar === tableConfig.rowVar) {
+            columnClauses.push(colVar);
+            return;
+          }
 
           // Special case: percent_*_rbc columns
           if (colVar.startsWith('percent_')) {
