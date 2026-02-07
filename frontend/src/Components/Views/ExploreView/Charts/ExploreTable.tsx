@@ -507,7 +507,10 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                   return isMatch ? smallHoverColor : baseColors[i];
                 });
 
-              const data = [Object.fromEntries(bins.map((bin, i) => [`bin${i}`, bin.count]))];
+              const data = [{
+                bin: 'all',
+                ...Object.fromEntries(bins.map((bin, i) => [`bin${i}`, bin.count])),
+              }];
               const series = bins.map((_, i) => ({ name: `bin${i}`, color: colors[i] }));
               const themeColor = colorScale ? '#ef6548' : '#6f6f6f';
 
