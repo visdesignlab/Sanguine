@@ -581,14 +581,22 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         column.render = (row: ExploreTableRow) => {
           const decimals = getDecimals(colVar, colConfig.aggregation);
 
+          const unitConfig = ExploreTableColumnOptions.find((opt) => opt.value === colVar)?.units;
+          const aggKey = (colConfig.aggregation === 'avg') ? 'avg' : 'sum';
+
+          const tooltipSuffix = unitConfig?.[aggKey] ?? '';
+          const space = tooltipSuffix.trim().startsWith('%') ? '' : ' ';
+
           const renderHeatmapCell = (val: number, padding: string, isSplit: boolean) => {
             const formattedVal = Number(val ?? 0).toFixed(decimals);
             // Normalize value for color scale
             const normalizedVal = getNormalizedValue(val);
 
+            const tooltipText = `${formattedVal}${space}${tooltipSuffix}`;
+
             if (val === 0) {
               return (
-                <Tooltip label={`${formattedVal}% of cases`} withArrow>
+                <Tooltip label={tooltipText} withArrow>
                   <div
                     onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
                     onMouseLeave={() => setHoveredValue(null)}
@@ -609,7 +617,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             }
 
             return (
-              <Tooltip label={`${formattedVal}% of cases`} withArrow>
+              <Tooltip label={tooltipText} withArrow>
                 <div
                   onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
                   onMouseLeave={() => setHoveredValue(null)}
@@ -624,7 +632,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                     } as CSSProperties}
                   >
                     {formattedVal}
-                    %
+                    {tooltipSuffix.includes('%') ? '%' : ''}
                   </div>
                 </div>
               </Tooltip>
