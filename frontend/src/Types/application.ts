@@ -105,7 +105,13 @@ export type BloodComponent = typeof BLOOD_COMPONENTS[number]['value'];
 export const BLOOD_COMPONENT_OPTIONS = BLOOD_COMPONENTS as ReadonlyArray<{
   value: BloodComponent;
   label: { short: string; base: string; sum: string; avg: string };
-  units: { sum: string; avg: string };
+  units: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
   decimals: { sum: number; avg: number };
 }>;
 
@@ -229,7 +235,13 @@ export type ProphylMed = typeof PROPHYL_MEDS[number]['value'];
 export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
   value: ProphylMed;
   label: { short: string; base: string; sum: string; avg: string };
-  units: { sum: string; avg: string };
+  units: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
   decimals: number;
 }>;
 
@@ -322,7 +334,13 @@ export type GuidelineAdherence = typeof GUIDELINE_ADHERENT[keyof typeof GUIDELIN
 export const GUIDELINE_ADHERENT_OPTIONS = Object.values(GUIDELINE_ADHERENT) as ReadonlyArray<{
   value: GuidelineAdherence;
   label: { short: string; base: string; sum: string; avg: string };
-  units: { sum: string; avg: string };
+  units: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
   decimals: number;
 }>;
 
@@ -617,9 +635,9 @@ export const ExploreTableColumnOptionsGrouped = [
       units: {
         sum: opt.units.sum,
         avg: opt.units.avg,
-        sumShort: (opt.units as any).sumShort,
-        avgShort: (opt.units as any).avgShort,
-        type: (opt.units as any).type,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
+        type: opt.units.type,
       },
       decimals: opt.decimals,
     })),
@@ -632,9 +650,9 @@ export const ExploreTableColumnOptionsGrouped = [
       units: {
         sum: opt.units.sum,
         avg: opt.units.avg,
-        sumShort: (opt.units as any).sumShort,
-        avgShort: (opt.units as any).avgShort,
-        type: (opt.units as any).type,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
+        type: opt.units.type,
       },
       decimals: opt.decimals,
     })),
@@ -647,9 +665,9 @@ export const ExploreTableColumnOptionsGrouped = [
       units: {
         sum: opt.units.sum,
         avg: opt.units.avg,
-        sumShort: (opt.units as any).sumShort,
-        avgShort: (opt.units as any).avgShort,
-        type: (opt.units as any).type,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
+        type: opt.units.type,
       },
       decimals: opt.decimals,
     })),
@@ -662,9 +680,9 @@ export const ExploreTableColumnOptionsGrouped = [
       units: {
         sum: opt.units.sum,
         avg: opt.units.avg,
-        sumShort: (opt.units as any).sumShort,
-        avgShort: (opt.units as any).avgShort,
-        type: (opt.units as any).type,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
+        type: opt.units.type,
       },
       decimals: opt.decimals,
     })),
@@ -677,9 +695,9 @@ export const ExploreTableColumnOptionsGrouped = [
       units: {
         sum: opt.units.sum,
         avg: opt.units.avg,
-        sumShort: (opt.units as any).sumShort,
-        avgShort: (opt.units as any).avgShort,
-        type: (opt.units as any).type,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
+        type: opt.units.type,
       },
       decimals: opt.decimals,
     })),
