@@ -44,6 +44,36 @@ const getDecimals = (colVar: string, agg: string = 'sum'): number => {
   return option.decimals[key] ?? 0;
 };
 
+// Helper to clean up display values
+const getFormattedValue = (
+  value: number | null | undefined,
+  colVar: string,
+  agg: string = 'sum',
+  isTooltip: boolean = false,
+): string => {
+  if (value === null || value === undefined) return '-';
+
+  const unitConfig = ExploreTableColumnOptions.find((opt) => opt.value === colVar)?.units;
+  const aggKey = (agg === 'avg') ? 'avg' : 'sum';
+  const shortKey = (agg === 'avg') ? 'avgShort' : 'sumShort';
+
+  const targetKey = isTooltip ? aggKey : shortKey;
+  const fallbackKey = isTooltip ? shortKey : aggKey;
+
+  const unitString = unitConfig?.[targetKey] ?? unitConfig?.[fallbackKey] ?? '';
+  const resolvedType = unitConfig?.type ?? 'suffix';
+
+  const prefix = resolvedType === 'prefix' ? unitString : '';
+  const suffix = resolvedType === 'suffix' ? unitString : '';
+
+  const decimals = getDecimals(colVar, agg);
+  const formattedValue = Number(value).toFixed(decimals);
+
+  const space = (suffix && !suffix.trim().startsWith('%')) ? ' ' : '';
+
+  return `${prefix}${formattedValue}${space}${suffix}`;
+};
+
 // When adding column, infer column type from attribute
 const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColumn['type'] => {
   // Always treat year and quarter as text
@@ -161,29 +191,10 @@ function NumericBarCell({
   // Amount to clip from the right side to show only the filled portion
   const clipRightAmount = `${Math.max(0, 100 - barWidthPercent)}%`;
 
+
   // The actual numeric value to display
-  const unitConfig = ExploreTableColumnOptions.find((opt) => opt.value === colVar)?.units;
-  const aggKey = (agg === 'avg') ? 'avg' : 'sum';
-  const shortKey = (agg === 'avg') ? 'avgShort' : 'sumShort';
-
-  const unitString = unitConfig?.[shortKey] ?? unitConfig?.[aggKey] ?? '';
-  const tooltipUnitString = unitConfig?.[aggKey] ?? unitConfig?.[shortKey] ?? '';
-
-  const type = unitConfig?.type ?? 'suffix';
-  const prefix = type === 'prefix' ? unitString : '';
-
-  const tooltipPrefix = type === 'prefix' ? tooltipUnitString : '';
-  const suffix = type === 'suffix' ? unitString : '';
-  const tooltipSuffix = type === 'suffix' ? tooltipUnitString : '';
-
-  const decimals = getDecimals(colVar, agg);
-  const formattedValue = isMissing ? '-' : Number(value).toFixed(decimals);
-
-  const space = suffix.trim().startsWith('%') ? '' : ' ';
-  const tooltipSpace = tooltipSuffix.trim().startsWith('%') ? '' : ' ';
-
-  const textValue = isMissing ? '-' : `${prefix}${formattedValue}${space}${suffix}`;
-  const tooltipTextValue = isMissing ? '-' : `${tooltipPrefix}${formattedValue}${tooltipSpace}${tooltipSuffix}`;
+  const textValue = getFormattedValue(value, colVar, agg, false);
+  const tooltipTextValue = getFormattedValue(value, colVar, agg, true);
 
   const hasValue = !isMissing && Number(value) !== 0;
 
@@ -585,25 +596,12 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Heatmap columns ---
       if (type === 'heatmap') {
         column.render = (row: ExploreTableRow) => {
-          const decimals = getDecimals(colVar, colConfig.aggregation);
-
-          const unitConfig = ExploreTableColumnOptions.find((opt) => opt.value === colVar)?.units;
-          const aggKey = (colConfig.aggregation === 'avg') ? 'avg' : 'sum';
-          const shortKey = (colConfig.aggregation === 'avg') ? 'avgShort' : 'sumShort';
-
-          const suffix = (unitConfig?.type ?? 'suffix') === 'suffix' ? (unitConfig?.[shortKey] ?? unitConfig?.[aggKey] ?? '') : '';
-          const tooltipSuffix = (unitConfig?.type ?? 'suffix') === 'suffix' ? (unitConfig?.[aggKey] ?? unitConfig?.[shortKey] ?? '') : '';
-
-          const space = suffix.trim().startsWith('%') ? '' : ' ';
-          const tooltipSpace = tooltipSuffix.trim().startsWith('%') ? '' : ' ';
-
           const renderHeatmapCell = (val: number, padding: string, isSplit: boolean) => {
-            const formattedVal = Number(val ?? 0).toFixed(decimals);
             // Normalize value for color scale
             const normalizedVal = getNormalizedValue(val);
 
-            const textVal = `${formattedVal}${space}${suffix}`;
-            const tooltipText = `${formattedVal}${tooltipSpace}${tooltipSuffix}`;
+            const textVal = getFormattedValue(val, colVar, colConfig.aggregation, false);
+            const tooltipText = getFormattedValue(val, colVar, colConfig.aggregation, true);
 
             if (val === 0) {
               return (
