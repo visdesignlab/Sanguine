@@ -173,14 +173,17 @@ function NumericBarCell({
   const prefix = type === 'prefix' ? unitString : '';
 
   const tooltipPrefix = type === 'prefix' ? tooltipUnitString : '';
+  const suffix = type === 'suffix' ? unitString : '';
   const tooltipSuffix = type === 'suffix' ? tooltipUnitString : '';
 
   const decimals = getDecimals(colVar, agg);
   const formattedValue = isMissing ? '-' : Number(value).toFixed(decimals);
 
-  const space = tooltipSuffix.trim().startsWith('%') ? '' : ' ';
-  const textValue = isMissing ? '-' : `${prefix}${formattedValue}${space}${tooltipSuffix}`;
-  const tooltipTextValue = isMissing ? '-' : `${tooltipPrefix}${formattedValue}${space}${tooltipSuffix}`;
+  const space = suffix.trim().startsWith('%') ? '' : ' ';
+  const tooltipSpace = tooltipSuffix.trim().startsWith('%') ? '' : ' ';
+
+  const textValue = isMissing ? '-' : `${prefix}${formattedValue}${space}${suffix}`;
+  const tooltipTextValue = isMissing ? '-' : `${tooltipPrefix}${formattedValue}${tooltipSpace}${tooltipSuffix}`;
 
   const hasValue = !isMissing && Number(value) !== 0;
 
@@ -586,16 +589,21 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
           const unitConfig = ExploreTableColumnOptions.find((opt) => opt.value === colVar)?.units;
           const aggKey = (colConfig.aggregation === 'avg') ? 'avg' : 'sum';
+          const shortKey = (colConfig.aggregation === 'avg') ? 'avgShort' : 'sumShort';
 
-          const tooltipSuffix = unitConfig?.[aggKey] ?? '';
-          const space = tooltipSuffix.trim().startsWith('%') ? '' : ' ';
+          const suffix = (unitConfig?.type ?? 'suffix') === 'suffix' ? (unitConfig?.[shortKey] ?? unitConfig?.[aggKey] ?? '') : '';
+          const tooltipSuffix = (unitConfig?.type ?? 'suffix') === 'suffix' ? (unitConfig?.[aggKey] ?? unitConfig?.[shortKey] ?? '') : '';
+
+          const space = suffix.trim().startsWith('%') ? '' : ' ';
+          const tooltipSpace = tooltipSuffix.trim().startsWith('%') ? '' : ' ';
 
           const renderHeatmapCell = (val: number, padding: string, isSplit: boolean) => {
             const formattedVal = Number(val ?? 0).toFixed(decimals);
             // Normalize value for color scale
             const normalizedVal = getNormalizedValue(val);
 
-            const tooltipText = `${formattedVal}${space}${tooltipSuffix}`;
+            const textVal = `${formattedVal}${space}${suffix}`;
+            const tooltipText = `${formattedVal}${tooltipSpace}${tooltipSuffix}`;
 
             if (val === 0) {
               return (
@@ -631,11 +639,10 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                     data-visible={numericTextVisible}
                     style={{
                       backgroundColor: getHeatmapColor(val),
-                      '--heatmap-text-color': normalizedVal > 0.5 ? 'white' : 'black', // Switch text color based on background darkness
+                      '--heatmap-text-color': normalizedVal > 0.5 ? 'white' : 'black',
                     } as CSSProperties}
                   >
-                    {formattedVal}
-                    {tooltipSuffix.includes('%') ? '%' : ''}
+                    {textVal}
                   </div>
                 </div>
               </Tooltip>

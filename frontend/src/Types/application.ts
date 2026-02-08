@@ -28,7 +28,7 @@ export const BLOOD_COMPONENTS = [
     },
     units: {
       sum: 'RBC Units',
-      avg: 'RBC Units',
+      avg: 'RBC Units Per Visit',
       sumShort: ' Units',
       avgShort: ' Units',
     },
@@ -44,7 +44,7 @@ export const BLOOD_COMPONENTS = [
     },
     units: {
       sum: 'Plasma Units',
-      avg: 'Plasma Units',
+      avg: 'Plasma Units Per Visit',
       sumShort: ' Units',
       avgShort: ' Units',
     },
@@ -60,7 +60,7 @@ export const BLOOD_COMPONENTS = [
     },
     units: {
       sum: 'Platelet Units',
-      avg: 'Platelet Units',
+      avg: 'Platelet Units Per Visit',
       sumShort: ' Units',
       avgShort: ' Units',
     },
@@ -76,7 +76,7 @@ export const BLOOD_COMPONENTS = [
     },
     units: {
       sum: 'Cryo Units',
-      avg: 'Cryo Units',
+      avg: 'Cryo Units Per Visit',
       sumShort: ' Units',
       avgShort: ' Units',
     },
@@ -92,7 +92,7 @@ export const BLOOD_COMPONENTS = [
     },
     units: {
       sum: 'mL',
-      avg: 'mL',
+      avg: 'mL Per Visit',
       sumShort: ' mL',
       avgShort: ' mL',
     },
@@ -260,6 +260,7 @@ export const GUIDELINE_ADHERENT = {
       sum: 'Adherent RBC Transfusions',
       avg: '% Adherent RBC Transfusions',
       avgShort: '%',
+      sumShort: '',
     },
     decimals: 0,
   },
@@ -275,6 +276,7 @@ export const GUIDELINE_ADHERENT = {
       sum: 'Adherent Plasma Transfusions',
       avg: '% Adherent Plasma Transfusions',
       avgShort: '%',
+      sumShort: '',
     },
     decimals: 0,
   },
@@ -290,6 +292,7 @@ export const GUIDELINE_ADHERENT = {
       sum: 'Adherent Platelet Transfusions',
       avg: '% Adherent Platelet Transfusions',
       avgShort: '%',
+      sumShort: '',
     },
     decimals: 0,
   },
@@ -305,6 +308,7 @@ export const GUIDELINE_ADHERENT = {
       sum: 'Adherent Cryo Transfusions',
       avg: '% Adherent Cryo Transfusions',
       avgShort: '%',
+      sumShort: '',
     },
     decimals: 0,
   },
@@ -323,6 +327,7 @@ export const OVERALL_GUIDELINE_ADHERENT = {
     sum: 'Adherent Transfusions',
     avg: '% Adherent Transfusions',
     avgShort: '%',
+    sumShort: '',
   },
   decimals: 0,
 } as const;
@@ -470,7 +475,7 @@ export const VISIT_COUNT = {
     sum: 'Visits',
     avg: 'Visits',
     sumShort: ' Cases',
-    avgShort: '%', // Ensure cases column is treated correctly in table if it's percentage
+    avgShort: '', // Ensure cases column is treated correctly in table if it's percentage
   },
   decimals: { sum: 0, avg: 0 },
 } as const;
@@ -715,7 +720,7 @@ export const ExploreTableColumnOptionsGrouped = [
       {
         value: 'cases',
         label: 'Cases',
-        units: { sum: 'cases', avg: '% of cases', sumShort: ' Cases', avgShort: '%' },
+        units: { sum: 'cases', avg: '% of cases', sumShort: ' Cases', avgShort: ' Cases' },
         decimals: 0,
       },
     ],
