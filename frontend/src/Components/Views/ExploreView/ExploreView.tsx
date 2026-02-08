@@ -21,7 +21,7 @@ import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
 import {
-  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS, ExploreTableRowOptions, ExploreChartConfig,
+  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS, ExploreTableRowOptions, ExploreChartConfig, ExploreTableConfig,
 } from '../../../Types/application';
 import { CostChart } from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
@@ -96,7 +96,7 @@ export function ExploreView() {
         chartId: id,
         chartType: 'exploreTable',
         title: `RBC Transfusions per ${groupLabel}`,
-        rowVar: exploreTableGroupVar,
+        rowVar: exploreTableGroupVar as ExploreTableConfig['rowVar'],
         aggregation,
         columns: [
           {
@@ -143,7 +143,7 @@ export function ExploreView() {
           },
         ],
         twoValsPerRow: false,
-      } as unknown as ExploreChartConfig); // TODO: Type assertion needed until ExploreChartConfig full union is refined or matches exactly
+      });
     } else {
       if (!scatterXAxisVar || !scatterYAxisVar) return;
       store.addExploreChart({
