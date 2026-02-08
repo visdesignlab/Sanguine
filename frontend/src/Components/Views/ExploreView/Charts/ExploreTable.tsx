@@ -196,7 +196,7 @@ function NumericBarCell({
   const textValue = getFormattedValue(value, colVar, agg, false);
   const tooltipTextValue = getFormattedValue(value, colVar, agg, true);
 
-  const hasValue = !isMissing && Number(value) !== 0;
+  const hasValue = !isMissing;
 
   return (
     <Tooltip
