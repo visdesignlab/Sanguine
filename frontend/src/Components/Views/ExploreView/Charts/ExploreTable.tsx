@@ -1,4 +1,4 @@
-import {
+import React, {
   useContext, useEffect, useState, useMemo, useRef, useCallback, CSSProperties,
 } from 'react';
 import { observer, useLocalObservable, Observer } from 'mobx-react-lite';
@@ -74,6 +74,8 @@ const getFormattedValue = (
   return `${prefix}${formattedValue}${space}${suffix}`;
 };
 
+const HEATMAP_COLS = ['percent_1_rbc', 'percent_2_rbc', 'percent_3_rbc', 'percent_4_rbc', 'percent_above_5_rbc'];
+
 // When adding column, infer column type from attribute
 const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColumn['type'] => {
   // Always treat year and quarter as text
@@ -84,7 +86,7 @@ const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColum
   const sample = data[0]?.[key];
 
   if (typeof sample !== 'string') {
-    if (['percent_1_rbc', 'percent_2_rbc', 'percent_3_rbc', 'percent_4_rbc', 'percent_above_5_rbc'].includes(key)) {
+    if (HEATMAP_COLS.includes(key)) {
       return 'heatmap';
     }
     return 'numeric';
@@ -93,8 +95,8 @@ const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColum
 };
 
 // Helper function to sort rows
-function sortRows<T>(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] {
-  return [...data].sort((a, b) => {
+const sortRows = <T,>(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] => (
+  [...data].sort((a, b) => {
     const valueA = getter(a);
     const valueB = getter(b);
 
@@ -113,57 +115,46 @@ function sortRows<T>(data: T[], getter: (item: T) => string | number | boolean |
     if (strA < strB) return -1;
     if (strA > strB) return 1;
     return 0;
-  });
-}
+  })
+);
 
 // Compute histogram bins for a given set of values
 const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
-  if (values.length === 0) {
-    return [];
-  }
+  if (values.length === 0) return [];
 
-  const histMinVal = Math.min(...values);
-  const histMaxVal = Math.max(...values);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
 
-  // Handle case where all values are the same
-  if (histMinVal === histMaxVal) {
+  if (min === max) {
     return [{
-      binMin: histMinVal,
-      binMax: histMinVal + (histMinVal === 0 ? 1 : Math.abs(histMinVal) * 0.1), // Ensure non-zero range
+      binMin: min,
+      binMax: min + (min === 0 ? 1 : Math.abs(min) * 0.1), // Ensure non-zero range
       count: values.length,
     }];
   }
 
-  const range = histMaxVal - histMinVal;
-  const binSize = range / bins;
+  const binSize = (max - min) / bins;
 
   const result: HistogramBin[] = Array.from({ length: bins }, (_, i) => ({
-    binMin: histMinVal + i * binSize,
-    binMax: histMinVal + (i + 1) * binSize,
+    binMin: min + i * binSize,
+    binMax: min + (i + 1) * binSize,
     count: 0,
   }));
 
   values.forEach((v) => {
-    const n = Number(v);
-    if (Number.isNaN(n)) {
-      return;
-    }
-
     // Special handling for the maximum value
-    if (n === histMaxVal) {
+    if (v === max) {
       result[bins - 1].count += 1;
-      return;
+    } else {
+      const idx = Math.floor((v - min) / binSize);
+      if (idx >= 0 && idx < bins) result[idx].count += 1;
     }
-
-    const idx = Math.floor((n - histMinVal) / binSize);
-    const binIdx = Math.min(Math.max(0, idx), bins - 1); // Clamp index to valid range
-    result[binIdx].count += 1;
   });
 
   return result;
 };
 
-function NumericBarCell({
+const NumericBarCell = ({
   value, max, colVar, opts = {}, setHoveredValue, agg,
 }: {
   value: number | null | undefined;
@@ -173,7 +164,7 @@ function NumericBarCell({
 
   opts?: { padding?: string; cellHeight?: number; fillColor?: string };
   agg?: string;
-}) {
+}) => {
   // Default Options
   const {
     cellHeight = 21,
@@ -247,7 +238,102 @@ function NumericBarCell({
       </div>
     </Tooltip>
   );
-}
+};
+
+// MARK: - Components
+
+const NumericFilterInput = ({
+  filterState, onChange,
+}: {
+  filterState: NumericFilter;
+  onChange: (val: Partial<NumericFilter>) => void;
+}) => (
+  <TextInput
+    placeholder="Filter value"
+    size="xs"
+    value={filterState.query}
+    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ query: e.currentTarget.value })}
+    leftSection={(
+      <ActionIcon
+        size="xs"
+        onClick={() => onChange({ cmp: filterState.cmp === '>' ? '<' : '>' })}
+      >
+        {filterState.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
+      </ActionIcon>
+    )}
+  />
+);
+
+const HistogramFooter = observer(({
+  values, colVar, agg, type, colorScale, hoverState,
+}: {
+  values: number[];
+  colVar: string;
+  agg?: string;
+  type?: string;
+  colorScale?: (val: number) => string;
+  hoverState: { current: HoveredValue };
+}) => {
+  if (values.length === 0) return null;
+  const bins = computeHistogramBins(values, 10);
+
+  const histogramMinVal = bins[0]?.binMin ?? 0;
+  const histogramMaxVal = bins[bins.length - 1]?.binMax ?? 0;
+
+  // Check if this column is hovered
+  const hoveredValStr = hoverState.current;
+  const isHoveredCol = hoveredValStr?.col === colVar;
+  const hoveredVal = hoveredValStr?.value;
+
+  // Base colors
+  const baseColors = bins.map((bin) => {
+    if (colorScale) return colorScale((bin.binMin + bin.binMax) / 2);
+    return '#8c8c8c';
+  });
+
+  // Final colors
+  const colors = (!isHoveredCol || hoveredVal === undefined)
+    ? baseColors
+    : bins.map((bin, i) => {
+      const isMatch = hoveredVal >= bin.binMin && hoveredVal <= bin.binMax;
+      return isMatch ? smallHoverColor : baseColors[i];
+    });
+
+  const data = [{
+    bin: 'all',
+    ...Object.fromEntries(bins.map((bin, i) => [`bin${i}`, bin.count])),
+  }];
+  const series = bins.map((_, i) => ({ name: `bin${i}`, color: colors[i] }));
+  const themeColor = colorScale ? '#ef6548' : '#6f6f6f';
+
+  return (
+    <div className="histogram-footer-container">
+      <BarChart
+        data={data}
+        series={series}
+        w="calc(126%)"
+        h={25}
+        dataKey="bin"
+        barChartProps={{ barGap: '0.5%' }}
+        withXAxis={false}
+        withYAxis={false}
+        gridAxis="none"
+        className="histogram-footer-chart"
+        style={{ angle: 25 }} // Note: checking if angle is a valid style property for this lib or CSS? Assuming it's passed to charts.
+        withTooltip={false}
+      />
+      <div className="histogram-footer-line" style={{ borderTop: `1px solid ${colorScale ? '#fc8d59' : '#6f6f6f'}` }} />
+      <div className="histogram-footer-ticks">
+        <div className="histogram-footer-tick-min" style={{ color: themeColor }}>
+          {colVar ? histogramMinVal.toFixed(getDecimals(colVar, agg)) : histogramMinVal}
+        </div>
+        <div className="histogram-footer-tick-max" style={{ color: themeColor }}>
+          {colVar ? histogramMaxVal.toFixed(getDecimals(colVar, agg)) : histogramMaxVal}
+        </div>
+      </div>
+    </div>
+  );
+});
 
 // MARK: - ExploreTable
 
@@ -280,14 +366,14 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     // Filter ---
     const filteredData = chartData.filter((row) => {
       // Text Filters
-      const matchesText = Object.entries(textFilters).every(([key, query]) => {
+      const matchesText = (Object.entries(textFilters) as [string, string][]).every(([key, query]) => {
         const val = String(row[key] ?? '').toLowerCase();
         return val.includes(query.toLowerCase());
       });
       if (!matchesText) return false;
 
       // Numeric Filters
-      const matchesNumeric = Object.entries(numericFilters).every(([key, filter]) => {
+      const matchesNumeric = (Object.entries(numericFilters) as [string, NumericFilter][]).every(([key, filter]) => {
         const { query, cmp } = filter;
         if (!query) return true;
         const threshold = Number(query);
@@ -360,7 +446,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
     // Generate new title
     const groupLabel = ExploreTableRowOptions.find((o) => o.value === value)?.label || value;
-    const newTitle = `RBC Transfusions per ${groupLabel}`;
+    const aggLabel = chartConfig.aggregation === 'avg' ? 'Average' : 'Total';
+    const newTitle = `${aggLabel} RBC Transfusions per ${groupLabel}`;
 
     const updatedConfig: ExploreTableConfig = {
       ...chartConfig,
@@ -373,11 +460,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
   const availableColumnOptions = useMemo(() => {
     const rowOptions = ExploreTableRowOptions.map((o) => o.value);
-    // Filter out any option that is a row variable BUT NOT the current row variable
     return ExploreTableColumnOptionsGrouped.map((group) => ({
       ...group,
       items: group.items.filter((item) => {
-        // If it's a potential row var, it must equal the current chartConfig.rowVar
         if (rowOptions.includes(item.value)) {
           return item.value === chartConfig.rowVar;
         }
@@ -426,7 +511,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     const heatmapCols = colConfigs.filter((c) => c.type === 'heatmap');
 
     if (heatmapCols.length > 0) {
-      rows.forEach((r) => {
+      rows.forEach((r: ExploreTableRow) => {
         heatmapCols.forEach((c) => {
           const val = r[c.colVar];
           const values = Array.isArray(val) ? val : [val];
@@ -443,165 +528,72 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     if (heatmapMax === -Infinity) heatmapMax = 100;
     if (heatmapMin === heatmapMax) heatmapMax = heatmapMin + 1;
 
+    // specific helpers
+    const getNormalizedValue = (val: number) => {
+      if (heatmapMax === heatmapMin) return 0;
+      return Math.max(0, Math.min(1, (val - heatmapMin) / (heatmapMax - heatmapMin)));
+    };
+    const getHeatmapColor = (val: number) => interpolateReds(getNormalizedValue(val));
+
     return colConfigs.map((colConfig) => {
       const {
-        colVar, type, title, numericTextVisible,
+        colVar, type, title, numericTextVisible, aggregation: agg,
       } = colConfig;
+
+      // Extract values for footer
+      const rawValues = rows.map((r: ExploreTableRow) => r[colVar]);
+      const values = chartConfig.twoValsPerRow
+        ? rawValues.flat().map((v: unknown) => Number(v ?? 0))
+        : rawValues.map((r: unknown) => Number(r ?? 0));
+      const maxVal = values.length ? Math.max(...values) : 0;
+
+      // Filter component
+      const filterComponent = (type === 'numeric' || type === 'heatmap') ? (
+        <NumericFilterInput
+          filterState={numericFilters[colVar] ?? defaultNumericFilter}
+          onChange={(newVal) => setNumericFilters((prev: Record<string, NumericFilter>) => ({
+            ...prev,
+            [colVar]: { ...prev[colVar] ?? defaultNumericFilter, ...newVal },
+          }))}
+        />
+      ) : (
+        <TextInput
+          placeholder="Search ..."
+          size="xs"
+          value={textFilters[colVar] ?? ''}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTextFilters((prev: Record<string, string>) => ({ ...prev, [colVar]: e.currentTarget.value }))}
+        />
+      );
 
       // Base column definition
       const column: DataTableColumn<ExploreTableRow> = {
         accessor: colVar,
         title,
-        draggable: true,
+        draggable: colVar !== 'cases' && !(colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar),
         resizable: false,
         sortable: true,
-        render: (row: ExploreTableRow) => <div>{String(row[colVar] ?? '')}</div>,
         noWrap: true,
-      };
-
-      // If accessor is 'cases', different size
-      if (colVar === 'cases') {
-        column.width = 90;
-        column.draggable = false;
-      }
-
-      // Primary text column (e.g. surgeon) has max width & no dragging
-      const textColumns = colConfigs.filter((c) => c.type === 'text');
-      if (textColumns.length === 1 && textColumns[0].colVar === colVar) {
-        column.width = 175;
-        column.draggable = false;
-      }
-
-      // Extract values
-      const rawValues = rows.map((r) => r[colVar]);
-      const values = chartConfig.twoValsPerRow
-        ? rawValues.flat().map((v) => Number(v ?? 0))
-        : rawValues.map((r) => Number(r ?? 0));
-
-      const maxVal = values.length ? Math.max(...values) : 0;
-
-      // Helper for color scale
-      const getNormalizedValue = (val: number) => {
-        if (heatmapMax === heatmapMin) return 0;
-        return Math.max(0, Math.min(1, (val - heatmapMin) / (heatmapMax - heatmapMin)));
-      };
-
-      const getHeatmapColor = (val: number) => interpolateReds(getNormalizedValue(val));
-
-      // Helper to create histogram footer
-      const createHistogramFooter = () => {
-        if (values.length === 0) return undefined;
-        const bins = computeHistogramBins(values, 10);
-
-        return (
-          <Observer>
-            {() => {
-              const histogramMinVal = bins[0]?.binMin ?? 0;
-              const histogramMaxVal = bins[bins.length - 1]?.binMax ?? 0;
-
-              // Check if this column is hovered
-              const hoveredValStr = hoverState.current;
-              const isHoveredCol = hoveredValStr?.col === colVar;
-              const hoveredVal = hoveredValStr?.value;
-
-              const colorScale = type === 'heatmap' ? getHeatmapColor : undefined;
-              const agg = colConfig.aggregation;
-
-              // Base colors
-              const baseColors = bins.map((bin) => {
-                if (colorScale) return colorScale((bin.binMin + bin.binMax) / 2);
-                return '#8c8c8c';
-              });
-
-              // Final colors
-              const colors = (!isHoveredCol || hoveredVal === undefined)
-                ? baseColors
-                : bins.map((bin, i) => {
-                  const isMatch = hoveredVal >= bin.binMin && hoveredVal <= bin.binMax;
-                  return isMatch ? smallHoverColor : baseColors[i];
-                });
-
-              const data = [{
-                bin: 'all',
-                ...Object.fromEntries(bins.map((bin, i) => [`bin${i}`, bin.count])),
-              }];
-              const series = bins.map((_, i) => ({ name: `bin${i}`, color: colors[i] }));
-              const themeColor = colorScale ? '#ef6548' : '#6f6f6f';
-
-              return (
-                <div className="histogram-footer-container">
-                  <BarChart
-                    data={data}
-                    series={series}
-                    w="calc(126%)"
-                    h={25}
-                    dataKey="bin"
-                    barChartProps={{ barGap: '0.5%' }}
-                    withXAxis={false}
-                    withYAxis={false}
-                    gridAxis="none"
-                    className="histogram-footer-chart"
-                    style={{ angle: 25 }}
-                    withTooltip={false}
-                  />
-                  <div className="histogram-footer-line" style={{ borderTop: `1px solid ${colorScale ? '#fc8d59' : '#6f6f6f'}` }} />
-                  <div className="histogram-footer-ticks">
-                    <div className="histogram-footer-tick-min" style={{ color: themeColor }}>
-                      {colVar ? histogramMinVal.toFixed(getDecimals(colVar, agg)) : histogramMinVal}
-                    </div>
-                    <div className="histogram-footer-tick-max" style={{ color: themeColor }}>
-                      {colVar ? histogramMaxVal.toFixed(getDecimals(colVar, agg)) : histogramMaxVal}
-                    </div>
-                  </div>
-                </div>
-              );
-            }}
-          </Observer>
-        );
-      };
-
-      // Helper to create numeric filter input
-      const createNumericFilterBtn = () => {
-        const filterState = numericFilters[colVar] ?? defaultNumericFilter;
-        return (
-          <TextInput
-            placeholder="Filter value"
-            size="xs"
-            value={filterState.query}
-            onChange={(e) => {
-              const val = e.currentTarget.value;
-              setNumericFilters((prev: Record<string, NumericFilter>) => {
-                const curr = prev[colVar] ?? defaultNumericFilter;
-                return { ...prev, [colVar]: { ...curr, query: val } };
-              });
-            }}
-            leftSection={(
-              <ActionIcon
-                size="xs"
-                onClick={() => {
-                  const newCmp = filterState.cmp === '>' ? '<' : '>';
-                  setNumericFilters((prev: Record<string, NumericFilter>) => {
-                    const curr = prev[colVar] ?? defaultNumericFilter;
-                    return { ...prev, [colVar]: { ...curr, cmp: newCmp } };
-                  });
-                }}
-              >
-                {filterState.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
-              </ActionIcon>
-            )}
+        width: colVar === 'cases' ? 90 : (colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar) ? 175 : undefined,
+        filter: filterComponent,
+        footer: (type === 'numeric' || type === 'heatmap') ? (
+          <HistogramFooter
+            values={values}
+            colVar={colVar}
+            agg={agg}
+            type={type}
+            colorScale={type === 'heatmap' ? getHeatmapColor : undefined}
+            hoverState={hoverState}
           />
-        );
+        ) : undefined,
       };
 
-      // Heatmap columns ---
+      // Custom Render Logic
       if (type === 'heatmap') {
         column.render = (row: ExploreTableRow) => {
           const renderHeatmapCell = (val: number, padding: string) => {
-            // Normalize value for color scale
             const normalizedVal = getNormalizedValue(val);
-
-            const textVal = getFormattedValue(val, colVar, colConfig.aggregation, false);
-            const tooltipText = getFormattedValue(val, colVar, colConfig.aggregation, true);
+            const textVal = getFormattedValue(val, colVar, agg, false);
+            const tooltipText = getFormattedValue(val, colVar, agg, true);
 
             if (val === 0) {
               return (
@@ -610,13 +602,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                     onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
                     onMouseLeave={() => setHoveredValue(null)}
                     style={{
-                      padding,
-                      width: '100%',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      height: '100%',
-                      color: '#8c8c8c', // Greyish color for dash
+                      padding, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#8c8c8c',
                     }}
                   >
                     &mdash;
@@ -647,84 +633,33 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             );
           };
 
-          // Render two values per row if enabled
           if (chartConfig.twoValsPerRow) {
             const val = row[colVar] as [number, number] | undefined;
-            const v1 = val?.[0] ?? 0;
-            const v2 = val?.[1] ?? 0;
             return (
               <Stack gap={0} p={0}>
-                {renderHeatmapCell(v1, '1.5px 1px 0.5px 1px')}
-                {renderHeatmapCell(v2, '0.5px 1px 1.5px 1px')}
+                {renderHeatmapCell(val?.[0] ?? 0, '1.5px 1px 0.5px 1px')}
+                {renderHeatmapCell(val?.[1] ?? 0, '0.5px 1px 1.5px 1px')}
               </Stack>
             );
           }
-
-          // Otherwise, render a single heatmap cell
-          const val = Number(row[colVar] ?? 0);
-          return renderHeatmapCell(val, '1px 1px 1px 1px');
+          return renderHeatmapCell(Number(row[colVar] ?? 0), '1px 1px 1px 1px');
         };
-
-        column.footer = createHistogramFooter();
-        column.filter = createNumericFilterBtn();
       } else if (type === 'numeric') {
-        // Numeric columns ---
         column.render = (row: ExploreTableRow) => {
           if (chartConfig.twoValsPerRow) {
             const val = row[colVar] as [number, number] | undefined;
-            const v1 = val?.[0] ?? null;
-            const v2 = val?.[1] ?? null;
             return (
               <Stack gap={0} p={0}>
-                <NumericBarCell
-                  value={v1}
-                  max={maxVal}
-                  colVar={colVar}
-                  opts={{ padding: '1px 1px 0.5px 1px' }}
-                  setHoveredValue={setHoveredValue}
-                  agg={colConfig.aggregation}
-                />
-                <NumericBarCell
-                  value={v2}
-                  max={maxVal}
-                  colVar={colVar}
-                  opts={{ padding: '0.5px 1px 1px 1px' }}
-                  setHoveredValue={setHoveredValue}
-                  agg={colConfig.aggregation}
-                />
+                <NumericBarCell value={val?.[0]} max={maxVal} colVar={colVar} opts={{ padding: '1px 1px 0.5px 1px' }} setHoveredValue={setHoveredValue} agg={agg} />
+                <NumericBarCell value={val?.[1]} max={maxVal} colVar={colVar} opts={{ padding: '0.5px 1px 1px 1px' }} setHoveredValue={setHoveredValue} agg={agg} />
               </Stack>
             );
           }
-          return (
-            <NumericBarCell
-              value={row[colVar] as number | null | undefined}
-              max={maxVal}
-              colVar={colVar}
-              setHoveredValue={setHoveredValue}
-              agg={colConfig.aggregation}
-            />
-          );
+          return <NumericBarCell value={row[colVar] as number} max={maxVal} colVar={colVar} setHoveredValue={setHoveredValue} agg={agg} />;
         };
-
-        column.footer = createHistogramFooter();
-        column.filter = createNumericFilterBtn();
-      } else if (type === 'text') {
-        // Text columns ---
+      } else {
         column.render = (row: ExploreTableRow) => (
           <div style={{ marginRight: '10px', textAlign: 'right' }}>{String(row[colVar] ?? '')}</div>
-        );
-
-        const textFilterValue = textFilters[colVar] ?? '';
-        column.filter = (
-          <TextInput
-            placeholder="Search ..."
-            size="xs"
-            value={textFilterValue}
-            onChange={(e) => {
-              const val = e.currentTarget.value;
-              setTextFilters((prev: Record<string, string>) => ({ ...prev, [colVar]: val }));
-            }}
-          />
         );
       }
 
@@ -836,7 +771,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
           columns={effectiveColumns}
           style={useMemo(() => ({ fontStyle: 'italic' }), [])}
-          onRowClick={useCallback(() => { }, [])}
+          onRowClick={undefined}
         />
       </Box>
     </Stack>
