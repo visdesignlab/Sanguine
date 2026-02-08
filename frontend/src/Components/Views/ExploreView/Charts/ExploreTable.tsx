@@ -154,6 +154,7 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
   return result;
 };
 
+// Cell for displaying numeric values as grey bars
 const NumericBarCell = ({
   value, max, colVar, opts = {}, setHoveredValue, agg,
 }: {
@@ -458,6 +459,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     store.updateExploreChartConfig(updatedConfig);
   };
 
+  // Available columns for the multi-select (excludes the row variable)
   const availableColumnOptions = useMemo(() => {
     const rowOptions = ExploreTableRowOptions.map((o) => o.value);
     return ExploreTableColumnOptionsGrouped.map((group) => ({
@@ -504,6 +506,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     store.updateExploreChartConfig(updatedConfig);
   };
 
+  // Definitions of columns (their styles and values)
   const generateColumnDefs = (colConfigs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => {
     // Compute global min/max for heatmap columns to normalize colors
     let heatmapMin = Infinity;
@@ -670,7 +673,6 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   // Data Table Columns -------
   const columnDefs = useMemo(
     () => generateColumnDefs(chartConfig.columns),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       chartConfig.columns,
       chartConfig.twoValsPerRow,
