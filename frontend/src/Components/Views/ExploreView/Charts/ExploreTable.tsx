@@ -596,7 +596,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Heatmap columns ---
       if (type === 'heatmap') {
         column.render = (row: ExploreTableRow) => {
-          const renderHeatmapCell = (val: number, padding: string, isSplit: boolean) => {
+          const renderHeatmapCell = (val: number, padding: string) => {
             // Normalize value for color scale
             const normalizedVal = getNormalizedValue(val);
 
@@ -633,7 +633,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                   style={{ padding, width: '100%' }}
                 >
                   <div
-                    className={`heatmap-cell heatmap-cell-${isSplit ? 'split' : 'full'}`}
+                    className="heatmap-cell"
                     data-visible={numericTextVisible}
                     style={{
                       backgroundColor: getHeatmapColor(val),
@@ -654,15 +654,15 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             const v2 = val?.[1] ?? 0;
             return (
               <Stack gap={0} p={0}>
-                {renderHeatmapCell(v1, '1.5px 1px 0.5px 1px', true)}
-                {renderHeatmapCell(v2, '0.5px 1px 1.5px 1px', true)}
+                {renderHeatmapCell(v1, '1.5px 1px 0.5px 1px')}
+                {renderHeatmapCell(v2, '0.5px 1px 1.5px 1px')}
               </Stack>
             );
           }
 
           // Otherwise, render a single heatmap cell
           const val = Number(row[colVar] ?? 0);
-          return renderHeatmapCell(val, '1px 1px 1px 1px', false);
+          return renderHeatmapCell(val, '1px 1px 1px 1px');
         };
 
         column.footer = createHistogramFooter();
