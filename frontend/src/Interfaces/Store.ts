@@ -83,9 +83,9 @@ export class RootStore {
         }
       }
       // Surgery urgency filter
-      if (!this.provenanceState.surgeryUrgencySelection[SurgeryUrgencyArray.indexOf(d.SURGERY_TYPE_DESC)]) {
-        return false;
-      }
+      // if (!this.provenanceState.surgeryUrgencySelection[SurgeryUrgencyArray.indexOf(d.SURGERY_TYPE_DESC)]) {
+      //   return false;
+      // }
       // Surgeon cases performed filter
       if (this.surgeonCasesPerformedRange[d.SURGEON_PROV_ID] < this.provenanceState.surgeonCasesPerformed[0] || this.surgeonCasesPerformedRange[d.SURGEON_PROV_ID] > this.provenanceState.surgeonCasesPerformed[1]) {
         return false;

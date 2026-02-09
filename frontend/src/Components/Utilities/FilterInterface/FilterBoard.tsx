@@ -15,7 +15,7 @@ import ComponentRangePicker from './ComponentRangePicker';
 import { Title } from '../../../Presets/StyledComponents';
 import { defaultState } from '../../../Interfaces/PresetStates/DefaultState';
 import OutcomeChipGroup from './OutcomeChipGroup';
-import SurgeryUrgencyChipGroup from './SurgeryUrgencyChipGroup';
+// import SurgeryUrgencyChipGroup from './SurgeryUrgencyChipGroup';
 import { SelectSet } from '../../../Interfaces/Types/SelectionTypes';
 import { ManualInfinity } from '../../../Presets/Constants';
 
@@ -189,7 +189,7 @@ function FilterBoard() {
 
           </ListItemSecondaryAction>
         </ListItem>
-        <SurgeryUrgencyChipGroup />
+        {/* <SurgeryUrgencyChipGroup /> */}
 
         <ListItem>
           <ListItemText primary={<Title>Surgeon Cases Performed</Title>} />
