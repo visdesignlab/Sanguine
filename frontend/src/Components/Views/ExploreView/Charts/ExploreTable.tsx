@@ -457,6 +457,14 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       title: newTitle,
     };
     store.updateExploreChartConfig(updatedConfig);
+
+    // If the new row variable is year or quarter, sort by it chronologically
+    if (['year', 'quarter'].includes(value)) {
+      setSortStatus({
+        columnAccessor: value,
+        direction: 'asc',
+      });
+    }
   };
 
   // Available columns for the multi-select (excludes the row variable)
