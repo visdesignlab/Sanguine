@@ -471,7 +471,7 @@ export const chartColors = [
 export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
   rbc_units: '#8C2D1C',
   ffp_units: '#C99700',
-  plt_units: '#F7E7B4',
+  plt_units: '#decfa2',
   cryo_units: '#58a2c8',
   cell_saver_ml: '#E4572E',
   cell_saver: '#E4572E',
