@@ -468,6 +468,15 @@ export const chartColors = [
   '#73C3C5',
 ];
 
+export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
+  rbc_units: '#8C2D1C',
+  ffp_units: '#C99700',
+  plt_units: '#F7E7B4',
+  cryo_units: '#58a2c8',
+  cell_saver_ml: '#E4572E',
+  cell_saver: '#E4572E',
+};
+
 // Explore View ----------------------------------------------------
 // Aggregation options for explore view
 const _AGGREGATIONS = ['surgeon_prov_id', 'anesth_prov_id', 'year', 'quarter'] as const;
