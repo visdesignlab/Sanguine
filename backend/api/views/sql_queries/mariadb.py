@@ -165,7 +165,7 @@ surgery_case_query = rf"""
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'tranexamic|txa' THEN 1 ELSE 0 END) AS TXA,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'amicar|aminocaproic|eaca' THEN 1 ELSE 0 END) AS AMICAR,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'b12|cobalamin' THEN 1 ELSE 0 END) AS B12,
-                SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'iron|ferric|ferrous' THEN 1 ELSE 0 END) AS IRON
+                SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'iron |ferric|ferrous' THEN 1 ELSE 0 END) AS IRON
             FROM {TABLES.get('intraop_meds')}
             GROUP BY VISIT_NO
             UNION ALL
@@ -174,7 +174,7 @@ surgery_case_query = rf"""
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'tranexamic|txa' THEN 1 ELSE 0 END) AS TXA,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'amicar|aminocaproic|eaca' THEN 1 ELSE 0 END) AS AMICAR,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'b12|cobalamin' THEN 1 ELSE 0 END) AS B12,
-                SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'iron|ferric|ferrous' THEN 1 ELSE 0 END) AS IRON
+                SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'iron |ferric|ferrous' THEN 1 ELSE 0 END) AS IRON
             FROM {TABLES.get('extraop_meds')}
             GROUP BY VISIT_NO
         ) meds_union
@@ -190,6 +190,7 @@ surgery_case_query = rf"""
         FROM VISIT_LABS
         WHERE (UPPER(RESULT_DESC) REGEXP 'HEMOGLOBIN|HGB')
           AND RESULT_VALUE REGEXP '^[+-]?\\d+(\\.\\d+)?$'
+          AND LOWER(UOM_CODE) = 'g/dl'
     ),
     PREOP_HB AS (
         SELECT
