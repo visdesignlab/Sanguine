@@ -15,7 +15,6 @@
         "d3": "^7.9.0",
         "dayjs": "^1.11.13",
         "html-to-image": "^1.11.13",
-        "lz-string": "^1.5.0",
         "mantine-datatable": "^8.3.6",
         "mobx": "^6.13.7",
         "mobx-react-lite": "^4.1.1",

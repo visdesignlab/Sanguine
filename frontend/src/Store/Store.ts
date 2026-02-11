@@ -5,7 +5,7 @@ import {
 import { createContext } from 'react';
 import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
 import { initProvenance, Provenance, NodeID } from '@visdesignlab/trrack';
-import LZString from 'lz-string';
+
 import { Layout } from 'react-grid-layout';
 // @ts-expect-error: rgl utils not typed
 import { compact } from 'react-grid-layout/build/utils';
@@ -691,31 +691,10 @@ export class RootStore {
     }
   }
 
-  getShareUrl(nodeId: NodeID): string | null {
+  getShareUrl(_nodeId: NodeID): string | null {
     if (!this.provenance) return null;
-
-    const state = this.provenance.getState(nodeId);
-
-    // Try accessing Trrack's serializer, fallback to manual LZString
-    let serializedState: string | null = null;
-    const serializer = (this.provenance.config as any)._serializer; // eslint-disable-line @typescript-eslint/no-explicit-any
-
-    if (serializer) {
-      serializedState = serializer(state);
-    } else {
-      console.warn('⚠️ [ProvenanceStore] Serializer not found on config. Using fallback LZString.');
-      try {
-        serializedState = LZString.compressToEncodedURIComponent(JSON.stringify(state));
-      } catch (e) {
-        console.error('Error serializing state:', e);
-      }
-    }
-
-    if (serializedState) {
-      const baseUrl = window.location.origin + window.location.pathname;
-      return `${baseUrl}?config=${serializedState}`;
-    }
-    return null;
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}?config=${this.provenance.exportState()}`;
   }
   // endregion
 
