@@ -1,7 +1,8 @@
 import React, {
-  useContext, useEffect, useState, useMemo, useRef, useCallback, CSSProperties,
+  useContext, useEffect, useState, useMemo, useRef, CSSProperties,
+  useCallback,
 } from 'react';
-import { observer, useLocalObservable, Observer } from 'mobx-react-lite';
+import { observer, useLocalObservable } from 'mobx-react-lite';
 import {
   MultiSelect,
   CloseButton,
@@ -95,21 +96,24 @@ const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColum
 };
 
 // Helper function to sort rows
-const sortRows = <T,>(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] => (
+const sortRows = <T, >(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] => (
   [...data].sort((a, b) => {
     const valueA = getter(a);
     const valueB = getter(b);
 
+    // Null / Equal checks
     if (valueA === valueB) return 0;
     if (valueA === null || valueA === undefined) return 1;
     if (valueB === null || valueB === undefined) return -1;
 
+    // Numeric Sort
     if (typeof valueA === 'number' && typeof valueB === 'number') {
       if (valueA < valueB) return -1;
       if (valueA > valueB) return 1;
       return 0;
     }
 
+    // String sort
     const strA = String(valueA);
     const strB = String(valueB);
     if (strA < strB) return -1;
@@ -155,7 +159,7 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
 };
 
 // Cell for displaying numeric values as grey bars
-const NumericBarCell = ({
+function NumericBarCell({
   value, max, colVar, opts = {}, setHoveredValue, agg,
 }: {
   value: number | null | undefined;
@@ -165,7 +169,7 @@ const NumericBarCell = ({
 
   opts?: { padding?: string; cellHeight?: number; fillColor?: string };
   agg?: string;
-}) => {
+}) {
   // Default Options
   const {
     cellHeight = 21,
@@ -182,7 +186,6 @@ const NumericBarCell = ({
 
   // Amount to clip from the right side to show only the filled portion
   const clipRightAmount = `${Math.max(0, 100 - barWidthPercent)}%`;
-
 
   // The actual numeric value to display
   const textValue = getFormattedValue(value, colVar, agg, false);
@@ -239,34 +242,36 @@ const NumericBarCell = ({
       </div>
     </Tooltip>
   );
-};
+}
 
 // MARK: - Components
 
-const NumericFilterInput = ({
+function NumericFilterInput({
   filterState, onChange,
 }: {
   filterState: NumericFilter;
   onChange: (val: Partial<NumericFilter>) => void;
-}) => (
-  <TextInput
-    placeholder="Filter value"
-    size="xs"
-    value={filterState.query}
-    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ query: e.currentTarget.value })}
-    leftSection={(
-      <ActionIcon
-        size="xs"
-        onClick={() => onChange({ cmp: filterState.cmp === '>' ? '<' : '>' })}
-      >
-        {filterState.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
-      </ActionIcon>
-    )}
-  />
-);
+}) {
+  return (
+    <TextInput
+      placeholder="Filter value"
+      size="xs"
+      value={filterState.query}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange({ query: e.currentTarget.value })}
+      leftSection={(
+        <ActionIcon
+          size="xs"
+          onClick={() => onChange({ cmp: filterState.cmp === '>' ? '<' : '>' })}
+        >
+          {filterState.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
+        </ActionIcon>
+      )}
+    />
+  );
+}
 
 const HistogramFooter = observer(({
-  values, colVar, agg, type, colorScale, hoverState,
+  values, colVar, agg, colorScale, hoverState,
 }: {
   values: number[];
   colVar: string;
@@ -343,13 +348,13 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   const chartData = store.exploreChartData[chartConfig.chartId] as ExploreTableData;
 
   // Filters
-  const defaultNumericFilter: NumericFilter = { query: '', cmp: '>' };
+  const defaultNumericFilter: NumericFilter = useMemo(() => ({ query: '', cmp: '>' }), []);
   const [numericFilters, setNumericFilters] = useState<Record<string, NumericFilter>>({});
   const [textFilters, setTextFilters] = useState<Record<string, string>>({});
 
   // Interaction
   const hoverState = useLocalObservable(() => ({ current: null as HoveredValue }));
-  const setHoveredValue = (val: HoveredValue) => { hoverState.current = val; };
+  const setHoveredValue = useCallback((val: HoveredValue) => { hoverState.current = val; }, [hoverState]);
 
   // Sorting
   const defaultSortCol = chartConfig.columns[0]?.colVar || 'surgeon_prov_id';
@@ -515,7 +520,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   };
 
   // Definitions of columns (their styles and values)
-  const generateColumnDefs = (colConfigs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => {
+  const generateColumnDefs = useCallback((colConfigs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => {
     // Compute global min/max for heatmap columns to normalize colors
     let heatmapMin = Infinity;
     let heatmapMax = -Infinity;
@@ -676,18 +681,12 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
       return column;
     });
-  };
+  }, [rows, chartConfig.twoValsPerRow, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue]);
 
   // Data Table Columns -------
   const columnDefs = useMemo(
     () => generateColumnDefs(chartConfig.columns),
-    [
-      chartConfig.columns,
-      chartConfig.twoValsPerRow,
-      rows,
-      numericFilters,
-      textFilters,
-    ],
+    [generateColumnDefs, chartConfig.columns],
   );
   const { effectiveColumns, resetColumnsOrder } = useDataTableColumns<ExploreTableRow>({
     key: `ExploreTable-${chartConfig.chartId}`,

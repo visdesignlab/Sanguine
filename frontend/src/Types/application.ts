@@ -125,7 +125,9 @@ export const OUTCOMES = [
       sum: 'Total Length of Stay',
       avg: 'Average Length of Stay',
     },
-    units: { sum: 'Days', avg: 'Days', sumShort: ' days', avgShort: ' days' },
+    units: {
+      sum: 'Days', avg: 'Days', sumShort: ' days', avgShort: ' days',
+    },
     decimals: { sum: 0, avg: 2 },
   },
   {
@@ -383,7 +385,9 @@ export const COSTS = {
       sum: 'Total RBC Cost',
       avg: 'Average RBC Cost Per Visit',
     },
-    units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
     decimals: { sum: 0, avg: 0 },
   },
   ffp_units_cost: {
@@ -394,7 +398,9 @@ export const COSTS = {
       sum: 'Total FFP Cost',
       avg: 'Average FFP Cost Per Visit',
     },
-    units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
     decimals: { sum: 0, avg: 0 },
   },
   plt_units_cost: {
@@ -405,7 +411,9 @@ export const COSTS = {
       sum: 'Total Platelet Cost',
       avg: 'Average Platelet Cost Per Visit',
     },
-    units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
     decimals: { sum: 0, avg: 0 },
   },
   cryo_units_cost: {
@@ -416,7 +424,9 @@ export const COSTS = {
       sum: 'Total Cryo Cost',
       avg: 'Average Cryo Cost Per Visit',
     },
-    units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
     decimals: { sum: 0, avg: 0 },
   },
   // TODO: Unit cost is wrong
@@ -428,7 +438,9 @@ export const COSTS = {
       sum: 'Total Cell Saver Cost',
       avg: 'Average Cell Saver Cost Per Visit',
     },
-    units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
     decimals: { sum: 0, avg: 0 },
   },
 } as const;
@@ -457,7 +469,9 @@ export const OVERALL_BLOOD_PRODUCT_COST = {
     sum: 'Total Blood Product Costs',
     avg: 'Average Blood Product Costs Per Visit',
   },
-  units: { sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix' },
+  units: {
+    sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+  },
   decimals: { sum: 0, avg: 0 },
 } as const;
 
@@ -720,7 +734,9 @@ export const ExploreTableColumnOptionsGrouped = [
       {
         value: 'cases',
         label: 'Cases',
-        units: { sum: 'cases', avg: '% of cases', sumShort: ' Cases', avgShort: ' Cases' },
+        units: {
+          sum: 'cases', avg: '% of cases', sumShort: ' Cases', avgShort: ' Cases',
+        },
         decimals: 0,
       },
     ],
@@ -738,7 +754,7 @@ export const ExploreTableColumnOptions: {
     type?: 'prefix' | 'suffix';
   };
   decimals?: number | { sum: number; avg: number };
-}[] = ExploreTableColumnOptionsGrouped.flatMap(g => g.items as {
+}[] = ExploreTableColumnOptionsGrouped.flatMap((g) => g.items as {
   value: string;
   label: string;
   units?: {

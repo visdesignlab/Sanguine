@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from 'react';
-import { observer } from 'mobx-react';
+import { observer } from 'mobx-react-lite';
 import { MantineProvider } from '@mantine/core';
 import { useIdleTimer } from 'react-idle-timer';
 import { Shell } from './Shell/Shell';

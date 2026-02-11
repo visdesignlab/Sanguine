@@ -11,9 +11,8 @@ import {
 import {
   IconPlus, IconArrowUpRight,
 } from '@tabler/icons-react';
-import clsx from 'clsx';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
-import { useObserver } from 'mobx-react';
+import { useObserver } from 'mobx-react-lite';
 import { useDisclosure } from '@mantine/hooks';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import cardStyles from './PresetStateCard.module.css';
@@ -328,10 +327,7 @@ export function ExploreView() {
             {/* Preset state group label */}
             <Text
               mb={verticalMargin}
-              className={clsx(
-                classes.variableTitle,
-                hoveredIdx && hoveredIdx.group === groupIdx && classes.active,
-              )}
+              className={`${classes.variableTitle} ${hoveredIdx && hoveredIdx.group === groupIdx ? classes.active : ''}`.trim()}
             >
               {groupLabel}
             </Text>
@@ -342,7 +338,7 @@ export function ExploreView() {
                   key={question}
                   withBorder
                   style={{ height: toolbarWidth, cursor: 'pointer' }}
-                  className={clsx(cardStyles.presetStateCard, classes.gridItem)}
+                  className={`${cardStyles.presetStateCard} ${classes.gridItem}`}
                   onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
                   onMouseLeave={() => setHoveredIdx(null)}
                   onClick={() => handlePresetClick(groupIdx, cardIdx)}

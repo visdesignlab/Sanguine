@@ -2,7 +2,7 @@ import {
   useCallback, useContext, useMemo, useState,
 } from 'react';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
-import { useObserver } from 'mobx-react';
+import { useObserver } from 'mobx-react-lite';
 
 // Mantine
 import { useDisclosure } from '@mantine/hooks';

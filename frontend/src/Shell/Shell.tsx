@@ -198,7 +198,9 @@ export const Shell = observer(() => {
           </Group>
           {/** All Header Icons, right-aligned */}
           <Group gap="sm" pr="md" wrap="nowrap">
-            {headerIcons.map(({ icon: Icon, label, onClick, disabled }) => {
+            {headerIcons.map(({
+              icon: Icon, label, onClick, disabled,
+            }) => {
               // --- Hover Menu for Camera to show screenshots ---
               if (label === 'Camera') {
                 return (
@@ -352,7 +354,6 @@ export const Shell = observer(() => {
           ))}
         </Container>
       </AppShell.Main>
-
 
       <Modal
         opened={aboutModalOpened}
