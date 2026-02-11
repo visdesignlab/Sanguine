@@ -775,8 +775,8 @@ export const ExploreTableRowOptions: { value: string; label: string }[] = [
 ];
 
 // Variables
-const ExploreTableColumnVars = ExploreTableColumnOptions.map((opt) => opt.value);
-const ExploreTableRowVars = ExploreTableRowOptions.map((opt) => opt.value);
+export const ExploreTableColumnVars = ExploreTableColumnOptions.map((opt) => opt.value);
+export const ExploreTableRowVars = ExploreTableRowOptions.map((opt) => opt.value);
 
 // Column type
 export type ExploreTableColumn = {
