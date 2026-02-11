@@ -4,7 +4,7 @@ import {
   useContext, useMemo, useState, useEffect,
 } from 'react';
 import {
-  Store, ProductMaximums, MANUAL_INFINITY, ApplicationState,
+  Store, MANUAL_INFINITY, ApplicationState,
 } from '../../../Store/Store';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 
@@ -21,7 +21,8 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Applic
 
   // Clamp slider max value to prevent outliers
   const clampedMax = useMemo(
-    () => Math.min(ProductMaximums[varName] ?? MANUAL_INFINITY, initialFilterMax),
+    // () => Math.min(ProductMaximums[varName] ?? MANUAL_INFINITY, initialFilterMax),
+    () => Math.min(MANUAL_INFINITY, initialFilterMax),
     [varName, initialFilterMax],
   );
 
@@ -57,7 +58,7 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Applic
       color={isFilterActive ? 'blue.6' : DEFAULT_DATA_COLOR}
       marks={[
         { value: initialFilterMin, label: `${initialFilterMin}` },
-        { value: clampedMax, label: `${clampedMax}${initialFilterMax > ProductMaximums[varName] ? '+' : ''}` },
+        { value: clampedMax, label: `${clampedMax}` },
       ]}
       minRange={0}
       mb="xl"
