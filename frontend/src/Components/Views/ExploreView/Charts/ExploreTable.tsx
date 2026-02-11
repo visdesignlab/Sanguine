@@ -325,7 +325,6 @@ const HistogramFooter = observer(({
         withYAxis={false}
         gridAxis="none"
         className="histogram-footer-chart"
-        style={{ angle: 25 }} // Note: checking if angle is a valid style property for this lib or CSS? Assuming it's passed to charts.
         withTooltip={false}
       />
       <div className="histogram-footer-line" style={{ borderTop: `1px solid ${colorScale ? '#fc8d59' : '#6f6f6f'}` }} />
