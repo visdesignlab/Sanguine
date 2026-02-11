@@ -67,7 +67,7 @@ export const presetStateCards: PresetGroup[] = [
                 colVar: 'percent_above_5_rbc',
                 aggregation: 'avg',
                 type: 'heatmap',
-                title: '5 RBC',
+                title: '≥5 RBC',
               }],
             twoValsPerRow: false,
           },
