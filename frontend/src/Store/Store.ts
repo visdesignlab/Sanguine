@@ -21,6 +21,7 @@ import {
   ExploreChartConfig,
   ExploreChartData,
   ExploreTableConfig,
+  ExploreTableRow,
   TimeAggregation,
   TimePeriod,
   dashboardXAxisVars,
@@ -1630,7 +1631,7 @@ export class RootStore {
 
         try {
           const queryResult = await this.duckDB!.query(query);
-          const rows = queryResult.toArray().map((row: any) => row.toJSON());
+          const rows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as ExploreTableRow);
 
           if (tableConfig.twoValsPerRow) {
             console.warn('twoValsPerRow is not yet fully implemented, using basic data');
