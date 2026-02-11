@@ -1480,6 +1480,10 @@ export class RootStore {
       () => this.state.settings.unitCosts,
       async () => { await this.updateCostsTable(); },
     );
+    reaction(
+      () => this.state.explore.chartConfigs,
+      async () => { await this.computeExploreChartData(); },
+    );
   }
 
   // endregion
