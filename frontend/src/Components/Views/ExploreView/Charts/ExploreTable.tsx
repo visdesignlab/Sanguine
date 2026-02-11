@@ -70,7 +70,7 @@ const getFormattedValue = (
   const decimals = getDecimals(colVar, agg);
   const formattedValue = Number(value).toFixed(decimals);
 
-  const space = (suffix && !suffix.trim().startsWith('%')) ? ' ' : '';
+  const space = (suffix && !suffix.startsWith(' ') && !suffix.trim().startsWith('%')) ? ' ' : '';
 
   return `${prefix}${formattedValue}${space}${suffix}`;
 };
@@ -96,7 +96,7 @@ const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColum
 };
 
 // Helper function to sort rows
-const sortRows = <T, >(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] => (
+const sortRows = <T,>(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] => (
   [...data].sort((a, b) => {
     const valueA = getter(a);
     const valueB = getter(b);

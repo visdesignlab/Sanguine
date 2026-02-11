@@ -29,8 +29,8 @@ export const BLOOD_COMPONENTS = [
     units: {
       sum: 'RBC Units',
       avg: 'RBC Units Per Visit',
-      sumShort: ' Units',
-      avgShort: ' Units',
+      sumShort: 'Units',
+      avgShort: 'Units',
     },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
@@ -45,8 +45,8 @@ export const BLOOD_COMPONENTS = [
     units: {
       sum: 'Plasma Units',
       avg: 'Plasma Units Per Visit',
-      sumShort: ' Units',
-      avgShort: ' Units',
+      sumShort: 'Units',
+      avgShort: 'Units',
     },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
@@ -61,8 +61,8 @@ export const BLOOD_COMPONENTS = [
     units: {
       sum: 'Platelet Units',
       avg: 'Platelet Units Per Visit',
-      sumShort: ' Units',
-      avgShort: ' Units',
+      sumShort: 'Units',
+      avgShort: 'Units',
     },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
@@ -77,8 +77,8 @@ export const BLOOD_COMPONENTS = [
     units: {
       sum: 'Cryo Units',
       avg: 'Cryo Units Per Visit',
-      sumShort: ' Units',
-      avgShort: ' Units',
+      sumShort: 'Units',
+      avgShort: 'Units',
     },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
@@ -93,8 +93,8 @@ export const BLOOD_COMPONENTS = [
     units: {
       sum: 'mL',
       avg: 'mL Per Visit',
-      sumShort: ' mL',
-      avgShort: ' mL',
+      sumShort: 'mL',
+      avgShort: 'mL',
     },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
@@ -126,7 +126,7 @@ export const OUTCOMES = [
       avg: 'Average Length of Stay',
     },
     units: {
-      sum: 'Days', avg: 'Days', sumShort: ' days', avgShort: ' days',
+      sum: 'Days', avg: 'Days', sumShort: 'days', avgShort: 'days',
     },
     decimals: { sum: 0, avg: 2 },
   },
@@ -488,7 +488,7 @@ export const VISIT_COUNT = {
   units: {
     sum: 'Visits',
     avg: 'Visits',
-    sumShort: ' Cases',
+    sumShort: 'Cases',
     avgShort: '', // Ensure cases column is treated correctly in table if it's percentage
   },
   decimals: { sum: 0, avg: 0 },
