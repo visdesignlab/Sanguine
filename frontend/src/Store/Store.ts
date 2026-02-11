@@ -25,6 +25,7 @@ import {
   dashboardXAxisVars,
   dashboardYAxisOptions,
   DEFAULT_UNIT_COSTS,
+  DumbbellData,
 } from '../Types/application';
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
@@ -90,6 +91,40 @@ export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
     statId: '6', yAxisVar: 'plt_adherent', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
   },
 ];
+
+// --- Dummy Data Generator for Dumbbell Chart ---
+function generateDumbbellData(): DumbbellData {
+  const providers = ['Dr. Aris', 'Dr. Briseis', 'Dr. Caelus', 'Dr. Daedalus', 'Dr. Elara'];
+  const data: DumbbellData = [];
+  let caseIdCounter = 1;
+
+  providers.forEach((provider) => {
+    // 15 to 25 visits per provider (increased 5x from original 3-5)
+    const numVisits = Math.floor(Math.random() * 11) + 15;
+    for (let v = 1; v <= numVisits; v += 1) {
+      const visitId = `${v}`; // Just the number
+      // 3 to 8 cases per visit
+      const numCases = Math.floor(Math.random() * 6) + 3;
+      for (let c = 0; c < numCases; c += 1) {
+        // Generate pre-op Hgb (roughly 10-16)
+        const preHgb = 10 + Math.random() * 6;
+        // Generate post-op Hgb (roughly 7-14, usually lower than pre)
+        const postHgb = Math.max(7, preHgb - (Math.random() * 4 + 0.5));
+
+        data.push({
+          id: `case-${caseIdCounter}`,
+          providerId: provider,
+          visitId,
+          preHgb,
+          postHgb,
+        });
+        caseIdCounter += 1;
+      }
+    }
+  });
+
+  return data;
+}
 // endregion
 
 // region Types
@@ -235,6 +270,7 @@ export class RootStore {
         cell_saver_cost: 550,
       },
     ],
+    none_hgb_provider_visit: generateDumbbellData(),
   };
 
   exploreChartData: ExploreChartData = { ...this.exploreDummyData };

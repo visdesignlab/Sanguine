@@ -501,7 +501,7 @@ export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof c
 // TODO: Update scatterPlotConfig type
 export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterPlot'>;
 
-export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig;
+export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | DumbbellChartConfig;
 export type ScatterPlotData = ScatterChartSeries[];
 
 // TOOD: Update or remove CostBarData type
@@ -514,7 +514,25 @@ export interface CostBarDatum extends Record<Cost, number> {
 export type CostBarData = CostBarDatum[];
 
 // TODO: Update ExploreChartData type
-export type ExploreChartData = Record<string, ScatterPlotData | CostBarData>;
+export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | DumbbellData>;
+
+// --- Dumbbell Chart ---
+export type DumbbellChartConfig = ChartConfig<
+  'provider_visit', // Fixed x-axis structure
+  'hgb',           // Fixed y-axis variable for now
+  'none',          // No aggregation
+  'dumbbell'
+>;
+
+export interface DumbbellCase {
+  id: string;
+  providerId: string;
+  visitId: string;
+  preHgb: number;
+  postHgb: number;
+}
+
+export type DumbbellData = DumbbellCase[];
 
 // Filter Counts ---------------------------------------------------
 export type FilterCountKey =

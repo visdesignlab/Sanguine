@@ -25,6 +25,7 @@ import {
 } from '../../../Types/application';
 import { CostChart } from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
+import { DumbbellChart } from './Charts/DumbbellChart';
 
 export function ExploreView() {
   const store = useContext(Store);
@@ -54,7 +55,7 @@ export function ExploreView() {
 
   // Add Chart Modal State ---------------------------------
   const [isAddModalOpen, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
-  const [chartType, setChartType] = useState<'cost' | 'scatter'>('cost');
+  const [chartType, setChartType] = useState<'cost' | 'scatter' | 'dumbbell'>('cost');
   const [aggregation, setAggregation] = useState<'sum' | 'avg'>('sum');
   const [costGroupVar, setCostGroupVar] = useState<string>('');
   const [scatterXAxisVar, setScatterXAxisVar] = useState<string>('quarter');
@@ -83,8 +84,9 @@ export function ExploreView() {
         xAxisVar: 'cost',
         yAxisVar: costGroupVar as typeof costYAxisVars[number],
         aggregation,
+
       });
-    } else {
+    } else if (chartType === 'scatter') {
       if (!scatterXAxisVar || !scatterYAxisVar) return;
       store.addExploreChart({
         chartId: id,
@@ -92,6 +94,14 @@ export function ExploreView() {
         xAxisVar: scatterXAxisVar as typeof dashboardXAxisVars[number],
         yAxisVar: scatterYAxisVar as typeof dashboardYAxisVars[number],
         aggregation,
+      });
+    } else if (chartType === 'dumbbell') {
+      store.addExploreChart({
+        chartId: id,
+        chartType: 'dumbbell',
+        xAxisVar: 'provider_visit',
+        yAxisVar: 'hgb',
+        aggregation: 'none',
       });
     }
     closeAddModal();
@@ -165,8 +175,9 @@ export function ExploreView() {
             data={[
               { value: 'cost', label: 'Costs & Savings' },
               { value: 'scatter', label: 'Scatter' },
+              { value: 'dumbbell', label: 'Dumbbell Chart' },
             ]}
-            onChange={(v) => setChartType((v as 'cost' | 'scatter') || 'cost')}
+            onChange={(v) => setChartType((v as 'cost' | 'scatter' | 'dumbbell') || 'cost')}
           />
           <Select
             label="Aggregation"
@@ -200,6 +211,13 @@ export function ExploreView() {
                 onChange={(v) => setScatterYAxisVar(v || '')}
               />
             </>
+
+          )}
+
+          {chartType === 'dumbbell' && (
+            <Text c="dimmed" fs="italic" size="sm">
+              Dumbbell chart groups by Provider and Visit automatically. No aggregation options available.
+            </Text>
           )}
           <Button
             onClick={handleAddChart}
@@ -213,85 +231,88 @@ export function ExploreView() {
           </Button>
         </Stack>
       </Modal>
-      {store.exploreChartLayouts.main.length > 0 ? (
-        <ResponsiveGridLayout
-          className="layout"
-          breakpoints={{
-            main: 852, sm: 0,
-          }}
-          cols={{
-            main: 2, sm: 1,
-          }}
-          rowHeight={300}
-          containerPadding={[0, 0]}
-          draggableHandle=".move-icon"
-          onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.updateExploreLayout({ main: _layout });
-          }}
-          onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.updateExploreLayout({ main: _layout });
-          }}
-          layouts={store.exploreChartLayouts}
-        >
-          {/** Render each chart defined in the store. */}
-          {store.exploreChartConfigs.map((chartConfig) => (
-            <Card
-              key={chartConfig.chartId}
-              withBorder
-              className={classes.gridItem}
-            >
-              {chartConfig.chartType === 'cost' && <CostChart chartConfig={chartConfig} />}
-              {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
-            </Card>
-          ))}
-        </ResponsiveGridLayout>
-      ) : (
-        presetStateCards.map(({ groupLabel, options }, groupIdx) => (
-          <Box key={groupLabel}>
-            {/* Preset state group label */}
-            <Text
-              mb={verticalMargin}
-              className={clsx(
-                classes.variableTitle,
-                hoveredIdx && hoveredIdx.group === groupIdx && classes.active,
-              )}
-            >
-              {groupLabel}
-            </Text>
-            {/* Preset state, for each option in group */}
-            <Stack>
-              {options.map(({ question, Icon }, cardIdx) => (
-                <Card
-                  key={question}
-                  withBorder
-                  style={{ height: toolbarWidth, cursor: 'pointer' }}
-                  className={clsx(cardStyles.presetStateCard, classes.gridItem)}
-                  onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
-                  onMouseLeave={() => setHoveredIdx(null)}
-                  onClick={() => handlePresetClick(groupIdx, cardIdx)}
-                >
-                  <Group className={cardStyles.presetStateContent}>
-                    <Group className={cardStyles.question}>
-                      {/* Preset state icon */}
-                      <Box className={cardStyles.iconContainer}>
-                        <Icon size={cardIconSize} stroke={cardIconStroke} />
-                      </Box>
-                      {/* Preset state question */}
-                      <Text size="sm">{question}</Text>
+      {
+        store.exploreChartLayouts.main.length > 0 ? (
+          <ResponsiveGridLayout
+            className="layout"
+            breakpoints={{
+              main: 852, sm: 0,
+            }}
+            cols={{
+              main: 2, sm: 1,
+            }}
+            rowHeight={300}
+            containerPadding={[0, 0]}
+            draggableHandle=".move-icon"
+            onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+              store.updateExploreLayout({ main: _layout });
+            }}
+            onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+              store.updateExploreLayout({ main: _layout });
+            }}
+            layouts={store.exploreChartLayouts}
+          >
+            {/** Render each chart defined in the store. */}
+            {store.exploreChartConfigs.map((chartConfig) => (
+              <Card
+                key={chartConfig.chartId}
+                withBorder
+                className={classes.gridItem}
+              >
+                {chartConfig.chartType === 'cost' && <CostChart chartConfig={chartConfig} />}
+                {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
+                {chartConfig.chartType === 'dumbbell' && <DumbbellChart chartConfig={chartConfig} />}
+              </Card>
+            ))}
+          </ResponsiveGridLayout>
+        ) : (
+          presetStateCards.map(({ groupLabel, options }, groupIdx) => (
+            <Box key={groupLabel}>
+              {/* Preset state group label */}
+              <Text
+                mb={verticalMargin}
+                className={clsx(
+                  classes.variableTitle,
+                  hoveredIdx && hoveredIdx.group === groupIdx && classes.active,
+                )}
+              >
+                {groupLabel}
+              </Text>
+              {/* Preset state, for each option in group */}
+              <Stack>
+                {options.map(({ question, Icon }, cardIdx) => (
+                  <Card
+                    key={question}
+                    withBorder
+                    style={{ height: toolbarWidth, cursor: 'pointer' }}
+                    className={clsx(cardStyles.presetStateCard, classes.gridItem)}
+                    onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
+                    onMouseLeave={() => setHoveredIdx(null)}
+                    onClick={() => handlePresetClick(groupIdx, cardIdx)}
+                  >
+                    <Group className={cardStyles.presetStateContent}>
+                      <Group className={cardStyles.question}>
+                        {/* Preset state icon */}
+                        <Box className={cardStyles.iconContainer}>
+                          <Icon size={cardIconSize} stroke={cardIconStroke} />
+                        </Box>
+                        {/* Preset state question */}
+                        <Text size="sm">{question}</Text>
+                      </Group>
+                      {/* Arrow Icon */}
+                      <IconArrowUpRight
+                        size={cardIconSize}
+                        stroke={cardIconStroke}
+                        className={`${cardStyles.arrow}`}
+                      />
                     </Group>
-                    {/* Arrow Icon */}
-                    <IconArrowUpRight
-                      size={cardIconSize}
-                      stroke={cardIconStroke}
-                      className={`${cardStyles.arrow}`}
-                    />
-                  </Group>
-                </Card>
-              ))}
-            </Stack>
-          </Box>
-        ))
-      )}
+                  </Card>
+                ))}
+              </Stack>
+            </Box>
+          ))
+        )
+      }
     </Stack>
   ));
 }
