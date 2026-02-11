@@ -20,7 +20,7 @@ import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
 import {
-  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS, ExploreTableRowOptions, ExploreChartConfig, ExploreTableConfig,
+  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS, ExploreTableRowOptions, ExploreTableConfig,
 } from '../../../Types/application';
 import { CostChart } from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
