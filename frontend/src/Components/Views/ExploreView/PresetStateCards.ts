@@ -19,9 +19,69 @@ export const presetStateCards: PresetGroup[] = [
       {
         question: 'In cases with preoperative anemia, how many RBCs were transfused per surgeon?',
         Icon: IconDropletHalf2Filled,
-        chartConfigs: [],
+        // Add a ExploreTable chart config so clicking this preset opens the ExploreTable.
+        chartConfigs: [
+          {
+            chartId: 'preset-explore-table-preop-anemia',
+            title: 'RBC Transfusions per Surgeon',
+            chartType: 'exploreTable',
+            rowVar: 'attending_provider',
+            columns: [
+              {
+                colVar: 'attending_provider',
+                aggregation: 'none',
+                type: 'text',
+                title: 'Surgeon',
+              },
+              {
+                colVar: 'cases',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Cases',
+              },
+              {
+                colVar: 'percent_1_rbc',
+                aggregation: 'avg',
+                type: 'heatmap',
+                title: '1 RBC',
+              },
+              {
+                colVar: 'percent_2_rbc',
+                aggregation: 'avg',
+                type: 'heatmap',
+                title: '2 RBC',
+              },
+              {
+                colVar: 'percent_3_rbc',
+                aggregation: 'avg',
+                type: 'heatmap',
+                title: '3 RBC',
+              },
+              {
+                colVar: 'percent_4_rbc',
+                aggregation: 'avg',
+                type: 'heatmap',
+                title: '4 RBC',
+              },
+              {
+                colVar: 'percent_above_5_rbc',
+                aggregation: 'avg',
+                type: 'heatmap',
+                title: '≥5 RBC',
+              }],
+            twoValsPerRow: false,
+          },
+        ],
         chartLayouts: {
-          main: [],
+          main: [
+            {
+              i: 'preset-explore-table-preop-anemia',
+              x: 0,
+              y: 0,
+              w: 1,
+              h: 1,
+            },
+          ],
         },
       },
       {

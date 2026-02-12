@@ -3,7 +3,7 @@ import {
 } from '@mantine/core';
 import { useContext } from 'react';
 import { IconRestore } from '@tabler/icons-react';
-import { useObserver } from 'mobx-react';
+import { useObserver } from 'mobx-react-lite';
 import { Store } from '../../../Store/Store';
 import { FilterCountKey } from '../../../Types/application';
 

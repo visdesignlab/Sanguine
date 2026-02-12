@@ -11,9 +11,8 @@ import {
 import {
   IconPlus, IconArrowUpRight,
 } from '@tabler/icons-react';
-import clsx from 'clsx';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
-import { useObserver } from 'mobx-react';
+import { useObserver } from 'mobx-react-lite';
 import { useDisclosure } from '@mantine/hooks';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import cardStyles from './PresetStateCard.module.css';
@@ -21,10 +20,11 @@ import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
 import {
-  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS,
+  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS, ExploreTableRowOptions, ExploreTableConfig,
 } from '../../../Types/application';
 import { CostChart } from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
+import ExploreTable from './Charts/ExploreTable';
 
 export function ExploreView() {
   const store = useContext(Store);
@@ -54,9 +54,10 @@ export function ExploreView() {
 
   // Add Chart Modal State ---------------------------------
   const [isAddModalOpen, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
-  const [chartType, setChartType] = useState<'cost' | 'scatter'>('cost');
+  const [chartType, setChartType] = useState<'cost' | 'scatter' | 'exploreTable'>('cost');
   const [aggregation, setAggregation] = useState<'sum' | 'avg'>('sum');
   const [costGroupVar, setCostGroupVar] = useState<string>('');
+  const [exploreTableGroupVar, setExploreTableGroupVar] = useState<string>('');
   const [scatterXAxisVar, setScatterXAxisVar] = useState<string>('quarter');
   const [scatterYAxisVar, setScatterYAxisVar] = useState<string>('');
 
@@ -64,6 +65,7 @@ export function ExploreView() {
     setChartType('cost');
     setAggregation('sum');
     setCostGroupVar('');
+    setExploreTableGroupVar('');
     setScatterXAxisVar('quarter');
     setScatterYAxisVar('');
   }, []);
@@ -83,6 +85,63 @@ export function ExploreView() {
         xAxisVar: 'cost',
         yAxisVar: costGroupVar as typeof costYAxisVars[number],
         aggregation,
+      });
+    } else if (chartType === 'exploreTable') {
+      if (!exploreTableGroupVar) return;
+
+      const groupLabel = ExploreTableRowOptions.find((o) => o.value === exploreTableGroupVar)?.label || exploreTableGroupVar;
+
+      store.addExploreChart({
+        chartId: id,
+        chartType: 'exploreTable',
+        title: `RBC Transfusions per ${groupLabel}`,
+        rowVar: exploreTableGroupVar as ExploreTableConfig['rowVar'],
+        aggregation,
+        columns: [
+          {
+            colVar: exploreTableGroupVar,
+            aggregation: 'none',
+            type: 'text',
+            title: groupLabel,
+          },
+          {
+            colVar: 'cases',
+            aggregation: 'sum',
+            type: 'numeric',
+            title: 'Cases',
+          },
+          {
+            colVar: 'percent_1_rbc',
+            aggregation: aggregation as 'sum' | 'avg',
+            type: 'heatmap',
+            title: '1 RBC',
+          },
+          {
+            colVar: 'percent_2_rbc',
+            aggregation: aggregation as 'sum' | 'avg',
+            type: 'heatmap',
+            title: '2 RBC',
+          },
+          {
+            colVar: 'percent_3_rbc',
+            aggregation: aggregation as 'sum' | 'avg',
+            type: 'heatmap',
+            title: '3 RBC',
+          },
+          {
+            colVar: 'percent_4_rbc',
+            aggregation: aggregation as 'sum' | 'avg',
+            type: 'heatmap',
+            title: '4 RBC',
+          },
+          {
+            colVar: 'percent_above_5_rbc',
+            aggregation: aggregation as 'sum' | 'avg',
+            type: 'heatmap',
+            title: '≥5 RBC',
+          },
+        ],
+        twoValsPerRow: false,
       });
     } else {
       if (!scatterXAxisVar || !scatterYAxisVar) return;
@@ -165,8 +224,15 @@ export function ExploreView() {
             data={[
               { value: 'cost', label: 'Costs & Savings' },
               { value: 'scatter', label: 'Scatter' },
+              { value: 'exploreTable', label: 'Heatmap' },
             ]}
-            onChange={(v) => setChartType((v as 'cost' | 'scatter') || 'cost')}
+            onChange={(v) => {
+              const val = (v as 'cost' | 'scatter' | 'exploreTable') || 'cost';
+              setChartType(val);
+              if (val === 'exploreTable') {
+                setAggregation('avg');
+              }
+            }}
           />
           <Select
             label="Aggregation"
@@ -182,6 +248,14 @@ export function ExploreView() {
               value={costGroupVar}
               data={costGroupOptions}
               onChange={(v) => setCostGroupVar(v || '')}
+            />
+          ) : chartType === 'exploreTable' ? (
+            <Select
+              label="Group By"
+              placeholder="Choose grouping variable"
+              value={exploreTableGroupVar}
+              data={ExploreTableRowOptions}
+              onChange={(v) => setExploreTableGroupVar(v || '')}
             />
           ) : (
             <>
@@ -205,6 +279,7 @@ export function ExploreView() {
             onClick={handleAddChart}
             disabled={
               (chartType === 'cost' && !costGroupVar)
+              || (chartType === 'exploreTable' && !exploreTableGroupVar)
               || (chartType === 'scatter' && (!scatterXAxisVar || !scatterYAxisVar))
             }
             fullWidth
@@ -242,6 +317,7 @@ export function ExploreView() {
             >
               {chartConfig.chartType === 'cost' && <CostChart chartConfig={chartConfig} />}
               {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
+              {chartConfig.chartType === 'exploreTable' && <ExploreTable chartConfig={chartConfig} />}
             </Card>
           ))}
         </ResponsiveGridLayout>
@@ -251,10 +327,7 @@ export function ExploreView() {
             {/* Preset state group label */}
             <Text
               mb={verticalMargin}
-              className={clsx(
-                classes.variableTitle,
-                hoveredIdx && hoveredIdx.group === groupIdx && classes.active,
-              )}
+              className={`${classes.variableTitle} ${hoveredIdx && hoveredIdx.group === groupIdx ? classes.active : ''}`.trim()}
             >
               {groupLabel}
             </Text>
@@ -265,7 +338,7 @@ export function ExploreView() {
                   key={question}
                   withBorder
                   style={{ height: toolbarWidth, cursor: 'pointer' }}
-                  className={clsx(cardStyles.presetStateCard, classes.gridItem)}
+                  className={`${cardStyles.presetStateCard} ${classes.gridItem}`}
                   onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
                   onMouseLeave={() => setHoveredIdx(null)}
                   onClick={() => handlePresetClick(groupIdx, cardIdx)}

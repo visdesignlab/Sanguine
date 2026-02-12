@@ -20,7 +20,7 @@ import {
   IconChartBar, IconCircle, IconCircleFilled, IconRestore,
 } from '@tabler/icons-react';
 import { useContext } from 'react';
-import { useObserver } from 'mobx-react';
+import { useObserver } from 'mobx-react-lite';
 import { DEFAULT_DATA_COLOR, useThemeConstants } from '../../../Theme/mantineTheme';
 import { FilterRangeSlider } from './FilterRangeSlider';
 import { RootStore, Store } from '../../../Store/Store';

@@ -4,9 +4,9 @@ import { IconGripVertical } from '@tabler/icons-react';
 import { ScatterChart } from '@mantine/charts';
 import { useContext, useMemo } from 'react';
 import { Store } from '../../../../Store/Store';
-import { ExploreChartConfig, ScatterPlotData } from '../../../../Types/application';
+import { ScatterPlotConfig, ScatterPlotData } from '../../../../Types/application';
 
-export function ScatterPlot({ chartConfig }: { chartConfig: ExploreChartConfig }) {
+export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig }) {
   const store = useContext(Store);
 
   const dataKeyString = useMemo(
