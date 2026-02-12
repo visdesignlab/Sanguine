@@ -488,10 +488,13 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   const handleColumnsChange = (newColValues: string[]) => {
     const currentCols = chartConfig.columns;
     const currentColVars = currentCols.map((c) => c.colVar);
+    const selectedColValues = newColValues.includes(chartConfig.rowVar)
+      ? newColValues
+      : [chartConfig.rowVar, ...newColValues];
 
     // Identify added & prev columns
-    const addedColVars = newColValues.filter((v) => !currentColVars.includes(v));
-    const prevCols = currentCols.filter((c) => newColValues.includes(c.colVar));
+    const addedColVars = selectedColValues.filter((v) => !currentColVars.includes(v));
+    const prevCols = currentCols.filter((c) => selectedColValues.includes(c.colVar));
 
     // Create objects for added columns
     const addedCols: ExploreTableColumn[] = [];
@@ -501,7 +504,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
       addedCols.push({
         colVar: selected.value,
-        aggregation: 'avg',
+        aggregation: selected.value === chartConfig.rowVar
+          ? 'none'
+          : (chartConfig.aggregation ?? 'sum'),
         type: inferColumnType(selected.value, chartData),
         title: selected.label,
       });
