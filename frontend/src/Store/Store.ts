@@ -21,6 +21,7 @@ import {
   ExploreChartData,
   ExploreTableConfig,
   ExploreTableRow,
+  ProcedureHierarchyResponse,
   TimeAggregation,
   TimePeriod,
   dashboardXAxisVars,
@@ -111,6 +112,8 @@ export interface ApplicationState {
     vent: boolean | null;
     stroke: boolean | null;
     ecmo: boolean | null;
+    departmentIds: string[];
+    procedureIds: string[];
   };
   selections: {
     selectedTimePeriods: string[];
@@ -148,6 +151,8 @@ export class RootStore {
   deletedStateKeys: Set<string> = new Set();
 
   duckDB: AsyncDuckDBConnection | null = null;
+
+  procedureHierarchy: ProcedureHierarchyResponse | null = null;
 
   // --- Dashboard State ---
   _baseDashboardLayouts: { [key: string]: Layout[] } | null = null;
@@ -257,6 +262,8 @@ export class RootStore {
     vent: null as boolean | null,
     stroke: null as boolean | null,
     ecmo: null as boolean | null,
+    departmentIds: [] as string[],
+    procedureIds: [] as string[],
   };
 
   histogramData: Record<string, { units: string, count: number }[] | undefined> = {};
@@ -298,6 +305,7 @@ export class RootStore {
       uiState: computed,
       dashboardChartData: observable.ref,
       exploreChartData: observable.ref,
+      procedureHierarchy: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
     });
@@ -343,6 +351,8 @@ export class RootStore {
           vent: initial.vent,
           stroke: initial.stroke,
           ecmo: initial.ecmo,
+          departmentIds: initial.departmentIds,
+          procedureIds: initial.procedureIds,
         }));
 
         return {
@@ -433,6 +443,15 @@ export class RootStore {
         },
       }), initialFilters);
     },
+    resetProcedureFilters: (initialFilters: Pick<ApplicationState['filterValues'], 'departmentIds' | 'procedureIds'>) => {
+      this.applyAction('Reset Department and Procedure Filters', (state, filters) => ({
+        ...state,
+        filterValues: {
+          ...state.filterValues,
+          ...filters,
+        },
+      }), initialFilters);
+    },
     clearSelection: () => {
       this.applyAction('Clear Selected Visits', (state) => ({
         ...state,
@@ -472,6 +491,8 @@ export class RootStore {
         vent: this.initialFilterValues.vent,
         stroke: this.initialFilterValues.stroke,
         ecmo: this.initialFilterValues.ecmo,
+        departmentIds: [...this.initialFilterValues.departmentIds],
+        procedureIds: [...this.initialFilterValues.procedureIds],
       },
       selections: {
         selectedTimePeriods: [],
@@ -1354,10 +1375,18 @@ export class RootStore {
     if (!rawFilters || Object.keys(rawFilters).length === 0) {
       return this._initialFilterValues;
     }
-    return {
+
+    const mergedFilters = {
+      ...this._initialFilterValues,
       ...rawFilters,
-      dateFrom: new Date(rawFilters.dateFrom),
-      dateTo: new Date(rawFilters.dateTo),
+      departmentIds: Array.isArray(rawFilters.departmentIds) ? rawFilters.departmentIds : this._initialFilterValues.departmentIds,
+      procedureIds: Array.isArray(rawFilters.procedureIds) ? rawFilters.procedureIds : this._initialFilterValues.procedureIds,
+    };
+
+    return {
+      ...mergedFilters,
+      dateFrom: new Date(mergedFilters.dateFrom),
+      dateTo: new Date(mergedFilters.dateTo),
     };
   }
 
@@ -1469,10 +1498,25 @@ export class RootStore {
   }
 
   /**
+   * Returns the number of department/procedure filters that are applied
+   */
+  get procedureFiltersAppliedCount(): number {
+    let count = 0;
+    const { departmentIds, procedureIds } = this.filterValues;
+    if (departmentIds.length > 0) count += 1;
+    if (procedureIds.length > 0) count += 1;
+    return count;
+  }
+
+  /**
    * Returns the total number of filters that are applied
    */
   get totalFiltersAppliedCount(): number {
-    return this.dateFiltersAppliedCount + this.bloodComponentFiltersAppliedCount + this.medicationsFiltersAppliedCount + this.outcomeFiltersAppliedCount;
+    return this.dateFiltersAppliedCount
+      + this.bloodComponentFiltersAppliedCount
+      + this.medicationsFiltersAppliedCount
+      + this.outcomeFiltersAppliedCount
+      + this.procedureFiltersAppliedCount;
   }
 
   resetAllFilters() {
@@ -1511,6 +1555,13 @@ export class RootStore {
       vent: this._initialFilterValues.vent,
       stroke: this._initialFilterValues.stroke,
       ecmo: this._initialFilterValues.ecmo,
+    });
+  }
+
+  resetProcedureFilters() {
+    this.actions.resetProcedureFilters({
+      departmentIds: [...this._initialFilterValues.departmentIds],
+      procedureIds: [...this._initialFilterValues.procedureIds],
     });
   }
 
@@ -1633,21 +1684,36 @@ export class RootStore {
     const dateTo = filterValues.dateTo.toISOString();
 
     // Generate the filter conditions --------
-    const filterConditions = Object.entries(filterValues)
-      // Filter out date filters (handled separately)
-      .filter(([key, value]) => {
-        if (key === 'dateFrom' || key === 'dateTo') return false;
-        const initVal = this._initialFilterValues[key as keyof typeof this._initialFilterValues];
-        return JSON.stringify(value) !== JSON.stringify(initVal);
-      })
-      // Map the filter values to SQL conditions
-      .map(([key, value]) => {
-        if (Array.isArray(value)) return `${key} BETWEEN ${value[0]} AND ${value[1]}`;
-        if (typeof value === 'boolean') return `${key} = ${value ? 1 : 0}`;
-        return null;
-      })
-      // Filter out null values
-      .filter((c): c is string => !!c);
+    const filterConditions: string[] = [];
+    const sqlString = (value: string) => `'${value.replace(/'/g, "''")}'`;
+
+    const rangeFilterKeys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml', 'los'] as const;
+    rangeFilterKeys.forEach((key) => {
+      const [min, max] = filterValues[key];
+      const [initialMin, initialMax] = this._initialFilterValues[key];
+      if (min !== initialMin || max !== initialMax) {
+        filterConditions.push(`${key} BETWEEN ${min} AND ${max}`);
+      }
+    });
+
+    const booleanFilterKeys = ['b12', 'iron', 'antifibrinolytic', 'death', 'vent', 'stroke', 'ecmo'] as const;
+    booleanFilterKeys.forEach((key) => {
+      const value = filterValues[key];
+      if (typeof value === 'boolean') {
+        filterConditions.push(`${key} = ${value ? 1 : 0}`);
+      }
+    });
+
+    // Use list-native predicates to avoid UNNEST/CTE rescans on each filter update.
+    if (filterValues.departmentIds.length > 0) {
+      const departmentIdList = filterValues.departmentIds.map(sqlString).join(', ');
+      filterConditions.push(`list_has_any(department_ids, [${departmentIdList}]::VARCHAR[])`);
+    }
+
+    if (filterValues.procedureIds.length > 0) {
+      const procedureIdList = filterValues.procedureIds.map(sqlString).join(', ');
+      filterConditions.push(`list_has_any(procedure_ids, [${procedureIdList}]::VARCHAR[])`);
+    }
 
     // Add date filters if applied
     if (this.dateFiltersAppliedCount > 0) {

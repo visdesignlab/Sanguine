@@ -815,9 +815,33 @@ export type ExploreTableData = ExploreTableRow[]; // E.g. [{ attending_provider:
 export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData>;
 export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig;
 
+// Procedure hierarchy ---------------------------------------------------
+export type ProcedureHierarchyProcedure = {
+  id: string;
+  name: string;
+  visit_count: number;
+  cpt_codes: string[];
+};
+
+export type ProcedureHierarchyDepartment = {
+  id: string;
+  name: string;
+  visit_count: number;
+  procedures: ProcedureHierarchyProcedure[];
+};
+
+export type ProcedureHierarchyResponse = {
+  version: string;
+  source: string;
+  department_level: 'department';
+  procedure_level: 'procedure';
+  departments: ProcedureHierarchyDepartment[];
+};
+
 // Filter Counts ---------------------------------------------------
 export type FilterCountKey =
   | 'dateFiltersAppliedCount'
   | 'bloodComponentFiltersAppliedCount'
   | 'medicationsFiltersAppliedCount'
-  | 'outcomeFiltersAppliedCount';
+  | 'outcomeFiltersAppliedCount'
+  | 'procedureFiltersAppliedCount';

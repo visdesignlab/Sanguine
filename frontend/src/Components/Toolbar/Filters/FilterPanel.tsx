@@ -25,6 +25,7 @@ import { DEFAULT_DATA_COLOR, useThemeConstants } from '../../../Theme/mantineThe
 import { FilterRangeSlider } from './FilterRangeSlider';
 import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
+import { DepartmentProcedureFilter } from './DepartmentProcedureFilter';
 import classes from '../../../Shell/Shell.module.css';
 import { BLOOD_PRODUCT_COLOR_THEME } from '../../../Types/application';
 
@@ -127,6 +128,19 @@ export function FilterPanel() {
                   w="45%"
                 />
               </Flex>
+            </Accordion.Panel>
+          </Accordion.Item>
+
+          {/* Department & Procedure Filters */}
+          <Accordion.Item value="department-procedure-filters" key="department-procedure-filters">
+            <FilterHeader
+              countName="procedureFiltersAppliedCount"
+              title="Department & Procedure"
+              tooltipLabel="Number of department/procedure filters applied"
+              resetFunc={() => store.resetProcedureFilters()}
+            />
+            <Accordion.Panel>
+              <DepartmentProcedureFilter />
             </Accordion.Panel>
           </Accordion.Item>
 

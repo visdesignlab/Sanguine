@@ -8,6 +8,7 @@ import { mantineTheme } from './Theme/mantineTheme';
 import { logoutHandler, whoamiAPICall } from './Store/UserManagement';
 import { DataRetrieval } from './Components/Modals/DataRetrieval';
 import { initDuckDB } from './duckdb';
+import type { ProcedureHierarchyResponse } from './Types/application';
 
 function App() {
   // Data Loading states
@@ -29,16 +30,6 @@ function App() {
     async function fetchAllVisits() {
       setDataLoading(true);
       try {
-        if (store.duckDB) {
-          // DuckDB is already initialized so don't re-initialize
-          setDataLoading(false);
-          return;
-        }
-
-        // Initialize DuckDB here
-        const { db, conn } = await initDuckDB();
-        store.duckDB = conn!;
-
         const queryUrl = import.meta.env.VITE_QUERY_URL;
         if (typeof queryUrl === 'undefined' || !queryUrl) {
           console.error('VITE_QUERY_URL is undefined');
@@ -46,6 +37,32 @@ function App() {
           setDataLoading(false);
           return;
         }
+
+        const fetchProcedureHierarchy = async () => {
+          try {
+            const hierarchyRes = await fetch(`${queryUrl}get_procedure_hierarchy`);
+            if (!hierarchyRes.ok) {
+              throw new Error(`HTTP error! status: ${hierarchyRes.status}`);
+            }
+            store.procedureHierarchy = (await hierarchyRes.json()) as ProcedureHierarchyResponse;
+          } catch (hierarchyError) {
+            console.error('Error fetching procedure hierarchy:', hierarchyError);
+            store.procedureHierarchy = null;
+          }
+        };
+
+        if (store.duckDB) {
+          // DuckDB is already initialized so don't re-initialize.
+          if (!store.procedureHierarchy) {
+            await fetchProcedureHierarchy();
+          }
+          setDataLoading(false);
+          return;
+        }
+
+        // Initialize DuckDB here
+        const { db, conn } = await initDuckDB();
+        store.duckDB = conn!;
 
         // Fetch visit attributes Parquet file from backend
         const res = await fetch(`${queryUrl}get_visit_attributes`);
@@ -56,7 +73,11 @@ function App() {
 
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
-          SELECT * FROM read_parquet('visit_attributes.parquet');
+          SELECT * REPLACE (
+            COALESCE(CAST(department_ids AS VARCHAR[]), []::VARCHAR[]) AS department_ids,
+            COALESCE(CAST(procedure_ids AS VARCHAR[]), []::VARCHAR[]) AS procedure_ids
+          )
+          FROM read_parquet('visit_attributes.parquet');
 
           CREATE TABLE IF NOT EXISTS costs (
             rbc_units_cost DOUBLE,
@@ -128,6 +149,8 @@ function App() {
           FROM filteredVisits
           GROUP BY visit_no, month, quarter, year, dsch_dtm;
         `);
+
+        await fetchProcedureHierarchy();
 
         // Update all stores
         await store.updateAllVisitsLength();
