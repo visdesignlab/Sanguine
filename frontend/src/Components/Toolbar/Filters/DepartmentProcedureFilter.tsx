@@ -162,10 +162,6 @@ function DepartmentOption({
   );
 }
 
-function toLower(value: string) {
-  return value.toLowerCase();
-}
-
 type VisibleDepartment = {
   id: string;
   name: string;
@@ -178,7 +174,7 @@ function getVisibleDepartments(
   departments: ProcedureHierarchyDepartment[],
   searchTerm: string,
 ) {
-  const normalizedSearch = toLower(searchTerm.trim());
+  const normalizedSearch = searchTerm.trim().toLowerCase();
   if (!normalizedSearch) {
     return departments.map((department) => ({
       ...department,
@@ -189,10 +185,11 @@ function getVisibleDepartments(
 
   return departments
     .map((department) => {
-      const departmentMatches = toLower(department.name).includes(normalizedSearch);
+      const departmentMatches = department.name.toLowerCase().includes(normalizedSearch);
       const matchingProcedures = departmentMatches
         ? department.procedures
-        : department.procedures.filter((procedure) => toLower(procedure.name).includes(normalizedSearch));
+        : department.procedures
+          .filter((procedure) => procedure.name.toLowerCase().includes(normalizedSearch));
       if (!departmentMatches && matchingProcedures.length === 0) return null;
       return {
         id: department.id,
