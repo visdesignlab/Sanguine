@@ -11,9 +11,8 @@ import {
 import {
   IconPlus, IconArrowUpRight,
 } from '@tabler/icons-react';
-import clsx from 'clsx';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
-import { useObserver } from 'mobx-react';
+import { useObserver } from 'mobx-react-lite';
 import { useDisclosure } from '@mantine/hooks';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import cardStyles from './PresetStateCard.module.css';
@@ -21,11 +20,12 @@ import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
 import {
-  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS,
+  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS, ExploreTableRowOptions, ExploreTableConfig,
 } from '../../../Types/application';
 import { CostChart } from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
 import { DumbbellChart } from './Charts/DumbbellChart';
+import ExploreTable from './Charts/ExploreTable';
 
 export function ExploreView() {
   const store = useContext(Store);
@@ -55,9 +55,11 @@ export function ExploreView() {
 
   // Add Chart Modal State ---------------------------------
   const [isAddModalOpen, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
-  const [chartType, setChartType] = useState<'cost' | 'scatter' | 'dumbbell'>('cost');
+
+  const [chartType, setChartType] = useState<'cost' | 'scatter' | 'dumbbell' | 'exploreTable'>('cost');
   const [aggregation, setAggregation] = useState<'sum' | 'avg'>('sum');
   const [costGroupVar, setCostGroupVar] = useState<string>('');
+  const [exploreTableGroupVar, setExploreTableGroupVar] = useState<string>('');
   const [scatterXAxisVar, setScatterXAxisVar] = useState<string>('quarter');
   const [scatterYAxisVar, setScatterYAxisVar] = useState<string>('');
 
@@ -65,6 +67,7 @@ export function ExploreView() {
     setChartType('cost');
     setAggregation('sum');
     setCostGroupVar('');
+    setExploreTableGroupVar('');
     setScatterXAxisVar('quarter');
     setScatterYAxisVar('');
   }, []);
@@ -86,7 +89,64 @@ export function ExploreView() {
         aggregation,
 
       });
-    } else if (chartType === 'scatter') {
+    } else if (chartType === 'exploreTable') {
+      if (!exploreTableGroupVar) return;
+
+      const groupLabel = ExploreTableRowOptions.find((o) => o.value === exploreTableGroupVar)?.label || exploreTableGroupVar;
+
+      store.addExploreChart({
+        chartId: id,
+        chartType: 'exploreTable',
+        title: `RBC Transfusions per ${groupLabel}`,
+        rowVar: exploreTableGroupVar as ExploreTableConfig['rowVar'],
+        aggregation,
+        columns: [
+          {
+            colVar: exploreTableGroupVar,
+            aggregation: 'none',
+            type: 'text',
+            title: groupLabel,
+          },
+          {
+            colVar: 'cases',
+            aggregation: 'sum',
+            type: 'numeric',
+            title: 'Cases',
+          },
+          {
+            colVar: 'percent_1_rbc',
+            aggregation: aggregation as 'sum' | 'avg',
+            type: 'heatmap',
+            title: '1 RBC',
+          },
+          {
+            colVar: 'percent_2_rbc',
+            aggregation: aggregation as 'sum' | 'avg',
+            type: 'heatmap',
+            title: '2 RBC',
+          },
+          {
+            colVar: 'percent_3_rbc',
+            aggregation: aggregation as 'sum' | 'avg',
+            type: 'heatmap',
+            title: '3 RBC',
+          },
+          {
+            colVar: 'percent_4_rbc',
+            aggregation: aggregation as 'sum' | 'avg',
+            type: 'heatmap',
+            title: '4 RBC',
+          },
+          {
+            colVar: 'percent_above_5_rbc',
+            aggregation: aggregation as 'sum' | 'avg',
+            type: 'heatmap',
+            title: '≥5 RBC',
+          },
+        ],
+        twoValsPerRow: false,
+      });
+    } else {
       if (!scatterXAxisVar || !scatterYAxisVar) return;
       store.addExploreChart({
         chartId: id,
@@ -175,9 +235,16 @@ export function ExploreView() {
             data={[
               { value: 'cost', label: 'Costs & Savings' },
               { value: 'scatter', label: 'Scatter' },
+              { value: 'exploreTable', label: 'Heatmap' },
               { value: 'dumbbell', label: 'Dumbbell Chart' },
             ]}
-            onChange={(v) => setChartType((v as 'cost' | 'scatter' | 'dumbbell') || 'cost')}
+            onChange={(v) => {
+              const val = (v as 'cost' | 'scatter' | 'exploreTable' | 'dumbbell') || 'cost';
+              setChartType(val);
+              if (val === 'exploreTable') {
+                setAggregation('avg');
+              }
+            }}
           />
           <Select
             label="Aggregation"
@@ -193,6 +260,14 @@ export function ExploreView() {
               value={costGroupVar}
               data={costGroupOptions}
               onChange={(v) => setCostGroupVar(v || '')}
+            />
+          ) : chartType === 'exploreTable' ? (
+            <Select
+              label="Group By"
+              placeholder="Choose grouping variable"
+              value={exploreTableGroupVar}
+              data={ExploreTableRowOptions}
+              onChange={(v) => setExploreTableGroupVar(v || '')}
             />
           ) : (
             <>
@@ -223,6 +298,7 @@ export function ExploreView() {
             onClick={handleAddChart}
             disabled={
               (chartType === 'cost' && !costGroupVar)
+              || (chartType === 'exploreTable' && !exploreTableGroupVar)
               || (chartType === 'scatter' && (!scatterXAxisVar || !scatterYAxisVar))
             }
             fullWidth
@@ -231,80 +307,70 @@ export function ExploreView() {
           </Button>
         </Stack>
       </Modal>
-      {
-        store.exploreChartLayouts.main.length > 0 ? (
-          <ResponsiveGridLayout
-            className="layout"
-            breakpoints={{
-              main: 852, sm: 0,
-            }}
-            cols={{
-              main: 2, sm: 1,
-            }}
-            rowHeight={300}
-            containerPadding={[0, 0]}
-            draggableHandle=".move-icon"
-            onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-              store.updateExploreLayout({ main: _layout });
-            }}
-            onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-              store.updateExploreLayout({ main: _layout });
-            }}
-            layouts={store.exploreChartLayouts}
-          >
-            {/** Render each chart defined in the store. */}
-            {store.exploreChartConfigs.map((chartConfig) => (
-              <Card
-                key={chartConfig.chartId}
-                withBorder
-                className={classes.gridItem}
-              >
-                {chartConfig.chartType === 'cost' && <CostChart chartConfig={chartConfig} />}
-                {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
-                {chartConfig.chartType === 'dumbbell' && <DumbbellChart chartConfig={chartConfig} />}
-              </Card>
-            ))}
-          </ResponsiveGridLayout>
-        ) : (
-          presetStateCards.map(({ groupLabel, options }, groupIdx) => (
-            <Box key={groupLabel}>
-              {/* Preset state group label */}
-              <Text
-                mb={verticalMargin}
-                className={clsx(
-                  classes.variableTitle,
-                  hoveredIdx && hoveredIdx.group === groupIdx && classes.active,
-                )}
-              >
-                {groupLabel}
-              </Text>
-              {/* Preset state, for each option in group */}
-              <Stack>
-                {options.map(({ question, Icon }, cardIdx) => (
-                  <Card
-                    key={question}
-                    withBorder
-                    style={{ height: toolbarWidth, cursor: 'pointer' }}
-                    className={clsx(cardStyles.presetStateCard, classes.gridItem)}
-                    onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
-                    onMouseLeave={() => setHoveredIdx(null)}
-                    onClick={() => handlePresetClick(groupIdx, cardIdx)}
-                  >
-                    <Group className={cardStyles.presetStateContent}>
-                      <Group className={cardStyles.question}>
-                        {/* Preset state icon */}
-                        <Box className={cardStyles.iconContainer}>
-                          <Icon size={cardIconSize} stroke={cardIconStroke} />
-                        </Box>
-                        {/* Preset state question */}
-                        <Text size="sm">{question}</Text>
-                      </Group>
-                      {/* Arrow Icon */}
-                      <IconArrowUpRight
-                        size={cardIconSize}
-                        stroke={cardIconStroke}
-                        className={`${cardStyles.arrow}`}
-                      />
+      {store.exploreChartLayouts.main.length > 0 ? (
+        <ResponsiveGridLayout
+          className="layout"
+          breakpoints={{
+            main: 852, sm: 0,
+          }}
+          cols={{
+            main: 2, sm: 1,
+          }}
+          rowHeight={300}
+          containerPadding={[0, 0]}
+          draggableHandle=".move-icon"
+          onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+            store.updateExploreLayout({ main: _layout });
+          }}
+          onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+            store.updateExploreLayout({ main: _layout });
+          }}
+          layouts={store.exploreChartLayouts}
+        >
+          {/** Render each chart defined in the store. */}
+          {store.exploreChartConfigs.map((chartConfig) => (
+            <Card
+              key={chartConfig.chartId}
+              withBorder
+              className={classes.gridItem}
+            >
+              {chartConfig.chartType === 'cost' && <CostChart chartConfig={chartConfig} />}
+              {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
+              {chartConfig.chartType === 'exploreTable' && <ExploreTable chartConfig={chartConfig} />}
+              {chartConfig.chartType === 'dumbbell' && <DumbbellChart chartConfig={chartConfig} />}
+            </Card>
+          ))}
+        </ResponsiveGridLayout>
+      ) : (
+        presetStateCards.map(({ groupLabel, options }, groupIdx) => (
+          <Box key={groupLabel}>
+            {/* Preset state group label */}
+            <Text
+              mb={verticalMargin}
+              className={`${classes.variableTitle} ${hoveredIdx && hoveredIdx.group === groupIdx ? classes.active : ''}`.trim()}
+            >
+              {groupLabel}
+            </Text>
+            {/* Preset state, for each option in group */}
+            <Stack>
+              {options.map(({ question, Icon }, cardIdx) => (
+                <Card
+                  key={question}
+                  withBorder
+                  style={{ height: toolbarWidth, cursor: 'pointer' }}
+                  className={`${cardStyles.presetStateCard} ${classes.gridItem}`}
+                  onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                  onClick={() => handlePresetClick(groupIdx, cardIdx)}
+                >
+                  <Group className={cardStyles.presetStateContent}>
+                    <Group className={cardStyles.question}>
+                      {/* Preset state icon */}
+                      <Box className={cardStyles.iconContainer}>
+                        <Icon size={cardIconSize} stroke={cardIconStroke} />
+                      </Box>
+                      {/* Preset state question */}
+                      <Text size="sm">{question}</Text>
                     </Group>
                   </Card>
                 ))}

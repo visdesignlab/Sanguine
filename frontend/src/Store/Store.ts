@@ -5,7 +5,6 @@ import {
 import { createContext } from 'react';
 import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
 import { initProvenance, Provenance, NodeID } from '@visdesignlab/trrack';
-import LZString from 'lz-string';
 import { Layout } from 'react-grid-layout';
 // @ts-expect-error: rgl utils not typed
 import { compact } from 'react-grid-layout/build/utils';
@@ -20,6 +19,8 @@ import {
   DashboardStatData,
   ExploreChartConfig,
   ExploreChartData,
+  ExploreTableConfig,
+  ExploreTableRow,
   TimeAggregation,
   TimePeriod,
   dashboardXAxisVars,
@@ -861,31 +862,10 @@ export class RootStore {
     }
   }
 
-  getShareUrl(nodeId: NodeID): string | null {
+  getShareUrl(_nodeId: NodeID): string | null {
     if (!this.provenance) return null;
-
-    const state = this.provenance.getState(nodeId);
-
-    // Try accessing Trrack's serializer, fallback to manual LZString
-    let serializedState: string | null = null;
-    const serializer = (this.provenance.config as any)._serializer; // eslint-disable-line @typescript-eslint/no-explicit-any
-
-    if (serializer) {
-      serializedState = serializer(state);
-    } else {
-      console.warn('⚠️ [ProvenanceStore] Serializer not found on config. Using fallback LZString.');
-      try {
-        serializedState = LZString.compressToEncodedURIComponent(JSON.stringify(state));
-      } catch (e) {
-        console.error('Error serializing state:', e);
-      }
-    }
-
-    if (serializedState) {
-      const baseUrl = window.location.origin + window.location.pathname;
-      return `${baseUrl}?config=${serializedState}`;
-    }
-    return null;
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}?config=${this.provenance.exportState()}`;
   }
   // endregion
 
@@ -1392,6 +1372,10 @@ export class RootStore {
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Explore Chart');
     this._transientExploreLayouts = null;
   }
+
+  updateExploreChartConfig(updatedConfig: ExploreChartConfig) {
+    this.exploreChartConfigs = this.exploreChartConfigs.map((cfg) => (cfg.chartId === updatedConfig.chartId ? updatedConfig : cfg));
+  }
   // endregion
 
   // region Filters
@@ -1667,6 +1651,10 @@ export class RootStore {
       () => this.state.settings.unitCosts,
       async () => { await this.updateCostsTable(); },
     );
+    reaction(
+      () => this.state.explore.chartConfigs,
+      async () => { await this.computeExploreChartData(); },
+    );
   }
 
   // endregion
@@ -1718,8 +1706,123 @@ export class RootStore {
     await this.updateFilteredVisitsLength();
     await this.computeDashboardChartData();
     await this.computeDashboardStatData();
+    await this.computeExploreChartData();
     await this.generateHistogramData();
     await this.updateSelectedVisits();
+  }
+
+  async computeExploreChartData(): Promise<void> {
+    const promises = this.exploreChartConfigs.map(async (config) => {
+      if (config.chartType === 'exploreTable') {
+        // Configuration of table (rowVar, columns, aggregation, etc.)
+        const tableConfig = config as ExploreTableConfig;
+
+        // Build column selection clauses based on config.columns
+        const columnClauses: string[] = [];
+
+        // Iterate over the columns and build the column selection clauses
+        tableConfig.columns.forEach((col) => {
+          const { colVar } = col;
+          let colAggregation = config.aggregation || col.aggregation;
+
+          if (colAggregation === 'none' && colVar !== tableConfig.rowVar) {
+            colAggregation = 'sum';
+          }
+
+          const aggFn = colAggregation.toUpperCase();
+
+          // If this column is the grouping variable, select it directly
+          if (colVar === tableConfig.rowVar) {
+            columnClauses.push(colVar);
+            return;
+          }
+
+          // Special case: percent_*_rbc columns
+          if (colVar.startsWith('percent_')) {
+            const match = colVar.match(/percent_(\d+|above_5)_rbc/);
+            if (match) {
+              const count = match[1];
+              const condition = count === 'above_5' ? 'rbc_units >= 5' : `rbc_units = ${count}`;
+
+              if (colAggregation === 'avg') {
+                columnClauses.push(`AVG(CAST(${condition} AS INT)) * 100.0 AS ${colVar}`);
+              } else if (colAggregation === 'sum') {
+                columnClauses.push(`SUM(CAST(${condition} AS INT)) AS ${colVar}`);
+              }
+            }
+            return;
+          }
+
+          // Special case: cases (visit count)
+          if (colVar === 'cases') {
+            columnClauses.push(`COUNT(*) AS ${colVar}`);
+            return;
+          }
+
+          // Special case: identity columns (attending_provider, year, quarter) - return strings (e.g. Dr. Provider)
+          if (['attending_provider', 'year', 'quarter'].includes(colVar)) {
+            if (colVar === tableConfig.rowVar) {
+              columnClauses.push(`${colVar}`);
+            } else {
+              columnClauses.push(`string_agg(DISTINCT CAST(${colVar} AS VARCHAR), ', ') AS ${colVar}`);
+            }
+            return;
+          }
+
+          // Standard numeric & boolean fields
+          const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
+          if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
+            if (colAggregation === 'avg') {
+              // Calculate percentage: AVG(1|0) * 100
+              columnClauses.push(`AVG(CAST(${colVar} AS INT)) * 100.0 AS ${colVar}`);
+            } else {
+              // Count occurrences: SUM(1|0)
+              columnClauses.push(`SUM(CAST(${colVar} AS INT)) AS ${colVar}`);
+            }
+          } else {
+            // Standard numeric aggregation
+            columnClauses.push(`${aggFn}(${colVar}) AS ${colVar}`);
+          }
+        });
+
+        // Ensure the grouping variable is selected
+        if (!columnClauses.some((clause) => clause.includes(tableConfig.rowVar) && !clause.includes('STRING_AGG'))) {
+          columnClauses.unshift(tableConfig.rowVar);
+        }
+
+        // Build the query
+        const query = `
+          SELECT 
+            ${columnClauses.join(',\n            ')}
+          FROM filteredVisits
+          GROUP BY ${tableConfig.rowVar}
+          ORDER BY ${tableConfig.rowVar};
+        `;
+
+        try {
+          const queryResult = await this.duckDB!.query(query);
+          const rows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as ExploreTableRow);
+
+          if (tableConfig.twoValsPerRow) {
+            console.warn('twoValsPerRow is not yet fully implemented, using basic data');
+          }
+
+          return { id: config.chartId, data: rows };
+        } catch (error) {
+          console.error('Error executing explore table query:', error);
+          return { id: config.chartId, data: [] };
+        }
+      }
+      return { id: config.chartId, data: [] };
+    });
+
+    const results = await Promise.all(promises);
+    const data: ExploreChartData = { ...this.exploreDummyData };
+    results.forEach(({ id, data: d }) => {
+      data[id] = d;
+    });
+
+    this.exploreChartData = data;
   }
 
   async updateFilteredVisitsLength() {
