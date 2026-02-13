@@ -6,7 +6,7 @@ import {
   ScrollArea, Box, CloseButton, Title, Flex, useMantineTheme,
   Tooltip, MantineTheme, Select, Button,
 } from '@mantine/core';
-import { IconGripVertical } from '@tabler/icons-react';
+import { IconGripVertical, IconArrowUp, IconArrowsVertical } from '@tabler/icons-react';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { Store } from '../../../../Store/Store';
 import { DumbbellCase, DumbbellChartConfig, DumbbellData } from '../../../../Types/application';
@@ -44,7 +44,8 @@ const getProviderName = (id: string) => {
   const fullName = PROVIDER_NAMES[cleanId] || cleanId;
   return `Dr. ${fullName}`;
 };
-const getVisitLabel = (id: string, label: string) => (label.startsWith('Visit') ? label : `Visit ${label}`);
+// Removed getVisitLabel usage or changed it to identity to remove "Visit " prefix
+const getVisitLabel = (_id: string, label: string) => label.replace(/^Visit\s*/, '');
 
 // Lab Value Configurations
 interface LabConfig {
@@ -86,9 +87,12 @@ const X_AXIS_OPTIONS = [
   { value: 'cell_salvage', label: 'Cell Salvage Volume (mL)' },
 ];
 
-function getNextSortState(current: 'none' | 'pre' | 'post' | undefined): 'none' | 'pre' | 'post' {
+type SortState = 'none' | 'pre' | 'post' | 'gap';
+
+function getNextSortState(current: SortState | undefined): SortState {
   if (!current || current === 'none') return 'pre';
   if (current === 'pre') return 'post';
+  if (current === 'post') return 'gap';
   return 'none';
 }
 
@@ -109,8 +113,8 @@ interface DumbbellChartSVGProps {
   }[];
   collapsedProviders: Set<string>;
   collapsedVisits: Set<string>;
-  providerSorts: Map<string, 'none' | 'pre' | 'post'>;
-  visitSorts: Map<string, 'none' | 'pre' | 'post'>;
+  providerSorts: Map<string, SortState>;
+  visitSorts: Map<string, SortState>;
   hoveredCollapse: string | null;
   theme: MantineTheme;
   onToggleProviderSort: (id: string) => void;
@@ -571,38 +575,62 @@ const DumbbellChartContent = memo(({
               <g key={provider.id}>
                 {/* Provider Bucket Body (Sort Trigger) */}
                 <Tooltip label={getProviderName(provider.id)} openDelay={200}>
-                  <rect
-                    x={providerX}
-                    y={isFlatMode ? innerHeight : innerHeight + 25}
-                    width={providerWidth}
-                    height={25}
-                    fill={isProvCollapsed ? theme.colors.gray[4] : providerColor}
-                    stroke={theme.colors.gray[5]}
-                    strokeWidth={1}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => onToggleProviderSort(provider.id)}
-                  />
+                  <g>
+                    <rect
+                      x={providerX}
+                      y={isFlatMode ? innerHeight : innerHeight + 25}
+                      width={providerWidth}
+                      height={25}
+                      fill={isProvCollapsed ? theme.colors.gray[4] : providerColor}
+                      stroke={theme.colors.gray[5]}
+                      strokeWidth={1}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => onToggleProviderSort(provider.id)}
+                    />
+                    {/* Overlay for Sort */}
+                    {(providerSort === 'pre' || providerSort === 'post') && !isProvCollapsed && (
+                      <rect
+                        x={providerX}
+                        y={isFlatMode ? innerHeight : innerHeight + 25}
+                        width={providerWidth}
+                        height={25}
+                        fill={providerSort === 'pre' ? theme.colors.teal[4] : theme.colors.indigo[4]}
+                        opacity={0.15}
+                        style={{ pointerEvents: 'none' }}
+                      />
+                    )}
+                  </g>
                 </Tooltip>
 
                 {/* Provider Label & Sort Indicator */}
                 {!isProvCollapsed ? (
-                  <text
-                    x={providerX + providerWidth / 2}
-                    y={isFlatMode ? innerHeight + 17 : innerHeight + 42}
-                    textAnchor="middle"
-                    fontSize={12}
-                    fontWeight={600}
-                    fill={theme.colors.gray[9]}
-                    style={{ pointerEvents: 'none' }}
-                  >
-                    {provider.id}
-                    {' '}
-                    {providerSort === 'pre' ? '↓' : providerSort === 'post' ? '↑' : ''}
-                  </text>
+                  <>
+                    <text
+                      x={providerX + providerWidth / 2}
+                      y={isFlatMode ? innerHeight + 17 : innerHeight + 42}
+                      textAnchor="middle"
+                      fontSize={12}
+                      fontWeight={600}
+                      fill={theme.colors.gray[9]}
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      {provider.id}
+                    </text>
+                    {/* Sort Icon positioned to the right of text (approximate) */}
+                    {providerSort !== 'none' && (
+                      <g transform={`translate(${providerX + providerWidth / 2 + (provider.id.length * 4) - 4}, ${isFlatMode ? innerHeight + 7 : innerHeight + 32})`}>
+                        {providerSort === 'pre' && <IconArrowUp size={12} stroke={2} color={theme.colors.teal[6]} />}
+                        {providerSort === 'post' && <IconArrowUp size={12} stroke={2} color={theme.colors.indigo[6]} />}
+                        {providerSort === 'gap' && (
+                          <IconArrowsVertical size={12} stroke={2} color={theme.colors.gray[6]} />
+                        )}
+                      </g>
+                    )}
+                  </>
                 ) : (
                   <text
                     x={providerX + providerWidth / 2}
-                    y={isFlatMode ? innerHeight + 17 : innerHeight + 42}
+                    y={isFlatMode ? innerHeight + 17 : innerHeight + 40}
                     textAnchor="middle"
                     fontSize={12}
                     fontWeight={600}
@@ -629,9 +657,9 @@ const DumbbellChartContent = memo(({
                 {hoveredCollapse === provider.id && (
                   <path
                     d={isProvCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'} // Simple chevron path
-                    transform={`translate(${providerX + providerWidth - 12}, ${isFlatMode ? innerHeight + 3 : innerHeight + 28}) scale(0.6)`}
+                    transform={`translate(${providerX + providerWidth - 12}, ${isFlatMode ? innerHeight + 3 : innerHeight + 30}) scale(0.6)`}
                     fill="none"
-                    stroke={theme.colors.gray[8]}
+                    stroke={theme.colors.gray[7]}
                     strokeWidth={2}
                     style={{ pointerEvents: 'none' }}
                   />
@@ -671,30 +699,71 @@ const DumbbellChartContent = memo(({
                             {!isFlatMode && (
                               <>
                                 <Tooltip label={getVisitLabel(visit.id, visit.label)} openDelay={200}>
-                                  <rect
-                                    x={currentVisitX}
-                                    y={innerHeight}
-                                    width={visitWidth}
-                                    height={25}
-                                    fill={isVisitCollapsed ? theme.colors.gray[4] : visitColor}
-                                    stroke={theme.colors.gray[4]}
-                                    strokeWidth={1}
-                                    style={{ cursor: 'pointer' }}
-                                    onClick={() => onToggleVisitSort(visit.id)}
-                                  />
+                                  <g>
+                                    <rect
+                                      x={currentVisitX}
+                                      y={innerHeight}
+                                      width={visitWidth}
+                                      height={25}
+                                      fill={isVisitCollapsed ? theme.colors.gray[4] : visitColor}
+                                      stroke={theme.colors.gray[4]}
+                                      strokeWidth={1}
+                                      style={{ cursor: 'pointer' }}
+                                      onClick={() => onToggleVisitSort(visit.id)}
+                                    />
+                                    {/* Overlay for Sort */}
+                                    {(visitSort === 'pre' || visitSort === 'post') && !isVisitCollapsed && (
+                                      <rect
+                                        x={currentVisitX}
+                                        y={innerHeight}
+                                        width={visitWidth}
+                                        height={25}
+                                        fill={visitSort === 'pre' ? theme.colors.teal[4] : theme.colors.indigo[4]}
+                                        opacity={0.15}
+                                        style={{ pointerEvents: 'none' }}
+                                      />
+                                    )}
+                                  </g>
                                 </Tooltip>
-                                <text
-                                  x={currentVisitX + visitWidth / 2}
-                                  y={innerHeight + 17}
-                                  textAnchor="middle"
-                                  fontSize={11}
-                                  fill={theme.colors.gray[8]}
-                                  style={{ pointerEvents: 'none' }}
-                                >
-                                  {isVisitCollapsed ? '...' : visit.label}
-                                  {' '}
-                                  {visitSort === 'pre' ? '↓' : visitSort === 'post' ? '↑' : ''}
-                                </text>
+                                {/* Provider/Visit Label Grouping was needed? No, this is inside map loop, but we need Fragment if multiple root elements? */}
+                                {/* Actually, the map callback returns a <g> so we are fine returning multiple elements inside that <g> */}
+                                {/* Visit Label & Sort Indicator */}
+                                {!isVisitCollapsed ? (
+                                  <>
+                                    <text
+                                      x={currentVisitX + visitWidth / 2}
+                                      y={innerHeight + 17}
+                                      textAnchor="middle"
+                                      fontSize={11}
+                                      fill={theme.colors.gray[8]}
+                                      style={{ pointerEvents: 'none' }}
+                                    >
+                                      {getVisitLabel(visit.id, visit.label)}
+                                    </text>
+                                    {/* Sort Icon for Visit */}
+                                    {visitSort !== 'none' && (
+                                      <g transform={`translate(${currentVisitX + visitWidth / 2 + (getVisitLabel(visit.id, visit.label).length * 4) + 2}, ${innerHeight + 8})`}>
+                                        {visitSort === 'pre' && <IconArrowUp size={10} stroke={2} color={theme.colors.teal[6]} />}
+                                        {visitSort === 'post' && <IconArrowUp size={10} stroke={2} color={theme.colors.indigo[6]} />}
+                                        {visitSort === 'gap' && (
+                                          <IconArrowsVertical size={10} stroke={2} color={theme.colors.gray[6]} />
+                                        )}
+                                      </g>
+                                    )}
+                                  </>
+                                ) : (
+                                  <text
+                                    x={currentVisitX + visitWidth / 2}
+                                    y={innerHeight + 14}
+                                    textAnchor="middle"
+                                    fontSize={12}
+                                    fontWeight={600}
+                                    fill={theme.colors.gray[6]}
+                                    style={{ pointerEvents: 'none' }}
+                                  >
+                                    ...
+                                  </text>
+                                )}
 
                                 {/* Collapse Trigger (Right Edge) */}
                                 <rect
@@ -711,9 +780,9 @@ const DumbbellChartContent = memo(({
                                 {hoveredCollapse === visit.id && (
                                   <path
                                     d={isVisitCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
-                                    transform={`translate(${currentVisitX + visitWidth - 10}, ${innerHeight + 2}) scale(0.6)`}
+                                    transform={`translate(${currentVisitX + visitWidth - 10}, ${innerHeight + 6}) scale(0.6)`}
                                     fill="none"
-                                    stroke={theme.colors.gray[8]}
+                                    stroke={theme.colors.gray[7]}
                                     strokeWidth={2}
                                     style={{ pointerEvents: 'none' }}
                                   />
@@ -778,7 +847,7 @@ const DumbbellChartContent = memo(({
           })}
         </g>
       </svg>
-    </div>
+    </div >
   );
 });
 
@@ -791,8 +860,8 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   // State
   const [collapsedProviders, setCollapsedProviders] = useState<Set<string>>(new Set());
   const [collapsedVisits, setCollapsedVisits] = useState<Set<string>>(new Set());
-  const [providerSorts, setProviderSorts] = useState<Map<string, 'none' | 'pre' | 'post'>>(new Map());
-  const [visitSorts, setVisitSorts] = useState<Map<string, 'none' | 'pre' | 'post'>>(new Map());
+  const [providerSorts, setProviderSorts] = useState<Map<string, SortState>>(new Map());
+  const [visitSorts, setVisitSorts] = useState<Map<string, SortState>>(new Map());
   const [selectedLab, setSelectedLab] = useState<string>('hgb');
   const [selectedX, setSelectedX] = useState<string>('surgeon');
   const [showPre, setShowPre] = useState<boolean>(true);
@@ -956,6 +1025,10 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
             sortedCases.sort((a, b) => (a[preAccess] as number) - (b[preAccess] as number));
           } else if (visitSort === 'post') {
             sortedCases.sort((a, b) => (a[postAccess] as number) - (b[postAccess] as number));
+          } else if (visitSort === 'gap') {
+            // Sort by gap size ascending (smallest gap first? or largest? "Up Arrow" implies ascending value of gap)
+            // Gap = |pre - post|
+            sortedCases.sort((a, b) => Math.abs((a[preAccess] as number) - (a[postAccess] as number)) - Math.abs((b[preAccess] as number) - (b[postAccess] as number)));
           } else {
             // Default chronological
             sortedCases.sort((a, b) => a.surgery_start_dtm - b.surgery_start_dtm);
@@ -997,6 +1070,8 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
           sortedCases.sort((a, b) => (a[preAccess] as number) - (b[preAccess] as number));
         } else if (providerSort === 'post') {
           sortedCases.sort((a, b) => (a[postAccess] as number) - (b[postAccess] as number));
+        } else if (providerSort === 'gap') {
+          sortedCases.sort((a, b) => Math.abs((a[preAccess] as number) - (a[postAccess] as number)) - Math.abs((b[preAccess] as number) - (b[postAccess] as number)));
         }
 
         const minPre = Math.min(...sortedCases.map((c) => c[preAccess] as number));
