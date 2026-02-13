@@ -65,7 +65,7 @@ def get_cpt_hierarchy() -> CPTHierarchy:
 
     with csv_path.open('r', encoding='utf-8', newline='') as csv_file:
         reader = csv.DictReader(csv_file)
-        for row in reader:
+        for row_number, row in enumerate(reader, start=2):
             cpt_code = _normalize_cpt_code(row.get('Code'))
             # Prefer normalized naming in CSV and keep legacy fallbacks.
             department_name = (
@@ -83,10 +83,14 @@ def get_cpt_hierarchy() -> CPTHierarchy:
             department_id = slugify(department_name)
             procedure_id = f'{department_id}__{slugify(procedure_name)}'
 
-            code_map.setdefault(
-                cpt_code,
-                (department_id, department_name, procedure_id, procedure_name),
-            )
+            mapping = (department_id, department_name, procedure_id, procedure_name)
+            existing_mapping = code_map.get(cpt_code)
+            if existing_mapping is not None:
+                raise ValueError(
+                    f'Duplicate CPT code "{cpt_code}" in {csv_path} at row {row_number}. '
+                    f'Existing mapping={existing_mapping}; duplicate mapping={mapping}',
+                )
+            code_map[cpt_code] = mapping
 
             department_bucket = departments.setdefault(
                 department_id,

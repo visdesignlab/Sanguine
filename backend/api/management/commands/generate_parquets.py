@@ -13,6 +13,7 @@ from api.views.utils.cpt_hierarchy import get_cpt_hierarchy, normalize_cpt_code
 
 class Command(BaseCommand):
     help = "Generate a Parquet cache of the database data"
+    BILLING_FETCH_BATCH_SIZE = 50000
 
     def handle(self, *args, **kwargs):
         # Define output path
@@ -49,18 +50,22 @@ class Command(BaseCommand):
                 """
             )
 
-            billing_rows = cursor.fetchall()
-            for visit_no, raw_cpt_code in billing_rows:
-                normalized_cpt_code = normalize_cpt_code(raw_cpt_code)
-                if not normalized_cpt_code:
-                    continue
-                mapped = code_map.get(normalized_cpt_code)
-                if not mapped:
-                    continue
+            while True:
+                billing_rows = cursor.fetchmany(self.BILLING_FETCH_BATCH_SIZE)
+                if not billing_rows:
+                    break
 
-                department_id, _department_name, procedure_id, _procedure_name = mapped
-                visit_departments[visit_no].add(department_id)
-                visit_procedures[visit_no].add(procedure_id)
+                for visit_no, raw_cpt_code in billing_rows:
+                    normalized_cpt_code = normalize_cpt_code(raw_cpt_code)
+                    if not normalized_cpt_code:
+                        continue
+                    mapped = code_map.get(normalized_cpt_code)
+                    if not mapped:
+                        continue
+
+                    department_id, _department_name, procedure_id, _procedure_name = mapped
+                    visit_departments[visit_no].add(department_id)
+                    visit_procedures[visit_no].add(procedure_id)
 
             department_visit_counts: dict[str, int] = defaultdict(int)
             for department_ids in visit_departments.values():
