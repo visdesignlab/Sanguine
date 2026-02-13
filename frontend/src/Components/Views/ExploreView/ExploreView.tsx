@@ -9,7 +9,7 @@ import {
   Select,
 } from '@mantine/core';
 import {
-  IconPlus, IconArrowUpRight,
+  IconPlus,
 } from '@tabler/icons-react';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { useObserver } from 'mobx-react-lite';
@@ -146,7 +146,7 @@ export function ExploreView() {
         ],
         twoValsPerRow: false,
       });
-    } else {
+    } else if (chartType === 'scatter') {
       if (!scatterXAxisVar || !scatterYAxisVar) return;
       store.addExploreChart({
         chartId: id,
@@ -372,12 +372,13 @@ export function ExploreView() {
                       {/* Preset state question */}
                       <Text size="sm">{question}</Text>
                     </Group>
-                  </Card>
-                ))}
-              </Stack>
-            </Box>
-          ))
-        )
+                  </Group>
+                </Card>
+              ))}
+            </Stack>
+          </Box>
+        ))
+      )
       }
     </Stack>
   ));

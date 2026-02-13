@@ -830,9 +830,8 @@ export type ExploreTableRow = Record<typeof ExploreTableRowVars[number], string 
 export type ExploreTableData = ExploreTableRow[]; // E.g. [{ attending_provider: 'Dr. Smith', cases: 100}, { attending_provider: 'Dr. Johnson', cases: 200}]
 
 // --- Explore Chart ---
-export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData>;
-export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig;
-
+export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData | DumbbellData>;
+export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig | DumbbellChartConfig;
 
 // Filter Counts ---------------------------------------------------
 export type FilterCountKey =
