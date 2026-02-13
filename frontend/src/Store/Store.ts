@@ -514,7 +514,7 @@ export class RootStore {
         leftToolbarOpened: true,
         activeLeftPanel: null,
         selectedVisitNo: null,
-        filterPanelExpandedItems: ['date-filters', 'blood-component-filters'],
+        filterPanelExpandedItems: ['date-filters', 'blood-component-filters', 'department-procedure-filters'],
         showFilterHistograms: false,
       },
     };
@@ -1506,6 +1506,25 @@ export class RootStore {
     if (departmentIds.length > 0) count += 1;
     if (procedureIds.length > 0) count += 1;
     return count;
+  }
+
+  /**
+   * Returns number of departments represented by current department/procedure filters.
+   */
+  get procedureDepartmentsAppliedCount(): number {
+    const { departmentIds, procedureIds } = this.filterValues;
+    const involvedDepartmentIds = new Set(departmentIds);
+
+    for (const procedureId of procedureIds) {
+      if (procedureId) {
+        const separatorIndex = procedureId.indexOf('__');
+        if (separatorIndex > 0) {
+          involvedDepartmentIds.add(procedureId.slice(0, separatorIndex));
+        }
+      }
+    }
+
+    return involvedDepartmentIds.size;
   }
 
   /**

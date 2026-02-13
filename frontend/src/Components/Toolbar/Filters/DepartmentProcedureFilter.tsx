@@ -22,11 +22,6 @@ import {
   ProcedureHierarchyDepartment,
   ProcedureHierarchyProcedure,
 } from '../../../Types/application';
-import classes from './DepartmentProcedureFilter.module.css';
-
-function cx(...classNames: Array<string | undefined | false>) {
-  return classNames.filter(Boolean).join(' ');
-}
 
 function ProcedureOption({
   procedure,
@@ -38,31 +33,30 @@ function ProcedureOption({
   onToggle: () => void;
 }) {
   return (
-    <Box className={cx(classes.procedureRow, checked && classes.procedureRowActive)}>
-      <Checkbox
-        checked={checked}
-        onChange={onToggle}
-        label={(
-          <Flex justify="space-between" align="center" gap="sm" w="100%">
-            <Text size="xs" className={classes.procedureName}>{procedure.name}</Text>
-            <Badge
-              size="xs"
-              variant={checked ? 'filled' : 'light'}
-              color={checked ? 'blue' : 'gray'}
-              className={classes.countBadge}
-            >
-              {procedure.visit_count.toLocaleString()}
-            </Badge>
-          </Flex>
-        )}
-      />
-    </Box>
+    <Checkbox
+      checked={checked}
+      onChange={onToggle}
+      size="xs"
+      label={(
+        <Flex justify="space-between" align="center" gap="sm" w="100%">
+          <Text size="xs">{procedure.name}</Text>
+          <Badge
+            size="xs"
+            variant={checked ? 'filled' : 'light'}
+            color={checked ? 'blue' : 'gray'}
+          >
+            {procedure.visit_count.toLocaleString()}
+          </Badge>
+        </Flex>
+      )}
+    />
   );
 }
 
 function DepartmentOption({
   department,
   checked,
+  indeterminate,
   expanded,
   selectedProcedureCount,
   onToggleExpanded,
@@ -74,6 +68,7 @@ function DepartmentOption({
 }: {
   department: ProcedureHierarchyDepartment;
   checked: boolean;
+  indeterminate: boolean;
   expanded: boolean;
   selectedProcedureCount: number;
   onToggleExpanded: () => void;
@@ -86,21 +81,18 @@ function DepartmentOption({
   const isActive = checked || selectedProcedureCount > 0;
 
   return (
-    <Paper
-      withBorder
-      p="xs"
-      className={cx(classes.departmentCard, isActive && classes.departmentCardActive)}
-    >
+    <Paper withBorder p="xs" radius="md">
       <Flex justify="space-between" align="flex-start" gap="xs">
-        <Flex gap="xs" align="flex-start" className={classes.departmentTitleBlock}>
+        <Flex gap="xs" align="flex-start" style={{ flex: 1, minWidth: 0 }}>
           <Checkbox
             checked={checked}
+            indeterminate={indeterminate}
             onChange={onToggleDepartment}
             mt={2}
             aria-label={`Toggle ${department.name}`}
           />
-          <Box>
-            <Text size="sm" fw={isActive ? 700 : 600} className={classes.departmentName}>
+          <Box style={{ minWidth: 0 }}>
+            <Text size="sm" fw={isActive ? 700 : 600}>
               {department.name}
             </Text>
             <Text size="xs" c="dimmed">
@@ -116,13 +108,13 @@ function DepartmentOption({
           onClick={onToggleExpanded}
           aria-label={`${expanded ? 'Collapse' : 'Expand'} ${department.name}`}
         >
-          <IconChevronDown className={cx(classes.chevronIcon, expanded && classes.chevronIconOpen)} size={18} />
+          <IconChevronDown size={18} style={expanded ? { transform: 'rotate(180deg)' } : undefined} />
         </ActionIcon>
       </Flex>
 
       <Flex gap="xs" align="center" wrap="wrap" mt={4} ml={24}>
         {selectedProcedureCount > 0 && (
-          <Badge size="xs" variant="filled" color="blue" className={classes.countBadge}>
+          <Badge size="xs" variant="filled" color="blue">
             {selectedProcedureCount}
             {' '}
             selected
@@ -132,7 +124,6 @@ function DepartmentOption({
           size="xs"
           variant={isActive ? 'light' : 'outline'}
           color={isActive ? 'blue' : 'gray'}
-          className={classes.countBadge}
         >
           {department.visit_count.toLocaleString()}
           {' '}
@@ -142,7 +133,7 @@ function DepartmentOption({
 
       <Collapse in={expanded}>
         <Divider my="sm" />
-        <Stack gap={6} ml="xs" className={classes.procedureList}>
+        <Stack gap={6} ml="xs">
           {procedures.map((procedure) => (
             <ProcedureOption
               key={procedure.id}
@@ -152,7 +143,7 @@ function DepartmentOption({
             />
           ))}
           {procedures.length === 0 && (
-            <Text size="xs" c="dimmed" className={classes.emptyText}>
+            <Text size="xs" c="dimmed">
               No procedures match this search.
             </Text>
           )}
@@ -227,19 +218,37 @@ export function DepartmentProcedureFilter() {
 
     const selectedDepartmentIdsSet = new Set(store.filterValues.departmentIds);
     const selectedProcedureIdsSet = new Set(store.filterValues.procedureIds);
+    const hierarchyDepartmentById = new Map(hierarchy.departments.map((department) => [department.id, department]));
 
     const visibleDepartments = getVisibleDepartments(hierarchy.departments, searchTerm);
 
-    const selectedDepartmentsCount = selectedDepartmentIdsSet.size;
+    const involvedDepartmentIds = new Set(selectedDepartmentIdsSet);
+    selectedProcedureIdsSet.forEach((procedureId) => {
+      const departmentId = procedureId.split('__', 1)[0];
+      if (hierarchyDepartmentById.has(departmentId)) {
+        involvedDepartmentIds.add(departmentId);
+      }
+    });
+
+    const selectedDepartmentsCount = involvedDepartmentIds.size;
     const selectedProceduresCount = selectedProcedureIdsSet.size;
 
     const toggleDepartmentSelectionById = (departmentId: string) => {
+      const targetDepartment = hierarchy.departments.find((department) => department.id === departmentId);
+      if (!targetDepartment) {
+        return;
+      }
+
       if (selectedDepartmentIdsSet.has(departmentId)) {
         selectedDepartmentIdsSet.delete(departmentId);
+        targetDepartment.procedures.forEach((procedure) => selectedProcedureIdsSet.delete(procedure.id));
       } else {
         selectedDepartmentIdsSet.add(departmentId);
+        targetDepartment.procedures.forEach((procedure) => selectedProcedureIdsSet.add(procedure.id));
       }
+
       store.setFilterValue('departmentIds', Array.from(selectedDepartmentIdsSet).sort());
+      store.setFilterValue('procedureIds', Array.from(selectedProcedureIdsSet).sort());
     };
 
     const toggleProcedureSelectionById = (procedureId: string) => {
@@ -248,6 +257,22 @@ export function DepartmentProcedureFilter() {
       } else {
         selectedProcedureIdsSet.add(procedureId);
       }
+
+      const departmentId = procedureId.split('__', 1)[0];
+      const department = hierarchyDepartmentById.get(departmentId);
+      if (department) {
+        const selectedCount = department.procedures
+          .filter((procedure) => selectedProcedureIdsSet.has(procedure.id)).length;
+        const allSelected = selectedCount === department.procedures.length && department.procedures.length > 0;
+
+        if (allSelected) {
+          selectedDepartmentIdsSet.add(departmentId);
+        } else {
+          selectedDepartmentIdsSet.delete(departmentId);
+        }
+      }
+
+      store.setFilterValue('departmentIds', Array.from(selectedDepartmentIdsSet).sort());
       store.setFilterValue('procedureIds', Array.from(selectedProcedureIdsSet).sort());
     };
 
@@ -260,25 +285,30 @@ export function DepartmentProcedureFilter() {
     };
 
     return (
-      <Stack gap="xs">
-        <Flex justify="space-between" align="center" wrap="wrap" gap="xs">
-          <Text size="xs" fw={600} c="dimmed">
-            Select departments and procedures to narrow visit results.
-          </Text>
-          {(selectedDepartmentsCount + selectedProceduresCount) > 0 && (
-            <Badge size="xs" color="blue" variant="light" className={classes.countBadge}>
-              {selectedDepartmentsCount}
-              {' '}
-              dept
-              {selectedDepartmentsCount === 1 ? '' : 's'}
-              {'  '}
-              ·
-              {'  '}
-              {selectedProceduresCount}
-              {' '}
-              proc
-            </Badge>
-          )}
+      <Stack gap={6}>
+        <Flex w="100%" justify="space-between" align="center" gap="xs">
+          <Badge
+            size="xs"
+            color="blue"
+            variant="light"
+            px={8}
+            styles={{ label: { textTransform: 'none' } }}
+          >
+            {selectedDepartmentsCount > 0
+              ? `${selectedDepartmentsCount} ${selectedDepartmentsCount === 1 ? 'Department' : 'Departments'}`
+              : 'All departments'}
+          </Badge>
+          <Badge
+            size="xs"
+            color="indigo"
+            variant="light"
+            px={8}
+            styles={{ label: { textTransform: 'none' } }}
+          >
+            {selectedProceduresCount > 0
+              ? `${selectedProceduresCount} ${selectedProceduresCount === 1 ? 'Procedure' : 'Procedures'}`
+              : 'All procedures'}
+          </Badge>
         </Flex>
 
         <TextInput
@@ -287,13 +317,16 @@ export function DepartmentProcedureFilter() {
           onChange={(event) => setSearchTerm(event.currentTarget.value)}
           leftSection={<IconSearch size={16} />}
           size="xs"
-          classNames={{ input: classes.searchInput }}
         />
 
         <Stack gap="xs">
           {visibleDepartments.map((department) => {
-            const selectedProcedureCount = department.procedures
+            const fullDepartment = hierarchyDepartmentById.get(department.id) || department;
+            const selectedProcedureCount = fullDepartment.procedures
               .filter((procedure) => selectedProcedureIdsSet.has(procedure.id)).length;
+            const totalProcedureCount = fullDepartment.procedures.length;
+            const isChecked = selectedDepartmentIdsSet.has(department.id);
+            const isIndeterminate = selectedProcedureCount > 0 && selectedProcedureCount < totalProcedureCount;
             const isExpanded = expandedDepartments.includes(department.id);
 
             return (
@@ -305,24 +338,25 @@ export function DepartmentProcedureFilter() {
                   visit_count: department.visit_count,
                   procedures: department.procedures,
                 }}
-                checked={selectedDepartmentIdsSet.has(department.id)}
+                checked={isChecked}
+                indeterminate={isIndeterminate}
                 expanded={isExpanded}
                 selectedProcedureCount={selectedProcedureCount}
                 onToggleExpanded={() => toggleDepartmentExpanded(department.id)}
                 onToggleDepartment={() => toggleDepartmentSelectionById(department.id)}
                 procedures={department.procedures}
-                totalProcedureCount={department.totalProcedureCount}
+                totalProcedureCount={totalProcedureCount}
                 selectedProcedureIdsSet={selectedProcedureIdsSet}
                 onToggleProcedureById={toggleProcedureSelectionById}
               />
             );
           })}
           {visibleDepartments.length === 0 && (
-            <Box className={classes.emptyState}>
+            <Paper withBorder p="xs" radius="md">
               <Text size="xs" c="dimmed">
                 No departments or procedures match your search.
               </Text>
-            </Box>
+            </Paper>
           )}
         </Stack>
       </Stack>

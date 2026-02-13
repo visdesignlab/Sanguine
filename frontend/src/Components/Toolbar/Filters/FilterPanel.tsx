@@ -96,6 +96,7 @@ export function FilterPanel() {
           multiple
           value={store.state.ui.filterPanelExpandedItems}
           onChange={(value) => store.actions.setUiState({ filterPanelExpandedItems: value })}
+          pb="xl"
         >
           {/* Date Filters */}
           <Accordion.Item value="date-filters" key="date-filters">
@@ -128,19 +129,6 @@ export function FilterPanel() {
                   w="45%"
                 />
               </Flex>
-            </Accordion.Panel>
-          </Accordion.Item>
-
-          {/* Department & Procedure Filters */}
-          <Accordion.Item value="department-procedure-filters" key="department-procedure-filters">
-            <FilterHeader
-              countName="procedureFiltersAppliedCount"
-              title="Department & Procedure"
-              tooltipLabel="Number of department/procedure filters applied"
-              resetFunc={() => store.resetProcedureFilters()}
-            />
-            <Accordion.Panel>
-              <DepartmentProcedureFilter />
             </Accordion.Panel>
           </Accordion.Item>
 
@@ -700,6 +688,19 @@ export function FilterPanel() {
                   <FilterRangeSlider varName="los" />
                 </Input.Wrapper>
               </Stack>
+            </Accordion.Panel>
+          </Accordion.Item>
+
+          {/* Department & Procedure Filters */}
+          <Accordion.Item value="department-procedure-filters" key="department-procedure-filters">
+            <FilterHeader
+              countName="procedureDepartmentsAppliedCount"
+              title="Department & Procedure"
+              tooltipLabel="Number of involved departments"
+              resetFunc={() => store.resetProcedureFilters()}
+            />
+            <Accordion.Panel>
+              <DepartmentProcedureFilter />
             </Accordion.Panel>
           </Accordion.Item>
         </Accordion>

@@ -844,4 +844,5 @@ export type FilterCountKey =
   | 'bloodComponentFiltersAppliedCount'
   | 'medicationsFiltersAppliedCount'
   | 'outcomeFiltersAppliedCount'
+  | 'procedureDepartmentsAppliedCount'
   | 'procedureFiltersAppliedCount';
