@@ -651,6 +651,7 @@ export interface DumbbellCase {
   visitId: string;
   preHgb: number;
   postHgb: number;
+  surgery_start_dtm: number;
 }
 
 export type DumbbellData = DumbbellCase[];

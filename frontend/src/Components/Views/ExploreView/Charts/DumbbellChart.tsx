@@ -184,7 +184,6 @@ const DumbbellChartSVG = memo(({
                   />
                 )}
 
-
                 {/* Internal Visits */}
                 {!isProvCollapsed && (
                   <g>
@@ -198,6 +197,7 @@ const DumbbellChartSVG = memo(({
 
                         // Visit Bucket Color: Alternating LIGHTER Greys
                         const visitColor = visitIdx % 2 === 0 ? theme.colors.gray[2] : theme.colors.gray[0];
+
 
                         // Background Shade for Visit Area (Super light)
                         const bgShade = visitIdx % 2 === 0 ? theme.colors.gray[1] : 'transparent';
@@ -395,47 +395,83 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     }[] = [];
 
     groupedByProvider.forEach((cases, providerId) => {
-      const groupedByVisit = new Map<string, DumbbellCase[]>();
-      cases.forEach((d) => {
-        if (!groupedByVisit.has(d.visitId)) groupedByVisit.set(d.visitId, []);
-        groupedByVisit.get(d.visitId)?.push(d);
-      });
+      const providerSort = providerSorts.get(providerId) || 'none';
 
-      const visits = Array.from(groupedByVisit.entries()).map(([visitLabel, visitCases]) => {
-        const minPre = Math.min(...visitCases.map((c) => c.preHgb));
-        const minPost = Math.min(...visitCases.map((c) => c.postHgb));
+      if (providerSort === 'none') {
+        // Default: Group by Visit, Sort cases chronologically
+        const groupedByVisit = new Map<string, DumbbellCase[]>();
+        cases.forEach((d) => {
+          if (!groupedByVisit.has(d.visitId)) groupedByVisit.set(d.visitId, []);
+          groupedByVisit.get(d.visitId)?.push(d);
+        });
 
-        // Sort Cases within Visit
-        const visitSort = visitSorts.get(`${providerId}-${visitLabel}`) || 'none';
-        const sortedCases = [...visitCases];
-        if (visitSort === 'pre') sortedCases.sort((a, b) => a.preHgb - b.preHgb);
-        else if (visitSort === 'post') sortedCases.sort((a, b) => a.postHgb - b.postHgb);
+        const visits = Array.from(groupedByVisit.entries()).map(([visitLabel, visitCases]) => {
+          const minPre = Math.min(...visitCases.map((c) => c.preHgb));
+          const minPost = Math.min(...visitCases.map((c) => c.postHgb));
 
-        return {
-          id: `${providerId}-${visitLabel}`,
-          label: visitLabel,
+          // Sort Cases within Visit
+          // Default: Chronological by surgery_start_dtm
+          // Overridden by visitSorts
+          const visitSort = visitSorts.get(`${providerId}-${visitLabel}`) || 'none';
+          const sortedCases = [...visitCases];
+
+          if (visitSort === 'pre') {
+            sortedCases.sort((a, b) => a.preHgb - b.preHgb);
+          } else if (visitSort === 'post') {
+            sortedCases.sort((a, b) => a.postHgb - b.postHgb);
+          } else {
+            // Default chronological
+            sortedCases.sort((a, b) => a.surgery_start_dtm - b.surgery_start_dtm);
+          }
+
+          return {
+            id: `${providerId}-${visitLabel}`,
+            label: visitLabel,
+            cases: sortedCases,
+            minPre,
+            minPost,
+          };
+        });
+
+        // Sort visits chronologically based on their first case
+        visits.sort((a, b) => {
+          const timeA = a.cases[0]?.surgery_start_dtm || 0;
+          const timeB = b.cases[0]?.surgery_start_dtm || 0;
+          return timeA - timeB;
+        });
+
+        hierarchy.push({
+          id: providerId,
+          cases,
+          visits,
+        });
+      } else {
+        // Sorted by Pre/Post Hgb: Flatten all cases into one "Visit"
+        const sortedCases = [...cases];
+        if (providerSort === 'pre') {
+          sortedCases.sort((a, b) => a.preHgb - b.preHgb);
+        } else if (providerSort === 'post') {
+          sortedCases.sort((a, b) => a.postHgb - b.postHgb);
+        }
+
+        const minPre = Math.min(...sortedCases.map((c) => c.preHgb));
+        const minPost = Math.min(...sortedCases.map((c) => c.postHgb));
+
+        // Create a single virtual visit for the flattened cases
+        const virtualVisit = {
+          id: `${providerId}-all-sorted`,
+          label: 'All Cases',
           cases: sortedCases,
           minPre,
           minPost,
         };
-      });
 
-      // Sort Visits within Provider
-      const providerSort = providerSorts.get(providerId) || 'none';
-      if (providerSort === 'pre') {
-        visits.sort((a, b) => a.minPre - b.minPre);
-      } else if (providerSort === 'post') {
-        visits.sort((a, b) => a.minPost - b.minPost);
-      } else {
-        // Default numeric sort
-        visits.sort((a, b) => parseInt(a.label, 10) - parseInt(b.label, 10));
+        hierarchy.push({
+          id: providerId,
+          cases,
+          visits: [virtualVisit],
+        });
       }
-
-      hierarchy.push({
-        id: providerId,
-        cases,
-        visits,
-      });
     });
 
     return hierarchy;

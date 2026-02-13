@@ -27,6 +27,7 @@ import {
   dashboardYAxisOptions,
   DEFAULT_UNIT_COSTS,
   DumbbellData,
+  DumbbellCase,
 } from '../Types/application';
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
@@ -99,28 +100,50 @@ function generateDumbbellData(): DumbbellData {
   const data: DumbbellData = [];
   let caseIdCounter = 1;
 
+  // Base time: 2024-01-01
+  const currentTime = new Date(2024, 0, 1).getTime();
+
   providers.forEach((provider) => {
     // 15 to 25 visits per provider (increased 5x from original 3-5)
     const numVisits = Math.floor(Math.random() * 11) + 15;
+
+    // Each provider starts at a varied time to avoid perfect overlap
+    let providerTime = currentTime + Math.random() * 100000000;
+
     for (let v = 1; v <= numVisits; v += 1) {
       const visitId = `${v}`; // Just the number
       // 3 to 8 cases per visit
       const numCases = Math.floor(Math.random() * 6) + 3;
+
+      // Each visit happens some time after the previous one
+      providerTime += 86400000 * (Math.floor(Math.random() * 5) + 1); // 1-5 days later
+
+      // Generate cases for this visit
+      const visitCases: DumbbellCase[] = [];
+
       for (let c = 0; c < numCases; c += 1) {
         // Generate pre-op Hgb (roughly 10-16)
         const preHgb = 10 + Math.random() * 6;
         // Generate post-op Hgb (roughly 7-14, usually lower than pre)
         const postHgb = Math.max(7, preHgb - (Math.random() * 4 + 0.5));
 
-        data.push({
+        // Cases within a visit are sequential, say 2-4 hours apart
+        const caseTime = providerTime + (c * (3600000 * (2 + Math.random() * 2)));
+
+        visitCases.push({
           id: `case-${caseIdCounter}`,
           providerId: provider,
           visitId,
           preHgb,
           postHgb,
+          surgery_start_dtm: caseTime,
         });
         caseIdCounter += 1;
       }
+
+      // Ensure strict time sort for generation (though we sort in chart too)
+      visitCases.sort((a, b) => a.surgery_start_dtm - b.surgery_start_dtm);
+      data.push(...visitCases);
     }
   });
 
