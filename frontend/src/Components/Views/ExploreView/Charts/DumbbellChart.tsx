@@ -6,7 +6,7 @@ import {
   ScrollArea, Box, CloseButton, Title, Flex, useMantineTheme,
   Tooltip, MantineTheme, Select, Button, Text, SegmentedControl,
 } from '@mantine/core';
-import { IconGripVertical, IconArrowUp, IconArrowsVertical } from '@tabler/icons-react';
+import { IconGripVertical, IconArrowUp, IconArrowsVertical, IconArrowForward, IconArrowRightDashed } from '@tabler/icons-react';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { Store } from '../../../../Store/Store';
 import { DumbbellCase, DumbbellChartConfig, DumbbellData } from '../../../../Types/application';
@@ -15,8 +15,8 @@ import { DumbbellCase, DumbbellChartConfig, DumbbellData } from '../../../../Typ
 const MARGIN = {
   top: 40, right: 30, bottom: 60, left: 60,
 };
-const CHAR_WIDTH_CASE = 8; // Further reduced width per case
-const DOT_RADIUS = 4.5; // Slightly larger dot radius
+const CHAR_WIDTH_CASE = 8.5; // Increased spacing (was 8)
+const DOT_RADIUS = 4.2; // Slightly larger dot radius
 
 // Target Configuration
 const DEFAULT_PRE_MIN = 13.0;
@@ -804,8 +804,8 @@ const DumbbellChartContent = memo(({
                                       x2={caseX}
                                       y1={yScale(d[labConfig.preKey] as number)}
                                       y2={yScale(d[labConfig.postKey] as number)}
-                                      stroke={theme.colors.gray[6]}
-                                      strokeWidth={1.5}
+                                      stroke={theme.colors.gray[5]}
+                                      strokeWidth={1}
                                       shapeRendering="crispEdges"
                                     />
                                   )}
@@ -818,7 +818,7 @@ const DumbbellChartContent = memo(({
                                         r={DOT_RADIUS}
                                         fill={theme.colors.teal[6]}
                                         stroke="white"
-                                        strokeWidth={1}
+                                        strokeWidth={0.6}
                                       />
                                     </Tooltip>
                                   )}
@@ -831,7 +831,7 @@ const DumbbellChartContent = memo(({
                                         r={DOT_RADIUS}
                                         fill={theme.colors.indigo[6]}
                                         stroke="white"
-                                        strokeWidth={1}
+                                        strokeWidth={0.6}
                                       />
                                     </Tooltip>
                                   )}
@@ -1178,10 +1178,42 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
               value={sortMode}
               onChange={handleSortChange}
               data={[
-                { label: 'Time', value: 'time' },
-                { label: 'Pre', value: 'pre' },
-                { label: 'Post', value: 'post' },
-                { label: 'Gap', value: 'gap' },
+                {
+                  label: (
+                    <Flex align="center" justify="center" gap={4}>
+                      Time
+                      {sortMode === 'time' && <IconArrowRightDashed size={12} stroke={2} />}
+                    </Flex>
+                  ),
+                  value: 'time',
+                },
+                {
+                  label: (
+                    <Flex align="center" justify="center" gap={4}>
+                      Pre
+                      {sortMode === 'pre' && <IconArrowUp size={12} stroke={2} />}
+                    </Flex>
+                  ),
+                  value: 'pre',
+                },
+                {
+                  label: (
+                    <Flex align="center" justify="center" gap={4}>
+                      Post
+                      {sortMode === 'post' && <IconArrowUp size={12} stroke={2} />}
+                    </Flex>
+                  ),
+                  value: 'post',
+                },
+                {
+                  label: (
+                    <Flex align="center" justify="center" gap={4}>
+                      Gap
+                      {sortMode === 'gap' && <IconArrowsVertical size={12} stroke={2} />}
+                    </Flex>
+                  ),
+                  value: 'gap',
+                },
               ]}
               styles={(theme) => ({
                 root: {
