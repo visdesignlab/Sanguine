@@ -10,6 +10,7 @@ class Command(BaseCommand):
             ["python", "manage.py", "destroydata"],
             ["python", "manage.py", "mock50million"],
             ["python", "manage.py", "generate_parquets"],
+            ["python", "manage.py", "generate_procedure_hierarchy_cache"],
         ]
         for cmd in commands:
             self.stdout.write(f"Running: {' '.join(cmd)}")

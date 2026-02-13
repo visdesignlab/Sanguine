@@ -3,8 +3,6 @@ from django.conf import settings
 from django.db import connection
 from pathlib import Path
 from collections import defaultdict
-from datetime import datetime, timezone
-import json
 import pyarrow as pa
 import pyarrow.parquet as pq
 
@@ -20,7 +18,6 @@ class Command(BaseCommand):
         cache_dir = Path(settings.BASE_DIR) / "parquet_cache"
         cache_dir.mkdir(exist_ok=True)
         visit_file_path = cache_dir / "visit_attributes.parquet"
-        procedure_hierarchy_file_path = cache_dir / "procedure_hierarchy.json"
 
         # Refresh the materialized view using the stored procedure
         with connection.cursor() as cursor:
@@ -67,56 +64,10 @@ class Command(BaseCommand):
                     visit_departments[visit_no].add(department_id)
                     visit_procedures[visit_no].add(procedure_id)
 
-            department_visit_counts: dict[str, int] = defaultdict(int)
-            for department_ids in visit_departments.values():
-                for department_id in department_ids:
-                    department_visit_counts[department_id] += 1
-
-            procedure_visit_counts: dict[str, int] = defaultdict(int)
-            for procedure_ids in visit_procedures.values():
-                for procedure_id in procedure_ids:
-                    procedure_visit_counts[procedure_id] += 1
-
-            procedure_hierarchy_departments = []
-            for department in hierarchy.departments:
-                procedure_payload = []
-                for procedure in department.procedures:
-                    procedure_visit_count = procedure_visit_counts.get(procedure.id, 0)
-                    if procedure_visit_count == 0:
-                        continue
-                    procedure_payload.append(
-                        {
-                            "id": procedure.id,
-                            "name": procedure.name,
-                            "visit_count": procedure_visit_count,
-                            "cpt_codes": list(procedure.cpt_codes),
-                        }
-                    )
-
-                if not procedure_payload:
-                    continue
-
-                procedure_hierarchy_departments.append(
-                    {
-                        "id": department.id,
-                        "name": department.name,
-                        "visit_count": department_visit_counts.get(department.id, 0),
-                        "procedures": procedure_payload,
-                    }
-                )
-
             for v in visits:
                 visit_no = v["visit_no"]
                 v["department_ids"] = sorted(visit_departments.get(visit_no, set()))
                 v["procedure_ids"] = sorted(visit_procedures.get(visit_no, set()))
-
-        procedure_hierarchy_payload = {
-            "version": datetime.now(timezone.utc).strftime("%Y-%m-%d.%H%M%S"),
-            "source": "cpt-code-mapping.csv",
-            "department_level": "department",
-            "procedure_level": "procedure",
-            "departments": procedure_hierarchy_departments,
-        }
 
         # Define schema for visit attributes
         visit_attributes_schema = pa.schema([
@@ -170,10 +121,5 @@ class Command(BaseCommand):
         visit_table = pa.Table.from_pylist(visits, schema=visit_attributes_schema)
 
         pq.write_table(visit_table, visit_file_path)
-        procedure_hierarchy_file_path.write_text(
-            json.dumps(procedure_hierarchy_payload, separators=(",", ":")),
-            encoding="utf-8",
-        )
 
         self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {visit_file_path}"))
-        self.stdout.write(self.style.SUCCESS(f"Procedure hierarchy cache generated at {procedure_hierarchy_file_path}"))

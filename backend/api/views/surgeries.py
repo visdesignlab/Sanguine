@@ -162,7 +162,7 @@ def get_procedure_hierarchy(request):
                 pass
 
         try:
-            call_command("generate_parquets")
+            call_command("generate_procedure_hierarchy_cache")
         except Exception as exc:
             return HttpResponse(
                 f"Procedure hierarchy cache regeneration failed. Error: {exc}",
