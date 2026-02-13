@@ -4,7 +4,7 @@ import {
 import { useElementSize } from '@mantine/hooks';
 import {
   ScrollArea, Box, CloseButton, Title, Flex, useMantineTheme,
-  Tooltip, MantineTheme, Select, Button,
+  Tooltip, MantineTheme, Select, Button, Text, SegmentedControl,
 } from '@mantine/core';
 import { IconGripVertical, IconArrowUp, IconArrowsVertical } from '@tabler/icons-react';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
@@ -514,12 +514,14 @@ const DumbbellChartContent = memo(({
   showPost,
   targets,
   setHoveredTarget,
+  showTargets,
 }: DumbbellChartSVGProps & {
   selectedX: string,
   showPre: boolean,
   showPost: boolean,
   targets: { preMin: number; postMin: number; postMax: number },
-  setHoveredTarget: (t: string | null) => void
+  setHoveredTarget: (t: string | null) => void,
+  showTargets: boolean,
 }) => {
   const innerHeight = Math.max(0, height - MARGIN.top - MARGIN.bottom);
   let currentX = 0; // Start with small padding
@@ -531,7 +533,7 @@ const DumbbellChartContent = memo(({
     <div style={{ width: totalWidth, height, position: 'relative' }}>
       <svg width={totalWidth} height={height}>
         {/* Target Regions (Only for Hgb) */}
-        {labConfig.label === 'Hemoglobin' && (
+        {labConfig.label === 'Hemoglobin' && showTargets && (
           <TargetOverlay
             totalWidth={totalWidth}
             yScale={yScale}
@@ -847,7 +849,7 @@ const DumbbellChartContent = memo(({
           })}
         </g>
       </svg>
-    </div >
+    </div>
   );
 });
 
@@ -866,6 +868,15 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   const [selectedX, setSelectedX] = useState<string>('surgeon');
   const [showPre, setShowPre] = useState<boolean>(true);
   const [showPost, setShowPost] = useState<boolean>(true);
+  const [showTargets, setShowTargets] = useState<boolean>(true);
+  const [showMedian, setShowMedian] = useState<boolean>(false);
+  const [sortMode, setSortMode] = useState<string>('time');
+
+  // Clear provider sorts when global sort changes
+  const handleSortChange = (value: string) => {
+    setSortMode(value);
+    setProviderSorts(new Map()); // Reset individual sorts to let global sort take over
+  };
 
   // Hgb Targets
   const [targets, setTargets] = useState({
@@ -949,11 +960,19 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
       else if (selectedX === 'year_quarter') {
         const date = new Date(d.surgery_start_dtm);
         key = `${date.getFullYear()}`;
-      } else if (selectedX === 'rbc') key = `${d.intraopRBC}`;
-      else if (selectedX === 'platelet') key = `${d.intraopPlatelet}`;
-      else if (selectedX === 'cryo') key = `${d.intraopCryo}`;
-      else if (selectedX === 'ffp') key = `${d.intraopFFP}`;
-      else if (selectedX === 'cell_salvage') {
+      } else if (selectedX === 'rbc') {
+        const val = d.intraopRBC;
+        key = `${val} ${val === 1 ? 'RBC' : 'RBCs'}`;
+      } else if (selectedX === 'platelet') {
+        const val = d.intraopPlatelet;
+        key = `${val} ${val === 1 ? 'Platelet' : 'Platelets'}`;
+      } else if (selectedX === 'cryo') {
+        const val = d.intraopCryo;
+        key = `${val} ${val === 1 ? 'Cryo' : 'Cryos'}`;
+      } else if (selectedX === 'ffp') {
+        const val = d.intraopFFP;
+        key = `${val} ${val === 1 ? 'FFP' : 'FFPs'}`;
+      } else if (selectedX === 'cell_salvage') {
         if (d.cellSalvage === 0) key = '0 mL';
         else if (d.cellSalvage <= 300) key = '1-300 mL';
         else if (d.cellSalvage <= 400) key = '301-400 mL';
@@ -990,7 +1009,12 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
 
     sortedKeys.forEach((providerId) => {
       const cases = groupedByProvider.get(providerId)!;
-      const providerSort = providerSorts.get(providerId) || 'none';
+      // Determine provider sort: explicit override OR global sort mode
+      let providerSort = providerSorts.get(providerId);
+      if (!providerSort) {
+        if (sortMode === 'time') providerSort = 'none';
+        else providerSort = sortMode as SortState;
+      }
 
       if (providerSort === 'none') {
         // Sub-grouping logic
@@ -1095,7 +1119,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     });
 
     return hierarchy;
-  }, [store.exploreChartData, chartConfig.yAxisVar, chartConfig.xAxisVar, providerSorts, visitSorts, labConfig, selectedX]);
+  }, [store.exploreChartData, chartConfig.yAxisVar, chartConfig.xAxisVar, providerSorts, visitSorts, labConfig, selectedX, sortMode]);
 
   // Flat list of visible cases for plotting
   const visibleItems = useMemo(() => {
@@ -1137,40 +1161,106 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
         <Flex direction="row" align="center" gap="md" ml={-12}>
           <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
           <Title order={4}>
-            Pre and Post
+            <span style={{ color: theme.colors.gray[6], fontWeight: 500 }}>Pre-op & Post-op</span>
             {' '}
             {labConfig.label}
             {' '}
-            Values
+            <span style={{ color: theme.colors.gray[6], fontWeight: 500 }}>by</span>
+            {' '}
+            {X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label || selectedX}
           </Title>
         </Flex>
         <Flex direction="row" align="center" gap="sm">
-          <Button.Group>
-            <Button
+          <Flex direction="row" align="center" gap="xs">
+            <Text size="xs" c="dimmed" fw={500}>Sort:</Text>
+            <SegmentedControl
               size="xs"
-              variant={showPre ? 'light' : 'outline'}
-              color="teal"
-              onClick={() => setShowPre(!showPre)}
-              styles={{ root: { borderColor: theme.colors.teal[6] } }}
-            >
-              Pre-op
-            </Button>
-            <Button
-              size="xs"
-              variant={showPost ? 'light' : 'outline'}
-              color="indigo"
-              onClick={() => setShowPost(!showPost)}
-              styles={{ root: { borderColor: theme.colors.indigo[6], marginLeft: -1 } }}
-            >
-              Post-op
-            </Button>
-          </Button.Group>
+              value={sortMode}
+              onChange={handleSortChange}
+              data={[
+                { label: 'Time', value: 'time' },
+                { label: 'Pre', value: 'pre' },
+                { label: 'Post', value: 'post' },
+                { label: 'Gap', value: 'gap' },
+              ]}
+              styles={(theme) => ({
+                root: {
+                  backgroundColor: 'transparent',
+                  border: `1px solid ${theme.colors.gray[3]}`,
+                  minHeight: 30,
+                },
+                control: {
+                  border: '0 !important',
+                },
+                label: {
+                  padding: '0 8px',
+                  fontWeight: 500,
+                  '&[data-active]': {
+                    color: sortMode === 'pre' ? theme.colors.teal[7] :
+                      sortMode === 'post' ? theme.colors.indigo[7] :
+                        theme.colors.gray[7],
+                  }
+                },
+                indicator: {
+                  backgroundColor: sortMode === 'pre' ? theme.colors.teal[1] :
+                    sortMode === 'post' ? theme.colors.indigo[1] :
+                      theme.colors.gray[2],
+                }
+              })}
+            />
+          </Flex>
+
+          <Flex direction="row" align="center" gap="xs" ml={0}>
+            <Text size="xs" c="dimmed" fw={500}>Show:</Text>
+            <Button.Group>
+              <Button
+                size="xs"
+                px={8}
+                variant={showPre ? 'light' : 'default'}
+                color="teal"
+                onClick={() => setShowPre(!showPre)}
+                styles={{ root: { borderColor: showPre ? theme.colors.teal[6] : undefined, fontWeight: 400 } }}
+              >
+                Pre
+              </Button>
+              <Button
+                size="xs"
+                px={8}
+                variant={showPost ? 'light' : 'default'}
+                color="indigo"
+                onClick={() => setShowPost(!showPost)}
+                styles={{ root: { borderColor: showPost ? theme.colors.indigo[6] : undefined, marginLeft: -1, fontWeight: 400 } }}
+              >
+                Post
+              </Button>
+              <Button
+                size="xs"
+                px={8}
+                variant={showTargets ? 'light' : 'default'}
+                color="gray"
+                onClick={() => setShowTargets(!showTargets)}
+                styles={{ root: { marginLeft: -1, borderColor: showTargets ? theme.colors.gray[5] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
+              >
+                Target
+              </Button>
+              <Button
+                size="xs"
+                px={8}
+                variant={showMedian ? 'light' : 'default'}
+                color="gray"
+                onClick={() => setShowMedian(!showMedian)}
+                styles={{ root: { marginLeft: -1, borderColor: showMedian ? theme.colors.gray[5] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
+              >
+                Avg
+              </Button>
+            </Button.Group>
+          </Flex>
           <Select
             data={X_AXIS_OPTIONS}
             value={selectedX}
             onChange={(value) => setSelectedX(value || 'surgeon')}
             size="xs"
-            w={200}
+            w={160}
             allowDeselect={false}
             leftSection={<Title order={6} c="dimmed" style={{ fontSize: '10px' }}>X</Title>}
           />
@@ -1233,6 +1323,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 showPost={showPost}
                 targets={targets}
                 setHoveredTarget={setHoveredTarget}
+                showTargets={showTargets}
               />
             </ScrollArea>
           </div>
