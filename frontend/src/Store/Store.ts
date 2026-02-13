@@ -100,15 +100,17 @@ function generateDumbbellData(): DumbbellData {
   const data: DumbbellData = [];
   let caseIdCounter = 1;
 
-  // Base time: 2024-01-01
-  const currentTime = new Date(2024, 0, 1).getTime();
+  // Date Range: 2019-2025
+  const startTimestamp = new Date('2019-01-01').getTime();
+  const endTimestamp = new Date('2025-12-31').getTime();
+  const dateRange = endTimestamp - startTimestamp;
 
   providers.forEach((provider) => {
     // 15 to 25 visits per provider (increased 5x from original 3-5)
     const numVisits = Math.floor(Math.random() * 11) + 15;
 
     // Each provider starts at a varied time to avoid perfect overlap
-    let providerTime = currentTime + Math.random() * 100000000;
+    let providerTime = startTimestamp + (Math.random() * dateRange);
 
     for (let v = 1; v <= numVisits; v += 1) {
       const visitId = `${v}`; // Just the number
@@ -127,7 +129,36 @@ function generateDumbbellData(): DumbbellData {
         // Generate post-op Hgb (roughly 7-14, usually lower than pre)
         const postHgb = Math.max(7, preHgb - (Math.random() * 4 + 0.5));
 
-        // Cases within a visit are sequential, say 2-4 hours apart
+        // Ferritin (ng/mL): 12-300
+        const preFerritin = 20 + Math.random() * 250;
+        const postFerritin = Math.max(10, preFerritin - (Math.random() * 50)); // Drops slightly
+
+        // Platelet Count (K/µL): 150-450
+        const prePlatelet = 150 + Math.random() * 300;
+        const postPlatelet = Math.max(50, prePlatelet - (Math.random() * 80)); // Drops due to consumption/dilution
+
+        // Fibrinogen (mg/dL): 200-400
+        const preFibrinogen = 200 + Math.random() * 200;
+        const postFibrinogen = Math.max(100, preFibrinogen - (Math.random() * 100)); // Consumed
+
+        // INR: 0.8-1.2 (Normal), up to 3.0 (Anticoagulated). Post-op might rise.
+        const preINR = 0.9 + Math.random() * 0.3;
+        const postINR = preINR + Math.random() * 0.5; // Increases (clotting factors diluted)
+
+        // Anesthesiologist
+        const anesthesiologists = ['Dr. Stone', 'Dr. Rivers', 'Dr. Sky', 'Dr. Woods', 'Dr. Brooks'];
+        const anesthesiologistId = anesthesiologists[Math.floor(Math.random() * anesthesiologists.length)];
+
+        // Intraop Transfusions (0, 1, 2...) - Weighted towards 0
+        const intraopRBC = Math.random() > 0.7 ? Math.floor(Math.random() * 5) : 0;
+        const intraopPlatelet = Math.random() > 0.8 ? Math.floor(Math.random() * 3) : 0;
+        const intraopCryo = Math.random() > 0.9 ? Math.floor(Math.random() * 3) : 0;
+        const intraopFFP = Math.random() > 0.85 ? Math.floor(Math.random() * 4) : 0;
+
+        // Cell Salvage (mL) - 0 or 1-1000
+        const cellSalvage = Math.random() > 0.6 ? Math.floor(Math.random() * 800) : 0;
+
+        // Cases within a visit are sequential
         const caseTime = providerTime + (c * (3600000 * (2 + Math.random() * 2)));
 
         visitCases.push({
@@ -136,6 +167,20 @@ function generateDumbbellData(): DumbbellData {
           visitId,
           preHgb,
           postHgb,
+          preFerritin,
+          postFerritin,
+          prePlatelet,
+          postPlatelet,
+          preFibrinogen,
+          postFibrinogen,
+          preINR,
+          postINR,
+          anesthesiologistId,
+          intraopRBC,
+          intraopPlatelet,
+          intraopCryo,
+          intraopFFP,
+          cellSalvage,
           surgery_start_dtm: caseTime,
         });
         caseIdCounter += 1;

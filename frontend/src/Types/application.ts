@@ -651,6 +651,20 @@ export interface DumbbellCase {
   visitId: string;
   preHgb: number;
   postHgb: number;
+  preFerritin: number;
+  postFerritin: number;
+  prePlatelet: number;
+  postPlatelet: number;
+  preFibrinogen: number;
+  postFibrinogen: number;
+  preINR: number;
+  postINR: number;
+  anesthesiologistId: string;
+  intraopRBC: number;
+  intraopPlatelet: number;
+  intraopCryo: number;
+  intraopFFP: number;
+  cellSalvage: number;
   surgery_start_dtm: number;
 }
 
