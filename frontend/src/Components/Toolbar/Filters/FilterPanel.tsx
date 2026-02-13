@@ -699,7 +699,7 @@ export function FilterPanel() {
               tooltipLabel="Number of involved departments"
               resetFunc={() => store.resetProcedureFilters()}
             />
-            <Accordion.Panel>
+            <Accordion.Panel styles={{ content: { paddingLeft: 8, paddingRight: 8 } }}>
               <DepartmentProcedureFilter />
             </Accordion.Panel>
           </Accordion.Item>

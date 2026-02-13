@@ -38,12 +38,15 @@ function ProcedureOption({
       onChange={onToggle}
       size="xs"
       label={(
-        <Flex justify="space-between" align="center" gap="sm" w="100%">
-          <Text size="xs">{procedure.name}</Text>
+        <Flex justify="space-between" align="flex-start" gap="xs" w="100%" wrap="nowrap">
+          <Text size="xs" style={{ flex: 1, minWidth: 0 }}>
+            {procedure.name}
+          </Text>
           <Badge
             size="xs"
             variant={checked ? 'filled' : 'light'}
             color={checked ? 'blue' : 'gray'}
+            style={{ flexShrink: 0 }}
           >
             {procedure.visit_count.toLocaleString()}
           </Badge>
@@ -288,7 +291,7 @@ export function DepartmentProcedureFilter() {
       <Stack gap={6}>
         <Flex w="100%" justify="space-between" align="center" gap="xs">
           <Badge
-            size="xs"
+            size="sm"
             color="blue"
             variant="light"
             px={8}
@@ -299,8 +302,8 @@ export function DepartmentProcedureFilter() {
               : 'All departments'}
           </Badge>
           <Badge
-            size="xs"
-            color="indigo"
+            size="sm"
+            color="blue"
             variant="light"
             px={8}
             styles={{ label: { textTransform: 'none' } }}
