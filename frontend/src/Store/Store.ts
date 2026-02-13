@@ -1705,14 +1705,23 @@ export class RootStore {
     });
 
     // Use list-native predicates to avoid UNNEST/CTE rescans on each filter update.
+    // Only allow slug-like IDs (alphanumeric, underscore, hyphen) to be interpolated into SQL.
+    const safeIdPattern = /^[A-Za-z0-9_-]+$/;
+
     if (filterValues.departmentIds.length > 0) {
-      const departmentIdList = filterValues.departmentIds.map(sqlString).join(', ');
-      filterConditions.push(`list_has_any(department_ids, [${departmentIdList}]::VARCHAR[])`);
+      const safeDepartmentIds = filterValues.departmentIds.filter((id) => safeIdPattern.test(id));
+      if (safeDepartmentIds.length > 0) {
+        const departmentIdList = safeDepartmentIds.map(sqlString).join(', ');
+        filterConditions.push(`list_has_any(department_ids, [${departmentIdList}]::VARCHAR[])`);
+      }
     }
 
     if (filterValues.procedureIds.length > 0) {
-      const procedureIdList = filterValues.procedureIds.map(sqlString).join(', ');
-      filterConditions.push(`list_has_any(procedure_ids, [${procedureIdList}]::VARCHAR[])`);
+      const safeProcedureIds = filterValues.procedureIds.filter((id) => safeIdPattern.test(id));
+      if (safeProcedureIds.length > 0) {
+        const procedureIdList = safeProcedureIds.map(sqlString).join(', ');
+        filterConditions.push(`list_has_any(procedure_ids, [${procedureIdList}]::VARCHAR[])`);
+      }
     }
 
     // Add date filters if applied
