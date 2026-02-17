@@ -43,7 +43,7 @@ function SingleHeatRow({
           return (
             <g key={`${dataPoint.aggregateAttribute}-${point}`}>
               <Tooltip
-                title={`${output}, ${outputContent}`}
+                title={`${output} cases, ${outputContent}`}
                 arrow
                 key={`${dataPoint.aggregateAttribute}-${point}`}
                 placement="top"
