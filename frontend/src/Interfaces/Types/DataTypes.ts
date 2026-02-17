@@ -46,10 +46,15 @@ export type SingleCasePoint = {
     DRG_WEIGHT: number;
     MONTH: number;
     FFP_UNITS: number;
+    FFP_UNITS_OUTSIDE_OR: number;
     PLT_UNITS: number;
+    PLT_UNITS_OUTSIDE_OR: number;
     POSTOP_HEMO: number;
     PRBC_UNITS: number;
+    PRBC_UNITS_OUTSIDE_OR: number;
     PREOP_HEMO: number;
+    CRYO_UNITS_OUTSIDE_OR: number;
+    CELL_SAVER_ML_OUTSIDE_OR: number;
     STROKE: number;
     VENT: number;
     B12: number;
