@@ -14,11 +14,18 @@ import {
 
 const EMAIL_GATE_STORAGE_KEY = 'intelvia_email_gate_v1';
 const EMAIL_GATE_COMPLETED_VALUE = 'true';
+let emailGateBypassedForSession = false;
 
 type EmailGateSubmitResponse = { ok: true } | { ok: false; error: string };
 
 function persistGateStorage(): void {
-  localStorage.setItem(EMAIL_GATE_STORAGE_KEY, EMAIL_GATE_COMPLETED_VALUE);
+  if (emailGateBypassedForSession) return;
+
+  try {
+    localStorage.setItem(EMAIL_GATE_STORAGE_KEY, EMAIL_GATE_COMPLETED_VALUE);
+  } catch {
+    emailGateBypassedForSession = true;
+  }
 }
 
 function getCookie(name: string): string | null {
@@ -58,8 +65,14 @@ export function isEmailGateEnabled(hostname: string = window.location.hostname):
 
 export function isEmailGateBlocked(hostname: string = window.location.hostname): boolean {
   if (!isEmailGateEnabled(hostname)) return false;
+  if (emailGateBypassedForSession) return false;
 
-  return localStorage.getItem(EMAIL_GATE_STORAGE_KEY) !== EMAIL_GATE_COMPLETED_VALUE;
+  try {
+    return localStorage.getItem(EMAIL_GATE_STORAGE_KEY) !== EMAIL_GATE_COMPLETED_VALUE;
+  } catch {
+    emailGateBypassedForSession = true;
+    return false;
+  }
 }
 
 async function submitEmailGate(email: string, institution: string): Promise<EmailGateSubmitResponse> {
