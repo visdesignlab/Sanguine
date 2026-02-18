@@ -26,14 +26,15 @@ import { FilterRangeSlider } from './FilterRangeSlider';
 import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
 import classes from '../../../Shell/Shell.module.css';
-import { BLOOD_PRODUCT_COLOR_THEME } from '../../../Types/application';
+import { FilterComponent } from './FilterComponent';
+import { BLOOD_COMPONENTS, BLOOD_PRODUCTS_ARRAY, BloodComponent } from '../../../Types/bloodProducts';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
 
 // Utility: Detect if a range filter has been applied
 function rangeChanged(
   store: RootStore,
-  key: 'rbc_units' | 'ffp_units' | 'plt_units' | 'cryo_units' | 'cell_saver_ml' | 'los',
+  key: BloodComponent | 'los',
 ) {
   const cur = store.filterValues[key];
   const init = store.initialFilterValues[key];
@@ -54,6 +55,7 @@ function dateChanged(
 export function FilterPanel() {
   const { toolbarWidth, iconStroke } = useThemeConstants();
   const store = useContext(Store);
+  const filterToolTip = 'Filter for Visits That Used ...';
 
   return useObserver(() => (
     <Box>
@@ -139,145 +141,19 @@ export function FilterPanel() {
               resetFunc={() => store.resetBloodComponentFilters()}
             />
             <Accordion.Panel>
-              <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper
-                  label="RBC Units"
-                  mb="lg"
-                  styles={{ label: { color: rangeChanged(store, 'rbc_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
-                >
-                  <Flex
-                    justify="center"
-                    style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
+              {BLOOD_PRODUCTS_ARRAY.map((bloodComponent, i) => (
+                <Tooltip key={`${bloodComponent}-${i}`} label={filterToolTip} position="top-start">
+                  <Input.Wrapper
+                    label={BLOOD_COMPONENTS.find((c) => c.value === bloodComponent)?.label.base || bloodComponent}
+                    mb="lg"
+                    styles={{ label: { color: rangeChanged(store, bloodComponent) ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   >
-                    <BarChart
-                      h={30}
-                      style={{ width: 'calc(100% - 12px)' }}
-                      barProps={{ barSize: '100%' }}
-                      data={store.rbc_unitsHistogramData || []}
-                      dataKey="units"
-                      withXAxis={false}
-                      withYAxis={false}
-                      withTooltip={false}
-                      gridAxis="none"
-                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.rbc_units }]}
-                      ml={1}
-                    />
-                  </Flex>
-                  <FilterRangeSlider varName="rbc_units" />
-                </Input.Wrapper>
-              </Tooltip>
 
-              <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper
-                  label="FFP Units"
-                  mb="lg"
-                  styles={{ label: { color: rangeChanged(store, 'ffp_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
-                >
-                  <Flex
-                    justify="center"
-                    style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
-                  >
-                    <BarChart
-                      h={30}
-                      style={{ width: 'calc(100% - 12px)' }}
-                      barProps={{ barSize: '100%' }}
-                      data={store.ffp_unitsHistogramData || []}
-                      dataKey="units"
-                      withXAxis={false}
-                      withYAxis={false}
-                      withTooltip={false}
-                      gridAxis="none"
-                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.ffp_units }]}
-                      ml={1}
-                    />
-                  </Flex>
-                  <FilterRangeSlider varName="ffp_units" />
-                </Input.Wrapper>
-              </Tooltip>
+                    <FilterComponent data={store.getHistogramData(bloodComponent) || []} unitName={bloodComponent} />
 
-              <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper
-                  label="Platelet Units"
-                  mb="lg"
-                  styles={{ label: { color: rangeChanged(store, 'plt_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
-                >
-                  <Flex
-                    justify="center"
-                    style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
-                  >
-                    <BarChart
-                      h={30}
-                      style={{ width: 'calc(100% - 12px)' }}
-                      barProps={{ barSize: '100%' }}
-                      data={store.plt_unitsHistogramData || []}
-                      dataKey="units"
-                      withXAxis={false}
-                      withYAxis={false}
-                      withTooltip={false}
-                      gridAxis="none"
-                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.plt_units }]}
-                      ml={1}
-                    />
-                  </Flex>
-                  <FilterRangeSlider varName="plt_units" />
-                </Input.Wrapper>
-              </Tooltip>
-
-              <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper
-                  label="Cryo Units"
-                  mb="lg"
-                  styles={{ label: { color: rangeChanged(store, 'cryo_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
-                >
-                  <Flex
-                    justify="center"
-                    style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
-                  >
-                    <BarChart
-                      h={30}
-                      style={{ width: 'calc(100% - 12px)' }}
-                      barProps={{ barSize: '100%' }}
-                      data={store.cryo_unitsHistogramData || []}
-                      dataKey="units"
-                      withXAxis={false}
-                      withYAxis={false}
-                      withTooltip={false}
-                      gridAxis="none"
-                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.cryo_units }]}
-                      ml={1}
-                    />
-                  </Flex>
-                  <FilterRangeSlider varName="cryo_units" />
-                </Input.Wrapper>
-              </Tooltip>
-
-              <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper
-                  label="Cell Saver (mL)"
-                  mb="lg"
-                  styles={{ label: { color: rangeChanged(store, 'cell_saver_ml') ? 'var(--mantine-color-blue-filled)' : undefined } }}
-                >
-                  <Flex
-                    justify="center"
-                    style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
-                  >
-                    <BarChart
-                      h={30}
-                      style={{ width: 'calc(100% - 12px)' }}
-                      barProps={{ barSize: '100%' }}
-                      data={store.cell_saver_mlHistogramData || []}
-                      dataKey="units"
-                      withXAxis={false}
-                      withYAxis={false}
-                      withTooltip={false}
-                      gridAxis="none"
-                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.cell_saver_ml }]}
-                      ml={1}
-                    />
-                  </Flex>
-                  <FilterRangeSlider varName="cell_saver_ml" />
-                </Input.Wrapper>
-              </Tooltip>
+                  </Input.Wrapper>
+                </Tooltip>
+              ))}
             </Accordion.Panel>
           </Accordion.Item>
 

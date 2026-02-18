@@ -29,20 +29,23 @@ import {
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
 import { expandTimePeriod } from '../Utils/expandTimePeriod';
+import { HistogramData } from '../Types/database';
+import {
+  BLOOD_PRODUCTS_ARRAY,
+  BloodComponent,
+  CELL_SAVER_ML, PLT_UNITS, RBC_UNITS,
+} from '../Types/bloodProducts';
 
-// endregion
-
-// region Constants
 export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
-export const ProductMaximums = {
-  rbc_units: 10,
-  ffp_units: 10,
-  plt_units: 10,
-  cryo_units: 50,
-  cell_saver_ml: 10000,
-  los: 30,
-};
+// export const ProductMaximums = {
+//   rbc_units: 10,
+//   ffp_units: 10,
+//   plt_units: 10,
+//   cryo_units: 50,
+//   cell_saver_ml: 10000,
+//   los: 30,
+// };
 
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
@@ -60,7 +63,7 @@ export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
 
 export const DEFAULT_CHART_CONFIGS: DashboardChartConfig[] = [
   {
-    chartId: '0', xAxisVar: 'month', yAxisVar: 'rbc_units', aggregation: 'sum', chartType: 'line',
+    chartId: '0', xAxisVar: 'month', yAxisVar: RBC_UNITS, aggregation: 'sum', chartType: 'line',
   },
   {
     chartId: '1', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
@@ -72,13 +75,13 @@ export const DEFAULT_CHART_CONFIGS: DashboardChartConfig[] = [
 
 export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
   {
-    statId: '1', yAxisVar: 'rbc_units', aggregation: 'avg', title: 'Average RBCs Transfused Per Visit',
+    statId: '1', yAxisVar: RBC_UNITS, aggregation: 'avg', title: 'Average RBCs Transfused Per Visit',
   },
   {
-    statId: '2', yAxisVar: 'plt_units', aggregation: 'avg', title: 'Average Platelets Transfused Per Visit',
+    statId: '2', yAxisVar: PLT_UNITS, aggregation: 'avg', title: 'Average Platelets Transfused Per Visit',
   },
   {
-    statId: '3', yAxisVar: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
+    statId: '3', yAxisVar: CELL_SAVER_ML, aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
   },
   {
     statId: '4', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', title: 'Total Blood Product Costs',
@@ -258,7 +261,11 @@ export class RootStore {
     ecmo: null as boolean | null,
   };
 
-  histogramData: Record<string, { units: string, count: number }[] | undefined> = {};
+  histogramData: Record<string, HistogramData> = {};
+
+  getHistogramData(bloodProduct: BloodComponent) {
+    return this.histogramData[bloodProduct];
+  }
 
   get rbc_unitsHistogramData() { return this.histogramData.rbc_units; }
 
@@ -405,7 +412,7 @@ export class RootStore {
         },
       }), initialDates);
     },
-    resetBloodComponentFilters: (initialFilters: Pick<ApplicationState['filterValues'], 'rbc_units' | 'ffp_units' | 'plt_units' | 'cryo_units' | 'cell_saver_ml'>) => {
+    resetBloodComponentFilters: (initialFilters: Pick<ApplicationState['filterValues'], BloodComponent>) => {
       this.applyAction('Reset Blood Component Filters', (state, filters) => ({
         ...state,
         filterValues: {
@@ -1024,7 +1031,7 @@ export class RootStore {
 
     // Get the data from each chart, grouped by month, quarter, and year
     const query = `
-      SELECT 
+      SELECT
         month,
         quarter,
         year,
@@ -1475,7 +1482,7 @@ export class RootStore {
   get bloodComponentFiltersAppliedCount(): number {
     let count = 0;
     const filters = this.filterValues;
-    const keys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
+    const keys = BLOOD_PRODUCTS_ARRAY;
     keys.forEach((key) => {
       const [min, max] = filters[key] as [number, number];
       const [initMin, initMax] = this._initialFilterValues[key] as [number, number];
@@ -1535,7 +1542,7 @@ export class RootStore {
    */
   async generateHistogramData() {
     if (!this.duckDB) return;
-    const components = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml', 'los'];
+    const components = [...BLOOD_PRODUCTS_ARRAY, 'los'];
     const histogramData: Record<string, { units: string, count: number }[]> = {};
     const filters = this.filterValues;
     // For each component, generate histogram data
@@ -1543,22 +1550,39 @@ export class RootStore {
       // Get the min and max values for the component, and the number of bins
       const [minRange, maxRange] = filters[component as keyof typeof filters] as [number, number];
       const numBins = Math.min(20, Math.max(1, maxRange - minRange));
-      // Cap the max range to the product maximum
-      const productMaximum = ProductMaximums[component as keyof typeof ProductMaximums] || maxRange;
-      // Query to get the counts for each bin
+
       const result = await this.duckDB!.query(`
-        WITH bins AS (
-          SELECT equi_width_bins(min(${component}), LEAST(${productMaximum}, max(${component})), ${numBins}, false) AS bin
+        WITH binned AS (
+          SELECT
+            CASE
+              WHEN '${component}' = 'cell_saver_ml' THEN
+                CASE
+                  WHEN ${component} = 0 THEN 0
+                  ELSE CEIL(${component} / 50.0) * 50
+                END
+              ELSE
+                ${component}
+            END AS bin_value
           FROM filteredVisits
         )
-        SELECT HISTOGRAM(${component}, bins.bin) AS histogram
-        FROM filteredVisits, bins;
-      `);
+        SELECT
+          bin_value,
+          COUNT(*) AS count
+        FROM binned
+        GROUP BY bin_value
+        ORDER BY bin_value;`);
       // Map the result to the histogram data
-      histogramData[component] = result.toArray().flatMap((row) => {
-        const { histogram } = row.toJSON();
-        return Object.entries(histogram.toJSON()).map(([units, count]) => ({ units, count: Number(count) }));
-      });
+      histogramData[component] = result
+        .toArray()
+        .map((row) => {
+          // eslint-disable-next-line camelcase
+          const { bin_value, count } = row.toJSON();
+
+          return {
+            units: String(bin_value),
+            count: Number(count),
+          };
+        });
     }));
     this.histogramData = histogramData;
   }

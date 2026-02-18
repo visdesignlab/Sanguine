@@ -6,6 +6,7 @@ import {
 } from 'react';
 import { Store } from '../../../Store/Store';
 import { getIconForVar } from '../../../Utils/icons';
+import { RBC_UNITS } from '../../../Types/bloodProducts';
 
 export function BloodProductCostSettings() {
   const store = useContext(Store);
@@ -45,7 +46,7 @@ export function BloodProductCostSettings() {
     || cellSaverCost !== store.unitCosts.cell_saver_cost
   ), [rbcCost, pltCost, ffpCost, cryoCost, cellSaverCost, store.unitCosts]);
 
-  const ControlIcon = getIconForVar('rbc_units');
+  const ControlIcon = getIconForVar(RBC_UNITS);
 
   return (
     <Accordion.Item value="bloodProductCosts">

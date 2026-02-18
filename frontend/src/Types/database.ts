@@ -17,6 +17,10 @@ export interface TransfusionEvent {
   whole_vol: number | null;
   cell_saver_ml: number | null;
 }
+
+export type HistogramData=
+   { units: string, count: number; } [] | undefined;
+
 export interface Surgery {
   case_id: string; // BigIntegerField, primary key
   visit_no: string; // ForeignKey to DatabaseVisit, use string to match DatabaseVisit.visit_no

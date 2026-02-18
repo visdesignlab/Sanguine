@@ -1,5 +1,4 @@
 import {
-  BLOOD_COMPONENTS,
   OUTCOMES,
   PROPHYL_MEDS,
   GUIDELINE_ADHERENT,
@@ -7,6 +6,7 @@ import {
   COSTS,
   TIME_AGGREGATION_OPTIONS,
 } from '../Types/application';
+import { BLOOD_COMPONENTS } from '../Types/bloodProducts';
 
 const columnNameMap: Record<string, string> = {
   adm_dtm: 'Admission Date',

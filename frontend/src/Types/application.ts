@@ -2,6 +2,10 @@
 // Time period types
 // TODO: Update ScatterPlot data type
 import { ScatterChartSeries } from '@mantine/charts';
+import {
+  BLOOD_COMPONENTS,
+  BloodComponent,
+} from './bloodProducts';
 
 export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
 export type Month = `${number}-${string}`; // e.g. "2023-Jan"
@@ -14,63 +18,6 @@ export const AGGREGATION_OPTIONS = {
   avg: { label: 'Average' },
 } as const;
 
-// Blood components -----------------------------------------------
-const BLOOD_COMPONENT_DECIMALS = { sum: 0, avg: 2 };
-
-export const BLOOD_COMPONENTS = [
-  {
-    value: 'rbc_units',
-    label: {
-      base: 'RBCs Transfused',
-      sum: 'Total RBCs Transfused',
-      avg: 'Average RBCs Transfused Per Visit',
-    },
-    units: { sum: 'RBC Units', avg: 'RBC Units' },
-    decimals: BLOOD_COMPONENT_DECIMALS,
-  },
-  {
-    value: 'ffp_units',
-    label: {
-      base: 'FFP Transfused',
-      sum: 'Total FFP Transfused',
-      avg: 'Average FFP Transfused Per Visit',
-    },
-    units: { sum: 'Plasma Units', avg: 'Plasma Units' },
-    decimals: BLOOD_COMPONENT_DECIMALS,
-  },
-  {
-    value: 'plt_units',
-    label: {
-      base: 'Platelets Transfused',
-      sum: 'Total Platelets Transfused',
-      avg: 'Average Platelets Transfused Per Visit',
-    },
-    units: { sum: 'Platelet Units', avg: 'Platelet Units' },
-    decimals: BLOOD_COMPONENT_DECIMALS,
-  },
-  {
-    value: 'cryo_units',
-    label: {
-      base: 'Cryo Transfused',
-      sum: 'Total Cryo Transfused',
-      avg: 'Average Cryo Transfused Per Visit',
-    },
-    units: { sum: 'Cryo Units', avg: 'Cryo Units' },
-    decimals: BLOOD_COMPONENT_DECIMALS,
-  },
-  {
-    value: 'cell_saver_ml',
-    label: {
-      base: 'Cell Salvage Volume (ml) Used',
-      sum: 'Total Cell Salvage Volume (ml) Used',
-      avg: 'Average Cell Salvage Volume (ml) Used Per Visit',
-    },
-    units: { sum: 'mL', avg: 'mL' },
-    decimals: BLOOD_COMPONENT_DECIMALS,
-  },
-] as const;
-// Values of blood components
-export type BloodComponent = typeof BLOOD_COMPONENTS[number]['value'];
 // Readonly array of blood component options
 export const BLOOD_COMPONENT_OPTIONS = BLOOD_COMPONENTS as ReadonlyArray<{
   value: BloodComponent;
