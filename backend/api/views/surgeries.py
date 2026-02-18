@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 
 from django.http import HttpResponse, FileResponse, JsonResponse
@@ -8,6 +9,8 @@ from django.views.decorators.cache import never_cache
 
 from .decorators.conditional_login_required import conditional_login_required
 from .utils.utils import log_request
+
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])
@@ -147,8 +150,9 @@ def get_procedure_hierarchy(request):
     try:
         with file_path.open("r", encoding="utf-8") as cache_file:
             return JsonResponse(json.load(cache_file))
-    except Exception as exc:
+    except Exception:
+        logger.exception("Failed to read procedure hierarchy cache")
         return HttpResponse(
-            f"Procedure hierarchy cache could not be read. Error: {exc}",
+            "Procedure hierarchy cache could not be read.",
             status=503,
         )

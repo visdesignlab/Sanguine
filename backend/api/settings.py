@@ -1,14 +1,20 @@
 import environ
 import os
+import sentry_sdk
 import sys
 from corsheaders.defaults import default_headers
+from sentry_sdk.integrations.django import DjangoIntegration
 
 
 env = environ.Env(
     DJANGO_DEBUG=(bool, True),  # Cast to bool, default to False
     DJANGO_HOSTNAME=(str, "localhost"),
     DJANGO_DISABLE_LOGINS=(bool, True),
-    DJANGO_LOGOUT_REDIRECT=(str, "")
+    DJANGO_LOGOUT_REDIRECT=(str, ""),
+    SENTRY_DSN=(str, ""),
+    SENTRY_ENVIRONMENT=(str, "development"),
+    SENTRY_TRACES_SAMPLE_RATE=(float, 0.0),
+    SENTRY_SEND_DEFAULT_PII=(bool, False),
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -17,6 +23,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DJANGO_DEBUG")
 DISABLE_LOGINS = env("DJANGO_DISABLE_LOGINS")
+SENTRY_DSN = env("SENTRY_DSN")
+
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        environment=env("SENTRY_ENVIRONMENT"),
+        traces_sample_rate=env("SENTRY_TRACES_SAMPLE_RATE"),
+        send_default_pii=env("SENTRY_SEND_DEFAULT_PII"),
+    )
 
 # We're allowing localhost for local development and for production deployment with containers
 ALLOWED_HOSTS = [
@@ -40,6 +56,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "api.middleware.GenericExceptionMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
