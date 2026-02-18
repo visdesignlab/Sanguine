@@ -13,7 +13,7 @@ from .utils.utils import log_request
 @require_http_methods(["GET"])
 def index(request):
     log_request(request)
-    return HttpResponse("Bloodvis API endpoint. Please use the client application to access the data here.")
+    return HttpResponse("Intelvia API endpoint. Please use the client application to access the data here.")
 
 
 @require_http_methods(["GET"])
