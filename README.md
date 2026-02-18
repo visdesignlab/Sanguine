@@ -73,24 +73,26 @@ For local development, run backend and MariaDB in Docker and run the frontend di
     ```bash
     cd frontend
     yarn install
-    yarn dev
+    yarn serve
     ```
 
 1. Open `http://localhost:8080`. API calls from the frontend use relative `/api/...` paths and are proxied by Vite to the backend at `http://localhost:8000`.
-1. If you run `yarn dev` inside the `frontend` devcontainer service, Vite uses `VITE_DEV_PROXY_TARGET=http://backend:8000` automatically (Docker network target). For host-based frontend dev, leave it unset and it defaults to `http://localhost:8000`.
+1. If you run `yarn serve` inside the `frontend` devcontainer service, Vite uses `VITE_DEV_PROXY_TARGET=http://backend:8000` automatically (Docker network target). For host-based frontend dev, leave it unset and it defaults to `http://localhost:8000`.
 1. To populate the database with mock data, run:
 
 ```bash
-docker compose -f docker-compose.devcontainer.yml exec backend poetry run python manage.py recreatedata
+docker-compose exec -it backend bash
+poetry run python manage.py recreatedata
 ```
 
 To step through each step of the process instead, run these:
 
 ```bash
-docker compose -f docker-compose.devcontainer.yml exec backend poetry run python manage.py destroydata
-docker compose -f docker-compose.devcontainer.yml exec backend poetry run python manage.py migrate api
-docker compose -f docker-compose.devcontainer.yml exec backend poetry run python manage.py mock50million
-docker compose -f docker-compose.devcontainer.yml exec backend poetry run python manage.py generate_parquets
+docker-compose exec -it backend bash
+poetry run python manage.py destroydata
+poetry run python manage.py migrate api
+poetry run python manage.py mock50million
+poetry run python manage.py generate_parquets
 ```
 
     
