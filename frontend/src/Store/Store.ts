@@ -709,7 +709,8 @@ export class RootStore {
         const artifacts = provenance.getAllArtifacts(node.id);
         if (!artifacts.length) return [];
 
-        const timestamp = (node as any).createdOn || node.metadata?.createdOn || 0;
+        const nodeWithCreatedOn = node as { createdOn?: number; metadata?: { createdOn?: number } };
+        const timestamp = nodeWithCreatedOn.createdOn || nodeWithCreatedOn.metadata?.createdOn || 0;
         const screenshot = artifacts.find((a) => a.artifact.type === 'screenshot')?.artifact.value;
         const names = new Set(
           artifacts

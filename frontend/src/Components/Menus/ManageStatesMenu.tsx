@@ -38,7 +38,6 @@ import { captureScreenshot } from '../../Utils/screenshotUtils';
 import { useThemeConstants } from '../../Theme/mantineTheme';
 import { formatStateDetailName, formatStateDetailValue } from '../../Utils/humanReadableColsVals';
 import { formatTimestamp } from '../../Utils/dates';
-import classes from '../../Shell/Shell.module.css';
 import { Store, ApplicationState } from '../../Store/Store';
 import {
   AGGREGATION_OPTIONS,
@@ -90,6 +89,9 @@ function StateDetails({ state }: { state: ApplicationState }) {
     const items: string[] = [];
     if (explore?.chartConfigs) {
       explore.chartConfigs.forEach((config: ExploreChartConfig) => {
+        if (config.chartType === 'exploreTable') {
+          return;
+        }
         const xLabel = formatStateDetailName(config.xAxisVar);
         const yLabel = formatStateDetailName(config.yAxisVar);
         items.push(`Chart: ${yLabel} vs ${xLabel}`);
