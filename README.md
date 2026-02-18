@@ -39,6 +39,37 @@ Security is a top priority for the Sanguine application. We use a variety of tec
 - Logging: We log all requests to the application and monitor for any unusual activity at backend/sanguine.log.
 - Data encryption: All data is encrypted in transit using SSL.
 
+### Sentry Monitoring Setup (Backend)
+
+The backend now supports Sentry for error monitoring and usage visibility across deployments.
+
+1. Create a Django project in [sentry.io](https://sentry.io/) and copy the DSN.
+2. Set the following environment variables for the backend service:
+   - `SENTRY_DSN` (**secret**): Sentry DSN for your hospital deployment
+   - `SENTRY_ENVIRONMENT`: Environment label (for example `production`, `staging`, `development`, `hospital-a-prod`)
+   - `SENTRY_TRACES_SAMPLE_RATE`: Decimal sample rate for performance traces (for example `0.1`)
+   - `SENTRY_SEND_DEFAULT_PII`: `True` or `False` (recommend `False` unless your compliance team approves otherwise)
+3. Restart the backend container/process after updating environment variables.
+
+When `SENTRY_DSN` is not set, Sentry is disabled.
+
+Production API errors are intentionally generic to avoid exposing internal details. In local development (`DJANGO_DEBUG=True`), full exception behavior/logs are preserved for debugging.
+
+#### Secrets to keep private
+
+At minimum, do **not** expose these values in git, logs, or screenshots:
+
+- `DJANGO_SECRET_KEY`
+- `MARIADB_PASSWORD`
+- `MARIADB_ROOT_PASSWORD`
+- `SENTRY_DSN`
+
+#### VM deployment suggestions for secrets
+
+- Store secrets in a local `.env` file on the VM with restrictive permissions (`chmod 600`) and inject via `docker-compose --env-file`.
+- Prefer hospital-managed secret stores (for example Vault, cloud secret managers, or configuration management encrypted vars) when available.
+- Use one DSN and one environment label per hospital deployment so alerts stay separated by domain/site.
+
 #### Deployment Steps
 
 To run the application in production, use either of the following commands:

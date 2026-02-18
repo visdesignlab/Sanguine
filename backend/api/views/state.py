@@ -78,7 +78,10 @@ def state(request):
 
     elif request.method == "PUT":
         # Get the required information from the request body
-        put = ast.literal_eval(request.body.decode())
+        try:
+            put = ast.literal_eval(request.body.decode())
+        except (ValueError, SyntaxError):
+            return HttpResponseBadRequest("Invalid request payload")
         old_name = put.get("old_name")
         new_name = put.get("new_name")
         new_definition = put.get("new_definition")
@@ -117,7 +120,10 @@ def state(request):
 
     elif request.method == "DELETE":
         # Get the required information from the request body
-        delete = ast.literal_eval(request.body.decode())
+        try:
+            delete = ast.literal_eval(request.body.decode())
+        except (ValueError, SyntaxError):
+            return HttpResponseBadRequest("Invalid request payload")
         name = delete.get("name")
 
         # Delete the matching State object
