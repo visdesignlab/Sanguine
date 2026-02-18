@@ -1,20 +1,21 @@
 import json
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
 
 
 class SubmitEmailGateTests(TestCase):
-    default_origin = "https://intelvia.app"
-
     def setUp(self):
         self.csrf_client = Client(enforce_csrf_checks=True)
+        self.default_origin = settings.CSRF_TRUSTED_ORIGINS[0]
 
     def post_email_gate(self, payload, **extra):
         csrf_response = self.csrf_client.get(
             reverse("email_gate_csrf"),
             HTTP_ORIGIN=self.default_origin,
+            secure=True,
         )
         self.assertEqual(csrf_response.status_code, 200)
         csrf_cookie = self.csrf_client.cookies.get("csrftoken")
@@ -27,6 +28,7 @@ class SubmitEmailGateTests(TestCase):
             content_type="application/json",
             HTTP_ORIGIN=self.default_origin,
             HTTP_X_CSRFTOKEN=csrf_token,
+            secure=True,
             **extra,
         )
 
@@ -156,6 +158,7 @@ class SubmitEmailGateTests(TestCase):
             ),
             content_type="application/json",
             HTTP_ORIGIN=self.default_origin,
+            secure=True,
         )
 
         self.assertEqual(response.status_code, 403)
