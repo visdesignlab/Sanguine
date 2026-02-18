@@ -13,38 +13,29 @@ import {
 } from '@mantine/core';
 
 const EMAIL_GATE_STORAGE_KEY = 'intelvia_email_gate_v1';
-const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
+const EMAIL_GATE_COMPLETED_VALUE = 'true';
 
 type EmailGateSubmitResponse = { ok: true } | { ok: false; error: string };
 
+function persistGateStorage(): void {
+  localStorage.setItem(EMAIL_GATE_STORAGE_KEY, EMAIL_GATE_COMPLETED_VALUE);
+}
+
 export function isEmailGateEnabled(hostname: string = window.location.hostname): boolean {
-  return hostname === 'intelvia.app' || hostname.endsWith('.intelvia.app') || hostname === 'localhost';
+  return hostname === 'intelvia.app' || hostname.endsWith('.intelvia.app');
 }
 
 export function isEmailGateBlocked(hostname: string = window.location.hostname): boolean {
   if (!isEmailGateEnabled(hostname)) return false;
 
-  const gateStorage = localStorage.getItem(EMAIL_GATE_STORAGE_KEY);
-  if (!gateStorage) return true;
-
-  try {
-    const parsed = JSON.parse(gateStorage) as { expiresAt?: number };
-    if (typeof parsed.expiresAt !== 'number') return true;
-    if (parsed.expiresAt <= Date.now()) {
-      localStorage.removeItem(EMAIL_GATE_STORAGE_KEY);
-      return true;
-    }
-    return false;
-  } catch {
-    return true;
-  }
+  return localStorage.getItem(EMAIL_GATE_STORAGE_KEY) !== EMAIL_GATE_COMPLETED_VALUE;
 }
 
 async function submitEmailGate(email: string, institution: string): Promise<EmailGateSubmitResponse> {
   try {
     const response = await fetch(`${import.meta.env.VITE_QUERY_URL}email_gate/submit`, {
       method: 'POST',
-      credentials: 'include',
+      credentials: 'omit',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -56,16 +47,7 @@ async function submitEmailGate(email: string, institution: string): Promise<Emai
       return { ok: false, error: data?.error || 'Unable to submit gate form' };
     }
 
-    const now = Date.now();
-    localStorage.setItem(
-      EMAIL_GATE_STORAGE_KEY,
-      JSON.stringify({
-        completedAt: now,
-        expiresAt: now + ONE_YEAR_MS,
-        email: email.trim().toLowerCase(),
-        institution: institution.trim(),
-      }),
-    );
+    persistGateStorage();
 
     return { ok: true };
   } catch {
