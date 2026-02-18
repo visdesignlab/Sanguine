@@ -1,8 +1,6 @@
 import json
-import threading
 from pathlib import Path
 
-from django.core.management import call_command
 from django.http import HttpResponse, FileResponse, JsonResponse
 from django.conf import settings
 from django.views.decorators.http import require_http_methods
@@ -10,8 +8,6 @@ from django.views.decorators.cache import never_cache
 
 from .decorators.conditional_login_required import conditional_login_required
 from .utils.utils import log_request
-
-_procedure_hierarchy_rebuild_lock = threading.Lock()
 
 
 @require_http_methods(["GET"])
@@ -142,43 +138,17 @@ def get_visit_attributes(request):
 def get_procedure_hierarchy(request):
     log_request(request)
     file_path = Path(settings.BASE_DIR) / "parquet_cache" / "procedure_hierarchy.json"
+    if not file_path.exists():
+        return HttpResponse(
+            "Procedure hierarchy cache not found.",
+            status=404,
+        )
 
-    def _read_cache():
+    try:
         with file_path.open("r", encoding="utf-8") as cache_file:
-            return json.load(cache_file)
-
-    if file_path.exists():
-        try:
-            return JsonResponse(_read_cache())
-        except Exception:
-            # Fall through to regeneration path.
-            pass
-
-    with _procedure_hierarchy_rebuild_lock:
-        if file_path.exists():
-            try:
-                return JsonResponse(_read_cache())
-            except Exception:
-                pass
-
-        try:
-            call_command("generate_procedure_hierarchy_cache")
-        except Exception as exc:
-            return HttpResponse(
-                f"Procedure hierarchy cache regeneration failed. Error: {exc}",
-                status=503,
-            )
-
-        if not file_path.exists():
-            return HttpResponse(
-                "Procedure hierarchy cache regeneration failed: cache file was not created.",
-                status=503,
-            )
-
-        try:
-            return JsonResponse(_read_cache())
-        except Exception as exc:
-            return HttpResponse(
-                f"Procedure hierarchy cache regeneration failed: could not read generated cache. Error: {exc}",
-                status=503,
-            )
+            return JsonResponse(json.load(cache_file))
+    except Exception as exc:
+        return HttpResponse(
+            f"Procedure hierarchy cache could not be read. Error: {exc}",
+            status=503,
+        )
