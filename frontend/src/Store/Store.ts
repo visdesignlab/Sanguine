@@ -330,6 +330,15 @@ export class RootStore {
         },
       }), { [filterKey]: value });
     },
+    updateProcedureFilters: (filters: Pick<ApplicationState['filterValues'], 'departmentIds' | 'procedureIds'>) => {
+      this.applyAction('Update Department and Procedure Filters', (state, nextFilters) => ({
+        ...state,
+        filterValues: {
+          ...state.filterValues,
+          ...nextFilters,
+        },
+      }), filters);
+    },
     resetAllFilters: () => {
       this.applyAction('Reset All Filters', (state) => {
         const initial = this.initialFilterValues;
@@ -1409,6 +1418,13 @@ export class RootStore {
 
     // Update the filter value
     this.actions.updateFilter(key as keyof ApplicationState['filterValues'], val as ApplicationState['filterValues'][keyof ApplicationState['filterValues']]);
+  }
+
+  setProcedureFilters(departmentIds: string[], procedureIds: string[]) {
+    this.actions.updateProcedureFilters({
+      departmentIds: [...departmentIds],
+      procedureIds: [...procedureIds],
+    });
   }
 
   async calculateDefaultFilterValues() {

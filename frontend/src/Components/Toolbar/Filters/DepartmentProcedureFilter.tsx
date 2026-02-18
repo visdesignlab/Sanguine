@@ -250,8 +250,10 @@ export function DepartmentProcedureFilter() {
         targetDepartment.procedures.forEach((procedure) => selectedProcedureIdsSet.add(procedure.id));
       }
 
-      store.setFilterValue('departmentIds', Array.from(selectedDepartmentIdsSet).sort());
-      store.setFilterValue('procedureIds', Array.from(selectedProcedureIdsSet).sort());
+      store.setProcedureFilters(
+        Array.from(selectedDepartmentIdsSet).sort(),
+        Array.from(selectedProcedureIdsSet).sort(),
+      );
     };
 
     const toggleProcedureSelectionById = (procedureId: string) => {
@@ -275,8 +277,10 @@ export function DepartmentProcedureFilter() {
         }
       }
 
-      store.setFilterValue('departmentIds', Array.from(selectedDepartmentIdsSet).sort());
-      store.setFilterValue('procedureIds', Array.from(selectedProcedureIdsSet).sort());
+      store.setProcedureFilters(
+        Array.from(selectedDepartmentIdsSet).sort(),
+        Array.from(selectedProcedureIdsSet).sort(),
+      );
     };
 
     const toggleDepartmentExpanded = (departmentId: string) => {
