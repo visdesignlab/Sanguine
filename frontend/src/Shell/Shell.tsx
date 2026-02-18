@@ -298,7 +298,7 @@ export const Shell = observer(() => {
                 <Menu.Item
                   leftSection={<IconLogout size={14} />}
                   onClick={async () => {
-                    await fetch(apiPath('accounts/logout'), { credentials: 'include' });
+                    await fetch(apiPath('accounts/logout/'), { credentials: 'include' });
                   }}
                   disabled
                 >

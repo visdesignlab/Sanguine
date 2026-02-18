@@ -38,5 +38,5 @@ export const simulateAPIClick = () => {
 };
 
 export const logoutHandler = () => {
-  window.location.replace(apiPath('accounts/logout'));
+  window.location.replace(apiPath('accounts/logout/'));
 };
