@@ -645,7 +645,7 @@ export type ScatterPlotData = ScatterChartSeries[];
 // --- Explore Table ---
 
 // Column options
-const RBC_COUNTS = ['1', '2', '3', '4', 'above_5'] as const;
+const RBC_COUNTS = ['0', '1', '2', '3', '4', 'above_5'] as const;
 const RBC_PERCENT_OPTIONS = RBC_COUNTS.map((count) => ({
   value: `percent_${count}_rbc`,
   label: count === 'above_5' ? '≥5 RBC' : `${count} RBC`,

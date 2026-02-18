@@ -40,6 +40,12 @@ export const presetStateCards: PresetGroup[] = [
                 title: 'Cases',
               },
               {
+                colVar: 'percent_0_rbc',
+                aggregation: 'avg',
+                type: 'heatmap',
+                title: '0 RBC',
+              },
+              {
                 colVar: 'percent_1_rbc',
                 aggregation: 'avg',
                 type: 'heatmap',

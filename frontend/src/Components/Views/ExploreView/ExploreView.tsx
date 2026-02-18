@@ -111,6 +111,12 @@ export function ExploreView() {
             title: 'Cases',
           },
           {
+            colVar: 'percent_0_rbc',
+            aggregation: aggregation as 'sum' | 'avg',
+            type: 'heatmap',
+            title: '0 RBC',
+          },
+          {
             colVar: 'percent_1_rbc',
             aggregation: aggregation as 'sum' | 'avg',
             type: 'heatmap',
