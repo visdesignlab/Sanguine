@@ -140,7 +140,7 @@ export function FilterPanel() {
               tooltipLabel="Number of blood product filters applied"
               resetFunc={() => store.resetBloodComponentFilters()}
             />
-            <Accordion.Panel>
+            <Accordion.Panel style={{ display: 'flex', flexDirection: 'column' }}>
               {BLOOD_PRODUCTS_ARRAY.map((bloodComponent, i) => (
                 <Tooltip key={`${bloodComponent}-${i}`} label={filterToolTip} position="top-start">
                   <Input.Wrapper
@@ -148,9 +148,7 @@ export function FilterPanel() {
                     mb="lg"
                     styles={{ label: { color: rangeChanged(store, bloodComponent) ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   >
-
                     <FilterComponent data={store.getHistogramData(bloodComponent) || []} unitName={bloodComponent} />
-
                   </Input.Wrapper>
                 </Tooltip>
               ))}

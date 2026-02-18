@@ -12,7 +12,7 @@ type NumberArrayKeys<T> = {
   [K in keyof T]: T[K] extends number[] ? K : never
 }[keyof T];
 
-export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: { varName: NumberArrayKeys<ApplicationState['filterValues']>; paddingLeft: number; paddingRight: number }) {
+export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: { varName: NumberArrayKeys<ApplicationState['filterValues']>; paddingLeft?: number; paddingRight?: number }) {
   const store = useContext(Store);
 
   // Initial filter range & store filter range

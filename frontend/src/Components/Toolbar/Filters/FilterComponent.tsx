@@ -3,6 +3,7 @@ import {
 } from 'react';
 import { useObserver } from 'mobx-react';
 import { range, scaleBand, scaleLinear } from 'd3';
+import { Flex } from '@mantine/core';
 import { Store } from '../../../Store/Store';
 import { HistogramData } from '../../../Types/database';
 import { BLOOD_PRODUCT_COLOR_THEME } from '../../../Types/application';
@@ -10,9 +11,10 @@ import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 import { FilterRangeSlider } from './FilterRangeSlider';
 import { BloodComponent } from '../../../Types/bloodProducts';
 
-export function FilterComponent({ data, unitName }: { unitName: BloodComponent, data: HistogramData}) {
+export function FilterComponent({ data, unitName }: { unitName: BloodComponent | 'los', data: HistogramData}) {
   const store = useContext(Store);
   const svgRef = useRef<SVGSVGElement>(null);
+  const svgHeight = 40;
 
   const maxUnit = useMemo(() => {
     const unitBins = data ? data.map((d) => parseInt(d.units, 10)) : [];
@@ -25,51 +27,54 @@ export function FilterComponent({ data, unitName }: { unitName: BloodComponent, 
     return scaleBand(dataBins, [0, svgWidth]);
   }, [maxUnit, unitName]);
 
-  const sliderLeftPadding = useMemo(
-    () => (bandScale()('0') ?? 0) + 0.5 * bandScale().bandwidth() || 0,
-    [bandScale],
-  );
-  const sliderRightPadding = useMemo(
-    () => (svgRef.current ? svgRef.current.clientWidth : 0) - (bandScale()(String(maxUnit)) ?? 0),
-    [bandScale, maxUnit],
-  );
-
   const maxCountExcludeZeroUnit = useMemo(() => (data ? Math.max(...data.map((d) => (d.units === '0' ? 0 : d.count))) : 0), [data]);
 
-  const barHeightScale = useCallback(() => scaleLinear([0, maxCountExcludeZeroUnit], [0, 30]).clamp(true), [maxCountExcludeZeroUnit]);
+  const barHeightScale = useCallback(() => scaleLinear([0, maxCountExcludeZeroUnit], [0, svgHeight]).clamp(true), [maxCountExcludeZeroUnit]);
 
   return useObserver(() => {
     const bgColor = getComputedStyle(document.body).backgroundColor;
     return (
-      <div style={{ width: '100%' }}>
-        <svg style={{ display: store.uiState.showFilterHistograms ? 'flex' : 'none' }} ref={svgRef} height={30} width="calc(100% - 12px)">
-          <defs>
-            <linearGradient id={`grad${unitName}`} x1="0%" y1="0%" x2="0%" y2="100%">
-              {/* start color */}
-              <stop offset="0%" stopColor={bgColor} />
-              <stop offset="40%" stopColor={BLOOD_PRODUCT_COLOR_THEME[unitName]} />
-              <stop offset="100%" stopColor={BLOOD_PRODUCT_COLOR_THEME[unitName]} />
-              {/* end color (background) */}
-            </linearGradient>
-          </defs>
-          {data && data.map((d, i) => (
-            <rect
-              key={i}
-              x={bandScale()(d.units) || 0}
-              y={30 - barHeightScale()(d.count)}
-              width={bandScale().bandwidth()}
-              height={barHeightScale()(d.count)}
-              fill={
+      <>
+        <Flex
+          justify="center"
+          style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
+        >
+          <svg style={{ display: store.uiState.showFilterHistograms ? 'flex' : 'none' }} ref={svgRef} height={svgHeight} width="100%">
+            <defs>
+              <linearGradient id={`grad${unitName}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor={bgColor} />
+                <stop offset="40%" stopColor={BLOOD_PRODUCT_COLOR_THEME[unitName]} />
+                <stop offset="100%" stopColor={BLOOD_PRODUCT_COLOR_THEME[unitName]} />
+              </linearGradient>
+            </defs>
+            {data && data.map((d, i) => (
+              <rect
+                key={i}
+                x={bandScale()(d.units) || 0}
+                y={svgHeight - barHeightScale()(d.count)}
+                width={bandScale().bandwidth()}
+                height={barHeightScale()(d.count)}
+                fill={
               d.count
                 > maxCountExcludeZeroUnit ? `url(#grad${unitName})` : (BLOOD_PRODUCT_COLOR_THEME[unitName] || DEFAULT_DATA_COLOR)
               }
-            >
-              <title>{`${d.units}:${d.count}`}</title>
-            </rect>
-          ))}
-        </svg>
-        <FilterRangeSlider paddingLeft={store.uiState.showFilterHistograms ? sliderLeftPadding : 0} paddingRight={store.uiState.showFilterHistograms ? sliderRightPadding : 0} varName={unitName} />
-      </div>
+              >
+                <title>{`${d.units}:${d.count}`}</title>
+              </rect>
+            ))}
+          </svg>
+        </Flex>
+        <FilterRangeSlider
+          paddingLeft={store.uiState.showFilterHistograms ? ((bandScale()('0') ?? 0) + 0.5 * bandScale().bandwidth() || 0) : 0}
+          paddingRight={
+            store.uiState.showFilterHistograms
+              ? ((svgRef.current ? svgRef.current.clientWidth : 0)
+              - ((bandScale()(String(maxUnit)) ?? 0)
+               + bandScale().bandwidth() * 0.5)) : 0
+}
+          varName={unitName}
+        />
+      </>
     );
   });
 }
