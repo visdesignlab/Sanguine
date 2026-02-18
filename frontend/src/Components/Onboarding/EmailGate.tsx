@@ -11,6 +11,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
+import { apiPath } from '../../Utils/api';
 
 const EMAIL_GATE_STORAGE_KEY = 'intelvia_email_gate_v1';
 const EMAIL_GATE_COMPLETED_VALUE = 'true';
@@ -48,7 +49,7 @@ async function getEmailGateCsrfToken(): Promise<string | null> {
     return existingToken;
   }
 
-  const csrfResponse = await fetch(`${import.meta.env.VITE_QUERY_URL}email_gate/csrf`, {
+  const csrfResponse = await fetch(apiPath('email_gate/csrf'), {
     method: 'GET',
     credentials: 'include',
   });
@@ -82,7 +83,7 @@ async function submitEmailGate(email: string, institution: string): Promise<Emai
       return { ok: false, error: 'Unable to submit gate form' };
     }
 
-    const response = await fetch(`${import.meta.env.VITE_QUERY_URL}email_gate/submit`, {
+    const response = await fetch(apiPath('email_gate/submit'), {
       method: 'POST',
       credentials: 'include',
       headers: {

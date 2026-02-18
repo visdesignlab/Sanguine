@@ -1,3 +1,5 @@
+import { apiPath } from '../Utils/api';
+
 function getCookie(name: string) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -14,7 +16,7 @@ function getCookie(name: string) {
 }
 
 export async function whoamiAPICall() {
-  const result = await fetch(`${import.meta.env.VITE_QUERY_URL}whoami`, {
+  const result = await fetch(apiPath('whoami'), {
     method: 'GET',
     credentials: 'include',
     headers: {
@@ -22,12 +24,12 @@ export async function whoamiAPICall() {
     },
   });
   if (result.status !== 200) {
-    window.location.replace(`${import.meta.env.VITE_QUERY_URL}accounts/login/`);
+    window.location.replace(apiPath('accounts/login/'));
   }
 }
 
 export const simulateAPIClick = () => {
-  fetch(`${import.meta.env.VITE_QUERY_URL}accounts/login/`, {
+  fetch(apiPath('accounts/login/'), {
     method: 'GET',
     credentials: 'include',
   });
@@ -36,5 +38,5 @@ export const simulateAPIClick = () => {
 };
 
 export const logoutHandler = () => {
-  window.location.replace(`${import.meta.env.VITE_QUERY_URL}accounts/logout`);
+  window.location.replace(apiPath('accounts/logout/'));
 };

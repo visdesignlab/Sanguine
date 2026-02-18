@@ -37,6 +37,7 @@ import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
 import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
 import { SavedStatesMenu } from '../Components/Menus/ManageStatesMenu';
+import { apiPath } from '../Utils/api';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -297,7 +298,7 @@ export const Shell = observer(() => {
                 <Menu.Item
                   leftSection={<IconLogout size={14} />}
                   onClick={async () => {
-                    await fetch(`${import.meta.env.VITE_QUERY_URL}accounts/logout`, { credentials: 'include' });
+                    await fetch(apiPath('accounts/logout/'), { credentials: 'include' });
                   }}
                   disabled
                 >

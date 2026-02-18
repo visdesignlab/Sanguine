@@ -11,7 +11,11 @@ services:
       - "8000:8000"
     volumes:
       - .:/app:Z
-    command: poetry run python manage.py runserver 0.0.0.0:8000
+    entrypoint: []
+    command:
+      - /bin/sh
+      - -c
+      - poetry run python manage.py migrate --noinput && poetry run python manage.py runserver 0.0.0.0:8000
     tty: true
 
   mariadb:
@@ -24,6 +28,7 @@ services:
       - ./mariadb/initdb:/docker-entrypoint-initdb.d:z
 
   frontend:
+    profiles: ["devcontainer"]
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -33,6 +38,8 @@ services:
       - .:/app:Z
     env_file:
       - .env
+    environment:
+      VITE_DEV_PROXY_TARGET: http://backend:8000
     command: sh -c "while true; do sleep 1000; done"
 
 volumes:
