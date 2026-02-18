@@ -95,6 +95,13 @@ poetry run python manage.py mock50million
 poetry run python manage.py generate_parquets
 ```
 
+To generate only one artifact:
+
+```bash
+poetry run python manage.py generate_parquets --generate visit_attributes
+poetry run python manage.py generate_parquets --generate procedure_hierarchy
+```
+
     
 1. The database should now be populated with mock data and you should be able to see it in the frontend by adding a chart to the dashboard.
 
