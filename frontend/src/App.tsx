@@ -12,6 +12,7 @@ import {
   isEmailGateBlocked,
 } from './Components/Onboarding/EmailGate';
 import { initDuckDB } from './duckdb';
+import { apiPath } from './Utils/api';
 import type { ProcedureHierarchyResponse } from './Types/application';
 
 function App() {
@@ -41,17 +42,9 @@ function App() {
     async function fetchAllVisits() {
       setDataLoading(true);
       try {
-        const queryUrl = import.meta.env.VITE_QUERY_URL;
-        if (typeof queryUrl === 'undefined' || !queryUrl) {
-          console.error('VITE_QUERY_URL is undefined');
-          setDataLoadingFailed(true);
-          setDataLoading(false);
-          return;
-        }
-
         const fetchProcedureHierarchy = async () => {
           try {
-            const hierarchyRes = await fetch(`${queryUrl}get_procedure_hierarchy`);
+            const hierarchyRes = await fetch(apiPath('get_procedure_hierarchy'));
             if (!hierarchyRes.ok) {
               throw new Error(`HTTP error! status: ${hierarchyRes.status}`);
             }
@@ -76,7 +69,7 @@ function App() {
         store.duckDB = conn!;
 
         // Fetch visit attributes Parquet file from backend
-        const res = await fetch(`${queryUrl}get_visit_attributes`);
+        const res = await fetch(apiPath('get_visit_attributes'));
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }

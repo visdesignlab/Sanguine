@@ -24,6 +24,7 @@ services:
       - ./mariadb/initdb:/docker-entrypoint-initdb.d:z
 
   frontend:
+    profiles: ["devcontainer"]
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -33,6 +34,8 @@ services:
       - .:/app:Z
     env_file:
       - .env
+    environment:
+      VITE_DEV_PROXY_TARGET: http://backend:8000
     command: sh -c "while true; do sleep 1000; done"
 
 volumes:
