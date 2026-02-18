@@ -45,10 +45,13 @@ const PROVIDER_NAMES: Record<string, string> = {
   // Fallback pattern
 };
 
-const getProviderName = (id: string) => {
-  const cleanId = id.replace(/^Dr\.\s*/, '');
-  const fullName = PROVIDER_NAMES[cleanId] || cleanId;
-  return `Dr. ${fullName}`;
+const getProviderName = (id: string, selectedX: string) => {
+  if (selectedX === 'surgeon' || selectedX === 'anesthesiologist') {
+    const cleanId = id.replace(/^Dr\.\s*/, '');
+    const fullName = PROVIDER_NAMES[cleanId] || cleanId;
+    return `Dr. ${fullName}`;
+  }
+  return id;
 };
 // Removed getVisitLabel usage or changed it to identity to remove "Visit " prefix
 const getVisitLabel = (_id: string, label: string) => label.replace(/^Visit\s*/, '');
@@ -88,7 +91,7 @@ const LAB_CONFIGS: Record<string, LabConfig> = {
     max: 350,
     preKey: 'preFerritin',
     postKey: 'postFerritin',
-    defaultTargets: { preMin: 100, postMin: 150, postMax: 250 },
+    defaultTargets: { preMin: 32.5, postMin: 12.5, postMax: 22.5 },
   },
   platelet: {
     label: 'Platelet Count',
@@ -97,7 +100,7 @@ const LAB_CONFIGS: Record<string, LabConfig> = {
     max: 500,
     preKey: 'prePlatelet',
     postKey: 'postPlatelet',
-    defaultTargets: { preMin: 150, postMin: 100, postMax: 200 },
+    defaultTargets: { preMin: 147.5, postMin: 47.5, postMax: 97.5 },
   },
   fibrinogen: {
     label: 'Fibrinogen',
@@ -106,7 +109,7 @@ const LAB_CONFIGS: Record<string, LabConfig> = {
     max: 500,
     preKey: 'preFibrinogen',
     postKey: 'postFibrinogen',
-    defaultTargets: { preMin: 200, postMin: 150, postMax: 250 },
+    defaultTargets: { preMin: 197.5, postMin: 97.5, postMax: 147.5 },
   },
   inr: {
     label: 'INR',
@@ -115,7 +118,7 @@ const LAB_CONFIGS: Record<string, LabConfig> = {
     max: 2,
     preKey: 'preINR',
     postKey: 'postINR',
-    defaultTargets: { preMin: 1.1, postMin: 1.5, postMax: 1.2 },
+    defaultTargets: { preMin: 1.15, postMin: 1.35, postMax: 1.55 },
   },
 };
 
@@ -868,7 +871,7 @@ const DumbbellChartContent = memo(({
             return (
               <g key={provider.id}>
                 {/* Provider Bucket Body (Sort Trigger) */}
-                <Tooltip label={getProviderName(provider.id)} openDelay={200}>
+                <Tooltip label={getProviderName(provider.id, selectedX)} openDelay={200}>
                   <g>
                     <rect
                       x={providerX}
@@ -895,32 +898,6 @@ const DumbbellChartContent = memo(({
                     )}
                   </g>
                 </Tooltip>
-
-                {/* Average Lines */}
-                {!isProvCollapsed && (
-                  <>
-                    {/* Pre-op Average Line */}
-                    {showMedian && showPre && avgPre !== null && (
-                      <AverageLine
-                        x1={providerX}
-                        x2={providerX + providerWidth}
-                        y={yScale(avgPre)}
-                        label={`Average Pre-op: ${avgPre.toFixed(1)} for ${getProviderName(provider.id)}`}
-                        color={theme.colors.teal[4]}
-                      />
-                    )}
-                    {/* Post-op Average Line */}
-                    {showMedian && showPost && avgPost !== null && (
-                      <AverageLine
-                        x1={providerX}
-                        x2={providerX + providerWidth}
-                        y={yScale(avgPost)}
-                        label={`Average Post-op: ${avgPost.toFixed(1)} for ${getProviderName(provider.id)}`}
-                        color={theme.colors.indigo[4]}
-                      />
-                    )}
-                  </>
-                )}
 
                 {/* Provider Label & Sort Indicator */}
                 {!isProvCollapsed ? (
@@ -985,7 +962,7 @@ const DumbbellChartContent = memo(({
                   />
                 )}
 
-                {/* Internal Visits */}
+                {/* Internal Visits - Pass 1: Backgrounds & Labels */}
                 {!isProvCollapsed && (
                   <g>
                     {(() => {
@@ -1045,8 +1022,6 @@ const DumbbellChartContent = memo(({
                                     )}
                                   </g>
                                 </Tooltip>
-                                {/* Provider/Visit Label Grouping was needed? No, this is inside map loop, but we need Fragment if multiple root elements? */}
-                                {/* Actually, the map callback returns a <g> so we are fine returning multiple elements inside that <g> */}
                                 {/* Visit Label & Sort Indicator */}
                                 {!isVisitCollapsed ? (
                                   <>
@@ -1109,8 +1084,50 @@ const DumbbellChartContent = memo(({
                                 )}
                               </>
                             )}
+                          </g>
+                        );
+                      });
+                    })()}
+                  </g>
+                )}
 
-                            {/* Cases (Dumbbells) */}
+                {/* Average Lines - rendered AFTER backgrounds, BEFORE dots */}
+                {!isProvCollapsed && (
+                  <>
+                    {showMedian && showPre && avgPre !== null && (
+                      <AverageLine
+                        x1={providerX}
+                        x2={providerX + providerWidth}
+                        y={yScale(avgPre)}
+                        label={`Average Pre-op: ${avgPre.toFixed(1)} for ${getProviderName(provider.id, selectedX)}`}
+                        color={theme.colors.teal[4]}
+                      />
+                    )}
+                    {showMedian && showPost && avgPost !== null && (
+                      <AverageLine
+                        x1={providerX}
+                        x2={providerX + providerWidth}
+                        y={yScale(avgPost)}
+                        label={`Average Post-op: ${avgPost.toFixed(1)} for ${getProviderName(provider.id, selectedX)}`}
+                        color={theme.colors.indigo[4]}
+                      />
+                    )}
+                  </>
+                )}
+
+                {/* Internal Visits - Pass 2: Dumbbell Dots */}
+                {!isProvCollapsed && (
+                  <g>
+                    {(() => {
+                      let visitX2 = providerX;
+                      return provider.visits.map((visit) => {
+                        const isVisitCollapsed = collapsedVisits.has(visit.id);
+                        const visitWidth = isVisitCollapsed ? 40 : Math.max(visit.cases.length * CHAR_WIDTH_CASE, EMPTY_VISIT_WIDTH);
+                        const currentVisitX = visitX2;
+                        visitX2 += visitWidth;
+
+                        return (
+                          <g key={visit.id}>
                             {!isVisitCollapsed && visit.cases.map((d, i) => {
                               const caseX = currentVisitX + i * CHAR_WIDTH_CASE + CHAR_WIDTH_CASE / 2;
                               return (
