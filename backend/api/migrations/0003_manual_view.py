@@ -3,7 +3,7 @@ from django.db import migrations
 
 def create_materialize_proc(apps, schema_editor):
     create_sql = """
-    CREATE PROCEDURE intelvia.materializeVisitAttributes()
+    CREATE PROCEDURE materializeVisitAttributes()
     BEGIN
         TRUNCATE TABLE VisitAttributes;
 
@@ -219,14 +219,14 @@ def create_materialize_proc(apps, schema_editor):
     """
     conn = schema_editor.connection
     with conn.cursor() as cursor:
-        cursor.execute("DROP PROCEDURE IF EXISTS intelvia.materializeVisitAttributes")
+        cursor.execute("DROP PROCEDURE IF EXISTS materializeVisitAttributes")
         cursor.execute(create_sql)
 
 
 def drop_materialize_proc(apps, schema_editor):
     conn = schema_editor.connection
     with conn.cursor() as cursor:
-        cursor.execute("DROP PROCEDURE IF EXISTS intelvia.materializeVisitAttributes")
+        cursor.execute("DROP PROCEDURE IF EXISTS materializeVisitAttributes")
 
 
 class Migration(migrations.Migration):
@@ -310,7 +310,7 @@ class Migration(migrations.Migration):
             CREATE EVENT IF NOT EXISTS updateVisitAttributesEvent
             ON SCHEDULE EVERY 1 DAY
             STARTS (CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 4 HOUR)
-            DO CALL intelvia.materializeVisitAttributes();
+            DO CALL materializeVisitAttributes();
             """,
             reverse_sql="""
             DROP EVENT IF EXISTS updateVisitAttributesEvent;
