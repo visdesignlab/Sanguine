@@ -28,6 +28,7 @@ import { FilterHeader } from './FilterHeader';
 import { DepartmentProcedureFilter } from './DepartmentProcedureFilter';
 import classes from '../../../Shell/Shell.module.css';
 import { BLOOD_PRODUCT_COLOR_THEME } from '../../../Types/application';
+import { FilterComponent } from './FilterComponent';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
 
@@ -151,19 +152,7 @@ export function FilterPanel() {
                     justify="center"
                     style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
-                    <BarChart
-                      h={30}
-                      style={{ width: 'calc(100% - 12px)' }}
-                      barProps={{ barSize: '100%' }}
-                      data={store.rbc_unitsHistogramData || []}
-                      dataKey="units"
-                      withXAxis={false}
-                      withYAxis={false}
-                      withTooltip={false}
-                      gridAxis="none"
-                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.rbc_units }]}
-                      ml={1}
-                    />
+                    <FilterComponent data={store.rbc_unitsHistogramData || []} unitName="rbc_units" />
                   </Flex>
                   <FilterRangeSlider varName="rbc_units" />
                 </Input.Wrapper>
@@ -179,19 +168,8 @@ export function FilterPanel() {
                     justify="center"
                     style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
-                    <BarChart
-                      h={30}
-                      style={{ width: 'calc(100% - 12px)' }}
-                      barProps={{ barSize: '100%' }}
-                      data={store.ffp_unitsHistogramData || []}
-                      dataKey="units"
-                      withXAxis={false}
-                      withYAxis={false}
-                      withTooltip={false}
-                      gridAxis="none"
-                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.ffp_units }]}
-                      ml={1}
-                    />
+                    <FilterComponent data={store.ffp_unitsHistogramData || []} unitName="ffp_units" />
+
                   </Flex>
                   <FilterRangeSlider varName="ffp_units" />
                 </Input.Wrapper>
@@ -207,19 +185,7 @@ export function FilterPanel() {
                     justify="center"
                     style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
-                    <BarChart
-                      h={30}
-                      style={{ width: 'calc(100% - 12px)' }}
-                      barProps={{ barSize: '100%' }}
-                      data={store.plt_unitsHistogramData || []}
-                      dataKey="units"
-                      withXAxis={false}
-                      withYAxis={false}
-                      withTooltip={false}
-                      gridAxis="none"
-                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.plt_units }]}
-                      ml={1}
-                    />
+                    <FilterComponent data={store.plt_unitsHistogramData || []} unitName="plt_units" />
                   </Flex>
                   <FilterRangeSlider varName="plt_units" />
                 </Input.Wrapper>
@@ -235,19 +201,7 @@ export function FilterPanel() {
                     justify="center"
                     style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
-                    <BarChart
-                      h={30}
-                      style={{ width: 'calc(100% - 12px)' }}
-                      barProps={{ barSize: '100%' }}
-                      data={store.cryo_unitsHistogramData || []}
-                      dataKey="units"
-                      withXAxis={false}
-                      withYAxis={false}
-                      withTooltip={false}
-                      gridAxis="none"
-                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.cryo_units }]}
-                      ml={1}
-                    />
+                    <FilterComponent data={store.cryo_unitsHistogramData || []} unitName="cryo_units" />
                   </Flex>
                   <FilterRangeSlider varName="cryo_units" />
                 </Input.Wrapper>
@@ -263,19 +217,7 @@ export function FilterPanel() {
                     justify="center"
                     style={{ display: store.state.ui.showFilterHistograms ? 'flex' : 'none' }}
                   >
-                    <BarChart
-                      h={30}
-                      style={{ width: 'calc(100% - 12px)' }}
-                      barProps={{ barSize: '100%' }}
-                      data={store.cell_saver_mlHistogramData || []}
-                      dataKey="units"
-                      withXAxis={false}
-                      withYAxis={false}
-                      withTooltip={false}
-                      gridAxis="none"
-                      series={[{ name: 'count', color: BLOOD_PRODUCT_COLOR_THEME.cell_saver_ml }]}
-                      ml={1}
-                    />
+                    <FilterComponent data={store.cell_saver_mlHistogramData || []} unitName="cell_saver_ml" />
                   </Flex>
                   <FilterRangeSlider varName="cell_saver_ml" />
                 </Input.Wrapper>

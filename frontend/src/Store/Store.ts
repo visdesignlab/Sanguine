@@ -31,20 +31,18 @@ import {
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
 import { expandTimePeriod } from '../Utils/expandTimePeriod';
+import { HistogramData } from '../Types/database';
 
-// endregion
-
-// region Constants
 export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
-export const ProductMaximums = {
-  rbc_units: 10,
-  ffp_units: 10,
-  plt_units: 10,
-  cryo_units: 50,
-  cell_saver_ml: 10000,
-  los: 30,
-};
+// export const ProductMaximums = {
+//   rbc_units: 10,
+//   ffp_units: 10,
+//   plt_units: 10,
+//   cryo_units: 50,
+//   cell_saver_ml: 10000,
+//   los: 30,
+// };
 
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
@@ -266,7 +264,7 @@ export class RootStore {
     procedureIds: [] as string[],
   };
 
-  histogramData: Record<string, { units: string, count: number }[] | undefined> = {};
+  histogramData: Record<string, HistogramData> = {};
 
   get rbc_unitsHistogramData() { return this.histogramData.rbc_units; }
 
@@ -1034,7 +1032,7 @@ export class RootStore {
 
     // Get the data from each chart, grouped by month, quarter, and year
     const query = `
-      SELECT 
+      SELECT
         month,
         quarter,
         year,
@@ -1613,22 +1611,40 @@ export class RootStore {
       // Get the min and max values for the component, and the number of bins
       const [minRange, maxRange] = filters[component as keyof typeof filters] as [number, number];
       const numBins = Math.min(20, Math.max(1, maxRange - minRange));
-      // Cap the max range to the product maximum
-      const productMaximum = ProductMaximums[component as keyof typeof ProductMaximums] || maxRange;
-      // Query to get the counts for each bin
+
       const result = await this.duckDB!.query(`
-        WITH bins AS (
-          SELECT equi_width_bins(min(${component}), LEAST(${productMaximum}, max(${component})), ${numBins}, false) AS bin
-          FROM filteredVisits
-        )
-        SELECT HISTOGRAM(${component}, bins.bin) AS histogram
-        FROM filteredVisits, bins;
-      `);
+  WITH binned AS (
+    SELECT
+      CASE
+        WHEN '${component}' = 'cell_saver_ml' THEN
+          CASE
+            WHEN ${component} = 0 THEN 0
+            ELSE CEIL(${component} / 50.0) * 50
+          END
+        ELSE
+          ${component}
+      END AS bin_value
+    FROM filteredVisits
+  )
+  SELECT
+    bin_value,
+    COUNT(*) AS count
+  FROM binned
+  GROUP BY bin_value
+  ORDER BY bin_value;
+`);
       // Map the result to the histogram data
-      histogramData[component] = result.toArray().flatMap((row) => {
-        const { histogram } = row.toJSON();
-        return Object.entries(histogram.toJSON()).map(([units, count]) => ({ units, count: Number(count) }));
-      });
+      histogramData[component] = result
+        .toArray()
+        .map((row) => {
+          // eslint-disable-next-line camelcase
+          const { bin_value, count } = row.toJSON();
+
+          return {
+            units: String(bin_value),
+            count: Number(count),
+          };
+        });
     }));
     this.histogramData = histogramData;
   }
