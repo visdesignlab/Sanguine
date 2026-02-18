@@ -1,9 +1,10 @@
-from django.db import connection
-from django.http import HttpResponse, FileResponse
+import json
+from pathlib import Path
+
+from django.http import HttpResponse, FileResponse, JsonResponse
 from django.conf import settings
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.cache import never_cache
-from pathlib import Path
 
 from .decorators.conditional_login_required import conditional_login_required
 from .utils.utils import log_request
@@ -129,3 +130,25 @@ def get_visit_attributes(request):
     if not file_path.exists():
         return HttpResponse("Parquet file not found. Please generate it first.", status=404)
     return FileResponse(open(file_path, 'rb'), content_type='application/vnd.apache.arrow.file')
+
+
+@never_cache
+@require_http_methods(["GET"])
+@conditional_login_required
+def get_procedure_hierarchy(request):
+    log_request(request)
+    file_path = Path(settings.BASE_DIR) / "parquet_cache" / "procedure_hierarchy.json"
+    if not file_path.exists():
+        return HttpResponse(
+            "Procedure hierarchy cache not found.",
+            status=404,
+        )
+
+    try:
+        with file_path.open("r", encoding="utf-8") as cache_file:
+            return JsonResponse(json.load(cache_file))
+    except Exception as exc:
+        return HttpResponse(
+            f"Procedure hierarchy cache could not be read. Error: {exc}",
+            status=503,
+        )

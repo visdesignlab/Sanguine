@@ -86,13 +86,14 @@ Now, to run the devcontainer using vscode, follow these steps:
 
 ```bash
 docker-compose exec -it backend bash
-poetry run python manage.py recreatedatabase
+poetry run python manage.py recreatedata
 ```
 
 To step through each step of the process instead, run these:
 
 ```bash
 docker-compose exec -it backend bash
+poetry run python manage.py destroydata
 poetry run python manage.py migrate api
 poetry run python manage.py mock50million
 poetry run python manage.py generate_parquets

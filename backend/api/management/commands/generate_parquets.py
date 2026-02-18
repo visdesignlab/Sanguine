@@ -2,12 +2,16 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.db import connection
 from pathlib import Path
+from collections import defaultdict
 import pyarrow as pa
 import pyarrow.parquet as pq
+
+from api.views.utils.cpt_hierarchy import get_cpt_hierarchy, normalize_cpt_code
 
 
 class Command(BaseCommand):
     help = "Generate a Parquet cache of the database data"
+    BILLING_FETCH_BATCH_SIZE = 50000
 
     def handle(self, *args, **kwargs):
         # Define output path
@@ -28,6 +32,42 @@ class Command(BaseCommand):
             visits = [dict(zip(columns, row)) for row in rows]
             for v in visits:
                 v["los"] = float(v["los"]) if v["los"] is not None else None
+
+            hierarchy = get_cpt_hierarchy()
+            code_map = hierarchy.code_map
+
+            visit_departments: dict[int, set[str]] = defaultdict(set)
+            visit_procedures: dict[int, set[str]] = defaultdict(set)
+
+            cursor.execute(
+                """
+                SELECT DISTINCT visit_no, cpt_code
+                FROM BillingCode
+                WHERE cpt_code IS NOT NULL AND cpt_code <> ''
+                """
+            )
+
+            while True:
+                billing_rows = cursor.fetchmany(self.BILLING_FETCH_BATCH_SIZE)
+                if not billing_rows:
+                    break
+
+                for visit_no, raw_cpt_code in billing_rows:
+                    normalized_cpt_code = normalize_cpt_code(raw_cpt_code)
+                    if not normalized_cpt_code:
+                        continue
+                    mapped = code_map.get(normalized_cpt_code)
+                    if not mapped:
+                        continue
+
+                    department_id, _department_name, procedure_id, _procedure_name = mapped
+                    visit_departments[visit_no].add(department_id)
+                    visit_procedures[visit_no].add(procedure_id)
+
+            for v in visits:
+                visit_no = v["visit_no"]
+                v["department_ids"] = sorted(visit_departments.get(visit_no, set()))
+                v["procedure_ids"] = sorted(visit_procedures.get(visit_no, set()))
 
         # Define schema for visit attributes
         visit_attributes_schema = pa.schema([
@@ -71,7 +111,10 @@ class Command(BaseCommand):
             pa.field("attending_provider", pa.string(), nullable=True),
             pa.field("attending_provider_id", pa.string(), nullable=True),
             pa.field("attending_provider_line", pa.uint16(), nullable=False),
-            pa.field("is_admitting_attending", pa.bool8(), nullable=False)
+            pa.field("is_admitting_attending", pa.bool8(), nullable=False),
+
+            pa.field("department_ids", pa.list_(pa.string()), nullable=False),
+            pa.field("procedure_ids", pa.list_(pa.string()), nullable=False),
         ])
 
         # Write Parquet file

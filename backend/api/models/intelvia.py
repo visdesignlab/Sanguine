@@ -150,6 +150,9 @@ class BillingCode(models.Model):
 
     class Meta:
         db_table = "BillingCode"
+        indexes = [
+            models.Index(fields=["cpt_code", "visit_no"], name="billingcode_cpt_visit_idx"),
+        ]
 
 
 class Medication(models.Model):
