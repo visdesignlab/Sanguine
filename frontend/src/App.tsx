@@ -7,6 +7,10 @@ import { Store } from './Store/Store';
 import { mantineTheme } from './Theme/mantineTheme';
 import { logoutHandler, whoamiAPICall } from './Store/UserManagement';
 import { DataRetrieval } from './Components/Modals/DataRetrieval';
+import {
+  EmailGateBoundary,
+  isEmailGateBlocked,
+} from './Components/Onboarding/EmailGate';
 import { initDuckDB } from './duckdb';
 import type { ProcedureHierarchyResponse } from './Types/application';
 
@@ -15,6 +19,7 @@ function App() {
   const store = useContext(Store);
   const [dataLoading, setDataLoading] = useState(true);
   const [dataLoadingFailed, setDataLoadingFailed] = useState(false);
+  const [gateBlocked, setGateBlocked] = useState(() => isEmailGateBlocked());
 
   // Idle timer to log out user after 30 minutes of inactivity
   useIdleTimer({
@@ -23,10 +28,16 @@ function App() {
     onAction: () => whoamiAPICall(),
     events: ['mousedown', 'keydown'],
     throttle: 1000 * 60,
+    disabled: gateBlocked,
   });
 
   // Fetch all visits data on initial load
   useEffect(() => {
+    if (gateBlocked) {
+      setDataLoading(false);
+      return;
+    }
+
     async function fetchAllVisits() {
       setDataLoading(true);
       try {
@@ -171,17 +182,17 @@ function App() {
     }
     // Call the function to fetch visits data
     fetchAllVisits();
-  }, [store]);
+  }, [store, gateBlocked]);
 
   return (
     // MantineProvider to apply the custom theme
     <MantineProvider theme={mantineTheme}>
-      {/** App Shell (Header, Main Content, etc.) */}
-      <Shell />
-      <>
+      <EmailGateBoundary onBlockedChange={setGateBlocked}>
+        {/** App Shell (Header, Main Content, etc.) */}
+        <Shell />
         { /* Data loading modal */}
         <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
-      </>
+      </EmailGateBoundary>
     </MantineProvider>
   );
 }
