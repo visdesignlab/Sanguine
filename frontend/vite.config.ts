@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
       proxy: { // Proxy API requests to the backend server during development
         '/api': {
           target: apiProxyTarget,
+          changeOrigin: true,
         },
       },
     },
