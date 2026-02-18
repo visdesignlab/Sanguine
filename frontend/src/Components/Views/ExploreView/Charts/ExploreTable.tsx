@@ -75,7 +75,7 @@ const getFormattedValue = (
   return `${prefix}${formattedValue}${space}${suffix}`;
 };
 
-const HEATMAP_COLS = ['percent_1_rbc', 'percent_2_rbc', 'percent_3_rbc', 'percent_4_rbc', 'percent_above_5_rbc'];
+const HEATMAP_COLS = ['percent_0_rbc', 'percent_1_rbc', 'percent_2_rbc', 'percent_3_rbc', 'percent_4_rbc', 'percent_above_5_rbc'];
 
 // When adding column, infer column type from attribute
 const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColumn['type'] => {
