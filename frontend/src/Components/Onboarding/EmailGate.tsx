@@ -21,6 +21,37 @@ function persistGateStorage(): void {
   localStorage.setItem(EMAIL_GATE_STORAGE_KEY, EMAIL_GATE_COMPLETED_VALUE);
 }
 
+function getCookie(name: string): string | null {
+  if (!document.cookie) return null;
+
+  const cookies = document.cookie.split(';');
+  for (let i = 0; i < cookies.length; i += 1) {
+    const cookie = cookies[i].trim();
+    if (cookie.startsWith(`${name}=`)) {
+      return decodeURIComponent(cookie.slice(name.length + 1));
+    }
+  }
+
+  return null;
+}
+
+async function getEmailGateCsrfToken(): Promise<string | null> {
+  const existingToken = getCookie('csrftoken');
+  if (existingToken) {
+    return existingToken;
+  }
+
+  const csrfResponse = await fetch(`${import.meta.env.VITE_QUERY_URL}email_gate/csrf`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!csrfResponse.ok) {
+    return null;
+  }
+
+  return getCookie('csrftoken');
+}
+
 export function isEmailGateEnabled(hostname: string = window.location.hostname): boolean {
   return hostname === 'intelvia.app' || hostname.endsWith('.intelvia.app');
 }
@@ -33,11 +64,17 @@ export function isEmailGateBlocked(hostname: string = window.location.hostname):
 
 async function submitEmailGate(email: string, institution: string): Promise<EmailGateSubmitResponse> {
   try {
+    const csrfToken = await getEmailGateCsrfToken();
+    if (!csrfToken) {
+      return { ok: false, error: 'Unable to submit gate form' };
+    }
+
     const response = await fetch(`${import.meta.env.VITE_QUERY_URL}email_gate/submit`, {
       method: 'POST',
-      credentials: 'omit',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken,
       },
       body: JSON.stringify({ email, institution }),
     });

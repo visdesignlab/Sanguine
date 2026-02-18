@@ -1,19 +1,32 @@
 import json
 
 from django.contrib.auth.models import User
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 
 class SubmitEmailGateTests(TestCase):
     default_origin = "https://intelvia.app"
 
+    def setUp(self):
+        self.csrf_client = Client(enforce_csrf_checks=True)
+
     def post_email_gate(self, payload, **extra):
-        return self.client.post(
+        csrf_response = self.csrf_client.get(
+            reverse("email_gate_csrf"),
+            HTTP_ORIGIN=self.default_origin,
+        )
+        self.assertEqual(csrf_response.status_code, 200)
+        csrf_cookie = self.csrf_client.cookies.get("csrftoken")
+        self.assertIsNotNone(csrf_cookie)
+        csrf_token = csrf_cookie.value
+
+        return self.csrf_client.post(
             reverse("submit_email_gate"),
             data=json.dumps(payload),
             content_type="application/json",
             HTTP_ORIGIN=self.default_origin,
+            HTTP_X_CSRFTOKEN=csrf_token,
             **extra,
         )
 
@@ -33,7 +46,7 @@ class SubmitEmailGateTests(TestCase):
         self.assertEqual(user.first_name, "University Hospital")
         self.assertFalse(user.has_usable_password())
 
-    def test_updates_institution_for_existing_email(self):
+    def test_does_not_update_institution_for_existing_email(self):
         existing = User.objects.create(
             username="existing@example.com",
             email="existing@example.com",
@@ -53,9 +66,9 @@ class SubmitEmailGateTests(TestCase):
         self.assertEqual(response.json(), {"ok": True})
 
         existing.refresh_from_db()
-        self.assertEqual(existing.first_name, "New Institution")
+        self.assertEqual(existing.first_name, "Old Institution")
 
-    def test_updates_user_when_username_exists_with_different_email(self):
+    def test_does_not_update_user_when_username_exists_with_different_email(self):
         existing = User.objects.create(
             username="existing@example.com",
             email="old-address@example.org",
@@ -75,11 +88,11 @@ class SubmitEmailGateTests(TestCase):
         self.assertEqual(response.json(), {"ok": True})
 
         existing.refresh_from_db()
-        self.assertEqual(existing.first_name, "New Institution")
-        self.assertEqual(existing.email, "existing@example.com")
+        self.assertEqual(existing.first_name, "Old Institution")
+        self.assertEqual(existing.email, "old-address@example.org")
         self.assertEqual(User.objects.filter(username="existing@example.com").count(), 1)
 
-    def test_updates_username_match_when_multiple_users_share_email(self):
+    def test_does_not_update_username_match_when_multiple_users_share_email(self):
         target = User.objects.create(
             username="shared@example.com",
             email="shared@example.com",
@@ -103,7 +116,7 @@ class SubmitEmailGateTests(TestCase):
 
         target.refresh_from_db()
         other.refresh_from_db()
-        self.assertEqual(target.first_name, "Updated Institution")
+        self.assertEqual(target.first_name, "Target Institution")
         self.assertEqual(other.first_name, "Other Institution")
 
     def test_truncates_email_and_institution_to_user_field_lengths(self):
@@ -132,8 +145,8 @@ class SubmitEmailGateTests(TestCase):
         self.assertEqual(len(user.username), username_max_length)
         self.assertEqual(len(user.first_name), first_name_max_length)
 
-    def test_rejects_untrusted_origin(self):
-        response = self.client.post(
+    def test_rejects_submit_without_csrf_token(self):
+        response = self.csrf_client.post(
             reverse("submit_email_gate"),
             data=json.dumps(
                 {
@@ -142,64 +155,10 @@ class SubmitEmailGateTests(TestCase):
                 }
             ),
             content_type="application/json",
-            HTTP_ORIGIN="https://attacker.example",
+            HTTP_ORIGIN=self.default_origin,
         )
 
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json(), {"ok": False, "error": "Invalid request origin"})
-        self.assertFalse(User.objects.filter(username="test@example.com").exists())
-
-    def test_allows_trusted_referer_without_origin(self):
-        response = self.client.post(
-            reverse("submit_email_gate"),
-            data=json.dumps(
-                {
-                    "email": "test@example.com",
-                    "institution": "University Hospital",
-                }
-            ),
-            content_type="application/json",
-            HTTP_REFERER="https://intelvia.app/some-page",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"ok": True})
-        self.assertTrue(User.objects.filter(username="test@example.com").exists())
-
-    @override_settings(DEBUG=True)
-    def test_allows_localhost_origin_in_debug(self):
-        response = self.client.post(
-            reverse("submit_email_gate"),
-            data=json.dumps(
-                {
-                    "email": "test@example.com",
-                    "institution": "University Hospital",
-                }
-            ),
-            content_type="application/json",
-            HTTP_ORIGIN="http://localhost:3000",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"ok": True})
-        self.assertTrue(User.objects.filter(username="test@example.com").exists())
-
-    @override_settings(DEBUG=False)
-    def test_rejects_localhost_origin_when_not_debug(self):
-        response = self.client.post(
-            reverse("submit_email_gate"),
-            data=json.dumps(
-                {
-                    "email": "test@example.com",
-                    "institution": "University Hospital",
-                }
-            ),
-            content_type="application/json",
-            HTTP_ORIGIN="http://localhost:3000",
-        )
-
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json(), {"ok": False, "error": "Invalid request origin"})
         self.assertFalse(User.objects.filter(username="test@example.com").exists())
 
     def test_rejects_invalid_email(self):
