@@ -6,7 +6,12 @@ import {
   ScrollArea, Box, CloseButton, Title, Flex, useMantineTheme,
   Tooltip, MantineTheme, Select, Button, Text, SegmentedControl,
 } from '@mantine/core';
-import { IconGripVertical, IconArrowUp, IconArrowsVertical, IconArrowForward, IconArrowRightDashed } from '@tabler/icons-react';
+import {
+  IconGripVertical,
+  IconArrowUp,
+  IconArrowsVertical,
+  IconArrowRightDashed,
+} from '@tabler/icons-react';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { Store } from '../../../../Store/Store';
 import { DumbbellCase, DumbbellChartConfig, DumbbellData } from '../../../../Types/application';
@@ -17,6 +22,7 @@ const MARGIN = {
 };
 const CHAR_WIDTH_CASE = 8.5; // Increased spacing (was 8)
 const DOT_RADIUS = 4.2; // Slightly larger dot radius
+const EMPTY_VISIT_WIDTH = 30; // Minimum width for empty visit/quarter buckets
 
 // Target Configuration
 const DEFAULT_PRE_MIN = 13.0;
@@ -47,6 +53,13 @@ const getProviderName = (id: string) => {
 // Removed getVisitLabel usage or changed it to identity to remove "Visit " prefix
 const getVisitLabel = (_id: string, label: string) => label.replace(/^Visit\s*/, '');
 
+const getVisitTooltipLabel = (label: string, selectedX: string) => {
+  if (selectedX === 'surgeon' || selectedX === 'anesthesiologist') {
+    return `Visit ${label.replace(/^Visit\s*/, '')}`;
+  }
+  return label;
+};
+
 // Lab Value Configurations
 interface LabConfig {
   label: string;
@@ -55,23 +68,54 @@ interface LabConfig {
   max: number;
   preKey: keyof DumbbellCase;
   postKey: keyof DumbbellCase;
+  defaultTargets: { preMin: number; postMin: number; postMax: number };
 }
 
 const LAB_CONFIGS: Record<string, LabConfig> = {
   hgb: {
-    label: 'Hemoglobin', unit: 'g/dL', min: 0, max: 18, preKey: 'preHgb', postKey: 'postHgb',
+    label: 'Hemoglobin',
+    unit: 'g/dL',
+    min: 5,
+    max: 18,
+    preKey: 'preHgb',
+    postKey: 'postHgb',
+    defaultTargets: { preMin: 13.0, postMin: 7.5, postMax: 9.5 },
   },
   ferritin: {
-    label: 'Ferritin', unit: 'ng/mL', min: 0, max: 350, preKey: 'preFerritin', postKey: 'postFerritin',
+    label: 'Ferritin',
+    unit: 'ng/mL',
+    min: 0,
+    max: 350,
+    preKey: 'preFerritin',
+    postKey: 'postFerritin',
+    defaultTargets: { preMin: 100, postMin: 150, postMax: 250 },
   },
   platelet: {
-    label: 'Platelet Count', unit: 'K/µL', min: 0, max: 500, preKey: 'prePlatelet', postKey: 'postPlatelet',
+    label: 'Platelet Count',
+    unit: 'K/µL',
+    min: 0,
+    max: 500,
+    preKey: 'prePlatelet',
+    postKey: 'postPlatelet',
+    defaultTargets: { preMin: 150, postMin: 100, postMax: 200 },
   },
   fibrinogen: {
-    label: 'Fibrinogen', unit: 'mg/dL', min: 0, max: 500, preKey: 'preFibrinogen', postKey: 'postFibrinogen',
+    label: 'Fibrinogen',
+    unit: 'mg/dL',
+    min: 0,
+    max: 500,
+    preKey: 'preFibrinogen',
+    postKey: 'postFibrinogen',
+    defaultTargets: { preMin: 200, postMin: 150, postMax: 250 },
   },
   inr: {
-    label: 'INR', unit: 'Ratio', min: 0, max: 4, preKey: 'preINR', postKey: 'postINR',
+    label: 'INR',
+    unit: 'Ratio',
+    min: 0.5,
+    max: 2,
+    preKey: 'preINR',
+    postKey: 'postINR',
+    defaultTargets: { preMin: 1.1, postMin: 1.5, postMax: 1.2 },
   },
 };
 
@@ -244,62 +288,60 @@ const DumbbellYAxis = memo(({
         )
       </text>
 
-      {/* Target Handles (Only for Hgb) */}
-      {labConfig.label === 'Hemoglobin' && (
-        <>
-          {/* Pre Min Handle */}
-          {(hoveredTarget === 'preMin' || dragging === 'preMin') && (
-            <Tooltip label={`Min Pre-op Target: ${targets.preMin.toFixed(1)} ${labConfig.unit}`} position="right">
-              <g
-                transform={`translate(${MARGIN.left}, ${yScale(targets.preMin) + MARGIN.top})`}
-                style={{ cursor: 'ns-resize' }}
-                onMouseDown={handleDragStart('preMin')}
-                onMouseEnter={() => setHoveredTarget('preMin')}
-                onMouseLeave={() => setHoveredTarget(null)}
-              >
-                {/* Expanded Hit Area */}
-                <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
-                <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.teal[6]} />
-                <line x1={-8} x2={0} y1={0} y2={0} stroke={theme.colors.teal[6]} strokeWidth={2} />
-              </g>
-            </Tooltip>
-          )}
+      {/* Target Handles */}
+      <g>
+        {/* Pre Min Handle */}
+        {(hoveredTarget === 'preMin' || dragging === 'preMin') && (
+          <Tooltip label={`Min Pre-op Target: ${targets.preMin.toFixed(1)} ${labConfig.unit}`} position="right">
+            <g
+              transform={`translate(${MARGIN.left}, ${yScale(targets.preMin) + MARGIN.top})`}
+              style={{ cursor: 'ns-resize' }}
+              onMouseDown={handleDragStart('preMin')}
+              onMouseEnter={() => setHoveredTarget('preMin')}
+              onMouseLeave={() => setHoveredTarget(null)}
+            >
+              {/* Expanded Hit Area */}
+              <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
+              <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.teal[6]} />
+              <line x1={-8} x2={0} y1={0} y2={0} stroke={theme.colors.teal[6]} strokeWidth={2} />
+            </g>
+          </Tooltip>
+        )}
 
-          {/* Post Min Handle */}
-          {(hoveredTarget === 'postMin' || dragging === 'postMin') && (
-            <Tooltip label={`Min Post-op Target (Transfused): ${targets.postMin.toFixed(1)} ${labConfig.unit}`} position="right">
-              <g
-                transform={`translate(${MARGIN.left}, ${yScale(targets.postMin) + MARGIN.top})`}
-                style={{ cursor: 'ns-resize' }}
-                onMouseDown={handleDragStart('postMin')}
-                onMouseEnter={() => setHoveredTarget('postMin')}
-                onMouseLeave={() => setHoveredTarget(null)}
-              >
-                {/* Expanded Hit Area */}
-                <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
-                <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.indigo[6]} />
-              </g>
-            </Tooltip>
-          )}
+        {/* Post Min Handle */}
+        {(hoveredTarget === 'postMin' || dragging === 'postMin') && (
+          <Tooltip label={`Min Post-op Target (Transfused): ${targets.postMin.toFixed(1)} ${labConfig.unit}`} position="right">
+            <g
+              transform={`translate(${MARGIN.left}, ${yScale(targets.postMin) + MARGIN.top})`}
+              style={{ cursor: 'ns-resize' }}
+              onMouseDown={handleDragStart('postMin')}
+              onMouseEnter={() => setHoveredTarget('postMin')}
+              onMouseLeave={() => setHoveredTarget(null)}
+            >
+              {/* Expanded Hit Area */}
+              <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
+              <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.indigo[6]} />
+            </g>
+          </Tooltip>
+        )}
 
-          {/* Post Max Handle */}
-          {(hoveredTarget === 'postMax' || dragging === 'postMax') && (
-            <Tooltip label={`Max Post-op Target (Transfused): ${targets.postMax.toFixed(1)} ${labConfig.unit}`} position="right">
-              <g
-                transform={`translate(${MARGIN.left}, ${yScale(targets.postMax) + MARGIN.top})`}
-                style={{ cursor: 'ns-resize' }}
-                onMouseDown={handleDragStart('postMax')}
-                onMouseEnter={() => setHoveredTarget('postMax')}
-                onMouseLeave={() => setHoveredTarget(null)}
-              >
-                {/* Expanded Hit Area */}
-                <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
-                <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.indigo[6]} />
-              </g>
-            </Tooltip>
-          )}
-        </>
-      )}
+        {/* Post Max Handle */}
+        {(hoveredTarget === 'postMax' || dragging === 'postMax') && (
+          <Tooltip label={`Max Post-op Target (Transfused): ${targets.postMax.toFixed(1)} ${labConfig.unit}`} position="right">
+            <g
+              transform={`translate(${MARGIN.left}, ${yScale(targets.postMax) + MARGIN.top})`}
+              style={{ cursor: 'ns-resize' }}
+              onMouseDown={handleDragStart('postMax')}
+              onMouseEnter={() => setHoveredTarget('postMax')}
+              onMouseLeave={() => setHoveredTarget(null)}
+            >
+              {/* Expanded Hit Area */}
+              <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
+              <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.indigo[6]} />
+            </g>
+          </Tooltip>
+        )}
+      </g>
     </svg>
   );
 });
@@ -489,8 +531,67 @@ const TargetOverlay = memo(({
     </g>
   );
 });
+
+const AverageLine = memo(({
+  x1, x2, y, label, color,
+}: {
+  x1: number;
+  x2: number;
+  y: number;
+  label: string;
+  color: string;
+}) => {
+  const [hovered, setHovered] = useState(false);
+  const [mouseX, setMouseX] = useState(0);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    // offsetX on the line is relative to the SVG element.
+    // However, since we're in a scrollable area, we need to be careful.
+    // Let's use the same logic as TargetOverlay if possible.
+    setMouseX(e.nativeEvent.offsetX);
+  }, []);
+
+  return (
+    <g>
+      <Tooltip label={label} opened={hovered} position="top" offset={5}>
+        <rect
+          x={mouseX}
+          y={y}
+          width={1}
+          height={1}
+          fill="transparent"
+          style={{ pointerEvents: 'none' }}
+        />
+      </Tooltip>
+      <line
+        x1={x1}
+        x2={x2}
+        y1={y}
+        y2={y}
+        stroke={color}
+        strokeWidth={1.5}
+        strokeOpacity={0.6}
+        style={{ pointerEvents: 'none' }}
+      />
+      {/* Hit Area */}
+      <line
+        x1={x1}
+        x2={x2}
+        y1={y}
+        y2={y}
+        stroke="transparent"
+        strokeWidth={10}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onMouseMove={handleMouseMove}
+      />
+    </g>
+  );
+});
+
 DumbbellYAxis.displayName = 'DumbbellYAxis';
 TargetOverlay.displayName = 'TargetOverlay';
+AverageLine.displayName = 'AverageLine';
 
 const DumbbellChartContent = memo(({
   totalWidth,
@@ -515,6 +616,7 @@ const DumbbellChartContent = memo(({
   targets,
   setHoveredTarget,
   showTargets,
+  showMedian,
 }: DumbbellChartSVGProps & {
   selectedX: string,
   showPre: boolean,
@@ -522,28 +624,196 @@ const DumbbellChartContent = memo(({
   targets: { preMin: number; postMin: number; postMax: number },
   setHoveredTarget: (t: string | null) => void,
   showTargets: boolean,
+  showMedian: boolean,
 }) => {
   const innerHeight = Math.max(0, height - MARGIN.top - MARGIN.bottom);
-  let currentX = 0; // Start with small padding
 
   // Check if we should flatten the visualization (hide visit buckets)
-  const isFlatMode = ['rbc', 'platelet', 'cryo', 'ffp', 'cell_salvage'].includes(selectedX);
+  const isFlatMode = [
+    'rbc',
+    'platelet',
+    'cryo',
+    'ffp',
+    'cell_salvage',
+  ].includes(selectedX);
 
-  return (
-    <div style={{ width: totalWidth, height, position: 'relative' }}>
-      <svg width={totalWidth} height={height}>
-        {/* Target Regions (Only for Hgb) */}
-        {labConfig.label === 'Hemoglobin' && showTargets && (
-          <TargetOverlay
-            totalWidth={totalWidth}
-            yScale={yScale}
-            targets={targets}
-            theme={theme}
-            labConfig={labConfig}
-            setHoveredTarget={setHoveredTarget}
-          />
-        )}
+  // Selection Box State
+  const [selection, setSelection] = useState<{
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number
+  } | null>(null);
+  const [appliedSelection, setAppliedSelection] = useState<{
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number
+  } | null>(null);
+  const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing'>('idle');
+  const [resizeHandle, setResizeHandle] = useState<string | null>(null);
+  const dragStart = useRef<{ x: number; y: number } | null>(null);
+  const initialSelection = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!chartRef.current) return;
+    const rect = chartRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left + (chartRef.current.scrollLeft || 0);
+    const y = e.clientY - rect.top;
+
+    // Check existing selection for move/resize
+    if (selection) {
+      const minX = Math.min(selection.x1, selection.x2);
+      const maxX = Math.max(selection.x1, selection.x2);
+      const minY = Math.min(selection.y1, selection.y2);
+      const maxY = Math.max(selection.y1, selection.y2);
+      const tolerance = 10;
+
+      // Check handles
+      let handle = null;
+      if (Math.abs(x - minX) < tolerance && Math.abs(y - minY) < tolerance) handle = 'nw';
+      else if (Math.abs(x - maxX) < tolerance && Math.abs(y - minY) < tolerance) handle = 'ne';
+      else if (Math.abs(x - minX) < tolerance && Math.abs(y - maxY) < tolerance) handle = 'sw';
+      else if (Math.abs(x - maxX) < tolerance && Math.abs(y - maxY) < tolerance) handle = 'se';
+      else if (Math.abs(y - minY) < tolerance && x > minX && x < maxX) handle = 'n';
+      else if (Math.abs(y - maxY) < tolerance && x > minX && x < maxX) handle = 's';
+      else if (Math.abs(x - minX) < tolerance && y > minY && y < maxY) handle = 'w';
+      else if (Math.abs(x - maxX) < tolerance && y > minY && y < maxY) handle = 'e';
+
+      if (handle) {
+        setInteractionMode('resizing');
+        setResizeHandle(handle);
+        initialSelection.current = { ...selection };
+        return;
+      }
+
+      // Check inside
+      if (x > minX && x < maxX && y > minY && y < maxY) {
+        setInteractionMode('moving');
+        dragStart.current = { x, y };
+        initialSelection.current = { ...selection };
+        return;
+      }
+    }
+
+    // Start new selection (if clicking in chart area)
+    const chartBottom = height - MARGIN.bottom;
+    const chartTop = MARGIN.top;
+    if (y < chartTop || y > chartBottom) {
+      setAppliedSelection(null); // Clear selection on click outside
+      setSelection(null);
+      return;
+    }
+
+    setInteractionMode('selecting');
+    setSelection({ x1: x, y1: y, x2: x, y2: y });
+    setAppliedSelection(null); // Clear highlight while selecting new area
+    initialSelection.current = { x1: x, y1: y, x2: x, y2: y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!chartRef.current) return;
+    const rect = chartRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Clamp coordinates to chart area
+    const chartTop = MARGIN.top;
+    const chartBottom = height - MARGIN.bottom;
+    const clampedY = Math.max(chartTop, Math.min(y, chartBottom));
+
+    // Cursor updates
+    if (interactionMode === 'idle' && selection) {
+      const minX = Math.min(selection.x1, selection.x2);
+      const maxX = Math.max(selection.x1, selection.x2);
+      const minY = Math.min(selection.y1, selection.y2);
+      const maxY = Math.max(selection.y1, selection.y2);
+      const tolerance = 10;
+
+      let cursor = 'default';
+      if ((Math.abs(x - minX) < tolerance && Math.abs(y - minY) < tolerance) || (Math.abs(x - maxX) < tolerance && Math.abs(y - maxY) < tolerance)) cursor = 'nwse-resize';
+      else if ((Math.abs(x - maxX) < tolerance && Math.abs(y - minY) < tolerance) || (Math.abs(x - minX) < tolerance && Math.abs(y - maxY) < tolerance)) cursor = 'nesw-resize';
+      else if ((Math.abs(y - minY) < tolerance || Math.abs(y - maxY) < tolerance) && x > minX && x < maxX) cursor = 'ns-resize';
+      else if ((Math.abs(x - minX) < tolerance || Math.abs(x - maxX) < tolerance) && y > minY && y < maxY) cursor = 'ew-resize';
+      else if (x > minX && x < maxX && y > minY && y < maxY) cursor = 'move';
+
+      chartRef.current.style.cursor = cursor;
+    }
+
+    if (interactionMode === 'selecting') {
+      if (!initialSelection.current) return;
+      setSelection({
+        ...initialSelection.current,
+        x2: x,
+        y2: clampedY,
+      });
+    } else if (interactionMode === 'moving') {
+      if (!initialSelection.current || !dragStart.current) return;
+      const dx = x - dragStart.current.x;
+      const dy = y - dragStart.current.y;
+
+      const currentMinY = Math.min(initialSelection.current.y1, initialSelection.current.y2);
+      const currentMaxY = Math.max(initialSelection.current.y1, initialSelection.current.y2);
+
+      let clampedDy = dy;
+      if (currentMinY + dy < chartTop) clampedDy = chartTop - currentMinY;
+      if (currentMaxY + dy > chartBottom) clampedDy = chartBottom - currentMaxY;
+
+      setSelection({
+        x1: initialSelection.current.x1 + dx,
+        y1: initialSelection.current.y1 + clampedDy,
+        x2: initialSelection.current.x2 + dx,
+        y2: initialSelection.current.y2 + clampedDy,
+      });
+    } else if (interactionMode === 'resizing') {
+      if (!initialSelection.current) return;
+      const minX = Math.min(initialSelection.current.x1, initialSelection.current.x2);
+      const maxX = Math.max(initialSelection.current.x1, initialSelection.current.x2);
+      const minY = Math.min(initialSelection.current.y1, initialSelection.current.y2);
+      const maxY = Math.max(initialSelection.current.y1, initialSelection.current.y2);
+
+      let newMinX = minX; let newMaxX = maxX; let newMinY = minY; let newMaxY = maxY;
+
+      if (resizeHandle?.includes('w')) newMinX = x;
+      if (resizeHandle?.includes('e')) newMaxX = x;
+      if (resizeHandle?.includes('n')) newMinY = clampedY;
+      if (resizeHandle?.includes('s')) newMaxY = clampedY;
+
+      setSelection({ x1: newMinX, y1: newMinY, x2: newMaxX, y2: newMaxY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setInteractionMode('idle');
+    setResizeHandle(null);
+    dragStart.current = null;
+    initialSelection.current = null;
+    if (selection) {
+      if (Math.abs(selection.x2 - selection.x1) < 5 && Math.abs(selection.y2 - selection.y1) < 5) {
+        setSelection(null); // Clear click-like selections
+        setAppliedSelection(null);
+      } else {
+        setAppliedSelection(selection); // Apply highlighting
+      }
+    }
+  };
+
+  const isSelected = useCallback((cx: number, cy: number) => {
+    // Use appliedSelection for highlighting (optimized)
+    if (!appliedSelection) return false;
+    const minX = Math.min(appliedSelection.x1, appliedSelection.x2);
+    const maxX = Math.max(appliedSelection.x1, appliedSelection.x2);
+    const minY = Math.min(appliedSelection.y1, appliedSelection.y2);
+    const maxY = Math.max(appliedSelection.y1, appliedSelection.y2);
+    return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY;
+  }, [appliedSelection]);
+
+  // Memoize the heavy chart body
+  const chartBody = useMemo(() => {
+    let currentX = 0;
+    return (
+      <>
         {/* Grid Lines (No text) */}
         {yScale.ticks(5).map((tick) => (
           <g key={tick} transform={`translate(0, ${yScale(tick) + MARGIN.top})`}>
@@ -562,7 +832,7 @@ const DumbbellChartContent = memo(({
             } else {
               provider.visits.forEach((v) => {
                 if (collapsedVisits.has(v.id)) providerWidth += 40;
-                else providerWidth += v.cases.length * CHAR_WIDTH_CASE;
+                else providerWidth += Math.max(v.cases.length * CHAR_WIDTH_CASE, EMPTY_VISIT_WIDTH);
               });
             }
 
@@ -572,6 +842,28 @@ const DumbbellChartContent = memo(({
             // Provider Bucket Color: Alternating Darker Greys
             const providerColor = providerIdx % 2 === 0 ? theme.colors.gray[3] : theme.colors.gray[1];
             const providerSort = providerSorts.get(provider.id) || 'none';
+
+            // Calculate Averages for Provider
+            let sumPre = 0; let countPre = 0;
+            let sumPost = 0; let countPost = 0;
+
+            provider.visits.forEach((v) => {
+              v.cases.forEach((c) => {
+                const preVal = c[labConfig.preKey] as number;
+                const postVal = c[labConfig.postKey] as number;
+                if (preVal !== undefined && preVal !== null) {
+                  sumPre += preVal;
+                  countPre += 1;
+                }
+                if (postVal !== undefined && postVal !== null) {
+                  sumPost += postVal;
+                  countPost += 1;
+                }
+              });
+            });
+
+            const avgPre = countPre > 0 ? sumPre / countPre : null;
+            const avgPost = countPost > 0 ? sumPost / countPost : null;
 
             return (
               <g key={provider.id}>
@@ -603,6 +895,32 @@ const DumbbellChartContent = memo(({
                     )}
                   </g>
                 </Tooltip>
+
+                {/* Average Lines */}
+                {!isProvCollapsed && (
+                  <>
+                    {/* Pre-op Average Line */}
+                    {showMedian && showPre && avgPre !== null && (
+                      <AverageLine
+                        x1={providerX}
+                        x2={providerX + providerWidth}
+                        y={yScale(avgPre)}
+                        label={`Average Pre-op: ${avgPre.toFixed(1)} for ${getProviderName(provider.id)}`}
+                        color={theme.colors.teal[4]}
+                      />
+                    )}
+                    {/* Post-op Average Line */}
+                    {showMedian && showPost && avgPost !== null && (
+                      <AverageLine
+                        x1={providerX}
+                        x2={providerX + providerWidth}
+                        y={yScale(avgPost)}
+                        label={`Average Post-op: ${avgPost.toFixed(1)} for ${getProviderName(provider.id)}`}
+                        color={theme.colors.indigo[4]}
+                      />
+                    )}
+                  </>
+                )}
 
                 {/* Provider Label & Sort Indicator */}
                 {!isProvCollapsed ? (
@@ -659,7 +977,7 @@ const DumbbellChartContent = memo(({
                 {hoveredCollapse === provider.id && (
                   <path
                     d={isProvCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'} // Simple chevron path
-                    transform={`translate(${providerX + providerWidth - 12}, ${isFlatMode ? innerHeight + 3 : innerHeight + 30}) scale(0.6)`}
+                    transform={`translate(${providerX + providerWidth - 12}, ${isFlatMode ? innerHeight + 3 : innerHeight + 31}) scale(0.6)`}
                     fill="none"
                     stroke={theme.colors.gray[7]}
                     strokeWidth={2}
@@ -674,7 +992,7 @@ const DumbbellChartContent = memo(({
                       let visitX = providerX;
                       return provider.visits.map((visit, visitIdx) => {
                         const isVisitCollapsed = collapsedVisits.has(visit.id);
-                        const visitWidth = isVisitCollapsed ? 40 : visit.cases.length * CHAR_WIDTH_CASE;
+                        const visitWidth = isVisitCollapsed ? 40 : Math.max(visit.cases.length * CHAR_WIDTH_CASE, EMPTY_VISIT_WIDTH);
                         const currentVisitX = visitX;
                         visitX += visitWidth;
 
@@ -700,7 +1018,7 @@ const DumbbellChartContent = memo(({
                             {/* Visit Bucket Body (Sort Trigger) - HIDE IN FLAT MODE */}
                             {!isFlatMode && (
                               <>
-                                <Tooltip label={getVisitLabel(visit.id, visit.label)} openDelay={200}>
+                                <Tooltip label={getVisitTooltipLabel(visit.label, selectedX)} openDelay={200}>
                                   <g>
                                     <rect
                                       x={currentVisitX}
@@ -816,7 +1134,7 @@ const DumbbellChartContent = memo(({
                                         cx={caseX}
                                         cy={yScale(d[labConfig.preKey] as number)}
                                         r={DOT_RADIUS}
-                                        fill={theme.colors.teal[6]}
+                                        fill={isSelected(caseX, yScale(d[labConfig.preKey] as number) + MARGIN.top) ? theme.colors.orange[5] : theme.colors.teal[6]}
                                         stroke="white"
                                         strokeWidth={0.6}
                                       />
@@ -829,7 +1147,7 @@ const DumbbellChartContent = memo(({
                                         cx={caseX}
                                         cy={yScale(d[labConfig.postKey] as number)}
                                         r={DOT_RADIUS}
-                                        fill={theme.colors.indigo[6]}
+                                        fill={isSelected(caseX, yScale(d[labConfig.postKey] as number) + MARGIN.top) ? theme.colors.orange[5] : theme.colors.indigo[6]}
                                         stroke="white"
                                         strokeWidth={0.6}
                                       />
@@ -848,6 +1166,47 @@ const DumbbellChartContent = memo(({
             );
           })}
         </g>
+      </>
+    );
+  }, [processedData, collapsedProviders, collapsedVisits, providerSorts, visitSorts, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, isFlatMode, onToggleProviderSort, onToggleVisitSort, onToggleProviderCollapse, onToggleVisitCollapse, setHoveredCollapse, isSelected, totalWidth, selectedX, showMedian]);
+
+  return (
+    <div
+      ref={chartRef}
+      style={{ width: totalWidth, height, position: 'relative', userSelect: 'none' }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
+      <svg width={totalWidth} height={height}>
+        {/* Target Regions */}
+        {showTargets && (
+          <TargetOverlay
+            totalWidth={totalWidth}
+            yScale={yScale}
+            targets={targets}
+            theme={theme}
+            labConfig={labConfig}
+            setHoveredTarget={setHoveredTarget}
+          />
+        )}
+
+        {chartBody}
+
+        {/* Selection Overlay */}
+        {selection && (
+          <rect
+            x={Math.min(selection.x1, selection.x2)}
+            y={Math.min(selection.y1, selection.y2)}
+            width={Math.abs(selection.x2 - selection.x1)}
+            height={Math.abs(selection.y2 - selection.y1)}
+            fill={theme.colors.orange[2]}
+            fillOpacity={0.2}
+            stroke={theme.colors.orange[6]}
+            strokeDasharray="4 2"
+          />
+        )}
       </svg>
     </div>
   );
@@ -869,7 +1228,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   const [showPre, setShowPre] = useState<boolean>(true);
   const [showPost, setShowPost] = useState<boolean>(true);
   const [showTargets, setShowTargets] = useState<boolean>(true);
-  const [showMedian, setShowMedian] = useState<boolean>(false);
+  const [showMedian, setShowMedian] = useState<boolean>(true);
   const [sortMode, setSortMode] = useState<string>('time');
 
   // Clear provider sorts when global sort changes
@@ -878,14 +1237,15 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     setProviderSorts(new Map()); // Reset individual sorts to let global sort take over
   };
 
-  // Hgb Targets
-  const [targets, setTargets] = useState({
-    preMin: DEFAULT_PRE_MIN,
-    postMin: DEFAULT_POST_MIN,
-    postMax: DEFAULT_POST_MAX,
-  });
-
   const labConfig = LAB_CONFIGS[selectedLab];
+
+  // Targets
+  const [targets, setTargets] = useState(labConfig.defaultTargets);
+
+  // Reset targets when lab changes
+  useEffect(() => {
+    setTargets(labConfig.defaultTargets);
+  }, [selectedLab, labConfig.defaultTargets]);
 
   // Hover state for collapse arrows
   const [hoveredCollapse, setHoveredCollapse] = useState<string | null>(null);
@@ -1033,11 +1393,23 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
           groupedByVisit.get(subKey)?.push(d);
         });
 
+        // Ensure all 4 quarters exist for year_quarter mode
+        if (selectedX === 'year_quarter') {
+          for (let q = 1; q <= 4; q += 1) {
+            const qKey = `Q${q}`;
+            if (!groupedByVisit.has(qKey)) {
+              groupedByVisit.set(qKey, []);
+            }
+          }
+        }
+
         const visits = Array.from(groupedByVisit.entries()).map(([visitLabel, visitCases]) => {
           const preAccess = labConfig.preKey;
           const postAccess = labConfig.postKey;
-          const minPre = Math.min(...visitCases.map((c) => c[preAccess] as number));
-          const minPost = Math.min(...visitCases.map((c) => c[postAccess] as number));
+          const preValues = visitCases.map((c) => c[preAccess] as number);
+          const postValues = visitCases.map((c) => c[postAccess] as number);
+          const minPre = preValues.length > 0 ? Math.min(...preValues) : Infinity;
+          const minPost = postValues.length > 0 ? Math.min(...postValues) : Infinity;
 
           // Sort Cases within Visit
           // Default: Chronological by surgery_start_dtm
@@ -1123,7 +1495,11 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
 
   // Flat list of visible cases for plotting
   const visibleItems = useMemo(() => {
-    const items: { type: 'case' | 'visit_gap' | 'provider_gap', data?: DumbbellCase, width: number }[] = [];
+    const items: {
+      type: 'case' | 'visit_gap' | 'provider_gap',
+      data?: DumbbellCase,
+      width: number
+    }[] = [];
 
     processedData.forEach((provider) => {
       if (collapsedProviders.has(provider.id)) {
@@ -1132,6 +1508,8 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
         provider.visits.forEach((visit) => {
           if (collapsedVisits.has(visit.id)) {
             items.push({ type: 'visit_gap', width: 40 });
+          } else if (visit.cases.length === 0) {
+            items.push({ type: 'visit_gap', width: EMPTY_VISIT_WIDTH });
           } else {
             visit.cases.forEach((c) => {
               items.push({ type: 'case', data: c, width: CHAR_WIDTH_CASE });
@@ -1215,10 +1593,10 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                   value: 'gap',
                 },
               ]}
-              styles={(theme) => ({
+              styles={(t) => ({
                 root: {
                   backgroundColor: 'transparent',
-                  border: `1px solid ${theme.colors.gray[3]}`,
+                  border: `1px solid ${t.colors.gray[3]}`,
                   minHeight: 30,
                 },
                 control: {
@@ -1228,16 +1606,20 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                   padding: '0 8px',
                   fontWeight: 500,
                   '&[data-active]': {
-                    color: sortMode === 'pre' ? theme.colors.teal[7] :
-                      sortMode === 'post' ? theme.colors.indigo[7] :
-                        theme.colors.gray[7],
-                  }
+                    color: sortMode === 'pre'
+                      ? t.colors.teal[7]
+                      : sortMode === 'post'
+                        ? t.colors.indigo[7]
+                        : t.colors.gray[7],
+                  },
                 },
                 indicator: {
-                  backgroundColor: sortMode === 'pre' ? theme.colors.teal[1] :
-                    sortMode === 'post' ? theme.colors.indigo[1] :
-                      theme.colors.gray[2],
-                }
+                  backgroundColor: sortMode === 'pre'
+                    ? t.colors.teal[1]
+                    : sortMode === 'post'
+                      ? t.colors.indigo[1]
+                      : t.colors.gray[2],
+                },
               })}
             />
           </Flex>
@@ -1271,7 +1653,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 variant={showTargets ? 'light' : 'default'}
                 color="gray"
                 onClick={() => setShowTargets(!showTargets)}
-                styles={{ root: { marginLeft: -1, borderColor: showTargets ? theme.colors.gray[5] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
+                styles={{ root: { marginLeft: -1, borderColor: showTargets ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
               >
                 Target
               </Button>
@@ -1281,7 +1663,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 variant={showMedian ? 'light' : 'default'}
                 color="gray"
                 onClick={() => setShowMedian(!showMedian)}
-                styles={{ root: { marginLeft: -1, borderColor: showMedian ? theme.colors.gray[5] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
+                styles={{ root: { marginLeft: -1, borderColor: showMedian ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
               >
                 Avg
               </Button>
@@ -1298,11 +1680,26 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
           />
           <Select
             data={[
-              { value: 'hgb', label: 'Hemoglobin' },
-              { value: 'ferritin', label: 'Ferritin' },
-              { value: 'platelet', label: 'Platelet Count' },
-              { value: 'fibrinogen', label: 'Fibrinogen' },
-              { value: 'inr', label: 'INR' },
+              {
+                value: 'hgb',
+                label: 'Hemoglobin',
+              },
+              {
+                value: 'ferritin',
+                label: 'Ferritin',
+              },
+              {
+                value: 'platelet',
+                label: 'Platelet Count',
+              },
+              {
+                value: 'fibrinogen',
+                label: 'Fibrinogen',
+              },
+              {
+                value: 'inr',
+                label: 'INR',
+              },
             ]}
             value={selectedLab}
             onChange={(value) => setSelectedLab(value || 'hgb')}
@@ -1356,6 +1753,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 targets={targets}
                 setHoveredTarget={setHoveredTarget}
                 showTargets={showTargets}
+                showMedian={showMedian}
               />
             </ScrollArea>
           </div>

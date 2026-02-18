@@ -87,9 +87,25 @@ export const presetStateCards: PresetGroup[] = [
       {
         question: 'What were the pre-op and post-op HGB levels of cases per surgeon?',
         Icon: IconTestPipe2,
-        chartConfigs: [],
+        chartConfigs: [
+          {
+            chartId: 'preset-dumbbell-hgb',
+            chartType: 'dumbbell',
+            xAxisVar: 'provider_visit',
+            yAxisVar: 'hgb',
+            aggregation: 'none',
+          },
+        ],
         chartLayouts: {
-          main: [],
+          main: [
+            {
+              i: 'preset-dumbbell-hgb',
+              x: 0,
+              y: 0,
+              w: 2,
+              h: 2,
+            },
+          ],
         },
       },
     ],
