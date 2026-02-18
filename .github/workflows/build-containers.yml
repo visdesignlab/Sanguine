@@ -48,8 +48,8 @@ jobs:
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=backend-release
+          cache-to: type=gha,mode=max,scope=backend-release
 
       - name: Build and push frontend Docker image
         id: push-frontend
@@ -59,8 +59,8 @@ jobs:
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=frontend-release
+          cache-to: type=gha,mode=max,scope=frontend-release
           build-args: |
             VITE_VERSION=${{ github.ref_name }}
 
