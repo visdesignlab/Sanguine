@@ -76,7 +76,7 @@ For local development, run backend and MariaDB in Docker and run the frontend di
     yarn dev
     ```
 
-1. Open `http://localhost:5173`. API calls from the frontend use relative `/api/...` paths and are proxied by Vite to the backend at `http://localhost:8000`.
+1. Open `http://localhost:8080`. API calls from the frontend use relative `/api/...` paths and are proxied by Vite to the backend at `http://localhost:8000`.
 1. If you run `yarn dev` inside the `frontend` devcontainer service, Vite uses `VITE_DEV_PROXY_TARGET=http://backend:8000` automatically (Docker network target). For host-based frontend dev, leave it unset and it defaults to `http://localhost:8000`.
 1. To populate the database with mock data, run:
 

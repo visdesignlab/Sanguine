@@ -2,6 +2,7 @@ from django.apps import apps
 from django.core.management.base import BaseCommand
 from django.db import connection, transaction
 
+
 class Command(BaseCommand):
     help = "Delete all data from the database"
 
