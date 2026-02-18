@@ -1,0 +1,13 @@
+.DS_Store
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+parquet_cache/
+sanguine.log
+ERD.png
+database.mwb
+data_dictionary.csv
+utah-schema/

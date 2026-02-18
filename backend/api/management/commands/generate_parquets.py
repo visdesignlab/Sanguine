@@ -22,7 +22,7 @@ class Command(BaseCommand):
         # Refresh the materialized view using the stored procedure
         with connection.cursor() as cursor:
             # Materialize VisitAttributes
-            cursor.execute("CALL intelvia.materializeVisitAttributes()")
+            cursor.execute("CALL materializeVisitAttributes()")
             self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
 
             # Fetch all VisitAttributes records

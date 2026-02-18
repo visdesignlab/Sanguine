@@ -98,6 +98,17 @@ poetry run python manage.py generate_parquets
     
 1. The database should now be populated with mock data and you should be able to see it in the frontend by adding a chart to the dashboard.
 
+#### Backend migration/materialized-view tests
+
+These tests validate that Django migrations build the schema correctly and that the `VisitAttributes` materialization procedure computes deterministic outputs.
+
+Run from a shell where `.env` is loaded and MariaDB is available:
+
+```bash
+cd backend
+poetry run python manage.py test api.tests.test_materialized_views --verbosity 2
+```
+
 #### Setting up the vscode extensions to connect to the databases
 
 The devcontainer specification contains the necessary extensions to connect to the databases, MariaDB/MySQL. 

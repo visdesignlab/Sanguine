@@ -1,0 +1,56 @@
+name: Backend and DB Validation
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-db-tests.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-db-tests.yml"
+
+jobs:
+  migration-and-materialized-view-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Copy .env.default to .env
+        run: cp .env.default .env
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend devcontainer image (cached)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          load: true
+          tags: sanguine-backend:ci
+          cache-from: type=gha,scope=backend-devcontainer
+          cache-to: type=gha,mode=max,scope=backend-devcontainer
+
+      - name: Write CI compose override
+        run: |
+          cat > docker-compose.ci.override.yml <<'EOF'
+          services:
+            backend:
+              image: sanguine-backend:ci
+          EOF
+
+      - name: Start MariaDB
+        run: docker compose -f docker-compose.devcontainer.yml -f docker-compose.ci.override.yml up -d --wait mariadb
+
+      - name: Run migration and materialized view tests in backend container
+        run: >
+          docker compose -f docker-compose.devcontainer.yml -f docker-compose.ci.override.yml run --rm --no-deps backend
+          poetry run python manage.py test api.tests --verbosity 2
+
+      - name: Tear down containers
+        if: always()
+        run: docker compose -f docker-compose.devcontainer.yml -f docker-compose.ci.override.yml down -v
