@@ -55,6 +55,6 @@
         "build": "vite build",
         "typecheck": "tsc --noEmit",
         "lint": "eslint src",
-        "postinstall": "cd .. && husky frontend/.husky"
+        "postinstall": "sh -c 'if command -v husky >/dev/null 2>&1 && [ -d ../.git ] && [ -w ../.git/config ]; then cd .. && husky frontend/.husky || true; fi'"
     }
 }
