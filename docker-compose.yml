@@ -15,13 +15,15 @@ services:
     image: docker.io/mariadb:11
     env_file:
       - .env
+    environment:
+      MARIADB_HOST: localhost
     ports:
       - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./mariadb/conf.d:/etc/mysql/conf.d:z
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD-SHELL", "mariadb --protocol=socket --socket=/run/mysqld/mysqld.sock -uroot --password=\"$${MARIADB_ROOT_PASSWORD}\" -e 'SELECT 1' >/dev/null 2>&1"]
       start_period: 3s
       interval: 10s
       timeout: 5s

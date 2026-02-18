@@ -18,6 +18,10 @@ services:
     extends:
       file: docker-compose.yml
       service: mariadb
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./mariadb/conf.d:/etc/mysql/conf.d:z
+      - ./mariadb/initdb:/docker-entrypoint-initdb.d:z
 
   frontend:
     build:
