@@ -28,7 +28,7 @@ export function getProcessedDumbbellData(
       key = `${val} ${val === 1 ? 'Platelet' : 'Platelets'}`;
     } else if (selectedX === 'cryo') {
       const val = d.intraop_cryo_units;
-      key = `${val} ${val === 1 ? 'Cryo' : 'Cryos'}`;
+      key = `${val} ${val === 1 ? 'Cryo' : 'Cryo Units'}`;
     } else if (selectedX === 'ffp') {
       const val = d.intraop_ffp_units;
       key = `${val} ${val === 1 ? 'FFP' : 'FFPs'}`;
