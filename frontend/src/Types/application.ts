@@ -352,9 +352,12 @@ export const GUIDELINE_ADHERENT_OPTIONS = Object.values(GUIDELINE_ADHERENT) as R
 }>;
 
 // Lab Results ---------------------------------------------------
+// Lab Results ---------------------------------------------------
 export const LAB_RESULTS = [
   {
-    value: 'pre_op_hgb',
+    value: 'pre_hgb',
+    metricId: 'hgb',
+    metricLabel: 'Hemoglobin',
     label: {
       short: 'Pre-op Hgb',
       base: 'Pre-Operative Hemoglobin',
@@ -362,18 +365,120 @@ export const LAB_RESULTS = [
       avg: 'Average Pre-Operative Hemoglobin',
     },
     units: { sum: 'g/dL', avg: 'g/dL' },
+    range: { min: 3, max: 22 },
+    target: { min: 13, max: 18 },
     decimals: { sum: 0, avg: 2 },
   },
   {
-    value: 'post_op_hgb',
+    value: 'post_hgb',
+    metricId: 'hgb',
+    metricLabel: 'Hemoglobin',
     label: {
       short: 'Post-op Hgb',
       base: 'Post-Operative Hemoglobin',
       sum: 'Total Post-Operative Hemoglobin',
       avg: 'Average Post-Operative Hemoglobin',
     },
+    range: { min: 3, max: 22 },
+    target: { min: 7.5, max: 9.5 },
     units: { sum: 'g/dL', avg: 'g/dL' },
     decimals: { sum: 0, avg: 2 },
+  },
+  {
+    value: 'pre_ferritin',
+    metricId: 'ferritin',
+    metricLabel: 'Ferritin',
+    label: {
+      short: 'Pre-op Ferritin', base: 'Pre-op Ferritin', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'ng/mL', avg: 'ng/mL' },
+    range: { min: 0, max: 400 },
+    target: { min: 32.5, max: 350 },
+    decimals: { sum: 0, avg: 1 },
+  },
+  {
+    value: 'post_ferritin',
+    metricId: 'ferritin',
+    metricLabel: 'Ferritin',
+    label: {
+      short: 'Post-op Ferritin', base: 'Post-op Ferritin', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'ng/mL', avg: 'ng/mL' },
+    range: { min: 0, max: 400 },
+    target: { min: 12.5, max: 22.5 },
+    decimals: { sum: 0, avg: 1 },
+  },
+  {
+    value: 'pre_plt',
+    metricId: 'platelet',
+    metricLabel: 'Platelet Count',
+    label: {
+      short: 'Pre-op Platelet', base: 'Pre-op Platelet', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'K/µL', avg: 'K/µL' },
+    range: { min: 0, max: 600 },
+    target: { min: 147.5, max: 500 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'post_plt',
+    metricId: 'platelet',
+    metricLabel: 'Platelet Count',
+    label: {
+      short: 'Post-op Platelet', base: 'Post-op Platelet', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'K/µL', avg: 'K/µL' },
+    range: { min: 0, max: 600 },
+    target: { min: 47.5, max: 97.5 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'pre_fibrinogen',
+    metricId: 'fibrinogen',
+    metricLabel: 'Fibrinogen',
+    label: {
+      short: 'Pre-op Fibrinogen', base: 'Pre-op Fibrinogen', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'mg/dL', avg: 'mg/dL' },
+    range: { min: 0, max: 600 },
+    target: { min: 197.5, max: 500 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'post_fibrinogen',
+    metricId: 'fibrinogen',
+    metricLabel: 'Fibrinogen',
+    label: {
+      short: 'Post-op Fibrinogen', base: 'Post-op Fibrinogen', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'mg/dL', avg: 'mg/dL' },
+    range: { min: 0, max: 600 },
+    target: { min: 97.5, max: 147.5 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'pre_inr',
+    metricId: 'inr',
+    metricLabel: 'INR',
+    label: {
+      short: 'Pre-op INR', base: 'Pre-op INR', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'Ratio', avg: 'Ratio' },
+    range: { min: 0.5, max: 2.5 },
+    target: { min: 0.8, max: 1.15 },
+    decimals: { sum: 1, avg: 2 },
+  },
+  {
+    value: 'post_inr',
+    metricId: 'inr',
+    metricLabel: 'INR',
+    label: {
+      short: 'Post-op INR', base: 'Post-op INR', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'Ratio', avg: 'Ratio' },
+    range: { min: 0.5, max: 2.5 },
+    target: { min: 1.35, max: 1.55 },
+    decimals: { sum: 1, avg: 2 },
   },
 ] as const;
 export type LabResult = typeof LAB_RESULTS[number]['value'];
@@ -659,25 +764,25 @@ export type DumbbellChartConfig = ChartConfig<
 >;
 
 export interface DumbbellCase {
-  id: string;
-  providerId: string;
-  visitId: string;
-  preHgb: number;
-  postHgb: number;
-  preFerritin: number;
-  postFerritin: number;
-  prePlatelet: number;
-  postPlatelet: number;
-  preFibrinogen: number;
-  postFibrinogen: number;
-  preINR: number;
-  postINR: number;
-  anesthesiologistId: string;
-  intraopRBC: number;
-  intraopPlatelet: number;
-  intraopCryo: number;
-  intraopFFP: number;
-  cellSalvage: number;
+  case_id: string;
+  surgeon_prov_id: string;
+  visit_no: string;
+  pre_hgb: number;
+  post_hgb: number;
+  pre_ferritin: number;
+  post_ferritin: number;
+  pre_plt: number;
+  post_plt: number;
+  pre_fibrinogen: number;
+  post_fibrinogen: number;
+  pre_inr: number;
+  post_inr: number;
+  anesth_prov_id: string;
+  intraop_rbc_units: number;
+  intraop_plt_units: number;
+  intraop_cryo_units: number;
+  intraop_ffp_units: number;
+  intraop_cell_saver_ml: number;
   surgery_start_dtm: number;
 }
 

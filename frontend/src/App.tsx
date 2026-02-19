@@ -54,9 +54,20 @@ function App() {
         }
         await db.registerFileBuffer('visit_attributes.parquet', new Uint8Array(await res.arrayBuffer()));
 
+        const resSurgery = await fetch(`${queryUrl}get_surgery_case_attributes`);
+        if (!resSurgery.ok) {
+          console.warn(`Failed to fetch surgery cases. Status: ${resSurgery.status}`);
+          // Optional: throw error if critical
+        } else {
+          await db.registerFileBuffer('surgery_case_attributes.parquet', new Uint8Array(await resSurgery.arrayBuffer()));
+        }
+
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
           SELECT * FROM read_parquet('visit_attributes.parquet');
+
+          CREATE TABLE IF NOT EXISTS surgery_cases AS
+          SELECT * FROM read_parquet('surgery_case_attributes.parquet');
 
           CREATE TABLE IF NOT EXISTS costs (
             rbc_units_cost DOUBLE,
@@ -87,6 +98,12 @@ function App() {
           FROM visits v
           INNER JOIN filteredVisitIds fvi ON v.visit_no = fvi.visit_no
           CROSS JOIN costs c;
+
+          CREATE VIEW IF NOT EXISTS filteredSurgeryCases AS
+          SELECT 
+            sc.*
+          FROM surgery_cases sc
+          INNER JOIN filteredVisitIds fvi ON sc.visit_no = fvi.visit_no;
 
           CREATE VIEW IF NOT EXISTS aggregatedVisits AS
           SELECT

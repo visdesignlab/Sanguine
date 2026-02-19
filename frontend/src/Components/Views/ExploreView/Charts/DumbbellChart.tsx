@@ -14,7 +14,10 @@ import {
 } from '@tabler/icons-react';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { Store } from '../../../../Store/Store';
-import { DumbbellCase, DumbbellChartConfig, DumbbellData } from '../../../../Types/application';
+import {
+  DumbbellCase, DumbbellChartConfig, DumbbellData,
+  LAB_RESULTS,
+} from '../../../../Types/application';
 
 // Constants
 const MARGIN = {
@@ -25,9 +28,6 @@ const DOT_RADIUS = 3; // Slightly larger dot radius
 const EMPTY_VISIT_WIDTH = 30; // Minimum width for empty visit/quarter buckets
 
 // Target Configuration
-const DEFAULT_PRE_MIN = 13.0;
-const DEFAULT_POST_MIN = 7.5;
-const DEFAULT_POST_MAX = 9.5;
 const DRAG_LIMIT = 1.0;
 
 // Dummy Data Enhancements
@@ -63,65 +63,6 @@ const getVisitTooltipLabel = (label: string, selectedX: string) => {
   return label;
 };
 
-// Lab Value Configurations
-interface LabConfig {
-  label: string;
-  unit: string;
-  min: number;
-  max: number;
-  preKey: keyof DumbbellCase;
-  postKey: keyof DumbbellCase;
-  defaultTargets: { preMin: number; postMin: number; postMax: number };
-}
-
-const LAB_CONFIGS: Record<string, LabConfig> = {
-  hgb: {
-    label: 'Hemoglobin',
-    unit: 'g/dL',
-    min: 5,
-    max: 18,
-    preKey: 'preHgb',
-    postKey: 'postHgb',
-    defaultTargets: { preMin: 13.0, postMin: 7.5, postMax: 9.5 },
-  },
-  ferritin: {
-    label: 'Ferritin',
-    unit: 'ng/mL',
-    min: 0,
-    max: 350,
-    preKey: 'preFerritin',
-    postKey: 'postFerritin',
-    defaultTargets: { preMin: 32.5, postMin: 12.5, postMax: 22.5 },
-  },
-  platelet: {
-    label: 'Platelet Count',
-    unit: 'K/µL',
-    min: 0,
-    max: 500,
-    preKey: 'prePlatelet',
-    postKey: 'postPlatelet',
-    defaultTargets: { preMin: 147.5, postMin: 47.5, postMax: 97.5 },
-  },
-  fibrinogen: {
-    label: 'Fibrinogen',
-    unit: 'mg/dL',
-    min: 0,
-    max: 500,
-    preKey: 'preFibrinogen',
-    postKey: 'postFibrinogen',
-    defaultTargets: { preMin: 197.5, postMin: 97.5, postMax: 147.5 },
-  },
-  inr: {
-    label: 'INR',
-    unit: 'Ratio',
-    min: 0.5,
-    max: 2,
-    preKey: 'preINR',
-    postKey: 'postINR',
-    defaultTargets: { preMin: 1.15, postMin: 1.35, postMax: 1.55 },
-  },
-};
-
 // X-Axis Configurations
 const X_AXIS_OPTIONS = [
   { value: 'surgeon', label: 'Surgeon' },
@@ -135,6 +76,16 @@ const X_AXIS_OPTIONS = [
 ];
 
 type SortState = 'none' | 'pre' | 'post' | 'gap';
+
+interface LabConfig {
+  label: string;
+  unit: string;
+  min: number;
+  max: number;
+  preKey: keyof DumbbellCase;
+  postKey: keyof DumbbellCase;
+  defaultTargets: { preMin: number; postMin: number; postMax: number };
+}
 
 function getNextSortState(current: SortState | undefined): SortState {
   if (!current || current === 'none') return 'pre';
@@ -236,9 +187,9 @@ const DumbbellYAxis = memo(({
 
         // Apply constraints
         let baseVal = 0;
-        if (dragging === 'preMin') baseVal = DEFAULT_PRE_MIN;
-        if (dragging === 'postMin') baseVal = DEFAULT_POST_MIN;
-        if (dragging === 'postMax') baseVal = DEFAULT_POST_MAX;
+        if (dragging === 'preMin') baseVal = labConfig.defaultTargets.preMin;
+        if (dragging === 'postMin') baseVal = labConfig.defaultTargets.postMin;
+        if (dragging === 'postMax') baseVal = labConfig.defaultTargets.postMax;
 
         // Clamp to +/- DRAG_LIMIT
         if (newVal > baseVal + DRAG_LIMIT) newVal = baseVal + DRAG_LIMIT;
@@ -258,7 +209,7 @@ const DumbbellYAxis = memo(({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [dragging, yScale, targets, setTargets, innerHeight, labConfig.min, labConfig.max]);
+  }, [dragging, yScale, targets, setTargets, innerHeight, labConfig.min, labConfig.max, labConfig.defaultTargets.preMin, labConfig.defaultTargets.postMin, labConfig.defaultTargets.postMax]);
 
   // We need to implement the actual drag logic in a separate step to be clean.
   // For this step, I'll just add the props and the rendering of handles.
@@ -816,7 +767,6 @@ const DumbbellChartContent = memo(({
     return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY;
   }, [appliedSelection]);
 
-
   const chartBody = useMemo(() => {
     let currentX = 0;
     return (
@@ -1131,7 +1081,7 @@ const DumbbellChartContent = memo(({
                               const postVal = d[labConfig.postKey] as number | null;
 
                               return (
-                                <g key={d.id}>
+                                <g key={d.case_id}>
                                   {/* Connector Line - Only if BOTH are visible and exist */}
                                   {showPre && showPost && preVal !== null && postVal !== null && (
                                     <line
@@ -1254,7 +1204,36 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     setProviderSorts(new Map()); // Reset individual sorts to let global sort take over
   };
 
-  const labConfig = LAB_CONFIGS[selectedLab];
+  const labConfig = useMemo(() => {
+    const pre = LAB_RESULTS.find((l) => l.metricId === selectedLab && l.value.startsWith('pre'));
+    const post = LAB_RESULTS.find((l) => l.metricId === selectedLab && l.value.startsWith('post'));
+    if (!pre || !post) {
+      // Fallback or empty config if not found (shouldn't happen with controlled select)
+      return {
+        label: '',
+        unit: '',
+        min: 0,
+        max: 100,
+        preKey: 'pre_hgb' as keyof DumbbellCase,
+        postKey: 'post_hgb' as keyof DumbbellCase,
+        defaultTargets: { preMin: 0, postMin: 0, postMax: 0 },
+      };
+    }
+
+    return {
+      label: pre.metricLabel,
+      unit: pre.units.avg,
+      min: pre.range.min,
+      max: pre.range.max,
+      preKey: pre.value as keyof DumbbellCase,
+      postKey: post.value as keyof DumbbellCase,
+      defaultTargets: {
+        preMin: pre.target.min,
+        postMin: post.target.min,
+        postMax: post.target.max,
+      },
+    } as LabConfig;
+  }, [selectedLab]);
 
   // Targets
   const [targets, setTargets] = useState(labConfig.defaultTargets);
@@ -1331,28 +1310,28 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
 
     // Grouping Logic based on selectedX
     rawData.forEach((d) => {
-      let key = d.providerId; // Default Surgeon
-      if (selectedX === 'anesthesiologist') key = d.anesthesiologistId;
+      let key = d.surgeon_prov_id; // Default Surgeon
+      if (selectedX === 'anesthesiologist') key = d.anesth_prov_id;
       else if (selectedX === 'year_quarter') {
         const date = new Date(d.surgery_start_dtm);
         key = `${date.getFullYear()}`;
       } else if (selectedX === 'rbc') {
-        const val = d.intraopRBC;
+        const val = d.intraop_rbc_units;
         key = `${val} ${val === 1 ? 'RBC' : 'RBCs'}`;
       } else if (selectedX === 'platelet') {
-        const val = d.intraopPlatelet;
+        const val = d.intraop_plt_units;
         key = `${val} ${val === 1 ? 'Platelet' : 'Platelets'}`;
       } else if (selectedX === 'cryo') {
-        const val = d.intraopCryo;
+        const val = d.intraop_cryo_units;
         key = `${val} ${val === 1 ? 'Cryo' : 'Cryos'}`;
       } else if (selectedX === 'ffp') {
-        const val = d.intraopFFP;
+        const val = d.intraop_ffp_units;
         key = `${val} ${val === 1 ? 'FFP' : 'FFPs'}`;
       } else if (selectedX === 'cell_salvage') {
-        if (d.cellSalvage === 0) key = '0 mL';
-        else if (d.cellSalvage <= 300) key = '1-300 mL';
-        else if (d.cellSalvage <= 400) key = '301-400 mL';
-        else if (d.cellSalvage <= 500) key = '401-500 mL';
+        if (d.intraop_cell_saver_ml === 0) key = '0 mL';
+        else if (d.intraop_cell_saver_ml <= 300) key = '1-300 mL';
+        else if (d.intraop_cell_saver_ml <= 400) key = '301-400 mL';
+        else if (d.intraop_cell_saver_ml <= 500) key = '401-500 mL';
         else key = '>500 mL';
       }
 
@@ -1397,7 +1376,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
         const groupedByVisit = new Map<string, DumbbellCase[]>();
 
         cases.forEach((d) => {
-          let subKey = d.visitId; // Default Visit ID
+          let subKey = d.visit_no; // Default Visit ID
           if (selectedX === 'year_quarter') {
             const date = new Date(d.surgery_start_dtm);
             const q = Math.floor((date.getMonth() + 3) / 3);
@@ -1420,8 +1399,8 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
         }
 
         const visits = Array.from(groupedByVisit.entries()).map(([visitLabel, visitCases]) => {
-          const preAccess = labConfig.preKey;
-          const postAccess = labConfig.postKey;
+          const preAccess = labConfig.preKey as keyof DumbbellCase;
+          const postAccess = labConfig.postKey as keyof DumbbellCase;
           const preValues = visitCases.map((c) => c[preAccess] as number);
           const postValues = visitCases.map((c) => c[postAccess] as number);
           const minPre = preValues.length > 0 ? Math.min(...preValues) : Infinity;
@@ -1785,28 +1764,13 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
             leftSection={<Title order={6} c="dimmed" style={{ fontSize: '10px' }}>X</Title>}
           />
           <Select
-            data={[
-              {
-                value: 'hgb',
-                label: 'Hemoglobin',
-              },
-              {
-                value: 'ferritin',
-                label: 'Ferritin',
-              },
-              {
-                value: 'platelet',
-                label: 'Platelet Count',
-              },
-              {
-                value: 'fibrinogen',
-                label: 'Fibrinogen',
-              },
-              {
-                value: 'inr',
-                label: 'INR',
-              },
-            ]}
+            data={Array.from(new Set(LAB_RESULTS.map((l) => l.metricId))).map((id) => {
+              const res = LAB_RESULTS.find((l) => l.metricId === id);
+              return {
+                value: id,
+                label: res?.metricLabel || id,
+              };
+            })}
             value={selectedLab}
             onChange={(value) => setSelectedLab(value || 'hgb')}
             size="xs"

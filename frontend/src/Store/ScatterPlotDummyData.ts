@@ -2,11 +2,11 @@ import { ScatterPlotData, LabResult, BloodComponent } from '../Types/application
 
 // Reference Lines Configuration
 export const SCATTER_PLOT_REFERENCE_LINES: Record<string, { value: number; label: string; color: string; direction: 'x' | 'y'; maxAdjustment?: number }[]> = {
-    post_op_hgb: [
+    post_hgb: [
         { value: 7, label: 'Restrictive Trigger: 7 g/dL', color: '#22c55e', direction: 'y', maxAdjustment: 0.5 },
         { value: 10, label: 'Upper Limit for Intervention: 10 g/dL', color: '#f59e0b', direction: 'y', maxAdjustment: 0.5 },
     ],
-    pre_op_hgb: [
+    pre_hgb: [
         { value: 13, label: 'Optimization Target: 13 g/dL', color: '#22c55e', direction: 'y' },
         { value: 10, label: 'High-Risk Threshold: 10 g/dL', color: '#f59e0b', direction: 'y' },
     ],
@@ -41,7 +41,7 @@ const generateScatterData = (
 
     // Y-axis range for hemoglobin
     // (Default is post-op, check strings)
-    const isPreOp = yVar === 'pre_op_hgb';
+    const isPreOp = yVar === 'pre_hgb';
     const yMin = isPreOp ? 10 : 7;
     const yMax = isPreOp ? 17 : 13;
 
@@ -96,280 +96,280 @@ const generateScatterData = (
 // Generate dummy data for all scatter plot combinations
 export const SCATTER_PLOT_DUMMY_DATA: Record<string, ScatterPlotData> = {
     // RBC Units vs Post-op Hemoglobin
-    sum_post_op_hgb_rbc_units: [
+    sum_post_hgb_rbc_units: [
         {
             name: 'Surgeon A',
             color: '#1770B8',
-            data: generateScatterData('rbc_units', 'post_op_hgb', 'Surgeon A', '#1770B8'),
+            data: generateScatterData('rbc_units', 'post_hgb', 'Surgeon A', '#1770B8'),
         },
         {
             name: 'Surgeon B',
             color: '#EF2026',
-            data: generateScatterData('rbc_units', 'post_op_hgb', 'Surgeon B', '#EF2026'),
+            data: generateScatterData('rbc_units', 'post_hgb', 'Surgeon B', '#EF2026'),
         },
         {
             name: 'Surgeon C',
             color: '#897BD3',
-            data: generateScatterData('rbc_units', 'post_op_hgb', 'Surgeon C', '#897BD3'),
+            data: generateScatterData('rbc_units', 'post_hgb', 'Surgeon C', '#897BD3'),
         },
     ],
-    avg_post_op_hgb_rbc_units: [
+    avg_post_hgb_rbc_units: [
         {
             name: 'Surgeon A',
             color: '#1770B8',
-            data: generateScatterData('rbc_units', 'post_op_hgb', 'Surgeon A', '#1770B8'),
+            data: generateScatterData('rbc_units', 'post_hgb', 'Surgeon A', '#1770B8'),
         },
         {
             name: 'Surgeon B',
             color: '#EF2026',
-            data: generateScatterData('rbc_units', 'post_op_hgb', 'Surgeon B', '#EF2026'),
+            data: generateScatterData('rbc_units', 'post_hgb', 'Surgeon B', '#EF2026'),
         },
         {
             name: 'Surgeon C',
             color: '#897BD3',
-            data: generateScatterData('rbc_units', 'post_op_hgb', 'Surgeon C', '#897BD3'),
+            data: generateScatterData('rbc_units', 'post_hgb', 'Surgeon C', '#897BD3'),
         },
     ],
 
     // FFP Units vs Post-op Hemoglobin
-    sum_post_op_hgb_ffp_units: [
+    sum_post_hgb_ffp_units: [
         {
             name: 'Surgeon A',
             color: '#1770B8',
-            data: generateScatterData('ffp_units', 'post_op_hgb', 'Surgeon A', '#1770B8'),
+            data: generateScatterData('ffp_units', 'post_hgb', 'Surgeon A', '#1770B8'),
         },
         {
             name: 'Surgeon B',
             color: '#EF2026',
-            data: generateScatterData('ffp_units', 'post_op_hgb', 'Surgeon B', '#EF2026'),
+            data: generateScatterData('ffp_units', 'post_hgb', 'Surgeon B', '#EF2026'),
         },
         {
             name: 'Surgeon C',
             color: '#897BD3',
-            data: generateScatterData('ffp_units', 'post_op_hgb', 'Surgeon C', '#897BD3'),
+            data: generateScatterData('ffp_units', 'post_hgb', 'Surgeon C', '#897BD3'),
         },
     ],
-    avg_post_op_hgb_ffp_units: [
+    avg_post_hgb_ffp_units: [
         {
             name: 'Surgeon A',
             color: '#1770B8',
-            data: generateScatterData('ffp_units', 'post_op_hgb', 'Surgeon A', '#1770B8'),
+            data: generateScatterData('ffp_units', 'post_hgb', 'Surgeon A', '#1770B8'),
         },
         {
             name: 'Surgeon B',
             color: '#EF2026',
-            data: generateScatterData('ffp_units', 'post_op_hgb', 'Surgeon B', '#EF2026'),
+            data: generateScatterData('ffp_units', 'post_hgb', 'Surgeon B', '#EF2026'),
         },
         {
             name: 'Surgeon C',
             color: '#897BD3',
-            data: generateScatterData('ffp_units', 'post_op_hgb', 'Surgeon C', '#897BD3'),
+            data: generateScatterData('ffp_units', 'post_hgb', 'Surgeon C', '#897BD3'),
         },
     ],
 
     // Platelet Units vs Post-op Hemoglobin
-    sum_post_op_hgb_plt_units: [
+    sum_post_hgb_plt_units: [
         {
             name: 'Surgeon A',
             color: '#1770B8',
-            data: generateScatterData('plt_units', 'post_op_hgb', 'Surgeon A', '#1770B8'),
+            data: generateScatterData('plt_units', 'post_hgb', 'Surgeon A', '#1770B8'),
         },
         {
             name: 'Surgeon B',
             color: '#EF2026',
-            data: generateScatterData('plt_units', 'post_op_hgb', 'Surgeon B', '#EF2026'),
+            data: generateScatterData('plt_units', 'post_hgb', 'Surgeon B', '#EF2026'),
         },
         {
             name: 'Surgeon C',
             color: '#897BD3',
-            data: generateScatterData('plt_units', 'post_op_hgb', 'Surgeon C', '#897BD3'),
+            data: generateScatterData('plt_units', 'post_hgb', 'Surgeon C', '#897BD3'),
         },
     ],
-    avg_post_op_hgb_plt_units: [
+    avg_post_hgb_plt_units: [
         {
             name: 'Surgeon A',
             color: '#1770B8',
-            data: generateScatterData('plt_units', 'post_op_hgb', 'Surgeon A', '#1770B8'),
+            data: generateScatterData('plt_units', 'post_hgb', 'Surgeon A', '#1770B8'),
         },
         {
             name: 'Surgeon B',
             color: '#EF2026',
-            data: generateScatterData('plt_units', 'post_op_hgb', 'Surgeon B', '#EF2026'),
+            data: generateScatterData('plt_units', 'post_hgb', 'Surgeon B', '#EF2026'),
         },
         {
             name: 'Surgeon C',
             color: '#897BD3',
-            data: generateScatterData('plt_units', 'post_op_hgb', 'Surgeon C', '#897BD3'),
+            data: generateScatterData('plt_units', 'post_hgb', 'Surgeon C', '#897BD3'),
         },
     ],
 
     // Cryo Units vs Post-op Hemoglobin
-    sum_post_op_hgb_cryo_units: [
+    sum_post_hgb_cryo_units: [
         {
             name: 'Surgeon A',
             color: '#1770B8',
-            data: generateScatterData('cryo_units', 'post_op_hgb', 'Surgeon A', '#1770B8'),
+            data: generateScatterData('cryo_units', 'post_hgb', 'Surgeon A', '#1770B8'),
         },
         {
             name: 'Surgeon B',
             color: '#EF2026',
-            data: generateScatterData('cryo_units', 'post_op_hgb', 'Surgeon B', '#EF2026'),
+            data: generateScatterData('cryo_units', 'post_hgb', 'Surgeon B', '#EF2026'),
         },
         {
             name: 'Surgeon C',
             color: '#897BD3',
-            data: generateScatterData('cryo_units', 'post_op_hgb', 'Surgeon C', '#897BD3'),
+            data: generateScatterData('cryo_units', 'post_hgb', 'Surgeon C', '#897BD3'),
         },
     ],
-    avg_post_op_hgb_cryo_units: [
+    avg_post_hgb_cryo_units: [
         {
             name: 'Surgeon A',
             color: '#1770B8',
-            data: generateScatterData('cryo_units', 'post_op_hgb', 'Surgeon A', '#1770B8'),
+            data: generateScatterData('cryo_units', 'post_hgb', 'Surgeon A', '#1770B8'),
         },
         {
             name: 'Surgeon B',
             color: '#EF2026',
-            data: generateScatterData('cryo_units', 'post_op_hgb', 'Surgeon B', '#EF2026'),
+            data: generateScatterData('cryo_units', 'post_hgb', 'Surgeon B', '#EF2026'),
         },
         {
             name: 'Surgeon C',
             color: '#897BD3',
-            data: generateScatterData('cryo_units', 'post_op_hgb', 'Surgeon C', '#897BD3'),
+            data: generateScatterData('cryo_units', 'post_hgb', 'Surgeon C', '#897BD3'),
         },
     ],
 
     // Cell Salvage Volume vs Post-op Hemoglobin
-    sum_post_op_hgb_cell_saver_ml: [
+    sum_post_hgb_cell_saver_ml: [
         {
             name: 'Anesth 101',
             color: '#1770B8',
             data: [
-                { cell_saver_ml: 50, post_op_hgb: 11.2 },
-                { cell_saver_ml: 120, post_op_hgb: 10.8 },
-                { cell_saver_ml: 180, post_op_hgb: 10.5 },
-                { cell_saver_ml: 240, post_op_hgb: 10.1 },
-                { cell_saver_ml: 310, post_op_hgb: 9.7 },
-                { cell_saver_ml: 400, post_op_hgb: 9.4 },
+                { cell_saver_ml: 50, post_hgb: 11.2 },
+                { cell_saver_ml: 120, post_hgb: 10.8 },
+                { cell_saver_ml: 180, post_hgb: 10.5 },
+                { cell_saver_ml: 240, post_hgb: 10.1 },
+                { cell_saver_ml: 310, post_hgb: 9.7 },
+                { cell_saver_ml: 400, post_hgb: 9.4 },
             ],
         },
         {
             name: 'Anesth 204',
             color: '#EF2026',
             data: [
-                { cell_saver_ml: 40, post_op_hgb: 12.0 },
-                { cell_saver_ml: 90, post_op_hgb: 11.6 },
-                { cell_saver_ml: 150, post_op_hgb: 11.1 },
-                { cell_saver_ml: 200, post_op_hgb: 10.9 },
-                { cell_saver_ml: 270, post_op_hgb: 10.2 },
-                { cell_saver_ml: 350, post_op_hgb: 9.9 },
+                { cell_saver_ml: 40, post_hgb: 12.0 },
+                { cell_saver_ml: 90, post_hgb: 11.6 },
+                { cell_saver_ml: 150, post_hgb: 11.1 },
+                { cell_saver_ml: 200, post_hgb: 10.9 },
+                { cell_saver_ml: 270, post_hgb: 10.2 },
+                { cell_saver_ml: 350, post_hgb: 9.9 },
             ],
         },
         {
             name: 'Anesth 317',
             color: '#897BD3',
             data: [
-                { cell_saver_ml: 30, post_op_hgb: 12.5 },
-                { cell_saver_ml: 70, post_op_hgb: 12.1 },
-                { cell_saver_ml: 110, post_op_hgb: 11.7 },
-                { cell_saver_ml: 160, post_op_hgb: 11.3 },
-                { cell_saver_ml: 220, post_op_hgb: 10.8 },
-                { cell_saver_ml: 300, post_op_hgb: 10.4 },
+                { cell_saver_ml: 30, post_hgb: 12.5 },
+                { cell_saver_ml: 70, post_hgb: 12.1 },
+                { cell_saver_ml: 110, post_hgb: 11.7 },
+                { cell_saver_ml: 160, post_hgb: 11.3 },
+                { cell_saver_ml: 220, post_hgb: 10.8 },
+                { cell_saver_ml: 300, post_hgb: 10.4 },
             ],
         },
     ],
-    avg_post_op_hgb_cell_saver_ml: [
+    avg_post_hgb_cell_saver_ml: [
         {
             name: 'Anesth 101',
             color: '#1770B8',
             data: [
-                { cell_saver_ml: 50, post_op_hgb: 11.2 },
-                { cell_saver_ml: 120, post_op_hgb: 10.8 },
-                { cell_saver_ml: 180, post_op_hgb: 10.5 },
-                { cell_saver_ml: 240, post_op_hgb: 10.1 },
-                { cell_saver_ml: 310, post_op_hgb: 9.7 },
-                { cell_saver_ml: 400, post_op_hgb: 9.4 },
+                { cell_saver_ml: 50, post_hgb: 11.2 },
+                { cell_saver_ml: 120, post_hgb: 10.8 },
+                { cell_saver_ml: 180, post_hgb: 10.5 },
+                { cell_saver_ml: 240, post_hgb: 10.1 },
+                { cell_saver_ml: 310, post_hgb: 9.7 },
+                { cell_saver_ml: 400, post_hgb: 9.4 },
             ],
         },
         {
             name: 'Anesth 204',
             color: '#EF2026',
             data: [
-                { cell_saver_ml: 40, post_op_hgb: 12.0 },
-                { cell_saver_ml: 90, post_op_hgb: 11.6 },
-                { cell_saver_ml: 150, post_op_hgb: 11.1 },
-                { cell_saver_ml: 200, post_op_hgb: 10.9 },
-                { cell_saver_ml: 270, post_op_hgb: 10.2 },
-                { cell_saver_ml: 350, post_op_hgb: 9.9 },
+                { cell_saver_ml: 40, post_hgb: 12.0 },
+                { cell_saver_ml: 90, post_hgb: 11.6 },
+                { cell_saver_ml: 150, post_hgb: 11.1 },
+                { cell_saver_ml: 200, post_hgb: 10.9 },
+                { cell_saver_ml: 270, post_hgb: 10.2 },
+                { cell_saver_ml: 350, post_hgb: 9.9 },
             ],
         },
         {
             name: 'Anesth 317',
             color: '#897BD3',
             data: [
-                { cell_saver_ml: 30, post_op_hgb: 12.5 },
-                { cell_saver_ml: 70, post_op_hgb: 12.1 },
-                { cell_saver_ml: 110, post_op_hgb: 11.7 },
-                { cell_saver_ml: 160, post_op_hgb: 11.3 },
-                { cell_saver_ml: 220, post_op_hgb: 10.8 },
-                { cell_saver_ml: 300, post_op_hgb: 10.4 },
+                { cell_saver_ml: 30, post_hgb: 12.5 },
+                { cell_saver_ml: 70, post_hgb: 12.1 },
+                { cell_saver_ml: 110, post_hgb: 11.7 },
+                { cell_saver_ml: 160, post_hgb: 11.3 },
+                { cell_saver_ml: 220, post_hgb: 10.8 },
+                { cell_saver_ml: 300, post_hgb: 10.4 },
             ],
         },
     ],
     // Pre-op Hemoglobin Data
     // RBC Units vs Pre-op Hemoglobin
-    sum_pre_op_hgb_rbc_units: [
-        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
-        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
-        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    sum_pre_hgb_rbc_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('rbc_units', 'pre_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('rbc_units', 'pre_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('rbc_units', 'pre_hgb', 'Surgeon C', '#897BD3') },
     ],
-    avg_pre_op_hgb_rbc_units: [
-        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
-        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
-        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('rbc_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    avg_pre_hgb_rbc_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('rbc_units', 'pre_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('rbc_units', 'pre_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('rbc_units', 'pre_hgb', 'Surgeon C', '#897BD3') },
     ],
     // FFP Units vs Pre-op Hemoglobin
-    sum_pre_op_hgb_ffp_units: [
-        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
-        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
-        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    sum_pre_hgb_ffp_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('ffp_units', 'pre_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('ffp_units', 'pre_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('ffp_units', 'pre_hgb', 'Surgeon C', '#897BD3') },
     ],
-    avg_pre_op_hgb_ffp_units: [
-        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
-        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
-        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('ffp_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    avg_pre_hgb_ffp_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('ffp_units', 'pre_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('ffp_units', 'pre_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('ffp_units', 'pre_hgb', 'Surgeon C', '#897BD3') },
     ],
     // Platelet Units vs Pre-op Hemoglobin
-    sum_pre_op_hgb_plt_units: [
-        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
-        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
-        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    sum_pre_hgb_plt_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('plt_units', 'pre_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('plt_units', 'pre_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('plt_units', 'pre_hgb', 'Surgeon C', '#897BD3') },
     ],
-    avg_pre_op_hgb_plt_units: [
-        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
-        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
-        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('plt_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    avg_pre_hgb_plt_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('plt_units', 'pre_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('plt_units', 'pre_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('plt_units', 'pre_hgb', 'Surgeon C', '#897BD3') },
     ],
     // Cryo Units vs Pre-op Hemoglobin
-    sum_pre_op_hgb_cryo_units: [
-        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
-        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
-        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    sum_pre_hgb_cryo_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('cryo_units', 'pre_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('cryo_units', 'pre_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('cryo_units', 'pre_hgb', 'Surgeon C', '#897BD3') },
     ],
-    avg_pre_op_hgb_cryo_units: [
-        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon A', '#1770B8') },
-        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon B', '#EF2026') },
-        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('cryo_units', 'pre_op_hgb', 'Surgeon C', '#897BD3') },
+    avg_pre_hgb_cryo_units: [
+        { name: 'Surgeon A', color: '#1770B8', data: generateScatterData('cryo_units', 'pre_hgb', 'Surgeon A', '#1770B8') },
+        { name: 'Surgeon B', color: '#EF2026', data: generateScatterData('cryo_units', 'pre_hgb', 'Surgeon B', '#EF2026') },
+        { name: 'Surgeon C', color: '#897BD3', data: generateScatterData('cryo_units', 'pre_hgb', 'Surgeon C', '#897BD3') },
     ],
     // Cell Salvage Volume vs Pre-op Hemoglobin
-    sum_pre_op_hgb_cell_saver_ml: [
-        { name: 'Anesth 101', color: '#1770B8', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 101', '#1770B8') },
-        { name: 'Anesth 204', color: '#EF2026', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 204', '#EF2026') },
-        { name: 'Anesth 317', color: '#897BD3', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 317', '#897BD3') },
+    sum_pre_hgb_cell_saver_ml: [
+        { name: 'Anesth 101', color: '#1770B8', data: generateScatterData('cell_saver_ml', 'pre_hgb', 'Anesth 101', '#1770B8') },
+        { name: 'Anesth 204', color: '#EF2026', data: generateScatterData('cell_saver_ml', 'pre_hgb', 'Anesth 204', '#EF2026') },
+        { name: 'Anesth 317', color: '#897BD3', data: generateScatterData('cell_saver_ml', 'pre_hgb', 'Anesth 317', '#897BD3') },
     ],
-    avg_pre_op_hgb_cell_saver_ml: [
-        { name: 'Anesth 101', color: '#1770B8', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 101', '#1770B8') },
-        { name: 'Anesth 204', color: '#EF2026', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 204', '#EF2026') },
-        { name: 'Anesth 317', color: '#897BD3', data: generateScatterData('cell_saver_ml', 'pre_op_hgb', 'Anesth 317', '#897BD3') },
+    avg_pre_hgb_cell_saver_ml: [
+        { name: 'Anesth 101', color: '#1770B8', data: generateScatterData('cell_saver_ml', 'pre_hgb', 'Anesth 101', '#1770B8') },
+        { name: 'Anesth 204', color: '#EF2026', data: generateScatterData('cell_saver_ml', 'pre_hgb', 'Anesth 204', '#EF2026') },
+        { name: 'Anesth 317', color: '#897BD3', data: generateScatterData('cell_saver_ml', 'pre_hgb', 'Anesth 317', '#897BD3') },
     ],
 };
