@@ -340,6 +340,13 @@ class GenerateParquetsTests(TransactionTestCase):
                     with self.assertRaises(ARROW_ERRORS):
                         build_visit_attributes_table([row])
 
+    def test_build_visit_attributes_table_accepts_large_unsigned_age_values(self):
+        row = valid_visit_attributes_row()
+        row["age_at_adm"] = 168
+
+        table = build_visit_attributes_table([row])
+        self.assertEqual(table.to_pylist()[0]["age_at_adm"], 168)
+
     def test_build_visit_attributes_table_rejects_bogus_values_for_every_column(self):
         schema = get_visit_attributes_schema()
         base_row = valid_visit_attributes_row()
@@ -348,7 +355,7 @@ class GenerateParquetsTests(TransactionTestCase):
             "mrn": {"bad": "string"},
             "adm_dtm": {"bad": "date"},
             "dsch_dtm": {"bad": "date"},
-            "age_at_adm": {"bad": "uint8"},
+            "age_at_adm": {"bad": "uint16"},
             "pat_class_desc": {"bad": "string"},
             "apr_drg_weight": {"bad": "float"},
             "ms_drg_weight": {"bad": "float"},
