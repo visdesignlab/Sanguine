@@ -256,24 +256,6 @@ const TargetOverlay = memo(({
   const [mouseX, setMouseX] = useState<number>(0);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    // Relative X inside the SVG group, assuming the group starts at x=0
-    // e.nativeEvent.offsetX works if the parent is relative.
-    // D3 scales are relative to the chart area.
-    // The group is translated by MARGIN.top.
-    // The mouse event on the line is relative to the viewport or client.
-    // Let's use getBoundingClientRect for robust relative coords if needed,
-    // but offsetX on the SVG element should be consistent.
-    // Actually, on the <line>, nativeEvent.offsetX is usually correct relative to the SVG element.
-    // However, since we are inside a <g transform=...>, we need to be careful.
-    // Let's use a ref for the group to calculate relative position safely.
-    // But simplistic approach: e.nativeEvent.offsetX - MARGIN.left (if applicable).
-    // Wait, the group is translated by (0, MARGIN.top).
-    // The <svg> has MARGIN.left as width? No, the chart content is inside a div with relative pos.
-    // The SVG is `totalWidth` wide.
-    // The `line` starts at x=0.
-    // The group is at `transform="translate(0, MARGIN.top)"`.
-    // So offsetX should be correct relative to the SVG container.
-    // Let's rely on offsetX for now.
     setMouseX(e.nativeEvent.offsetX);
   }, []);
 
@@ -437,9 +419,6 @@ const AverageLine = memo(({
   const [mouseX, setMouseX] = useState(0);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    // offsetX on the line is relative to the SVG element.
-    // However, since we're in a scrollable area, we need to be careful.
-    // Let's use the same logic as TargetOverlay if possible.
     setMouseX(e.nativeEvent.offsetX);
   }, []);
 
@@ -1112,7 +1091,6 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     });
   }, []);
 
-  // Get and Process Data
   // Get and Process Data
   const processedData = useMemo(() => {
     const rawData = (store.exploreChartData[chartConfig.chartId] as DumbbellData) || [];
