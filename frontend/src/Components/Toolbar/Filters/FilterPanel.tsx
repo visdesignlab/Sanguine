@@ -27,7 +27,9 @@ import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
 import classes from '../../../Shell/Shell.module.css';
 import { FilterComponent } from './FilterComponent';
-import { BLOOD_COMPONENTS, BLOOD_PRODUCTS_ARRAY, BloodComponent } from '../../../Types/bloodProducts';
+import {
+  BLOOD_COMPONENTS, BLOOD_PRODUCTS_ARRAY, BloodComponent, RBC_UNITS,
+} from '../../../Types/bloodProducts';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
 
@@ -55,7 +57,6 @@ function dateChanged(
 export function FilterPanel() {
   const { toolbarWidth, iconStroke } = useThemeConstants();
   const store = useContext(Store);
-  const filterToolTip = 'Filter for Visits That Used ...';
 
   return useObserver(() => (
     <Box>
@@ -141,16 +142,9 @@ export function FilterPanel() {
               resetFunc={() => store.resetBloodComponentFilters()}
             />
             <Accordion.Panel style={{ display: 'flex', flexDirection: 'column' }}>
-              {BLOOD_PRODUCTS_ARRAY.map((bloodComponent, i) => (
-                <Tooltip key={`${bloodComponent}-${i}`} label={filterToolTip} position="top-start">
-                  <Input.Wrapper
-                    label={BLOOD_COMPONENTS.find((c) => c.value === bloodComponent)?.label.base || bloodComponent}
-                    mb="lg"
-                    styles={{ label: { color: rangeChanged(store, bloodComponent) ? 'var(--mantine-color-blue-filled)' : undefined } }}
-                  >
-                    <FilterComponent data={store.getHistogramData(bloodComponent) || []} unitName={bloodComponent} />
-                  </Input.Wrapper>
-                </Tooltip>
+
+              {BLOOD_PRODUCTS_ARRAY.map((bloodComponent) => (
+                <FilterComponent key={`filter-${bloodComponent}`} data={store.getHistogramData(bloodComponent) || []} unitName={bloodComponent} />
               ))}
             </Accordion.Panel>
           </Accordion.Item>

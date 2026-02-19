@@ -7,6 +7,7 @@ import {
   Store, MANUAL_INFINITY, ApplicationState,
 } from '../../../Store/Store';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
+import { CELL_SAVER_ML } from '../../../Types/bloodProducts';
 
 type NumberArrayKeys<T> = {
   [K in keyof T]: T[K] extends number[] ? K : never
@@ -55,7 +56,7 @@ export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: { varN
       onChangeEnd={(v) => setStoreFilterValue(v)}
       min={initialFilterMin}
       max={clampedMax}
-      step={varName === 'cell_saver_ml' ? 50 : 1}
+      step={varName === CELL_SAVER_ML ? 50 : 1}
       color={isFilterActive ? 'blue.6' : DEFAULT_DATA_COLOR}
       marks={[
         { value: initialFilterMin, label: `${initialFilterMin}` },
