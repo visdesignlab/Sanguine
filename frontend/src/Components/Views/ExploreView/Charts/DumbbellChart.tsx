@@ -30,39 +30,6 @@ const EMPTY_VISIT_WIDTH = 30; // Minimum width for empty visit/quarter buckets
 // Target Configuration
 const DRAG_LIMIT = 1.0;
 
-// Dummy Data Enhancements
-const PROVIDER_NAMES: Record<string, string> = {
-  Aris: 'Aaron Aris',
-  Bennett: 'Brian Bennett',
-  Cheng: 'Charles Cheng',
-  Davis: 'David Davis',
-  Evans: 'Edward Evans',
-  Foster: 'Frank Foster',
-  Green: 'George Green',
-  Harris: 'Henry Harris',
-  Irwin: 'Ian Irwin',
-  Jones: 'John Jones',
-  // Fallback pattern
-};
-
-const getProviderName = (id: string, selectedX: string) => {
-  if (selectedX === 'surgeon' || selectedX === 'anesthesiologist') {
-    const cleanId = id.replace(/^Dr\.\s*/, '');
-    const fullName = PROVIDER_NAMES[cleanId] || cleanId;
-    return `Dr. ${fullName}`;
-  }
-  return id;
-};
-// Removed getVisitLabel usage or changed it to identity to remove "Visit " prefix
-const getVisitLabel = (_id: string, label: string) => label.replace(/^Visit\s*/, '');
-
-const getVisitTooltipLabel = (label: string, selectedX: string) => {
-  if (selectedX === 'surgeon' || selectedX === 'anesthesiologist') {
-    return `Visit ${label.replace(/^Visit\s*/, '')}`;
-  }
-  return label;
-};
-
 // X-Axis Configurations
 const X_AXIS_OPTIONS = [
   { value: 'surgeon', label: 'Surgeon' },
@@ -150,19 +117,6 @@ const DumbbellYAxis = memo(({
     }
 
     const handleMouseMove = (e: MouseEvent) => {
-      // Calculate new value from Y position.
-      // We approximate the Y value based on the mouse position relative to the chart top.
-      // Ideally we'd use the SVG ref, but for now we'll use movementY or simple relative calc if we assume fixed layout.
-      // A robust way without ref is using the existing scale and the delta.
-      // But we need the current value to apply delta.
-
-      // Let's use the invert function of yScale.
-      // We need to know component offset.
-      // Instead, let's just use the fact that we have the height and margins.
-      // We can map mouse Y to the value if we know where the SVG is.
-      // Since that's hard to know without ref, let's use a simpler approach:
-      // Change value based on movementY pixels.
-
       const pixelRange = innerHeight;
       const valueRange = labConfig.max - labConfig.min;
       const valuePerPixel = valueRange / pixelRange;
@@ -171,10 +125,6 @@ const DumbbellYAxis = memo(({
       setTargets((prev: { preMin: number; postMin: number; postMax: number }) => {
         const val = prev[dragging as keyof typeof prev];
         let newVal = val - deltaValue;
-        // Screen Y increases downwards.
-        // Scale Y range is [height, 0].
-        // So moving mouse DOWN (positive movementY) -> y increases -> value DECREASES.
-        // So subtraction is correct.
 
         // Apply constraints
         let baseVal = 0;
@@ -201,9 +151,6 @@ const DumbbellYAxis = memo(({
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [dragging, yScale, targets, setTargets, innerHeight, labConfig.min, labConfig.max, labConfig.defaultTargets.preMin, labConfig.defaultTargets.postMin, labConfig.defaultTargets.postMax]);
-
-  // We need to implement the actual drag logic in a separate step to be clean.
-  // For this step, I'll just add the props and the rendering of handles.
 
   return (
     <svg width={MARGIN.left} height={height} style={{ display: 'block', flexShrink: 0 }}>
@@ -550,18 +497,18 @@ const DumbbellChartContent = memo(({
   onToggleProviderCollapse,
   onToggleVisitCollapse,
   setHoveredCollapse,
+  showMedian,
+  isFlatMode,
+  providerLayout,
+  visitLayout,
   labConfig,
-  selectedX,
   showPre,
   showPost,
   targets,
   setHoveredTarget,
   showTargets,
-  showMedian,
-  providerLayout,
-  visitLayout,
 }: DumbbellChartSVGProps & {
-  selectedX: string,
+  isFlatMode: boolean,
   showPre: boolean,
   showPost: boolean,
   targets: { preMin: number; postMin: number; postMax: number },
@@ -591,16 +538,6 @@ const DumbbellChartContent = memo(({
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const initialSelection = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
-
-  const isFlatMode = useMemo(() => [
-    'surgeon',
-    'anesthesiologist',
-    'rbc',
-    'platelet',
-    'cryo',
-    'ffp',
-    'cell_salvage',
-  ].includes(selectedX), [selectedX]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
@@ -814,7 +751,7 @@ const DumbbellChartContent = memo(({
 
         return (
           <g key={provider.id}>
-            <Tooltip label={getProviderName(provider.id, selectedX)} openDelay={200}>
+            <Tooltip label={provider.id} openDelay={200}>
               <rect
                 x={providerX}
                 y={isFlatMode ? innerHeight : innerHeight + 25}
@@ -882,7 +819,7 @@ const DumbbellChartContent = memo(({
                         style={{ pointerEvents: 'none' }}
                       />
                       {!isFlatMode && (
-                        <Tooltip label={getVisitTooltipLabel(visit.label, selectedX)} openDelay={200}>
+                        <Tooltip label={visit.label} openDelay={200}>
                           <rect
                             x={currentVisitX}
                             y={innerHeight}
@@ -905,7 +842,7 @@ const DumbbellChartContent = memo(({
                           fill={theme.colors.gray[6]}
                           style={{ pointerEvents: 'none' }}
                         >
-                          {getVisitLabel(visit.id, visit.label)}
+                          {visit.label}
                         </text>
                       )}
                       <rect
@@ -997,7 +934,7 @@ const DumbbellChartContent = memo(({
                     x1={providerX}
                     x2={providerX + providerWidth}
                     y={yScale(avgPre)}
-                    label={`Average Pre-op: ${avgPre.toFixed(1)} for ${getProviderName(provider.id, selectedX)}`}
+                    label={`Average Pre-op: ${avgPre.toFixed(1)} for ${provider.id}`}
                     color={theme.colors.teal[4]}
                   />
                 )}
@@ -1006,7 +943,7 @@ const DumbbellChartContent = memo(({
                     x1={providerX}
                     x2={providerX + providerWidth}
                     y={yScale(avgPost)}
-                    label={`Average Post-op: ${avgPost.toFixed(1)} for ${getProviderName(provider.id, selectedX)}`}
+                    label={`Average Post-op: ${avgPost.toFixed(1)} for ${provider.id}`}
                     color={theme.colors.indigo[4]}
                   />
                 )}
@@ -1016,12 +953,17 @@ const DumbbellChartContent = memo(({
         );
       })}
     </g>
-  ), [processedData, collapsedProviders, collapsedVisits, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, isFlatMode, onToggleProviderCollapse, onToggleVisitCollapse, setHoveredCollapse, isSelected, totalWidth, selectedX, showMedian, providerLayout, visitLayout]);
+  ), [processedData, collapsedProviders, collapsedVisits, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, isFlatMode, onToggleProviderCollapse, onToggleVisitCollapse, setHoveredCollapse, isSelected, totalWidth, showMedian, providerLayout, visitLayout]);
 
   return (
     <div
       ref={chartRef}
-      style={{ width: totalWidth, height, position: 'relative', userSelect: 'none' }}
+      style={{
+        width: totalWidth,
+        height,
+        position: 'relative',
+        userSelect: 'none',
+      }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -1119,6 +1061,16 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
 
   // Hover state for collapse arrows
   const [hoveredCollapse, setHoveredCollapse] = useState<string | null>(null);
+
+  const isFlatMode = useMemo(() => [
+    'surgeon',
+    'anesthesiologist',
+    'rbc',
+    'platelet',
+    'cryo',
+    'ffp',
+    'cell_salvage',
+  ].includes(selectedX), [selectedX]);
 
   // Hover state for targets
   const [hoveredTarget, setHoveredTargetRaw] = useState<string | null>(null);
@@ -1235,7 +1187,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
             const date = new Date(d.surgery_start_dtm);
             const q = Math.floor((date.getMonth() + 3) / 3);
             subKey = `Q${q}`;
-          } else if (['surgeon', 'anesthesiologist', 'rbc', 'platelet', 'cryo', 'ffp', 'cell_salvage'].includes(selectedX)) {
+          } else if (isFlatMode) {
             subKey = 'All Cases';
           }
           if (!groupedByVisit.has(subKey)) groupedByVisit.set(subKey, []);
@@ -1327,7 +1279,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     });
 
     return hierarchy;
-  }, [store.exploreChartData, chartConfig.chartId, labConfig, selectedX, sortMode]);
+  }, [store.exploreChartData, chartConfig.chartId, labConfig, selectedX, sortMode, isFlatMode]);
 
   // --- Layout & Width Calculation ---
 
@@ -1550,7 +1502,12 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 variant={showPre ? 'light' : 'default'}
                 color="teal"
                 onClick={() => setShowPre(!showPre)}
-                styles={{ root: { borderColor: showPre ? theme.colors.teal[6] : undefined, fontWeight: 400 } }}
+                styles={{
+                  root: {
+                    borderColor: showPre ? theme.colors.teal[6] : undefined,
+                    fontWeight: 400,
+                  },
+                }}
               >
                 Pre
               </Button>
@@ -1560,7 +1517,13 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 variant={showPost ? 'light' : 'default'}
                 color="indigo"
                 onClick={() => setShowPost(!showPost)}
-                styles={{ root: { borderColor: showPost ? theme.colors.indigo[6] : undefined, marginLeft: -1, fontWeight: 400 } }}
+                styles={{
+                  root: {
+                    borderColor: showPost ? theme.colors.indigo[6] : undefined,
+                    marginLeft: -1,
+                    fontWeight: 400,
+                  },
+                }}
               >
                 Post
               </Button>
@@ -1570,7 +1533,14 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 variant={showTargets ? 'light' : 'default'}
                 color="gray"
                 onClick={() => setShowTargets(!showTargets)}
-                styles={{ root: { marginLeft: -1, borderColor: showTargets ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
+                styles={{
+                  root: {
+                    marginLeft: -1,
+                    borderColor: showTargets ? theme.colors.gray[6] : theme.colors.gray[4],
+                    fontWeight: 400,
+                    color: theme.colors.gray[9],
+                  },
+                }}
               >
                 Target
               </Button>
@@ -1580,7 +1550,14 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 variant={showMedian ? 'light' : 'default'}
                 color="gray"
                 onClick={() => setShowMedian(!showMedian)}
-                styles={{ root: { marginLeft: -1, borderColor: showMedian ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
+                styles={{
+                  root: {
+                    marginLeft: -1,
+                    borderColor: showMedian ? theme.colors.gray[6] : theme.colors.gray[4],
+                    fontWeight: 400,
+                    color: theme.colors.gray[9],
+                  },
+                }}
               >
                 Avg
               </Button>
@@ -1644,14 +1621,14 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 onToggleProviderCollapse={toggleProviderCollapse}
                 onToggleVisitCollapse={toggleVisitCollapse}
                 setHoveredCollapse={setHoveredCollapse}
-                labConfig={labConfig}
-                selectedX={selectedX}
+                isFlatMode={isFlatMode}
                 showPre={showPre}
                 showPost={showPost}
                 targets={targets}
                 setHoveredTarget={setHoveredTarget}
                 showTargets={showTargets}
                 showMedian={showMedian}
+                labConfig={labConfig}
                 providerLayout={layoutData.providerLayout}
                 visitLayout={layoutData.visitLayout}
               />
