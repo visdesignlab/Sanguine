@@ -102,6 +102,13 @@ poetry run python manage.py generate_parquets --generate visit_attributes
 poetry run python manage.py generate_parquets --generate procedure_hierarchy
 ```
 
+If `VisitAttributes` is already fresh and you only need to rebuild cache files, you can skip re-materializing it:
+
+```bash
+poetry run python manage.py generate_parquets --skip-materialize
+poetry run python manage.py generate_parquets --generate procedure_hierarchy --skip-materialize
+```
+
     
 1. The database should now be populated with mock data and you should be able to see it in the frontend by adding a chart to the dashboard.
 

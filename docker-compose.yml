@@ -9,7 +9,7 @@ services:
       mariadb:
         condition: service_healthy
     volumes:
-      - backend_parquets:/app/parquet_cache
+      - ./backend/parquet_cache:/app/parquet_cache
 
   mariadb:
     image: docker.io/mariadb:11
@@ -37,4 +37,3 @@ services:
 
 volumes:
   mariadb_data:
-  backend_parquets:

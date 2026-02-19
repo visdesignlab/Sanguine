@@ -2,6 +2,7 @@ from collections import defaultdict
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -69,18 +70,42 @@ def build_visit_attributes_table(rows: list[dict]) -> pa.Table:
     return pa.Table.from_pylist(rows, schema=schema)
 
 
+def get_visit_attributes_select_columns() -> list[str]:
+    return [
+        field.name
+        for field in get_visit_attributes_schema()
+        if field.name not in ("department_ids", "procedure_ids")
+    ]
+
+
 def attach_cpt_dimensions(
     rows: list[dict],
     code_map: dict[str, tuple[str, str, str, str]],
     billing_fetch_batch_size: int = 50000,
 ) -> list[dict]:
+    visit_departments, visit_procedures = build_visit_cpt_dimensions(
+        code_map=code_map,
+        billing_fetch_batch_size=billing_fetch_batch_size,
+    )
+
+    for row in rows:
+        visit_no = row["visit_no"]
+        row["department_ids"] = visit_departments.get(visit_no, [])
+        row["procedure_ids"] = visit_procedures.get(visit_no, [])
+
+    return rows
+
+
+def build_visit_cpt_dimensions(
+    code_map: dict[str, tuple[str, str, str, str]],
+    billing_fetch_batch_size: int = 50000,
+) -> tuple[dict[int, list[str]], dict[int, list[str]]]:
     visit_departments: dict[int, set[str]] = defaultdict(set)
     visit_procedures: dict[int, set[str]] = defaultdict(set)
-
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT DISTINCT visit_no, cpt_code
+            SELECT visit_no, cpt_code
             FROM BillingCode
             WHERE cpt_code IS NOT NULL AND cpt_code <> ''
             """
@@ -103,35 +128,46 @@ def attach_cpt_dimensions(
                 visit_departments[visit_no].add(department_id)
                 visit_procedures[visit_no].add(procedure_id)
 
-    for row in rows:
-        visit_no = row["visit_no"]
-        row["department_ids"] = sorted(visit_departments.get(visit_no, set()))
-        row["procedure_ids"] = sorted(visit_procedures.get(visit_no, set()))
+    return (
+        {visit_no: sorted(department_ids) for visit_no, department_ids in visit_departments.items()},
+        {visit_no: sorted(procedure_ids) for visit_no, procedure_ids in visit_procedures.items()},
+    )
 
-    return rows
+
+def build_visit_counts(
+    visit_dimensions: dict[int, list[str]],
+    eligible_visit_numbers: set[int] | None = None,
+) -> dict[str, int]:
+    dimension_visit_counts: dict[str, int] = defaultdict(int)
+    for visit_no, dimension_ids in visit_dimensions.items():
+        if eligible_visit_numbers is not None and visit_no not in eligible_visit_numbers:
+            continue
+        for dimension_id in dimension_ids:
+            dimension_visit_counts[dimension_id] += 1
+    return dict(dimension_visit_counts)
+
+
+def fetch_materialized_visit_numbers(fetch_batch_size: int) -> set[int]:
+    visit_numbers: set[int] = set()
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT DISTINCT visit_no FROM VisitAttributes")
+        while True:
+            rows = cursor.fetchmany(fetch_batch_size)
+            if not rows:
+                break
+            for row in rows:
+                visit_numbers.add(row[0])
+    return visit_numbers
 
 
 def build_procedure_hierarchy_payload(
-    rows: list[dict],
     hierarchy_departments,
+    visit_departments: dict[int, list[str]],
+    visit_procedures: dict[int, list[str]],
+    eligible_visit_numbers: set[int] | None = None,
 ) -> dict:
-    visit_departments: dict[int, set[str]] = defaultdict(set)
-    visit_procedures: dict[int, set[str]] = defaultdict(set)
-
-    for row in rows:
-        visit_no = row["visit_no"]
-        visit_departments[visit_no].update(row.get("department_ids", []))
-        visit_procedures[visit_no].update(row.get("procedure_ids", []))
-
-    department_visit_counts: dict[str, int] = defaultdict(int)
-    for department_ids in visit_departments.values():
-        for department_id in department_ids:
-            department_visit_counts[department_id] += 1
-
-    procedure_visit_counts: dict[str, int] = defaultdict(int)
-    for procedure_ids in visit_procedures.values():
-        for procedure_id in procedure_ids:
-            procedure_visit_counts[procedure_id] += 1
+    department_visit_counts = build_visit_counts(visit_departments, eligible_visit_numbers)
+    procedure_visit_counts = build_visit_counts(visit_procedures, eligible_visit_numbers)
 
     procedure_hierarchy_departments = []
     for department in hierarchy_departments:
@@ -170,10 +206,66 @@ def build_procedure_hierarchy_payload(
     }
 
 
+def normalize_visit_attributes_row(
+    row: dict[str, Any],
+    nullable_bool_fields: tuple[str, ...],
+    required_bool_fields: tuple[str, ...],
+) -> dict[str, Any]:
+    row["los"] = float(row["los"]) if row["los"] is not None else None
+    for field_name in nullable_bool_fields:
+        value = row[field_name]
+        row[field_name] = None if value is None else bool(value)
+    for field_name in required_bool_fields:
+        row[field_name] = bool(row[field_name])
+    return row
+
+
+def write_visit_attributes_parquet(
+    file_path: Path,
+    visit_departments: dict[int, list[str]],
+    visit_procedures: dict[int, list[str]],
+    fetch_batch_size: int,
+    nullable_bool_fields: tuple[str, ...],
+    required_bool_fields: tuple[str, ...],
+) -> None:
+    schema = get_visit_attributes_schema()
+    select_columns = get_visit_attributes_select_columns()
+    writer = pq.ParquetWriter(file_path, schema=schema)
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT {', '.join(select_columns)} FROM VisitAttributes")
+            columns = [col[0] for col in cursor.description]
+
+            while True:
+                rows = cursor.fetchmany(fetch_batch_size)
+                if not rows:
+                    break
+
+                visits = []
+                for row in rows:
+                    visit = dict(zip(columns, row))
+                    visit = normalize_visit_attributes_row(
+                        row=visit,
+                        nullable_bool_fields=nullable_bool_fields,
+                        required_bool_fields=required_bool_fields,
+                    )
+                    visit_no = visit["visit_no"]
+                    visit["department_ids"] = visit_departments.get(visit_no, [])
+                    visit["procedure_ids"] = visit_procedures.get(visit_no, [])
+                    visits.append(visit)
+
+                if visits:
+                    visit_table = build_visit_attributes_table(visits)
+                    writer.write_table(visit_table)
+    finally:
+        writer.close()
+
+
 class Command(BaseCommand):
     help = "Generate a Parquet cache of the database data"
     GENERATE_CHOICES = ("all", "visit_attributes", "procedure_hierarchy")
     BILLING_FETCH_BATCH_SIZE = 50000
+    VISIT_FETCH_BATCH_SIZE = 50000
     NULLABLE_BOOL_FIELDS = (
         "death",
         "vent",
@@ -195,9 +287,15 @@ class Command(BaseCommand):
                 "all, visit_attributes, procedure_hierarchy."
             ),
         )
+        parser.add_argument(
+            "--skip-materialize",
+            action="store_true",
+            help="Skip calling materializeVisitAttributes() before cache generation.",
+        )
 
     def handle(self, *args, **kwargs):
         generate_target = kwargs["generate"]
+        skip_materialize = kwargs["skip_materialize"]
         should_generate_visit_attributes = generate_target in ("all", "visit_attributes")
         should_generate_procedure_hierarchy = generate_target in ("all", "procedure_hierarchy")
 
@@ -208,43 +306,39 @@ class Command(BaseCommand):
         procedure_hierarchy_file_path = cache_dir / "procedure_hierarchy.json"
         temp_procedure_hierarchy_file_path = cache_dir / "procedure_hierarchy.json.tmp"
 
-        with connection.cursor() as cursor:
-            cursor.execute("CALL materializeVisitAttributes()")
+        if not skip_materialize:
+            with connection.cursor() as cursor:
+                cursor.execute("CALL materializeVisitAttributes()")
             self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
-
-            cursor.execute("SELECT * FROM VisitAttributes")
-            columns = [col[0] for col in cursor.description]
-            rows = cursor.fetchall()
-            visits = [dict(zip(columns, row)) for row in rows]
-            for visit in visits:
-                visit["los"] = float(visit["los"]) if visit["los"] is not None else None
-                for field_name in self.NULLABLE_BOOL_FIELDS:
-                    value = visit[field_name]
-                    visit[field_name] = None if value is None else bool(value)
-                for field_name in self.REQUIRED_BOOL_FIELDS:
-                    visit[field_name] = bool(visit[field_name])
+        else:
+            self.stdout.write("Skipping VisitAttributes materialization.")
 
         hierarchy = get_cpt_hierarchy()
-        visits = attach_cpt_dimensions(
-            rows=visits,
+        visit_departments, visit_procedures = build_visit_cpt_dimensions(
             code_map=hierarchy.code_map,
             billing_fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
         )
 
-        visit_table = None
-        if should_generate_visit_attributes:
-            visit_table = build_visit_attributes_table(visits)
-
         procedure_hierarchy_payload = None
         if should_generate_procedure_hierarchy:
+            eligible_visit_numbers = fetch_materialized_visit_numbers(self.VISIT_FETCH_BATCH_SIZE)
             procedure_hierarchy_payload = build_procedure_hierarchy_payload(
-                rows=visits,
                 hierarchy_departments=hierarchy.departments,
+                visit_departments=visit_departments,
+                visit_procedures=visit_procedures,
+                eligible_visit_numbers=eligible_visit_numbers,
             )
 
         try:
             if should_generate_visit_attributes:
-                pq.write_table(visit_table, temp_visit_file_path)
+                write_visit_attributes_parquet(
+                    file_path=temp_visit_file_path,
+                    visit_departments=visit_departments,
+                    visit_procedures=visit_procedures,
+                    fetch_batch_size=self.VISIT_FETCH_BATCH_SIZE,
+                    nullable_bool_fields=self.NULLABLE_BOOL_FIELDS,
+                    required_bool_fields=self.REQUIRED_BOOL_FIELDS,
+                )
             if should_generate_procedure_hierarchy:
                 temp_procedure_hierarchy_file_path.write_text(
                     json.dumps(procedure_hierarchy_payload, separators=(",", ":")),
