@@ -1,5 +1,5 @@
 import {
-  useMemo, useState, useContext, memo, useCallback, useEffect, useRef,
+  useMemo, useState, useContext, memo, useCallback, useEffect, useRef, useId,
 } from 'react';
 import { useElementSize } from '@mantine/hooks';
 import {
@@ -394,6 +394,7 @@ const AverageLine = memo(({
 }) => {
   const [hovered, setHovered] = useState(false);
   const [mouseX, setMouseX] = useState(0);
+  const gradientId = useId();
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     setMouseX(e.nativeEvent.offsetX);
@@ -401,6 +402,14 @@ const AverageLine = memo(({
 
   return (
     <g>
+      <defs>
+        <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1={x1} x2={x2} y1={y} y2={y}>
+          <stop offset="0%" stopColor={color} stopOpacity={0} />
+          <stop offset="5%" stopColor={color} stopOpacity={1} />
+          <stop offset="95%" stopColor={color} stopOpacity={1} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
+        </linearGradient>
+      </defs>
       <Tooltip label={label} opened={hovered} position="top" offset={5}>
         <rect
           x={mouseX}
@@ -416,7 +425,7 @@ const AverageLine = memo(({
         x2={x2}
         y1={y}
         y2={y}
-        stroke={color}
+        stroke={`url(#${gradientId})`}
         strokeWidth={1.5}
         strokeOpacity={0.6}
         style={{ pointerEvents: 'none' }}
