@@ -1,6 +1,6 @@
 services:
   backend:
-    image: docker.io/intelvia/intelvia-backend:v1.0.0-alpha.5
+    image: docker.io/intelvia/intelvia-backend:v1.0.0-alpha.6
     env_file:
       - .env
     expose:
@@ -9,7 +9,7 @@ services:
       mariadb:
         condition: service_healthy
     volumes:
-      - backend_parquets:/app/parquet_cache
+      - ./backend/parquet_cache:/app/parquet_cache:z
 
   mariadb:
     image: docker.io/mariadb:11
@@ -29,7 +29,7 @@ services:
       timeout: 5s
 
   frontend:
-    image: docker.io/intelvia/intelvia-frontend:v1.0.0-alpha.5
+    image: docker.io/intelvia/intelvia-frontend:v1.0.0-alpha.6
     ports:
       - "8080:8080"
     depends_on:
@@ -37,4 +37,3 @@ services:
 
 volumes:
   mariadb_data:
-  backend_parquets:

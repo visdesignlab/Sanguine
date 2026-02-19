@@ -340,6 +340,13 @@ class GenerateParquetsTests(TransactionTestCase):
                     with self.assertRaises(ARROW_ERRORS):
                         build_visit_attributes_table([row])
 
+    def test_build_visit_attributes_table_accepts_large_unsigned_age_values(self):
+        row = valid_visit_attributes_row()
+        row["age_at_adm"] = 168
+
+        table = build_visit_attributes_table([row])
+        self.assertEqual(table.to_pylist()[0]["age_at_adm"], 168)
+
     def test_build_visit_attributes_table_rejects_bogus_values_for_every_column(self):
         schema = get_visit_attributes_schema()
         base_row = valid_visit_attributes_row()
@@ -348,7 +355,7 @@ class GenerateParquetsTests(TransactionTestCase):
             "mrn": {"bad": "string"},
             "adm_dtm": {"bad": "date"},
             "dsch_dtm": {"bad": "date"},
-            "age_at_adm": {"bad": "uint8"},
+            "age_at_adm": {"bad": "uint16"},
             "pat_class_desc": {"bad": "string"},
             "apr_drg_weight": {"bad": "float"},
             "ms_drg_weight": {"bad": "float"},
@@ -581,3 +588,42 @@ class GenerateParquetsTests(TransactionTestCase):
                     self.assertIn("Procedure hierarchy cache generated at", output)
                 else:
                     self.assertNotIn("Procedure hierarchy cache generated at", output)
+
+    def test_generate_parquets_can_skip_materialization(self):
+        visit = create_empty_visit_fixture(
+            visit_no=3301,
+            mrn="MRN-3301",
+            provider_ids=("PROV-3301",),
+        )
+        add_billing_code(
+            visit=visit,
+            cpt_code="99291",
+            proc_dtm=utc_dt(2024, 1, 2, 9, 0),
+            provider_id="PROV-3301",
+            code_rank=1,
+        )
+        code_map = {
+            "99291": (
+                "critical-care",
+                "Critical Care",
+                "critical-care__stroke",
+                "Stroke",
+            ),
+        }
+
+        with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
+            with patch(
+                "api.management.commands.generate_parquets.get_cpt_hierarchy",
+                return_value=mock_hierarchy(code_map=code_map, departments=hierarchy_departments()),
+            ):
+                out = io.StringIO()
+                call_command(
+                    "generate_parquets",
+                    generate="procedure_hierarchy",
+                    skip_materialize=True,
+                    stdout=out,
+                )
+                output = out.getvalue()
+
+        self.assertIn("Skipping VisitAttributes materialization.", output)
+        self.assertNotIn("Successfully materialized VisitAttributes.", output)
