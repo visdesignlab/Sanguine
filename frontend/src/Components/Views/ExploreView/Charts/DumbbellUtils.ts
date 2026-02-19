@@ -33,11 +33,14 @@ export function getProcessedDumbbellData(
       const val = d.intraop_ffp_units;
       key = `${val} ${val === 1 ? 'FFP' : 'FFPs'}`;
     } else if (selectedX === 'cell_salvage') {
-      if (d.intraop_cell_saver_ml === 0) key = '0 mL';
-      else if (d.intraop_cell_saver_ml <= 300) key = '1-300 mL';
-      else if (d.intraop_cell_saver_ml <= 400) key = '301-400 mL';
-      else if (d.intraop_cell_saver_ml <= 500) key = '401-500 mL';
-      else key = '>500 mL';
+      const val = d.intraop_cell_saver_ml ?? 0;
+      if (val === 0) {
+        key = '0 mL';
+      } else {
+        const lower = Math.floor(val / 100) * 100;
+        const upper = lower + 100;
+        key = `${lower}-${upper} mL`;
+      }
     }
 
     if (!groupedByBinGroup.has(key)) groupedByBinGroup.set(key, []);
@@ -61,8 +64,13 @@ export function getProcessedDumbbellData(
   if (selectedX === 'year_quarter' || selectedX === 'rbc' || selectedX === 'platelet' || selectedX === 'cryo' || selectedX === 'ffp') {
     sortedKeys.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
   } else if (selectedX === 'cell_salvage') {
-    const order = ['0 mL', '1-300 mL', '301-400 mL', '401-500 mL', '>500 mL'];
-    sortedKeys.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    sortedKeys.sort((a, b) => {
+      if (a === '0 mL') return -1;
+      if (b === '0 mL') return 1;
+      const aVal = parseInt(a.split('-')[0], 10);
+      const bVal = parseInt(b.split('-')[0], 10);
+      return aVal - bVal;
+    });
   } else {
     sortedKeys.sort(); // Alphabetical for names
   }
