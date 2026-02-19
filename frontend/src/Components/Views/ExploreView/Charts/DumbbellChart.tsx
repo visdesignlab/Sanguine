@@ -87,13 +87,6 @@ interface LabConfig {
   defaultTargets: { preMin: number; postMin: number; postMax: number };
 }
 
-function getNextSortState(current: SortState | undefined): SortState {
-  if (!current || current === 'none') return 'pre';
-  if (current === 'pre') return 'post';
-  if (current === 'post') return 'gap';
-  return 'none';
-}
-
 interface DumbbellChartSVGProps {
   totalWidth: number;
   height: number;
@@ -111,12 +104,8 @@ interface DumbbellChartSVGProps {
   }[];
   collapsedProviders: Set<string>;
   collapsedVisits: Set<string>;
-  providerSorts: Map<string, SortState>;
-  visitSorts: Map<string, SortState>;
   hoveredCollapse: string | null;
   theme: MantineTheme;
-  onToggleProviderSort: (id: string) => void;
-  onToggleVisitSort: (id: string) => void;
   onToggleProviderCollapse: (e: React.MouseEvent, id: string) => void;
   onToggleVisitCollapse: (e: React.MouseEvent, id: string) => void;
   setHoveredCollapse: (id: string | null) => void;
@@ -156,7 +145,9 @@ const DumbbellYAxis = memo(({
   };
 
   useEffect(() => {
-    if (!dragging) return;
+    if (!dragging) {
+      return undefined;
+    }
 
     const handleMouseMove = (e: MouseEvent) => {
       // Calculate new value from Y position.
@@ -554,12 +545,8 @@ const DumbbellChartContent = memo(({
   processedData,
   collapsedProviders,
   collapsedVisits,
-  providerSorts,
-  visitSorts,
   hoveredCollapse,
   theme,
-  onToggleProviderSort,
-  onToggleVisitSort,
   onToggleProviderCollapse,
   onToggleVisitCollapse,
   setHoveredCollapse,
@@ -586,27 +573,18 @@ const DumbbellChartContent = memo(({
 }) => {
   const innerHeight = Math.max(0, height - MARGIN.top - MARGIN.bottom);
 
-  // Check if we should flatten the visualization (hide visit buckets)
-  const isFlatMode = [
-    'rbc',
-    'platelet',
-    'cryo',
-    'ffp',
-    'cell_salvage',
-  ].includes(selectedX);
-
   // Selection Box State
   const [selection, setSelection] = useState<{
     x1: number;
     y1: number;
     x2: number;
-    y2: number
+    y2: number;
   } | null>(null);
   const [appliedSelection, setAppliedSelection] = useState<{
     x1: number;
     y1: number;
     x2: number;
-    y2: number
+    y2: number;
   } | null>(null);
   const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing'>('idle');
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
@@ -614,13 +592,22 @@ const DumbbellChartContent = memo(({
   const initialSelection = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const isFlatMode = useMemo(() => [
+    'surgeon',
+    'anesthesiologist',
+    'rbc',
+    'platelet',
+    'cryo',
+    'ffp',
+    'cell_salvage',
+  ].includes(selectedX), [selectedX]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
     const rect = chartRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left + (chartRef.current.scrollLeft || 0);
     const y = e.clientY - rect.top;
 
-    // Check existing selection for move/resize
     if (selection) {
       const minX = Math.min(selection.x1, selection.x2);
       const maxX = Math.max(selection.x1, selection.x2);
@@ -628,7 +615,6 @@ const DumbbellChartContent = memo(({
       const maxY = Math.max(selection.y1, selection.y2);
       const tolerance = 10;
 
-      // Check handles
       let handle = null;
       if (Math.abs(x - minX) < tolerance && Math.abs(y - minY) < tolerance) handle = 'nw';
       else if (Math.abs(x - maxX) < tolerance && Math.abs(y - minY) < tolerance) handle = 'ne';
@@ -646,7 +632,6 @@ const DumbbellChartContent = memo(({
         return;
       }
 
-      // Check inside
       if (x > minX && x < maxX && y > minY && y < maxY) {
         setInteractionMode('moving');
         dragStart.current = { x, y };
@@ -655,33 +640,40 @@ const DumbbellChartContent = memo(({
       }
     }
 
-    // Start new selection (if clicking in chart area)
     const chartBottom = height - MARGIN.bottom;
     const chartTop = MARGIN.top;
     if (y < chartTop || y > chartBottom) {
-      setAppliedSelection(null); // Clear selection on click outside
+      setAppliedSelection(null);
       setSelection(null);
       return;
     }
 
     setInteractionMode('selecting');
-    setSelection({ x1: x, y1: y, x2: x, y2: y });
-    setAppliedSelection(null); // Clear highlight while selecting new area
-    initialSelection.current = { x1: x, y1: y, x2: x, y2: y };
-  };
+    setSelection({
+      x1: x,
+      y1: y,
+      x2: x,
+      y2: y,
+    });
+    setAppliedSelection(null);
+    initialSelection.current = {
+      x1: x,
+      y1: y,
+      x2: x,
+      y2: y,
+    };
+  }, [selection, height]);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
     const rect = chartRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // Clamp coordinates to chart area
     const chartTop = MARGIN.top;
     const chartBottom = height - MARGIN.bottom;
     const clampedY = Math.max(chartTop, Math.min(y, chartBottom));
 
-    // Cursor updates
     if (interactionMode === 'idle' && selection) {
       const minX = Math.min(selection.x1, selection.x2);
       const maxX = Math.max(selection.x1, selection.x2);
@@ -699,18 +691,15 @@ const DumbbellChartContent = memo(({
       chartRef.current.style.cursor = cursor;
     }
 
-    if (interactionMode === 'selecting') {
-      if (!initialSelection.current) return;
+    if (interactionMode === 'selecting' && initialSelection.current) {
       setSelection({
         ...initialSelection.current,
         x2: x,
         y2: clampedY,
       });
-    } else if (interactionMode === 'moving') {
-      if (!initialSelection.current || !dragStart.current) return;
+    } else if (interactionMode === 'moving' && initialSelection.current && dragStart.current) {
       const dx = x - dragStart.current.x;
       const dy = y - dragStart.current.y;
-
       const currentMinY = Math.min(initialSelection.current.y1, initialSelection.current.y2);
       const currentMaxY = Math.max(initialSelection.current.y1, initialSelection.current.y2);
 
@@ -724,41 +713,43 @@ const DumbbellChartContent = memo(({
         x2: initialSelection.current.x2 + dx,
         y2: initialSelection.current.y2 + clampedDy,
       });
-    } else if (interactionMode === 'resizing') {
-      if (!initialSelection.current) return;
+    } else if (interactionMode === 'resizing' && initialSelection.current) {
       const minX = Math.min(initialSelection.current.x1, initialSelection.current.x2);
       const maxX = Math.max(initialSelection.current.x1, initialSelection.current.x2);
       const minY = Math.min(initialSelection.current.y1, initialSelection.current.y2);
       const maxY = Math.max(initialSelection.current.y1, initialSelection.current.y2);
 
       let newMinX = minX; let newMaxX = maxX; let newMinY = minY; let newMaxY = maxY;
-
       if (resizeHandle?.includes('w')) newMinX = x;
       if (resizeHandle?.includes('e')) newMaxX = x;
       if (resizeHandle?.includes('n')) newMinY = clampedY;
       if (resizeHandle?.includes('s')) newMaxY = clampedY;
 
-      setSelection({ x1: newMinX, y1: newMinY, x2: newMaxX, y2: newMaxY });
+      setSelection({
+        x1: newMinX,
+        y1: newMinY,
+        x2: newMaxX,
+        y2: newMaxY,
+      });
     }
-  };
+  }, [interactionMode, selection, height, resizeHandle]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setInteractionMode('idle');
     setResizeHandle(null);
     dragStart.current = null;
     initialSelection.current = null;
     if (selection) {
       if (Math.abs(selection.x2 - selection.x1) < 5 && Math.abs(selection.y2 - selection.y1) < 5) {
-        setSelection(null); // Clear click-like selections
+        setSelection(null);
         setAppliedSelection(null);
       } else {
-        setAppliedSelection(selection); // Apply highlighting
+        setAppliedSelection(selection);
       }
     }
-  };
+  }, [selection]);
 
   const isSelected = useCallback((cx: number, cy: number) => {
-    // Use appliedSelection for highlighting (optimized)
     if (!appliedSelection) return false;
     const minX = Math.min(appliedSelection.x1, appliedSelection.x2);
     const maxX = Math.max(appliedSelection.x1, appliedSelection.x2);
@@ -767,375 +758,265 @@ const DumbbellChartContent = memo(({
     return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY;
   }, [appliedSelection]);
 
-  const chartBody = useMemo(() => {
-    let currentX = 0;
-    return (
-      <>
-        {/* Grid Lines (No text) */}
-        {yScale.ticks(5).map((tick) => (
-          <g key={tick} transform={`translate(0, ${yScale(tick) + MARGIN.top})`}>
-            <line x1={0} x2={totalWidth - MARGIN.right} y1={0} y2={0} stroke={theme.colors.gray[3]} strokeDasharray="4 4" />
-          </g>
-        ))}
+  const chartBody = useMemo(() => (
+    <g transform={`translate(0, ${MARGIN.top})`}>
+      {/* Render Stripe backgrounds first */}
+      {processedData.map((provider, i) => {
+        const layout = providerLayout.get(provider.id);
+        const providerX = layout ? layout.x : 0;
+        const providerWidth = layout ? layout.width : 100;
+        const providerColor = i % 2 === 0 ? theme.colors.gray[3] : theme.colors.gray[1];
+        return (
+          <rect
+            key={`bg-${provider.id}`}
+            x={providerX}
+            y={0}
+            width={providerWidth}
+            height={innerHeight}
+            fill={providerColor}
+            opacity={0.3}
+            style={{ pointerEvents: 'none' }}
+          />
+        );
+      })}
+      {yScale.ticks(5).map((tick) => (
+        <g key={tick} transform={`translate(0, ${yScale(tick)})`}>
+          <line x1={0} x2={totalWidth - MARGIN.right} y1={0} y2={0} stroke={theme.colors.gray[3]} strokeDasharray="4 4" />
+        </g>
+      ))}
 
-        {/* Buckets and Dumbbells */}
-        <g transform={`translate(0, ${MARGIN.top})`}>
-          {processedData.map((provider, providerIdx) => {
-            const isProvCollapsed = collapsedProviders.has(provider.id);
-            const layout = providerLayout.get(provider.id);
-            const providerWidth = layout ? layout.width : 50;
-            const providerX = layout ? layout.x : currentX; // Use pre-calculated X
-            const providerLabel = layout ? layout.label : provider.id;
+      {processedData.map((provider, providerIdx) => {
+        const isProvCollapsed = collapsedProviders.has(provider.id);
+        const layout = providerLayout.get(provider.id);
+        const providerWidth = layout ? layout.width : 100;
+        const providerX = layout ? layout.x : 0;
+        const providerLabel = layout ? layout.label : provider.id;
+        const providerColor = providerIdx % 2 === 0 ? theme.colors.gray[3] : theme.colors.gray[1];
 
-            // Update currentX just in case (though we use providerX)
-            if (layout) currentX = layout.x + layout.width;
-            else currentX += providerWidth;
+        let sumPre = 0; let countPre = 0;
+        let sumPost = 0; let countPost = 0;
+        provider.visits.forEach((v) => {
+          v.cases.forEach((c) => {
+            const preVal = c[labConfig.preKey] as number;
+            const postVal = c[labConfig.postKey] as number;
+            if (preVal !== undefined && preVal !== null) {
+              sumPre += preVal;
+              countPre += 1;
+            }
+            if (postVal !== undefined && postVal !== null) {
+              sumPost += postVal;
+              countPost += 1;
+            }
+          });
+        });
+        const avgPre = countPre > 0 ? sumPre / countPre : null;
+        const avgPost = countPost > 0 ? sumPost / countPost : null;
 
-            // Provider Bucket Color: Alternating Darker Greys
-            const providerColor = providerIdx % 2 === 0 ? theme.colors.gray[3] : theme.colors.gray[1];
-            const providerSort = providerSorts.get(provider.id) || 'none';
+        return (
+          <g key={provider.id}>
+            <Tooltip label={getProviderName(provider.id, selectedX)} openDelay={200}>
+              <rect
+                x={providerX}
+                y={isFlatMode ? innerHeight : innerHeight + 25}
+                width={providerWidth}
+                height={25}
+                fill={isProvCollapsed ? theme.colors.gray[4] : providerColor}
+                stroke={theme.colors.gray[5]}
+                strokeWidth={1}
+              />
+            </Tooltip>
 
-            // Calculate Averages for Provider
-            let sumPre = 0; let countPre = 0;
-            let sumPost = 0; let countPost = 0;
+            <text
+              x={providerX + providerWidth / 2}
+              y={isFlatMode ? innerHeight + 17 : innerHeight + 42}
+              textAnchor="middle"
+              fontSize={12}
+              fontWeight={600}
+              fill={isProvCollapsed ? theme.colors.gray[6] : theme.colors.gray[9]}
+              style={{ pointerEvents: 'none' }}
+            >
+              {isProvCollapsed ? '...' : providerLabel}
+            </text>
 
-            provider.visits.forEach((v) => {
-              v.cases.forEach((c) => {
-                const preVal = c[labConfig.preKey] as number;
-                const postVal = c[labConfig.postKey] as number;
-                if (preVal !== undefined && preVal !== null) {
-                  sumPre += preVal;
-                  countPre += 1;
-                }
-                if (postVal !== undefined && postVal !== null) {
-                  sumPost += postVal;
-                  countPost += 1;
-                }
-              });
-            });
+            <rect
+              x={providerX + providerWidth - 15}
+              y={isFlatMode ? innerHeight : innerHeight + 25}
+              width={15}
+              height={25}
+              fill="transparent"
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={() => setHoveredCollapse(provider.id)}
+              onMouseLeave={() => setHoveredCollapse(null)}
+              onClick={(e) => onToggleProviderCollapse(e, provider.id)}
+            />
+            {hoveredCollapse === provider.id && (
+              <path
+                d={isProvCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
+                transform={`translate(${providerX + providerWidth - 12}, ${isFlatMode ? innerHeight + 3 : innerHeight + 31}) scale(0.6)`}
+                fill="none"
+                stroke={theme.colors.gray[7]}
+                strokeWidth={2}
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
 
-            const avgPre = countPre > 0 ? sumPre / countPre : null;
-            const avgPost = countPost > 0 ? sumPost / countPost : null;
+            {!isProvCollapsed && (
+              <g>
+                {provider.visits.map((visit, visitIdx) => {
+                  const isVisitCollapsed = collapsedVisits.has(visit.id);
+                  const vLayout = visitLayout.get(visit.id);
+                  const visitWidth = vLayout ? vLayout.width : 40;
+                  const currentVisitX = vLayout ? vLayout.x : 0;
+                  const visitColor = visitIdx % 2 === 0 ? theme.colors.gray[2] : theme.colors.gray[0];
+                  const bgShade = (!isFlatMode && visitIdx % 2 === 0) ? theme.colors.gray[1] : 'transparent';
 
-            return (
-              <g key={provider.id}>
-                {/* Provider Bucket Body (Sort Trigger) */}
-                <Tooltip label={getProviderName(provider.id, selectedX)} openDelay={200}>
-                  <g>
-                    <rect
-                      x={providerX}
-                      y={isFlatMode ? innerHeight : innerHeight + 25}
-                      width={providerWidth}
-                      height={25}
-                      fill={isProvCollapsed ? theme.colors.gray[4] : providerColor}
-                      stroke={theme.colors.gray[5]}
-                      strokeWidth={1}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => onToggleProviderSort(provider.id)}
-                    />
-                    {/* Overlay for Sort */}
-                    {(providerSort === 'pre' || providerSort === 'post') && !isProvCollapsed && (
+                  return (
+                    <g key={visit.id}>
                       <rect
-                        x={providerX}
-                        y={isFlatMode ? innerHeight : innerHeight + 25}
-                        width={providerWidth}
-                        height={25}
-                        fill={providerSort === 'pre' ? theme.colors.teal[4] : theme.colors.indigo[4]}
-                        opacity={0.15}
+                        x={currentVisitX}
+                        y={0}
+                        width={visitWidth}
+                        height={innerHeight}
+                        fill={bgShade}
+                        opacity={0.3}
                         style={{ pointerEvents: 'none' }}
                       />
-                    )}
-                  </g>
-                </Tooltip>
+                      {!isFlatMode && (
+                        <Tooltip label={getVisitTooltipLabel(visit.label, selectedX)} openDelay={200}>
+                          <rect
+                            x={currentVisitX}
+                            y={innerHeight}
+                            width={visitWidth}
+                            height={25}
+                            fill={isVisitCollapsed ? theme.colors.gray[4] : visitColor}
+                            stroke={theme.colors.gray[4]}
+                            strokeWidth={1}
+                          />
+                        </Tooltip>
+                      )}
+                      {/* Visit Label - Hidden in Flat Mode */}
+                      {!isFlatMode && (
+                        <text
+                          x={currentVisitX + visitWidth / 2}
+                          y={innerHeight + 20}
+                          textAnchor="middle"
+                          fontSize={10}
+                          fontWeight={400}
+                          fill={theme.colors.gray[6]}
+                          style={{ pointerEvents: 'none' }}
+                        >
+                          {getVisitLabel(visit.id, visit.label)}
+                        </text>
+                      )}
+                      <rect
+                        x={currentVisitX + visitWidth - 10}
+                        y={innerHeight}
+                        width={10}
+                        height={25}
+                        fill="transparent"
+                        style={{ cursor: 'pointer' }}
+                        onMouseEnter={() => setHoveredCollapse(visit.id)}
+                        onMouseLeave={() => setHoveredCollapse(null)}
+                        onClick={(e) => onToggleVisitCollapse(e, visit.id)}
+                      />
+                      {hoveredCollapse === visit.id && (
+                        <path
+                          d={isVisitCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
+                          transform={`translate(${currentVisitX + visitWidth - 10}, ${innerHeight + 6}) scale(0.6)`}
+                          fill="none"
+                          stroke={theme.colors.gray[7]}
+                          strokeWidth={2}
+                          style={{ pointerEvents: 'none' }}
+                        />
+                      )}
+                    </g>
+                  );
+                })}
 
-                {/* Provider Label & Sort Indicator */}
-                {!isProvCollapsed ? (
-                  <>
-                    <text
-                      x={providerX + providerWidth / 2}
-                      y={isFlatMode ? innerHeight + 17 : innerHeight + 42}
-                      textAnchor="middle"
-                      fontSize={12}
-                      fontWeight={600}
-                      fill={theme.colors.gray[9]}
-                      style={{ pointerEvents: 'none' }}
-                    >
-                      {providerLabel}
-                    </text>
-                    {/* Sort Icon positioned to the right of text (approximate) */}
-                    {providerSort !== 'none' && (
-                      <g transform={`translate(${providerX + providerWidth / 2 + (providerLabel.length * 4) + 6}, ${isFlatMode ? innerHeight + 7 : innerHeight + 32})`}>
-                        {providerSort === 'pre' && <IconArrowUp size={12} stroke={2} color={theme.colors.teal[6]} />}
-                        {providerSort === 'post' && <IconArrowUp size={12} stroke={2} color={theme.colors.indigo[6]} />}
-                        {providerSort === 'gap' && (
-                          <IconArrowsVertical size={12} stroke={2} color={theme.colors.gray[6]} />
-                        )}
+                <g>
+                  {provider.visits.map((visit) => {
+                    const isVisitCollapsed = collapsedVisits.has(visit.id);
+                    const vLayout = visitLayout.get(visit.id);
+                    const currentVisitX = vLayout ? vLayout.x : 0;
+
+                    return (
+                      <g key={visit.id}>
+                        {!isVisitCollapsed && visit.cases.map((d) => {
+                          const vIdx = visit.cases.indexOf(d);
+                          const caseX = currentVisitX + vIdx * CHAR_WIDTH_CASE + CHAR_WIDTH_CASE / 2;
+                          const preVal = d[labConfig.preKey] as number | null;
+                          const postVal = d[labConfig.postKey] as number | null;
+
+                          return (
+                            <g key={d.case_id}>
+                              {showPre && showPost && preVal !== null && postVal !== null && (
+                                <line
+                                  x1={caseX}
+                                  x2={caseX}
+                                  y1={yScale(preVal)}
+                                  y2={yScale(postVal)}
+                                  stroke={theme.colors.gray[5]}
+                                  strokeWidth={1}
+                                  shapeRendering="crispEdges"
+                                />
+                              )}
+                              {showPre && preVal !== null && (
+                                <Tooltip label={`Pre: ${preVal.toFixed(1)}`}>
+                                  <circle
+                                    cx={caseX}
+                                    cy={yScale(preVal)}
+                                    r={DOT_RADIUS}
+                                    fill={isSelected(caseX, yScale(preVal) + MARGIN.top) ? theme.colors.orange[5] : theme.colors.teal[6]}
+                                    stroke="white"
+                                    strokeWidth={0.6}
+                                  />
+                                </Tooltip>
+                              )}
+                              {showPost && postVal !== null && (
+                                <Tooltip label={`Post: ${postVal.toFixed(1)}`}>
+                                  <circle
+                                    cx={caseX}
+                                    cy={yScale(postVal)}
+                                    r={DOT_RADIUS}
+                                    fill={isSelected(caseX, yScale(postVal) + MARGIN.top) ? theme.colors.orange[5] : theme.colors.indigo[6]}
+                                    stroke="white"
+                                    strokeWidth={0.6}
+                                  />
+                                </Tooltip>
+                              )}
+                            </g>
+                          );
+                        })}
                       </g>
-                    )}
-                  </>
-                ) : (
-                  <text
-                    x={providerX + providerWidth / 2}
-                    y={isFlatMode ? innerHeight + 17 : innerHeight + 40}
-                    textAnchor="middle"
-                    fontSize={12}
-                    fontWeight={600}
-                    fill={theme.colors.gray[6]}
-                    style={{ pointerEvents: 'none' }}
-                  >
-                    ...
-                  </text>
-                )}
+                    );
+                  })}
+                </g>
 
-                {/* Collapse Trigger (Right Edge) */}
-                <rect
-                  x={providerX + providerWidth - 15}
-                  y={isFlatMode ? innerHeight : innerHeight + 25}
-                  width={15}
-                  height={25}
-                  fill="transparent"
-                  style={{ cursor: 'pointer' }}
-                  onMouseEnter={() => setHoveredCollapse(provider.id)}
-                  onMouseLeave={() => setHoveredCollapse(null)}
-                  onClick={(e) => onToggleProviderCollapse(e, provider.id)}
-                />
-                {/* Collapse Arrow (Only visible on hover) */}
-                {hoveredCollapse === provider.id && (
-                  <path
-                    d={isProvCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'} // Simple chevron path
-                    transform={`translate(${providerX + providerWidth - 12}, ${isFlatMode ? innerHeight + 3 : innerHeight + 31}) scale(0.6)`}
-                    fill="none"
-                    stroke={theme.colors.gray[7]}
-                    strokeWidth={2}
-                    style={{ pointerEvents: 'none' }}
+                {showMedian && showPre && avgPre !== null && (
+                  <AverageLine
+                    x1={providerX}
+                    x2={providerX + providerWidth}
+                    y={yScale(avgPre)}
+                    label={`Average Pre-op: ${avgPre.toFixed(1)} for ${getProviderName(provider.id, selectedX)}`}
+                    color={theme.colors.teal[4]}
                   />
                 )}
-
-                {/* Internal Visits - Pass 1: Backgrounds & Labels */}
-                {!isProvCollapsed && (
-                  <g>
-                    {(() => {
-                      // We don't need to track visitX, we have visitLayout
-                      return provider.visits.map((visit, visitIdx) => {
-                        const isVisitCollapsed = collapsedVisits.has(visit.id);
-                        const vLayout = visitLayout.get(visit.id);
-                        const visitWidth = vLayout ? vLayout.width : 40;
-                        const currentVisitX = vLayout ? vLayout.x : 0;
-
-                        // Visit Bucket Color: Alternating LIGHTER Greys
-                        const visitColor = visitIdx % 2 === 0 ? theme.colors.gray[2] : theme.colors.gray[0];
-                        // Background Shade: Only show if NOT flat mode
-                        const bgShade = (!isFlatMode && visitIdx % 2 === 0) ? theme.colors.gray[1] : 'transparent';
-                        const visitSort = visitSorts.get(visit.id) || 'none';
-
-                        return (
-                          <g key={visit.id}>
-                            {/* Background Shade Rectangle */}
-                            <rect
-                              x={currentVisitX}
-                              y={0}
-                              width={visitWidth}
-                              height={innerHeight}
-                              fill={bgShade}
-                              opacity={0.3}
-                              style={{ pointerEvents: 'none' }}
-                            />
-
-                            {/* Visit Bucket Body (Sort Trigger) - HIDE IN FLAT MODE */}
-                            {!isFlatMode && (
-                              <>
-                                <Tooltip label={getVisitTooltipLabel(visit.label, selectedX)} openDelay={200}>
-                                  <g>
-                                    <rect
-                                      x={currentVisitX}
-                                      y={innerHeight}
-                                      width={visitWidth}
-                                      height={25}
-                                      fill={isVisitCollapsed ? theme.colors.gray[4] : visitColor}
-                                      stroke={theme.colors.gray[4]}
-                                      strokeWidth={1}
-                                      style={{ cursor: 'pointer' }}
-                                      onClick={() => onToggleVisitSort(visit.id)}
-                                    />
-                                    {/* Overlay for Sort */}
-                                    {(visitSort === 'pre' || visitSort === 'post') && !isVisitCollapsed && (
-                                      <rect
-                                        x={currentVisitX}
-                                        y={innerHeight}
-                                        width={visitWidth}
-                                        height={25}
-                                        fill={visitSort === 'pre' ? theme.colors.teal[4] : theme.colors.indigo[4]}
-                                        opacity={0.15}
-                                        style={{ pointerEvents: 'none' }}
-                                      />
-                                    )}
-                                  </g>
-                                </Tooltip>
-                                {/* Visit Label & Sort Indicator */}
-                                {!isVisitCollapsed ? (
-                                  <>
-                                    <text
-                                      x={currentVisitX + visitWidth / 2}
-                                      y={innerHeight + 17}
-                                      textAnchor="middle"
-                                      fontSize={11}
-                                      fill={theme.colors.gray[8]}
-                                      style={{ pointerEvents: 'none' }}
-                                    >
-                                      {getVisitLabel(visit.id, visit.label)}
-                                    </text>
-                                    {/* Sort Icon for Visit */}
-                                    {visitSort !== 'none' && (
-                                      <g transform={`translate(${currentVisitX + visitWidth / 2 + (getVisitLabel(visit.id, visit.label).length * 4) + 2}, ${innerHeight + 8})`}>
-                                        {visitSort === 'pre' && <IconArrowUp size={10} stroke={2} color={theme.colors.teal[6]} />}
-                                        {visitSort === 'post' && <IconArrowUp size={10} stroke={2} color={theme.colors.indigo[6]} />}
-                                        {visitSort === 'gap' && (
-                                          <IconArrowsVertical size={10} stroke={2} color={theme.colors.gray[6]} />
-                                        )}
-                                      </g>
-                                    )}
-                                  </>
-                                ) : (
-                                  <text
-                                    x={currentVisitX + visitWidth / 2}
-                                    y={innerHeight + 14}
-                                    textAnchor="middle"
-                                    fontSize={12}
-                                    fontWeight={600}
-                                    fill={theme.colors.gray[6]}
-                                    style={{ pointerEvents: 'none' }}
-                                  >
-                                    ...
-                                  </text>
-                                )}
-
-                                {/* Collapse Trigger (Right Edge) */}
-                                <rect
-                                  x={currentVisitX + visitWidth - 10}
-                                  y={innerHeight}
-                                  width={10}
-                                  height={25}
-                                  fill="transparent"
-                                  style={{ cursor: 'pointer' }}
-                                  onMouseEnter={() => setHoveredCollapse(visit.id)}
-                                  onMouseLeave={() => setHoveredCollapse(null)}
-                                  onClick={(e) => onToggleVisitCollapse(e, visit.id)}
-                                />
-                                {hoveredCollapse === visit.id && (
-                                  <path
-                                    d={isVisitCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
-                                    transform={`translate(${currentVisitX + visitWidth - 10}, ${innerHeight + 6}) scale(0.6)`}
-                                    fill="none"
-                                    stroke={theme.colors.gray[7]}
-                                    strokeWidth={2}
-                                    style={{ pointerEvents: 'none' }}
-                                  />
-                                )}
-                              </>
-                            )}
-                          </g>
-                        );
-                      });
-                    })()}
-                  </g>
-                )}
-
-                {/* Average Lines - rendered AFTER backgrounds, BEFORE dots */}
-                {!isProvCollapsed && (
-                  <>
-                    {showMedian && showPre && avgPre !== null && (
-                      <AverageLine
-                        x1={providerX}
-                        x2={providerX + providerWidth}
-                        y={yScale(avgPre)}
-                        label={`Average Pre-op: ${avgPre.toFixed(1)} for ${getProviderName(provider.id, selectedX)}`}
-                        color={theme.colors.teal[4]}
-                      />
-                    )}
-                    {showMedian && showPost && avgPost !== null && (
-                      <AverageLine
-                        x1={providerX}
-                        x2={providerX + providerWidth}
-                        y={yScale(avgPost)}
-                        label={`Average Post-op: ${avgPost.toFixed(1)} for ${getProviderName(provider.id, selectedX)}`}
-                        color={theme.colors.indigo[4]}
-                      />
-                    )}
-                  </>
-                )}
-
-                {/* Internal Visits - Pass 2: Dumbbell Dots */}
-                {!isProvCollapsed && (
-                  <g>
-                    {(() => {
-                      return provider.visits.map((visit) => {
-                        const isVisitCollapsed = collapsedVisits.has(visit.id);
-                        const vLayout = visitLayout.get(visit.id);
-                        const currentVisitX = vLayout ? vLayout.x : 0;
-
-                        return (
-                          <g key={visit.id}>
-                            {!isVisitCollapsed && visit.cases.map((d, i) => {
-                              const caseX = currentVisitX + i * CHAR_WIDTH_CASE + CHAR_WIDTH_CASE / 2;
-                              const preVal = d[labConfig.preKey] as number | null;
-                              const postVal = d[labConfig.postKey] as number | null;
-
-                              return (
-                                <g key={d.case_id}>
-                                  {/* Connector Line - Only if BOTH are visible and exist */}
-                                  {showPre && showPost && preVal !== null && postVal !== null && (
-                                    <line
-                                      x1={caseX}
-                                      x2={caseX}
-                                      y1={yScale(preVal)}
-                                      y2={yScale(postVal)}
-                                      stroke={theme.colors.gray[5]}
-                                      strokeWidth={1}
-                                      shapeRendering="crispEdges"
-                                    />
-                                  )}
-                                  {/* Pre Dot (Green) */}
-                                  {showPre && preVal !== null && (
-                                    <Tooltip label={`Pre: ${preVal.toFixed(1)}`}>
-                                      <circle
-                                        cx={caseX}
-                                        cy={yScale(preVal)}
-                                        r={DOT_RADIUS}
-                                        fill={isSelected(caseX, yScale(preVal) + MARGIN.top) ? theme.colors.orange[5] : theme.colors.teal[6]}
-                                        stroke="white"
-                                        strokeWidth={0.6}
-                                      />
-                                    </Tooltip>
-                                  )}
-                                  {/* Post Dot (Blue) */}
-                                  {showPost && postVal !== null && (
-                                    <Tooltip label={`Post: ${postVal.toFixed(1)}`}>
-                                      <circle
-                                        cx={caseX}
-                                        cy={yScale(postVal)}
-                                        r={DOT_RADIUS}
-                                        fill={isSelected(caseX, yScale(postVal) + MARGIN.top) ? theme.colors.orange[5] : theme.colors.indigo[6]}
-                                        stroke="white"
-                                        strokeWidth={0.6}
-                                      />
-                                    </Tooltip>
-                                  )}
-                                </g>
-                              );
-                            })}
-                          </g>
-                        );
-                      });
-                    })()}
-                  </g>
+                {showMedian && showPost && avgPost !== null && (
+                  <AverageLine
+                    x1={providerX}
+                    x2={providerX + providerWidth}
+                    y={yScale(avgPost)}
+                    label={`Average Post-op: ${avgPost.toFixed(1)} for ${getProviderName(provider.id, selectedX)}`}
+                    color={theme.colors.indigo[4]}
+                  />
                 )}
               </g>
-            );
-          })}
-        </g>
-      </>
-    );
-  }, [processedData, collapsedProviders, collapsedVisits, providerSorts, visitSorts, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, isFlatMode, onToggleProviderSort, onToggleVisitSort, onToggleProviderCollapse, onToggleVisitCollapse, setHoveredCollapse, isSelected, totalWidth, selectedX, showMedian, providerLayout, visitLayout]);
+            )}
+          </g>
+        );
+      })}
+    </g>
+  ), [processedData, collapsedProviders, collapsedVisits, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, isFlatMode, onToggleProviderCollapse, onToggleVisitCollapse, setHoveredCollapse, isSelected, totalWidth, selectedX, showMedian, providerLayout, visitLayout]);
 
   return (
     <div
@@ -1147,7 +1028,6 @@ const DumbbellChartContent = memo(({
       onMouseLeave={handleMouseUp}
     >
       <svg width={totalWidth} height={height}>
-        {/* Target Regions */}
         {showTargets && (
           <TargetOverlay
             totalWidth={totalWidth}
@@ -1158,10 +1038,7 @@ const DumbbellChartContent = memo(({
             setHoveredTarget={setHoveredTarget}
           />
         )}
-
         {chartBody}
-
-        {/* Selection Overlay */}
         {selection && (
           <rect
             x={Math.min(selection.x1, selection.x2)}
@@ -1188,8 +1065,6 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   // State
   const [collapsedProviders, setCollapsedProviders] = useState<Set<string>>(new Set());
   const [collapsedVisits, setCollapsedVisits] = useState<Set<string>>(new Set());
-  const [providerSorts, setProviderSorts] = useState<Map<string, SortState>>(new Map());
-  const [visitSorts, setVisitSorts] = useState<Map<string, SortState>>(new Map());
   const [selectedLab, setSelectedLab] = useState<string>('hgb');
   const [selectedX, setSelectedX] = useState<string>('surgeon');
   const [showPre, setShowPre] = useState<boolean>(true);
@@ -1201,7 +1076,6 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   // Clear provider sorts when global sort changes
   const handleSortChange = (value: string) => {
     setSortMode(value);
-    setProviderSorts(new Map()); // Reset individual sorts to let global sort take over
   };
 
   const labConfig = useMemo(() => {
@@ -1286,22 +1160,6 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     });
   }, []);
 
-  const toggleProviderSort = useCallback((providerId: string) => {
-    setProviderSorts((prev) => {
-      const next = new Map(prev);
-      next.set(providerId, getNextSortState(next.get(providerId)));
-      return next;
-    });
-  }, []);
-
-  const toggleVisitSort = useCallback((uniqueVisitId: string) => {
-    setVisitSorts((prev) => {
-      const next = new Map(prev);
-      next.set(uniqueVisitId, getNextSortState(next.get(uniqueVisitId)));
-      return next;
-    });
-  }, []);
-
   // Get and Process Data
   // Get and Process Data
   const processedData = useMemo(() => {
@@ -1364,12 +1222,8 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
 
     sortedKeys.forEach((providerId) => {
       const cases = groupedByProvider.get(providerId)!;
-      // Determine provider sort: explicit override OR global sort mode
-      let providerSort = providerSorts.get(providerId);
-      if (!providerSort) {
-        if (sortMode === 'time') providerSort = 'none';
-        else providerSort = sortMode as SortState;
-      }
+      // Determine provider sort based on global sort mode
+      const providerSort = sortMode === 'time' ? 'none' : sortMode as SortState;
 
       if (providerSort === 'none') {
         // Sub-grouping logic
@@ -1381,7 +1235,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
             const date = new Date(d.surgery_start_dtm);
             const q = Math.floor((date.getMonth() + 3) / 3);
             subKey = `Q${q}`;
-          } else if (['rbc', 'platelet', 'cryo', 'ffp', 'cell_salvage'].includes(selectedX)) {
+          } else if (['surgeon', 'anesthesiologist', 'rbc', 'platelet', 'cryo', 'ffp', 'cell_salvage'].includes(selectedX)) {
             subKey = 'All Cases';
           }
           if (!groupedByVisit.has(subKey)) groupedByVisit.set(subKey, []);
@@ -1408,22 +1262,9 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
 
           // Sort Cases within Visit
           // Default: Chronological by surgery_start_dtm
-          // Overridden by visitSorts
-          const visitSort = visitSorts.get(`${providerId}-${visitLabel}`) || 'none';
           const sortedCases = [...visitCases];
 
-          if (visitSort === 'pre') {
-            sortedCases.sort((a, b) => (a[preAccess] as number) - (b[preAccess] as number));
-          } else if (visitSort === 'post') {
-            sortedCases.sort((a, b) => (a[postAccess] as number) - (b[postAccess] as number));
-          } else if (visitSort === 'gap') {
-            // Sort by gap size ascending (smallest gap first? or largest? "Up Arrow" implies ascending value of gap)
-            // Gap = |pre - post|
-            sortedCases.sort((a, b) => Math.abs((a[preAccess] as number) - (a[postAccess] as number)) - Math.abs((b[preAccess] as number) - (b[postAccess] as number)));
-          } else {
-            // Default chronological
-            sortedCases.sort((a, b) => a.surgery_start_dtm - b.surgery_start_dtm);
-          }
+          sortedCases.sort((a, b) => a.surgery_start_dtm - b.surgery_start_dtm);
 
           return {
             id: `${providerId}-${visitLabel}`,
@@ -1486,7 +1327,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     });
 
     return hierarchy;
-  }, [store.exploreChartData, chartConfig.chartId, chartConfig.yAxisVar, chartConfig.xAxisVar, providerSorts, visitSorts, labConfig, selectedX, sortMode]);
+  }, [store.exploreChartData, chartConfig.chartId, labConfig, selectedX, sortMode]);
 
   // --- Layout & Width Calculation ---
 
@@ -1520,16 +1361,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     const providerLayout = new Map<string, { x: number, width: number, label: string }>();
     const visitLayout = new Map<string, { x: number, width: number }>();
 
-    let currentX = MARGIN.left; // Start at Left Margin for coordinates passed to child?
-    // Wait, DumbbellChartContent adds MARGIN.top in the transform, but X usually starts at 0 or Margin?
-    // In original chartBody: `let currentX = 0`. And `g transform=translate(0, MARGIN.top)`.
-    // But `provider.visits.map` starts currentVisitX = providerX.
-    // And `totalWidth` includes Margins.
-    // Let's assume content starts at 0 relative to the scroll area, but offset by padding if needed.
-    // The previous `totalWidth` calculation added margins.
-    // The `chartBody` used `currentX = 0`.
-    // Let's stick to 0-based for the body content.
-    currentX = 0;
+    let currentX = 0;
 
     processedData.forEach((provider) => {
       const providerStartX = currentX;
@@ -1606,8 +1438,8 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     return { items, providerLayout, visitLayout };
   }, [processedData, collapsedProviders, collapsedVisits, measureText, getShortenedLabel, selectedX]);
 
-  // Calculate total width
-  const totalWidth = layoutData.items.reduce((acc, item) => acc + item.width, 0) + MARGIN.left + MARGIN.right;
+  // Calculate total width - content starts at 0, only add Right margin
+  const totalWidth = layoutData.items.reduce((acc, item) => acc + item.width, 0) + MARGIN.right;
 
   // Responsive Height
   const { ref, height: measuredHeight } = useElementSize();
@@ -1807,12 +1639,8 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 processedData={processedData}
                 collapsedProviders={collapsedProviders}
                 collapsedVisits={collapsedVisits}
-                providerSorts={providerSorts}
-                visitSorts={visitSorts}
                 hoveredCollapse={hoveredCollapse}
                 theme={theme}
-                onToggleProviderSort={toggleProviderSort}
-                onToggleVisitSort={toggleVisitSort}
                 onToggleProviderCollapse={toggleProviderCollapse}
                 onToggleVisitCollapse={toggleVisitCollapse}
                 setHoveredCollapse={setHoveredCollapse}
