@@ -20,6 +20,7 @@ import {
   DUMBBELL_CHAR_WIDTH_CASE, DUMBBELL_DOT_RADIUS,
   DUMBBELL_DRAG_LIMIT, DumbbellLabConfig as LabConfig,
 } from '../../../../Types/application';
+import { smallHoverColor } from '../../../../Theme/mantineTheme';
 import { getProcessedDumbbellData, calculateDumbbellLayout } from './DumbbellUtils';
 
 interface DumbbellChartSVGProps {
@@ -438,6 +439,76 @@ const AverageLine = memo(({
 DumbbellYAxis.displayName = 'DumbbellYAxis';
 TargetOverlay.displayName = 'TargetOverlay';
 AverageLine.displayName = 'AverageLine';
+
+const Dumbbell = memo(({
+  caseX,
+  yScale,
+  d,
+  labConfig,
+  showPre,
+  showPost,
+  selected,
+  theme,
+}: {
+  caseX: number;
+  yScale: ScaleLinear<number, number>;
+  d: DumbbellCase;
+  labConfig: LabConfig;
+  showPre: boolean;
+  showPost: boolean;
+  selected: boolean;
+  theme: MantineTheme;
+}) => {
+  const [hovered, setHovered] = useState(false);
+
+  const preVal = d[labConfig.preKey] as number | null;
+  const postVal = d[labConfig.postKey] as number | null;
+
+  const activeColor = hovered ? smallHoverColor : (selected ? theme.colors.orange[6] : null);
+  const lineColor = hovered ? smallHoverColor : (selected ? theme.colors.orange[4] : theme.colors.gray[4]);
+
+  return (
+    <g
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {showPre && showPost && preVal !== null && postVal !== null && (
+        <line
+          x1={caseX}
+          x2={caseX}
+          y1={yScale(preVal)}
+          y2={yScale(postVal)}
+          stroke={lineColor}
+          strokeWidth={1}
+          strokeOpacity={0.8}
+        />
+      )}
+      {showPre && preVal !== null && (
+        <Tooltip label={`Pre-op: ${preVal.toFixed(1)} ${labConfig.unit}`} position="top" openDelay={200}>
+          <circle
+            cx={caseX}
+            cy={yScale(preVal)}
+            r={DUMBBELL_DOT_RADIUS}
+            fill={activeColor || theme.colors.teal[6]}
+            fillOpacity={0.8}
+          />
+        </Tooltip>
+      )}
+      {showPost && postVal !== null && (
+        <Tooltip label={`Post-op: ${postVal.toFixed(1)} ${labConfig.unit}`} position="top" openDelay={200}>
+          <circle
+            cx={caseX}
+            cy={yScale(postVal)}
+            r={DUMBBELL_DOT_RADIUS}
+            fill={activeColor || theme.colors.indigo[6]}
+            fillOpacity={0.8}
+          />
+        </Tooltip>
+      )}
+    </g>
+  );
+});
+Dumbbell.displayName = 'Dumbbell';
 // #endregion
 
 // #region Dumbbell Chart Content
@@ -833,41 +904,17 @@ const DumbbellChartContent = memo(({
                         const selected = isSelected(caseX, yScale(preVal ?? 0)) || isSelected(caseX, yScale(postVal ?? 0));
 
                         return (
-                          <g key={d.case_id}>
-                            {showPre && showPost && preVal !== null && postVal !== null && (
-                              <line
-                                x1={caseX}
-                                x2={caseX}
-                                y1={yScale(preVal)}
-                                y2={yScale(postVal)}
-                                stroke={selected ? theme.colors.orange[4] : theme.colors.gray[4]}
-                                strokeWidth={selected ? 2 : 1}
-                                strokeOpacity={0.8}
-                              />
-                            )}
-                            {showPre && preVal !== null && (
-                              <Tooltip label={`Pre-op: ${preVal.toFixed(1)} ${labConfig.unit}`} position="top" openDelay={200}>
-                                <circle
-                                  cx={caseX}
-                                  cy={yScale(preVal)}
-                                  r={DUMBBELL_DOT_RADIUS}
-                                  fill={selected ? theme.colors.orange[6] : theme.colors.teal[6]}
-                                  fillOpacity={0.8}
-                                />
-                              </Tooltip>
-                            )}
-                            {showPost && postVal !== null && (
-                              <Tooltip label={`Post-op: ${postVal.toFixed(1)} ${labConfig.unit}`} position="bottom" openDelay={200}>
-                                <circle
-                                  cx={caseX}
-                                  cy={yScale(postVal)}
-                                  r={DUMBBELL_DOT_RADIUS}
-                                  fill={selected ? theme.colors.orange[6] : theme.colors.indigo[6]}
-                                  fillOpacity={0.8}
-                                />
-                              </Tooltip>
-                            )}
-                          </g>
+                          <Dumbbell
+                            key={d.case_id}
+                            caseX={caseX}
+                            yScale={yScale}
+                            d={d}
+                            labConfig={labConfig}
+                            showPre={showPre}
+                            showPost={showPost}
+                            selected={selected}
+                            theme={theme}
+                          />
                         );
                       })}
                     </g>
