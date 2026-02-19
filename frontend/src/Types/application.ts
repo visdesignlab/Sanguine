@@ -758,10 +758,43 @@ export type CostBarData = CostBarDatum[];
 // --- Dumbbell Chart ---
 export type DumbbellChartConfig = ChartConfig<
   'provider_visit', // Fixed x-axis structure
-  'hgb',           // Fixed y-axis variable for now
-  'none',          // No aggregation
+  'hgb', // Fixed y-axis variable for now
+  'none', // No aggregation
   'dumbbell'
 >;
+
+export const DUMBBELL_X_AXIS_OPTIONS = [
+  { value: 'surgeon', label: 'Surgeon' },
+  { value: 'anesthesiologist', label: 'Anesthesiologist' },
+  { value: 'year_quarter', label: 'Year & Quarter' },
+  { value: 'rbc', label: 'Intraoperative RBCs Transfused' },
+  { value: 'platelet', label: 'Intraoperative Platelets Transfused' },
+  { value: 'cryo', label: 'Intraoperative Cryo Transfused' },
+  { value: 'ffp', label: 'Intraoperative FFP Transfused' },
+  { value: 'cell_salvage', label: 'Cell Salvage Volume (mL)' },
+];
+
+export const DUMBBELL_MARGIN = {
+  top: 40, right: 30, bottom: 60, left: 60,
+};
+
+export const DUMBBELL_CHAR_WIDTH_CASE = 4;
+export const DUMBBELL_DOT_RADIUS = 3;
+export const DUMBBELL_EMPTY_NESTED_BIN_WIDTH = 30;
+export const DUMBBELL_DRAG_LIMIT = 1.0;
+
+export type DumbbellSortState = 'none' | 'pre' | 'post' | 'gap';
+
+export interface DumbbellLabConfig {
+  label: string;
+  unit: string;
+  min: number;
+  max: number;
+  preKey: keyof DumbbellCase;
+  postKey: keyof DumbbellCase;
+  defaultTargets: { preMin: number; postMin: number; postMax: number };
+}
+
 
 export interface DumbbellCase {
   case_id: string;
