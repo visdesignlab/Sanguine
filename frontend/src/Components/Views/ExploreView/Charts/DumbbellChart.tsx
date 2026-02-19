@@ -20,8 +20,8 @@ import { DumbbellCase, DumbbellChartConfig, DumbbellData } from '../../../../Typ
 const MARGIN = {
   top: 40, right: 30, bottom: 60, left: 60,
 };
-const CHAR_WIDTH_CASE = 8.5; // Increased spacing (was 8)
-const DOT_RADIUS = 4.2; // Slightly larger dot radius
+const CHAR_WIDTH_CASE = 4; // Increased spacing (was 8)
+const DOT_RADIUS = 3; // Slightly larger dot radius
 const EMPTY_VISIT_WIDTH = 30; // Minimum width for empty visit/quarter buckets
 
 // Target Configuration
@@ -620,6 +620,8 @@ const DumbbellChartContent = memo(({
   setHoveredTarget,
   showTargets,
   showMedian,
+  providerLayout,
+  visitLayout,
 }: DumbbellChartSVGProps & {
   selectedX: string,
   showPre: boolean,
@@ -628,6 +630,8 @@ const DumbbellChartContent = memo(({
   setHoveredTarget: (t: string | null) => void,
   showTargets: boolean,
   showMedian: boolean,
+  providerLayout: Map<string, { x: number, width: number, label: string }>,
+  visitLayout: Map<string, { x: number, width: number }>,
 }) => {
   const innerHeight = Math.max(0, height - MARGIN.top - MARGIN.bottom);
 
@@ -812,7 +816,7 @@ const DumbbellChartContent = memo(({
     return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY;
   }, [appliedSelection]);
 
-  // Memoize the heavy chart body
+
   const chartBody = useMemo(() => {
     let currentX = 0;
     return (
@@ -828,19 +832,14 @@ const DumbbellChartContent = memo(({
         <g transform={`translate(0, ${MARGIN.top})`}>
           {processedData.map((provider, providerIdx) => {
             const isProvCollapsed = collapsedProviders.has(provider.id);
-            // Calculate provider width based on its children (cases/visits) status
-            let providerWidth = 0;
-            if (isProvCollapsed) {
-              providerWidth = 50;
-            } else {
-              provider.visits.forEach((v) => {
-                if (collapsedVisits.has(v.id)) providerWidth += 40;
-                else providerWidth += Math.max(v.cases.length * CHAR_WIDTH_CASE, EMPTY_VISIT_WIDTH);
-              });
-            }
+            const layout = providerLayout.get(provider.id);
+            const providerWidth = layout ? layout.width : 50;
+            const providerX = layout ? layout.x : currentX; // Use pre-calculated X
+            const providerLabel = layout ? layout.label : provider.id;
 
-            const providerX = currentX;
-            currentX += providerWidth;
+            // Update currentX just in case (though we use providerX)
+            if (layout) currentX = layout.x + layout.width;
+            else currentX += providerWidth;
 
             // Provider Bucket Color: Alternating Darker Greys
             const providerColor = providerIdx % 2 === 0 ? theme.colors.gray[3] : theme.colors.gray[1];
@@ -911,11 +910,11 @@ const DumbbellChartContent = memo(({
                       fill={theme.colors.gray[9]}
                       style={{ pointerEvents: 'none' }}
                     >
-                      {provider.id}
+                      {providerLabel}
                     </text>
                     {/* Sort Icon positioned to the right of text (approximate) */}
                     {providerSort !== 'none' && (
-                      <g transform={`translate(${providerX + providerWidth / 2 + (provider.id.length * 4) - 4}, ${isFlatMode ? innerHeight + 7 : innerHeight + 32})`}>
+                      <g transform={`translate(${providerX + providerWidth / 2 + (providerLabel.length * 4) + 6}, ${isFlatMode ? innerHeight + 7 : innerHeight + 32})`}>
                         {providerSort === 'pre' && <IconArrowUp size={12} stroke={2} color={theme.colors.teal[6]} />}
                         {providerSort === 'post' && <IconArrowUp size={12} stroke={2} color={theme.colors.indigo[6]} />}
                         {providerSort === 'gap' && (
@@ -966,12 +965,12 @@ const DumbbellChartContent = memo(({
                 {!isProvCollapsed && (
                   <g>
                     {(() => {
-                      let visitX = providerX;
+                      // We don't need to track visitX, we have visitLayout
                       return provider.visits.map((visit, visitIdx) => {
                         const isVisitCollapsed = collapsedVisits.has(visit.id);
-                        const visitWidth = isVisitCollapsed ? 40 : Math.max(visit.cases.length * CHAR_WIDTH_CASE, EMPTY_VISIT_WIDTH);
-                        const currentVisitX = visitX;
-                        visitX += visitWidth;
+                        const vLayout = visitLayout.get(visit.id);
+                        const visitWidth = vLayout ? vLayout.width : 40;
+                        const currentVisitX = vLayout ? vLayout.x : 0;
 
                         // Visit Bucket Color: Alternating LIGHTER Greys
                         const visitColor = visitIdx % 2 === 0 ? theme.colors.gray[2] : theme.colors.gray[0];
@@ -1119,52 +1118,53 @@ const DumbbellChartContent = memo(({
                 {!isProvCollapsed && (
                   <g>
                     {(() => {
-                      let visitX2 = providerX;
                       return provider.visits.map((visit) => {
                         const isVisitCollapsed = collapsedVisits.has(visit.id);
-                        const visitWidth = isVisitCollapsed ? 40 : Math.max(visit.cases.length * CHAR_WIDTH_CASE, EMPTY_VISIT_WIDTH);
-                        const currentVisitX = visitX2;
-                        visitX2 += visitWidth;
+                        const vLayout = visitLayout.get(visit.id);
+                        const currentVisitX = vLayout ? vLayout.x : 0;
 
                         return (
                           <g key={visit.id}>
                             {!isVisitCollapsed && visit.cases.map((d, i) => {
                               const caseX = currentVisitX + i * CHAR_WIDTH_CASE + CHAR_WIDTH_CASE / 2;
+                              const preVal = d[labConfig.preKey] as number | null;
+                              const postVal = d[labConfig.postKey] as number | null;
+
                               return (
                                 <g key={d.id}>
-                                  {/* Connector Line - Only if BOTH are visible */}
-                                  {showPre && showPost && (
+                                  {/* Connector Line - Only if BOTH are visible and exist */}
+                                  {showPre && showPost && preVal !== null && postVal !== null && (
                                     <line
                                       x1={caseX}
                                       x2={caseX}
-                                      y1={yScale(d[labConfig.preKey] as number)}
-                                      y2={yScale(d[labConfig.postKey] as number)}
+                                      y1={yScale(preVal)}
+                                      y2={yScale(postVal)}
                                       stroke={theme.colors.gray[5]}
                                       strokeWidth={1}
                                       shapeRendering="crispEdges"
                                     />
                                   )}
                                   {/* Pre Dot (Green) */}
-                                  {showPre && (
-                                    <Tooltip label={`Pre: ${(d[labConfig.preKey] as number).toFixed(1)}`}>
+                                  {showPre && preVal !== null && (
+                                    <Tooltip label={`Pre: ${preVal.toFixed(1)}`}>
                                       <circle
                                         cx={caseX}
-                                        cy={yScale(d[labConfig.preKey] as number)}
+                                        cy={yScale(preVal)}
                                         r={DOT_RADIUS}
-                                        fill={isSelected(caseX, yScale(d[labConfig.preKey] as number) + MARGIN.top) ? theme.colors.orange[5] : theme.colors.teal[6]}
+                                        fill={isSelected(caseX, yScale(preVal) + MARGIN.top) ? theme.colors.orange[5] : theme.colors.teal[6]}
                                         stroke="white"
                                         strokeWidth={0.6}
                                       />
                                     </Tooltip>
                                   )}
                                   {/* Post Dot (Blue) */}
-                                  {showPost && (
-                                    <Tooltip label={`Post: ${(d[labConfig.postKey] as number).toFixed(1)}`}>
+                                  {showPost && postVal !== null && (
+                                    <Tooltip label={`Post: ${postVal.toFixed(1)}`}>
                                       <circle
                                         cx={caseX}
-                                        cy={yScale(d[labConfig.postKey] as number)}
+                                        cy={yScale(postVal)}
                                         r={DOT_RADIUS}
-                                        fill={isSelected(caseX, yScale(d[labConfig.postKey] as number) + MARGIN.top) ? theme.colors.orange[5] : theme.colors.indigo[6]}
+                                        fill={isSelected(caseX, yScale(postVal) + MARGIN.top) ? theme.colors.orange[5] : theme.colors.indigo[6]}
                                         stroke="white"
                                         strokeWidth={0.6}
                                       />
@@ -1185,7 +1185,7 @@ const DumbbellChartContent = memo(({
         </g>
       </>
     );
-  }, [processedData, collapsedProviders, collapsedVisits, providerSorts, visitSorts, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, isFlatMode, onToggleProviderSort, onToggleVisitSort, onToggleProviderCollapse, onToggleVisitCollapse, setHoveredCollapse, isSelected, totalWidth, selectedX, showMedian]);
+  }, [processedData, collapsedProviders, collapsedVisits, providerSorts, visitSorts, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, isFlatMode, onToggleProviderSort, onToggleVisitSort, onToggleProviderCollapse, onToggleVisitCollapse, setHoveredCollapse, isSelected, totalWidth, selectedX, showMedian, providerLayout, visitLayout]);
 
   return (
     <div
@@ -1324,10 +1324,9 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   }, []);
 
   // Get and Process Data
+  // Get and Process Data
   const processedData = useMemo(() => {
-    const dataKeyString = `none_${chartConfig.yAxisVar}_${chartConfig.xAxisVar}`;
-    const rawData = (store.exploreChartData[dataKeyString] as DumbbellData) || [];
-
+    const rawData = (store.exploreChartData[chartConfig.chartId] as DumbbellData) || [];
     const groupedByProvider = new Map<string, DumbbellCase[]>();
 
     // Grouping Logic based on selectedX
@@ -1508,38 +1507,128 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     });
 
     return hierarchy;
-  }, [store.exploreChartData, chartConfig.yAxisVar, chartConfig.xAxisVar, providerSorts, visitSorts, labConfig, selectedX, sortMode]);
+  }, [store.exploreChartData, chartConfig.chartId, chartConfig.yAxisVar, chartConfig.xAxisVar, providerSorts, visitSorts, labConfig, selectedX, sortMode]);
 
-  // Flat list of visible cases for plotting
-  const visibleItems = useMemo(() => {
+  // --- Layout & Width Calculation ---
+
+  // Helper to measure text width
+  const measureText = useCallback((text: string, fontSize: number = 12, fontWeight: number = 600) => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (context) {
+      context.font = `${fontWeight} ${fontSize}px ${theme.fontFamily || 'sans-serif'}`;
+      // Add a buffer because canvas measurement can be tight
+      return context.measureText(text).width + 2;
+    }
+    return text.length * 8;
+  }, [theme.fontFamily]);
+
+  const getShortenedLabel = useCallback((label: string) => {
+    if (label.includes('RBC')) return label.split(' ')[0];
+    if (label.includes('Platelet')) return label.split(' ')[0];
+    if (label.includes('Cryo')) return label.split(' ')[0];
+    if (label.includes('FFP')) return label.split(' ')[0];
+    return label;
+  }, []);
+
+  const layoutData = useMemo(() => {
     const items: {
-      type: 'case' | 'visit_gap' | 'provider_gap',
+      type: 'case' | 'visit_gap' | 'provider_gap' | 'spacer',
       data?: DumbbellCase,
       width: number
     }[] = [];
 
+    const providerLayout = new Map<string, { x: number, width: number, label: string }>();
+    const visitLayout = new Map<string, { x: number, width: number }>();
+
+    let currentX = MARGIN.left; // Start at Left Margin for coordinates passed to child?
+    // Wait, DumbbellChartContent adds MARGIN.top in the transform, but X usually starts at 0 or Margin?
+    // In original chartBody: `let currentX = 0`. And `g transform=translate(0, MARGIN.top)`.
+    // But `provider.visits.map` starts currentVisitX = providerX.
+    // And `totalWidth` includes Margins.
+    // Let's assume content starts at 0 relative to the scroll area, but offset by padding if needed.
+    // The previous `totalWidth` calculation added margins.
+    // The `chartBody` used `currentX = 0`.
+    // Let's stick to 0-based for the body content.
+    currentX = 0;
+
     processedData.forEach((provider) => {
+      const providerStartX = currentX;
+      let displayLabel = provider.id;
+
       if (collapsedProviders.has(provider.id)) {
-        items.push({ type: 'provider_gap', width: 50 });
+        const width = 50;
+        items.push({ type: 'provider_gap', width });
+        currentX += width;
       } else {
         provider.visits.forEach((visit) => {
+          const visitStartX = currentX;
           if (collapsedVisits.has(visit.id)) {
-            items.push({ type: 'visit_gap', width: 40 });
+            const width = 40;
+            items.push({ type: 'visit_gap', width });
+            currentX += width;
           } else if (visit.cases.length === 0) {
-            items.push({ type: 'visit_gap', width: EMPTY_VISIT_WIDTH });
+            const width = EMPTY_VISIT_WIDTH;
+            items.push({ type: 'visit_gap', width });
+            currentX += width;
           } else {
             visit.cases.forEach((c) => {
-              items.push({ type: 'case', data: c, width: CHAR_WIDTH_CASE });
+              const width = CHAR_WIDTH_CASE;
+              items.push({ type: 'case', data: c, width });
+              currentX += width;
             });
           }
+          visitLayout.set(visit.id, { x: visitStartX, width: currentX - visitStartX });
         });
       }
+
+      // Calculate natural width
+      let providerWidth = currentX - providerStartX;
+
+      // Enforce Min Width & Label Checks
+      const isSurgeon = selectedX === 'surgeon' || selectedX === 'anesthesiologist';
+
+      if (isSurgeon) {
+        const MIN_SURGEON_WIDTH = 40;
+        if (providerWidth < MIN_SURGEON_WIDTH) {
+          const deficit = MIN_SURGEON_WIDTH - providerWidth;
+          items.push({ type: 'spacer', width: deficit });
+          currentX += deficit;
+          providerWidth += deficit;
+        }
+      } else {
+        // RBC/Count buckets
+        const fullWidth = measureText(displayLabel, 12, 600);
+        // Check if full label fits
+        if (providerWidth < fullWidth + 10) {
+          const shortLabel = getShortenedLabel(displayLabel);
+          const shortWidth = measureText(shortLabel, 12, 600);
+
+          if (shortLabel !== displayLabel && providerWidth >= shortWidth + 8) {
+            displayLabel = shortLabel;
+          } else {
+            // Must expand
+            const targetWidth = (shortLabel !== displayLabel) ? shortWidth : fullWidth;
+
+            if (providerWidth < targetWidth + 10) {
+              const deficit = (targetWidth + 10) - providerWidth;
+              items.push({ type: 'spacer', width: deficit });
+              currentX += deficit;
+              providerWidth += deficit;
+              if (shortLabel !== displayLabel) displayLabel = shortLabel;
+            }
+          }
+        }
+      }
+
+      providerLayout.set(provider.id, { x: providerStartX, width: providerWidth, label: displayLabel });
     });
-    return items;
-  }, [processedData, collapsedProviders, collapsedVisits]);
+
+    return { items, providerLayout, visitLayout };
+  }, [processedData, collapsedProviders, collapsedVisits, measureText, getShortenedLabel, selectedX]);
 
   // Calculate total width
-  const totalWidth = visibleItems.reduce((acc, item) => acc + item.width, 0) + MARGIN.left + MARGIN.right;
+  const totalWidth = layoutData.items.reduce((acc, item) => acc + item.width, 0) + MARGIN.left + MARGIN.right;
 
   // Responsive Height
   const { ref, height: measuredHeight } = useElementSize();
@@ -1576,15 +1665,6 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 {
                   label: (
                     <Flex align="center" justify="center" gap={4}>
-                      Time
-                      {sortMode === 'time' && <IconArrowRightDashed size={12} stroke={2} />}
-                    </Flex>
-                  ),
-                  value: 'time',
-                },
-                {
-                  label: (
-                    <Flex align="center" justify="center" gap={4}>
                       Pre
                       {sortMode === 'pre' && <IconArrowUp size={12} stroke={2} />}
                     </Flex>
@@ -1608,6 +1688,15 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                     </Flex>
                   ),
                   value: 'gap',
+                },
+                {
+                  label: (
+                    <Flex align="center" justify="center" gap={4}>
+                      Time
+                      {sortMode === 'time' && <IconArrowRightDashed size={12} stroke={2} />}
+                    </Flex>
+                  ),
+                  value: 'time',
                 },
               ]}
               styles={(t) => ({
@@ -1771,6 +1860,8 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 setHoveredTarget={setHoveredTarget}
                 showTargets={showTargets}
                 showMedian={showMedian}
+                providerLayout={layoutData.providerLayout}
+                visitLayout={layoutData.visitLayout}
               />
             </ScrollArea>
           </div>

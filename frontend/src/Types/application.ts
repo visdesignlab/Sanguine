@@ -354,6 +354,17 @@ export const GUIDELINE_ADHERENT_OPTIONS = Object.values(GUIDELINE_ADHERENT) as R
 // Lab Results ---------------------------------------------------
 export const LAB_RESULTS = [
   {
+    value: 'pre_op_hgb',
+    label: {
+      short: 'Pre-op Hgb',
+      base: 'Pre-Operative Hemoglobin',
+      sum: 'Total Pre-Operative Hemoglobin',
+      avg: 'Average Pre-Operative Hemoglobin',
+    },
+    units: { sum: 'g/dL', avg: 'g/dL' },
+    decimals: { sum: 0, avg: 2 },
+  },
+  {
     value: 'post_op_hgb',
     label: {
       short: 'Post-op Hgb',
@@ -532,10 +543,12 @@ export const CPT_CODES = {
 // Chart configuration type
 type ChartConfig<X, Y, A, T> = {
   chartId: string;
+  title?: string;
   xAxisVar: X;
   yAxisVar: Y;
   aggregation: A;
   chartType: T;
+  rowVar?: typeof ExploreTableRowVars[number];
 };
 
 // PBM Dashboard ---------------------------------------------------
@@ -672,7 +685,7 @@ export type DumbbellData = DumbbellCase[];
 
 // --- Scatter plots ---
 // TODO: Update scatterPlotConfig type
-export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterPlot'>;
+export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS | 'none', 'scatterPlot'>;
 export type ScatterPlotData = ScatterChartSeries[];
 
 // --- Explore Table ---
@@ -750,24 +763,39 @@ export const ExploreTableColumnOptionsGrouped = [
   },
   {
     group: 'Costs',
-    items: COST_OPTIONS.map((opt) => ({
-      value: opt.value,
-      label: opt.label.base,
-      units: {
-        sum: opt.units.sum,
-        avg: opt.units.avg,
-        sumShort: opt.units.sumShort,
-        avgShort: opt.units.avgShort,
-        type: opt.units.type,
+    items: [
+      ...COST_OPTIONS.map((opt) => ({
+        value: opt.value,
+        label: opt.label.base,
+        units: {
+          sum: opt.units.sum,
+          avg: opt.units.avg,
+          sumShort: opt.units.sumShort,
+          avgShort: opt.units.avgShort,
+          type: opt.units.type,
+        },
+        decimals: opt.decimals,
+      })),
+      {
+        value: 'total_cost',
+        label: 'Cost',
+        units: { sum: '$', avg: '$', type: 'prefix' },
+        decimals: { sum: 0, avg: 0 },
       },
-      decimals: opt.decimals,
-    })),
+      {
+        value: 'salvage_savings',
+        label: 'Savings from Cell Salvage',
+        units: { sum: '$', avg: '$', type: 'prefix' },
+        decimals: { sum: 0, avg: 0 },
+      },
+    ],
   },
   {
     group: 'Other',
     items: [
       { value: 'year', label: 'Year' },
       { value: 'quarter', label: 'Quarter' },
+      { value: 'drg_weight', label: 'DRG Weight' },
       ...RBC_PERCENT_OPTIONS,
       {
         value: 'attending_provider',
@@ -824,7 +852,7 @@ export const ExploreTableRowVars = ExploreTableRowOptions.map((opt) => opt.value
 export type ExploreTableColumn = {
   colVar: typeof ExploreTableColumnVars[number];
   aggregation: keyof typeof AGGREGATION_OPTIONS | 'none';
-  type: 'numeric' | 'text' | 'violin' | 'heatmap';
+  type: 'numeric' | 'text' | 'violin' | 'heatmap' | 'stackedBar' | 'numericBar';
   title: string;
   numericTextVisible?: boolean;
 };

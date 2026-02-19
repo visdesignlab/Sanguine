@@ -26,8 +26,6 @@ import {
   dashboardXAxisVars,
   dashboardYAxisOptions,
   DEFAULT_UNIT_COSTS,
-  DumbbellData,
-  DumbbellCase,
 } from '../Types/application';
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
@@ -94,106 +92,7 @@ export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
   },
 ];
 
-// --- Dummy Data Generator for Dumbbell Chart ---
-function generateDumbbellData(): DumbbellData {
-  const providers = ['Dr. Aris', 'Dr. Briseis', 'Dr. Caelus', 'Dr. Daedalus', 'Dr. Elara'];
-  const data: DumbbellData = [];
-  let caseIdCounter = 1;
-
-  // Date Range: 2019-2025
-  const startTimestamp = new Date('2019-01-01').getTime();
-  const endTimestamp = new Date('2025-12-31').getTime();
-  const dateRange = endTimestamp - startTimestamp;
-
-  providers.forEach((provider) => {
-    // 15 to 25 visits per provider (increased 5x from original 3-5)
-    const numVisits = Math.floor(Math.random() * 11) + 15;
-
-    // Each provider starts at a varied time to avoid perfect overlap
-    let providerTime = startTimestamp + (Math.random() * dateRange);
-
-    for (let v = 1; v <= numVisits; v += 1) {
-      const visitId = `${v}`; // Just the number
-      // 3 to 8 cases per visit
-      const numCases = Math.floor(Math.random() * 6) + 3;
-
-      // Each visit happens some time after the previous one
-      providerTime += 86400000 * (Math.floor(Math.random() * 5) + 1); // 1-5 days later
-
-      // Generate cases for this visit
-      const visitCases: DumbbellCase[] = [];
-
-      for (let c = 0; c < numCases; c += 1) {
-        // Generate pre-op Hgb (roughly 10-16)
-        const preHgb = 10 + Math.random() * 6;
-        // Generate post-op Hgb (roughly 7-14, usually lower than pre)
-        const postHgb = Math.max(7, preHgb - (Math.random() * 4 + 0.5));
-
-        // Ferritin (ng/mL): 12-300
-        const preFerritin = 20 + Math.random() * 250;
-        const postFerritin = Math.max(10, preFerritin - (Math.random() * 50)); // Drops slightly
-
-        // Platelet Count (K/µL): 150-450
-        const prePlatelet = 150 + Math.random() * 300;
-        const postPlatelet = Math.max(50, prePlatelet - (Math.random() * 80)); // Drops due to consumption/dilution
-
-        // Fibrinogen (mg/dL): 200-400
-        const preFibrinogen = 200 + Math.random() * 200;
-        const postFibrinogen = Math.max(100, preFibrinogen - (Math.random() * 100)); // Consumed
-
-        // INR: 0.8-1.2 (Normal), up to 3.0 (Anticoagulated). Post-op might rise.
-        const preINR = 0.9 + Math.random() * 0.3;
-        const postINR = preINR + Math.random() * 0.5; // Increases (clotting factors diluted)
-
-        // Anesthesiologist
-        const anesthesiologists = ['Dr. Stone', 'Dr. Rivers', 'Dr. Sky', 'Dr. Woods', 'Dr. Brooks'];
-        const anesthesiologistId = anesthesiologists[Math.floor(Math.random() * anesthesiologists.length)];
-
-        // Intraop Transfusions (0, 1, 2...) - Weighted towards 0
-        const intraopRBC = Math.random() > 0.7 ? Math.floor(Math.random() * 5) : 0;
-        const intraopPlatelet = Math.random() > 0.8 ? Math.floor(Math.random() * 3) : 0;
-        const intraopCryo = Math.random() > 0.9 ? Math.floor(Math.random() * 3) : 0;
-        const intraopFFP = Math.random() > 0.85 ? Math.floor(Math.random() * 4) : 0;
-
-        // Cell Salvage (mL) - 0 or 1-1000
-        const cellSalvage = Math.random() > 0.6 ? Math.floor(Math.random() * 800) : 0;
-
-        // Cases within a visit are sequential
-        const caseTime = providerTime + (c * (3600000 * (2 + Math.random() * 2)));
-
-        visitCases.push({
-          id: `case-${caseIdCounter}`,
-          providerId: provider,
-          visitId,
-          preHgb,
-          postHgb,
-          preFerritin,
-          postFerritin,
-          prePlatelet,
-          postPlatelet,
-          preFibrinogen,
-          postFibrinogen,
-          preINR,
-          postINR,
-          anesthesiologistId,
-          intraopRBC,
-          intraopPlatelet,
-          intraopCryo,
-          intraopFFP,
-          cellSalvage,
-          surgery_start_dtm: caseTime,
-        });
-        caseIdCounter += 1;
-      }
-
-      // Ensure strict time sort for generation (though we sort in chart too)
-      visitCases.sort((a, b) => a.surgery_start_dtm - b.surgery_start_dtm);
-      data.push(...visitCases);
-    }
-  });
-
-  return data;
-}
+// --- Dummy Data Generator REMOVED ---
 // endregion
 
 // region Types
@@ -266,81 +165,7 @@ export class RootStore {
 
   _transientExploreLayouts: { [key: string]: Layout[] } | null = null;
 
-  exploreDummyData: ExploreChartData = {
-    sum_post_op_hgb_cell_saver_ml: [
-      {
-        name: 'Anesth 101',
-        color: 'blue',
-        data: [
-          { cell_saver_ml: 50, post_op_hgb: 11.2 },
-          { cell_saver_ml: 120, post_op_hgb: 10.8 },
-          { cell_saver_ml: 180, post_op_hgb: 10.5 },
-          { cell_saver_ml: 240, post_op_hgb: 10.1 },
-          { cell_saver_ml: 310, post_op_hgb: 9.7 },
-          { cell_saver_ml: 400, post_op_hgb: 9.4 },
-        ],
-      },
-      {
-        name: 'Anesth 204',
-        color: 'teal',
-        data: [
-          { cell_saver_ml: 40, post_op_hgb: 12.0 },
-          { cell_saver_ml: 90, post_op_hgb: 11.6 },
-          { cell_saver_ml: 150, post_op_hgb: 11.1 },
-          { cell_saver_ml: 200, post_op_hgb: 10.9 },
-          { cell_saver_ml: 270, post_op_hgb: 10.2 },
-          { cell_saver_ml: 350, post_op_hgb: 9.9 },
-        ],
-      },
-      {
-        name: 'Anesth 317',
-        color: 'grape',
-        data: [
-          { cell_saver_ml: 30, post_op_hgb: 12.5 },
-          { cell_saver_ml: 70, post_op_hgb: 12.1 },
-          { cell_saver_ml: 110, post_op_hgb: 11.7 },
-          { cell_saver_ml: 160, post_op_hgb: 11.3 },
-          { cell_saver_ml: 220, post_op_hgb: 10.8 },
-          { cell_saver_ml: 300, post_op_hgb: 10.4 },
-        ],
-      },
-    ],
-    sum_surgeon_prov_id_cost: [
-      {
-        surgeon_prov_id: 'Dr. Smith',
-        rbc_units_cost: 600,
-        ffp_units_cost: 950,
-        plt_units_cost: 900,
-        cryo_units_cost: 850,
-        cell_saver_cost: 800,
-      },
-      {
-        surgeon_prov_id: 'Dr. Lee',
-        rbc_units_cost: 400,
-        ffp_units_cost: 800,
-        plt_units_cost: 750,
-        cryo_units_cost: 700,
-        cell_saver_cost: 650,
-      },
-      {
-        surgeon_prov_id: 'Dr. Patel',
-        rbc_units_cost: 700,
-        ffp_units_cost: 1000,
-        plt_units_cost: 950,
-        cryo_units_cost: 900,
-        cell_saver_cost: 850,
-      },
-      {
-        surgeon_prov_id: 'Dr. Jones',
-        rbc_units_cost: 300,
-        ffp_units_cost: 700,
-        plt_units_cost: 650,
-        cryo_units_cost: 600,
-        cell_saver_cost: 550,
-      },
-    ],
-    none_hgb_provider_visit: generateDumbbellData(),
-  };
+  exploreDummyData: ExploreChartData = {};
 
   exploreChartData: ExploreChartData = { ...this.exploreDummyData };
 
@@ -1420,11 +1245,11 @@ export class RootStore {
     const currentConfigs = this.exploreChartConfigs;
     const currentLayouts = this.exploreChartLayouts;
     const newConfigs = [config, ...currentConfigs];
-    const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 1 }));
+    const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 2 }));
     shifted.unshift({
-      i: config.chartId, x: 0, y: 0, w: 2, h: 1, maxH: 2,
+      i: config.chartId, x: 0, y: 0, w: 2, h: 2, maxH: 4,
     });
-    const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 2) };
+    const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 4) };
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Explore Chart');
     this._transientExploreLayouts = null;
   }
@@ -1791,6 +1616,10 @@ export class RootStore {
         // Iterate over the columns and build the column selection clauses
         tableConfig.columns.forEach((col) => {
           const { colVar } = col;
+
+          // Skip client-only columns (e.g. violin plots use dummy data generated in the component)
+          if (col.type === 'violin') return;
+
           let colAggregation = config.aggregation || col.aggregation;
 
           if (colAggregation === 'none' && colVar !== tableConfig.rowVar) {
@@ -1837,6 +1666,22 @@ export class RootStore {
             return;
           }
 
+          // Special case: total_cost (stacked bar components)
+          if (colVar === 'total_cost') {
+            const comps = ['rbc_units_cost', 'ffp_units_cost', 'plt_units_cost', 'cryo_units_cost'];
+            comps.forEach((c) => {
+              columnClauses.push(`${aggFn}(${c}) AS ${c.replace('_units_cost', '_cost')}`);
+            });
+            columnClauses.push(`${aggFn}(${comps.join(' + ')}) AS total_cost`);
+            return;
+          }
+
+          // Special case: salvage_savings
+          if (colVar === 'salvage_savings') {
+            columnClauses.push(`${aggFn}(cell_saver_cost) AS salvage_savings`);
+            return;
+          }
+
           // Standard numeric & boolean fields
           const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
           if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
@@ -1878,6 +1723,100 @@ export class RootStore {
           return { id: config.chartId, data: rows };
         } catch (error) {
           console.error('Error executing explore table query:', error);
+          return { id: config.chartId, data: [] };
+        }
+      }
+      if (config.chartType === 'dumbbell') {
+        const query = `
+          SELECT
+             CAST(case_id AS VARCHAR) as id,
+             surgeon_prov_id as providerId,
+             CAST(visit_no AS VARCHAR) as visitId,
+             pre_hgb as preHgb,
+             post_hgb as postHgb,
+             pre_ferritin as preFerritin,
+             post_ferritin as postFerritin,
+             pre_plt as prePlatelet,
+             post_plt as postPlatelet,
+             pre_fibrinogen as preFibrinogen,
+             post_fibrinogen as postFibrinogen,
+             pre_inr as preINR,
+             post_inr as postINR,
+             anesth_prov_id as anesthesiologistId,
+             intraop_rbc_units as intraopRBC,
+             intraop_plt_units as intraopPlatelet,
+             intraop_cryo_units as intraopCryo,
+             intraop_ffp_units as intraopFFP,
+             intraop_cell_saver_ml as cellSalvage,
+             (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
+          FROM filteredSurgeryCases
+          ORDER BY surgery_start_dtm
+        `;
+        try {
+          const result = await this.duckDB!.query(query);
+          const data = result.toArray().map((row) => row.toJSON());
+          return { id: config.chartId, data };
+        } catch (error) {
+          console.error('Error executing dumbbell query:', error);
+          return { id: config.chartId, data: [] };
+        }
+      }
+      if (config.chartType === 'scatterPlot') {
+        const query = `
+           SELECT
+             CAST(case_id AS VARCHAR) as case_id,
+             surgeon_prov_id,
+             anesth_prov_id,
+             year,
+             quarter,
+             month,
+             
+             intraop_rbc_units,
+             intraop_ffp_units,
+             intraop_plt_units,
+             intraop_cryo_units,
+             intraop_cell_saver_ml,
+             
+             los,
+             death,
+             vent,
+             stroke,
+             ecmo,
+             
+             pre_hgb, post_hgb,
+             pre_ferritin, post_ferritin,
+             pre_plt, post_plt,
+             pre_fibrinogen, post_fibrinogen,
+             pre_inr, post_inr,
+             
+             total_cost,
+             rbc_cost,
+             case_id
+           FROM filteredSurgeryCases
+        `;
+        try {
+          const result = await this.duckDB!.query(query);
+          const data = result.toArray().map((row) => row.toJSON());
+
+          // We need to group by the 'grouping variable'. 
+          const groupingVar = (config as any).groupingVar || 'surgeon_prov_id';
+
+          // We can do the grouping in JS.
+          const grouped: Record<string, any[]> = {};
+          data.forEach(row => {
+            const key = row[groupingVar] || 'Unknown';
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(row);
+          });
+
+          const formattedData = Object.entries(grouped).map(([name, groupData]) => ({
+            name,
+            data: groupData
+          }));
+
+          return { id: config.chartId, data: formattedData };
+        } catch (error) {
+          console.error('Error executing scatter query:', error);
           return { id: config.chartId, data: [] };
         }
       }

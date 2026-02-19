@@ -2,6 +2,9 @@ import React, {
   useContext, useEffect, useState, useMemo, useRef, CSSProperties,
   useCallback,
 } from 'react';
+import { area, curveCatmullRom } from 'd3-shape';
+import { scaleLinear } from 'd3-scale';
+import { mean as d3Mean, max as d3Max } from 'd3-array';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import {
   MultiSelect,
@@ -14,6 +17,7 @@ import {
   Tooltip,
   TextInput,
   Select,
+  Text,
 } from '@mantine/core';
 import {
   IconGripVertical, IconMathGreater, IconMathLower, IconPercentage,
@@ -84,6 +88,11 @@ const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColum
     return 'text';
   }
 
+  // DRG weight always renders as violin
+  if (key === 'drg_weight') {
+    return 'violin';
+  }
+
   const sample = data[0]?.[key];
 
   if (typeof sample !== 'string') {
@@ -95,8 +104,151 @@ const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColum
   return 'text';
 };
 
+// ---------- DRG Violin helpers ----------
+function kernelEpanechnikov(k: number) {
+  return function kernelFn(v: number) {
+    const u = v / k;
+    return Math.abs(u) <= 1 ? (0.75 * (1 - u * u)) / k : 0;
+  };
+}
+
+function kernelDensityEstimator(kernel: (v: number) => number, X: number[]) {
+  return function estimator(V: number[]) {
+    return X.map((x) => [x, d3Mean(V, (v) => kernel(x - v)) ?? 0] as [number, number]);
+  };
+}
+
+function mulberry32(a: number) {
+  let seed = a;
+  return function rng() {
+    // eslint-disable-next-line no-bitwise
+    seed |= 0;
+    // eslint-disable-next-line no-bitwise
+    seed = (seed + 0x6d2b79f5) | 0;
+    // eslint-disable-next-line no-bitwise
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    // eslint-disable-next-line no-bitwise
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    // eslint-disable-next-line no-bitwise
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function makeFakeSamplesForRow(row: ExploreTableRow, count = 40) {
+  const seedStr = `${row.attending_provider ?? row.year ?? row.quarter ?? ''}:${row.cases ?? 0}`;
+  let h = 2166136261;
+  for (let i = 0; i < seedStr.length; i += 1) {
+    // eslint-disable-next-line no-bitwise
+    h = Math.imul(h ^ seedStr.charCodeAt(i), 16777619);
+  }
+  const rnd = mulberry32(h);
+  const samples = new Array(count).fill(0).map(() => {
+    const v = rnd() ** 1.3 * 1.5 + 0.2 + (Number(row.cases ?? 0) % 5) * 0.05;
+    return Math.round(v * 100) / 100;
+  });
+  return samples;
+}
+
+function computeMedian(arr: number[]) {
+  if (!arr || arr.length === 0) return 0;
+  const s = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
+function ViolinCell({
+  samples, domain, height = 25, padding = 0,
+}: { samples: number[]; domain?: [number, number]; height?: number; padding?: number }) {
+  const internalWidth = 120;
+  if (!samples || samples.length === 0) {
+    return (
+      <div style={{ width: '100%', height }}>
+        <div style={{
+          width: '30%', height: 6, background: '#ddd', margin: '0 auto', borderRadius: 3,
+        }}
+        />
+      </div>
+    );
+  }
+
+  const sampleMin = Math.min(...samples);
+  const sampleMax = Math.max(...samples);
+
+  const domainMin = (domain && typeof domain[0] === 'number') ? domain[0] : sampleMin;
+  const domainMax = (domain && typeof domain[1] === 'number') ? domain[1] : sampleMax;
+  const domainRange = Math.max(1e-6, domainMax - domainMin);
+
+  const ticks = 20;
+  const centerY = height / 2;
+
+  const xScale = scaleLinear().domain([domainMin, domainMax]).range([padding, internalWidth - padding]);
+
+  const liner = Array.from({ length: ticks }).map((_, i) => domainMin + (i * domainRange) / Math.max(1, ticks - 1));
+  const bandwidth = Math.max(domainRange / 8, 1e-3);
+  const kde = kernelDensityEstimator(kernelEpanechnikov(bandwidth), liner);
+  const density = kde(samples);
+  const maxDens = d3Max(density.map((d) => d[1])) ?? 1;
+
+  const yDensityScale = scaleLinear().domain([0, maxDens]).range([0, ((height - padding * 2) / 2) * 0.85]);
+
+  const path = area<[number, number]>()
+    .x((d) => xScale(d[0]))
+    .y0((d) => centerY - yDensityScale(d[1]))
+    .y1((d) => centerY + yDensityScale(d[1]))
+    .curve(curveCatmullRom);
+
+  const d = path(density as [number, number][]) ?? '';
+
+  const median = (() => {
+    const sorted = [...samples].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  })();
+
+  const medianX = xScale(median);
+  const medianHalfH = yDensityScale(maxDens);
+
+  return (
+    <Tooltip
+      label={`Min ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(sampleMin)} • Median ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(median)} • Max ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(sampleMax)}`}
+      position="top"
+      withArrow
+    >
+      <div style={{
+        width: '100%',
+        height,
+        flex: 1,
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+      }}
+      >
+        <svg viewBox={`0 0 ${internalWidth} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }} aria-hidden>
+          <path d={d} fill="#a6a6a6" stroke="#8c8c8c" strokeWidth={1} opacity={0.95} />
+        </svg>
+
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: `${(medianX / internalWidth) * 100}%`,
+            transform: 'translateX(-50%)',
+            top: `${centerY - medianHalfH}px`,
+            height: `${medianHalfH * 2}px`,
+            width: 1,
+            background: '#8c8c8c',
+            opacity: 0.95,
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+    </Tooltip>
+  );
+}
+// ---------- end DRG Violin helpers ----------
+
 // Helper function to sort rows
-const sortRows = <T, >(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] => (
+const sortRows = <T,>(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] => (
   [...data].sort((a, b) => {
     const valueA = getter(a);
     const valueB = getter(b);
@@ -158,7 +310,8 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
   return result;
 };
 
-// Cell for displaying numeric values as grey bars
+const chartColors = ['#2c7bb6', '#abd9e9', '#ffffbf', '#fdae61', '#d7191c'];
+
 function NumericBarCell({
   value, max, colVar, opts = {}, setHoveredValue, agg,
 }: {
@@ -166,16 +319,16 @@ function NumericBarCell({
   max: number;
   colVar: string;
   setHoveredValue: SetHoveredValue;
-
-  opts?: { padding?: string; cellHeight?: number; fillColor?: string };
+  opts?: { padding?: string; cellHeight?: number; fillColor?: string; isSavings?: boolean };
   agg?: string;
 }) {
   // Default Options
   const {
     cellHeight = 21,
-    fillColor = '#8c8c8c',
+    fillColor = opts?.isSavings ? '#ffd43b' : '#8c8c8c',
     padding = '1px 1px 1px 1px',
-  } = opts;
+    isSavings = false,
+  } = opts || {};
 
   const isMissing = value === null || value === undefined;
 
@@ -207,37 +360,143 @@ function NumericBarCell({
         onMouseEnter={() => !isMissing && setHoveredValue({ col: colVar, value })}
         onMouseLeave={() => setHoveredValue(null)}
       >
-        <div className="numeric-bar-cell-inner" style={{ height: cellHeight }}>
-          {/* Black Text */}
+        <div className="numeric-bar-cell-inner" style={{ height: cellHeight, position: 'relative' }}>
+          {/* Black Text (Underlay for standard, Overlay for savings) */}
           <div
             aria-hidden
             className="numeric-bar-cell-text-container"
+            style={{
+              zIndex: isSavings ? 2 : 0, // Force on top for savings
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+            }}
           >
             <p className="numeric-bar-cell-text" style={{ lineHeight: `${cellHeight}px` }}>
               {textValue}
             </p>
           </div>
+
           {/* Bar fill */}
           <div
             className="bar-fill numeric-bar-cell-fill"
             style={{
               width: `${barWidthPercent}%`,
               background: fillColor,
+              zIndex: 1, // Bar is above standard text (0) but below savings text (2)
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              height: '100%',
             }}
           />
-          {/* White Text */}
-          <div
-            aria-hidden
-            className="numeric-bar-cell-text-overlay"
-            style={{
-              clipPath: `inset(0 ${clipRightAmount} 0 0)`,
-              WebkitClipPath: `inset(0 ${clipRightAmount} 0 0)`,
-            }}
-          >
-            <p className="numeric-bar-cell-text" style={{ lineHeight: `${cellHeight}px` }}>
-              {textValue}
-            </p>
-          </div>
+
+          {/* White Text Overlay (Clipped) - Standard only */}
+          {!isSavings && (
+            <div
+              aria-hidden
+              className="numeric-bar-cell-text-overlay"
+              style={{
+                clipPath: `inset(0 ${clipRightAmount} 0 0)`,
+                WebkitClipPath: `inset(0 ${clipRightAmount} 0 0)`,
+                zIndex: 3, // Highest z-index for the white clipped text
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              <p className="numeric-bar-cell-text" style={{ lineHeight: `${cellHeight}px` }}>
+                {textValue}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </Tooltip>
+  );
+}
+
+function StackedBarCell({
+  row, max, colVar, agg,
+}: {
+  row: ExploreTableRow;
+  max: number;
+  colVar: string;
+  agg?: string;
+}) {
+  const parts = [
+    {
+      key: 'rbc_cost', label: 'RBC Cost', value: Number(row.rbc_cost ?? 0), color: chartColors[4],
+    },
+    {
+      key: 'ffp_cost', label: 'FFP Cost', value: Number(row.ffp_cost ?? 0), color: chartColors[2],
+    },
+    {
+      key: 'plt_cost', label: 'Platelets Cost', value: Number(row.plt_cost ?? 0), color: chartColors[0],
+    },
+    {
+      key: 'cryo_cost', label: 'Cryo Cost', value: Number(row.cryo_cost ?? 0), color: chartColors[1],
+    },
+  ];
+
+  const total = Number(row.total_cost ?? 0);
+  const textValue = getFormattedValue(total, colVar, agg, false);
+  const tooltipTextValue = getFormattedValue(total, colVar, agg, true);
+
+  return (
+    <Tooltip
+      label={(
+        <Stack gap={4}>
+          {parts.map((p) => (
+            <Text key={p.key} fz="xs" style={{ whiteSpace: 'nowrap' }}>
+              {p.label}
+              {': '}
+              {getFormattedValue(p.value, colVar, agg, true)}
+            </Text>
+          ))}
+          <Box pt={4} style={{ borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+            <Text fz="xs" fw={700}>
+              {'Total: '}
+              {tooltipTextValue}
+            </Text>
+          </Box>
+        </Stack>
+      )}
+      position="top"
+      withArrow
+    >
+      <div style={{
+        display: 'flex', alignItems: 'center', width: '100%', height: 21, gap: 8,
+      }}
+      >
+        <div style={{
+          display: 'flex', width: `${(total / max) * 100}%`, height: 18, overflow: 'hidden', borderRadius: 2,
+        }}
+        >
+          {parts.map((p) => {
+            const w = total > 0 ? (p.value / total) * 100 : 0;
+            return (
+              <div
+                key={p.key}
+                style={{
+                  width: `${w}%`,
+                  minWidth: p.value > 0 ? 1 : 0,
+                  background: p.color,
+                  display: p.value > 0 ? 'block' : 'none',
+                }}
+              />
+            );
+          })}
+        </div>
+        <div style={{
+          fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap',
+        }}
+        >
+          {textValue}
         </div>
       </div>
     </Tooltip>
@@ -403,8 +662,12 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         return (val as number[]).reduce((sum, n) => sum + n, 0);
       }
 
-      // Check column config to see if we should force numeric sort
+      // Check column config to see if we should force numeric sort or handle violin
       const colConfig = chartConfig.columns.find((c) => c.colVar === accessor);
+      if (colConfig?.type === 'violin') {
+        const samples = makeFakeSamplesForRow(row, 40);
+        return computeMedian(samples);
+      }
       if (colConfig?.type === 'numeric' || colConfig?.type === 'heatmap') {
         if (val === null || val === undefined) return val;
         // Force conversion to number for sorting
@@ -567,8 +830,27 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         : rawValues.map((r: unknown) => Number(r ?? 0));
       const maxVal = values.length ? Math.max(...values) : 0;
 
+      // Compute violin aggregate for footer when violin columns exist
+      const violinAggregate = (() => {
+        if (type !== 'violin') return null;
+        const perRow = rows.map((r: ExploreTableRow) => makeFakeSamplesForRow(r, 40));
+        const allSamples = perRow.flat();
+        if (allSamples.length === 0) return { samples: [] as number[], minAll: 0, maxAll: 0 };
+        const mins = perRow.map((s) => Math.min(...s));
+        const maxs = perRow.map((s) => Math.max(...s));
+        return { samples: allSamples, minAll: Math.min(...mins), maxAll: Math.max(...maxs) };
+      })();
+
       // Filter component
       const filterComponent = (type === 'numeric' || type === 'heatmap') ? (
+        <NumericFilterInput
+          filterState={numericFilters[colVar] ?? defaultNumericFilter}
+          onChange={(newVal) => setNumericFilters((prev: Record<string, NumericFilter>) => ({
+            ...prev,
+            [colVar]: { ...prev[colVar] ?? defaultNumericFilter, ...newVal },
+          }))}
+        />
+      ) : type === 'violin' ? (
         <NumericFilterInput
           filterState={numericFilters[colVar] ?? defaultNumericFilter}
           onChange={(newVal) => setNumericFilters((prev: Record<string, NumericFilter>) => ({
@@ -585,17 +867,55 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         />
       );
 
+      // Violin footer
+      const violinFooter = (type === 'violin' && violinAggregate) ? (
+        <div style={{
+          display: 'flex', justifyContent: 'center', paddingTop: 0, paddingBottom: 0,
+        }}
+        >
+          <div style={{
+            width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
+          }}
+          >
+            <div style={{ width: '100%' }}>
+              <ViolinCell samples={violinAggregate.samples} domain={[violinAggregate.minAll, violinAggregate.maxAll]} height={24} padding={0} />
+            </div>
+            <div style={{ width: '100%', marginTop: 2 }}>
+              <div
+                style={{
+                  width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  boxSizing: 'border-box', fontSize: 10, fontWeight: 600, opacity: 0.7,
+                }}
+              >
+                <div style={{ paddingLeft: 4, color: '#6f6f6f' }}>{violinAggregate.minAll.toFixed(2)}</div>
+                <div style={{ paddingRight: 4, color: '#6f6f6f' }}>{violinAggregate.maxAll.toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : undefined;
+
+      let displayTitle = title;
+      if (colVar === 'total_cost') {
+        const titleMap: Record<string, string> = { sum: 'Total Cost', avg: 'Average Cost per Visit' };
+        if (agg && titleMap[agg]) displayTitle = titleMap[agg];
+      }
+      if (colVar === 'salvage_savings') {
+        const titleMap: Record<string, string> = { sum: 'Total Savings', avg: 'Savings from Cell Salvage per Visit' };
+        if (agg && titleMap[agg]) displayTitle = titleMap[agg];
+      }
+
       // Base column definition
       const column: DataTableColumn<ExploreTableRow> = {
         accessor: colVar,
-        title,
+        title: displayTitle,
         draggable: colVar !== 'cases' && !(colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar),
         resizable: false,
         sortable: true,
         noWrap: true,
-        width: colVar === 'cases' ? 90 : (colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar) ? 175 : undefined,
+        width: colVar === 'cases' ? 90 : colVar === 'salvage_savings' ? 250 : colVar === 'total_cost' ? 400 : (colVar === 'attending_provider' || (colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar)) ? 175 : undefined,
         filter: filterComponent,
-        footer: (type === 'numeric' || type === 'heatmap') ? (
+        footer: type === 'violin' ? violinFooter : (type === 'numeric' || type === 'heatmap') ? (
           <HistogramFooter
             values={values}
             colVar={colVar}
@@ -608,7 +928,23 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       };
 
       // Custom Render Logic
-      if (type === 'heatmap') {
+      if (type === 'stackedBar') {
+        column.render = (row) => <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} />;
+      } else if (type === 'numericBar') {
+        column.render = (row) => {
+          const val = Number(row[colVar]);
+          return (
+            <NumericBarCell
+              value={val}
+              max={maxVal}
+              colVar={colVar}
+              setHoveredValue={setHoveredValue}
+              agg={agg}
+              opts={{ isSavings: colVar === 'salvage_savings' }}
+            />
+          );
+        };
+      } else if (type === 'heatmap') {
         column.render = (row: ExploreTableRow) => {
           const renderHeatmapCell = (val: number, padding: string) => {
             const normalizedVal = getNormalizedValue(val);
@@ -663,6 +999,15 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             );
           }
           return renderHeatmapCell(Number(row[colVar] ?? 0), '1px 1px 1px 1px');
+        };
+      } else if (type === 'violin') {
+        column.textAlign = 'center';
+        column.render = (row: ExploreTableRow) => {
+          const samples = makeFakeSamplesForRow(row, 40);
+          const domain: [number, number] = violinAggregate
+            ? [violinAggregate.minAll, violinAggregate.maxAll]
+            : [Math.min(...samples), Math.max(...samples)];
+          return <ViolinCell samples={samples} domain={domain} />;
         };
       } else if (type === 'numeric') {
         column.render = (row: ExploreTableRow) => {

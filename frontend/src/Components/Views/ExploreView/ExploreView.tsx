@@ -20,9 +20,8 @@ import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
 import {
-  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS, ExploreTableRowOptions, ExploreTableConfig,
+  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, dashboardXAxisVars, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS, ExploreTableRowOptions, ExploreTableConfig,
 } from '../../../Types/application';
-import { CostChart } from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
 import { DumbbellChart } from './Charts/DumbbellChart';
 import ExploreTable from './Charts/ExploreTable';
@@ -57,7 +56,7 @@ export function ExploreView() {
   const [isAddModalOpen, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
 
   const [chartType, setChartType] = useState<'cost' | 'scatter' | 'dumbbell' | 'exploreTable'>('cost');
-  const [aggregation, setAggregation] = useState<'sum' | 'avg'>('sum');
+  const [aggregation, setAggregation] = useState<'sum' | 'avg' | 'none'>('sum');
   const [costGroupVar, setCostGroupVar] = useState<string>('');
   const [exploreTableGroupVar, setExploreTableGroupVar] = useState<string>('');
   const [scatterXAxisVar, setScatterXAxisVar] = useState<string>('quarter');
@@ -81,13 +80,47 @@ export function ExploreView() {
     const id = `explore-${Date.now()}`;
     if (chartType === 'cost') {
       if (!costGroupVar) return;
+      const groupLabel = ExploreTableRowOptions.find((o) => o.value === costGroupVar)?.label || costGroupVar;
+
       store.addExploreChart({
         chartId: id,
-        chartType: 'cost',
-        xAxisVar: 'cost',
-        yAxisVar: costGroupVar as typeof costYAxisVars[number],
-        aggregation,
-
+        chartType: 'exploreTable',
+        title: `Cost Savings Analysis per ${groupLabel}`,
+        rowVar: costGroupVar as ExploreTableConfig['rowVar'],
+        aggregation: (aggregation === 'none' ? 'sum' : aggregation) as 'sum' | 'avg',
+        columns: [
+          {
+            colVar: 'drg_weight',
+            aggregation: 'none',
+            type: 'violin',
+            title: 'DRG Weight',
+          },
+          {
+            colVar: costGroupVar as ExploreTableConfig['rowVar'],
+            aggregation: 'none',
+            type: 'text',
+            title: groupLabel,
+          },
+          {
+            colVar: 'cases',
+            aggregation: 'sum',
+            type: 'numeric',
+            title: 'Cases',
+          },
+          {
+            colVar: 'total_cost',
+            aggregation: 'avg',
+            type: 'stackedBar',
+            title: 'Average Cost per Visit',
+          },
+          {
+            colVar: 'salvage_savings',
+            aggregation: 'sum',
+            type: 'numericBar',
+            title: 'Savings from Cell Salvage',
+          },
+        ],
+        twoValsPerRow: false,
       });
     } else if (chartType === 'exploreTable') {
       if (!exploreTableGroupVar) return;
@@ -99,8 +132,14 @@ export function ExploreView() {
         chartType: 'exploreTable',
         title: `RBC Transfusions per ${groupLabel}`,
         rowVar: exploreTableGroupVar as ExploreTableConfig['rowVar'],
-        aggregation,
+        aggregation: (aggregation === 'none' ? 'avg' : aggregation) as 'sum' | 'avg',
         columns: [
+          {
+            colVar: 'drg_weight',
+            aggregation: 'none',
+            type: 'violin',
+            title: 'DRG Weight',
+          },
           {
             colVar: exploreTableGroupVar,
             aggregation: 'none',
@@ -115,31 +154,31 @@ export function ExploreView() {
           },
           {
             colVar: 'percent_1_rbc',
-            aggregation: aggregation as 'sum' | 'avg',
+            aggregation: (aggregation === 'none' ? 'avg' : aggregation) as 'sum' | 'avg',
             type: 'heatmap',
             title: '1 RBC',
           },
           {
             colVar: 'percent_2_rbc',
-            aggregation: aggregation as 'sum' | 'avg',
+            aggregation: (aggregation === 'none' ? 'avg' : aggregation) as 'sum' | 'avg',
             type: 'heatmap',
             title: '2 RBC',
           },
           {
             colVar: 'percent_3_rbc',
-            aggregation: aggregation as 'sum' | 'avg',
+            aggregation: (aggregation === 'none' ? 'avg' : aggregation) as 'sum' | 'avg',
             type: 'heatmap',
             title: '3 RBC',
           },
           {
             colVar: 'percent_4_rbc',
-            aggregation: aggregation as 'sum' | 'avg',
+            aggregation: (aggregation === 'none' ? 'avg' : aggregation) as 'sum' | 'avg',
             type: 'heatmap',
             title: '4 RBC',
           },
           {
             colVar: 'percent_above_5_rbc',
-            aggregation: aggregation as 'sum' | 'avg',
+            aggregation: (aggregation === 'none' ? 'avg' : aggregation) as 'sum' | 'avg',
             type: 'heatmap',
             title: '≥5 RBC',
           },
@@ -153,7 +192,7 @@ export function ExploreView() {
         chartType: 'scatterPlot',
         xAxisVar: scatterXAxisVar as typeof dashboardXAxisVars[number],
         yAxisVar: scatterYAxisVar as typeof dashboardYAxisVars[number],
-        aggregation,
+        aggregation: 'none',
       });
     } else if (chartType === 'dumbbell') {
       store.addExploreChart({
@@ -175,27 +214,28 @@ export function ExploreView() {
 
   const costGroupOptions = costYAxisOptions.map((o) => ({ value: o.value, label: o.label }));
 
+  // Scatter X Options: Time Aggregations + Blood Components
   const scatterXOptions = [
-    // Time aggregations
     ...Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({
       value,
       label,
     })),
-    // Blood components
     ...BLOOD_COMPONENT_OPTIONS.map((b) => ({
       value: b.value,
       label: b.label.base,
     })),
   ];
 
+  // Scatter Y Options: Lab Results + Blood Components
+  // (User requested more correct options; typically Y is Lab Results or Blood Components)
   const scatterYOptions = [
-    ...dashboardYAxisOptions.map((o) => ({
-      value: o.value,
-      label: o.label.base,
-    })),
     ...LAB_RESULT_OPTIONS.map((l) => ({
       value: l.value,
       label: l.label.base,
+    })),
+    ...BLOOD_COMPONENT_OPTIONS.map((b) => ({
+      value: b.value,
+      label: b.label.base,
     })),
   ];
 
@@ -246,12 +286,14 @@ export function ExploreView() {
               }
             }}
           />
-          <Select
-            label="Aggregation"
-            value={aggregation}
-            data={aggregationOptions}
-            onChange={(v) => setAggregation((v as 'sum' | 'avg') || 'sum')}
-          />
+          {(chartType === 'cost' || chartType === 'exploreTable') && (
+            <Select
+              label="Aggregation"
+              value={aggregation}
+              data={aggregationOptions}
+              onChange={(v) => setAggregation((v as 'sum' | 'avg') || 'sum')}
+            />
+          )}
 
           {chartType === 'cost' ? (
             <Select
@@ -314,9 +356,9 @@ export function ExploreView() {
             main: 852, sm: 0,
           }}
           cols={{
-            main: 2, sm: 1,
+            main: 4, sm: 1,
           }}
-          rowHeight={300}
+          rowHeight={150}
           containerPadding={[0, 0]}
           draggableHandle=".move-icon"
           onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
@@ -334,7 +376,6 @@ export function ExploreView() {
               withBorder
               className={classes.gridItem}
             >
-              {chartConfig.chartType === 'cost' && <CostChart chartConfig={chartConfig} />}
               {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
               {chartConfig.chartType === 'exploreTable' && <ExploreTable chartConfig={chartConfig} />}
               {chartConfig.chartType === 'dumbbell' && <DumbbellChart chartConfig={chartConfig} />}
@@ -378,8 +419,7 @@ export function ExploreView() {
             </Stack>
           </Box>
         ))
-      )
-      }
+      )}
     </Stack>
   ));
 }

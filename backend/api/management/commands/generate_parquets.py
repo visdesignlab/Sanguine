@@ -29,6 +29,23 @@ class Command(BaseCommand):
             for v in visits:
                 v["los"] = float(v["los"]) if v["los"] is not None else None
 
+            # Materialize SurgeryCaseAttributes
+            cursor.execute("CALL intelvia.materializeSurgeryCaseAttributes()")
+            self.stdout.write(self.style.SUCCESS("Successfully materialized SurgeryCaseAttributes."))
+            
+            # Fetch all SurgeryCaseAttributes records
+            cursor.execute("SELECT * FROM SurgeryCaseAttributes")
+            columns = [col[0] for col in cursor.description]
+            rows = cursor.fetchall()
+            cases = [dict(zip(columns, row)) for row in rows]
+            for c in cases:
+                c["los"] = float(c["los"]) if c["los"] is not None else None
+                # float decimals
+                for field in ['pre_hgb', 'pre_ferritin', 'pre_plt', 'pre_fibrinogen', 'pre_inr',
+                              'post_hgb', 'post_ferritin', 'post_plt', 'post_fibrinogen', 'post_inr',
+                              'rbc_cost', 'ffp_cost', 'plt_cost', 'cryo_cost', 'cell_saver_cost', 'total_cost']:
+                    c[field] = float(c[field]) if c[field] is not None else None
+
         # Define schema for visit attributes
         visit_attributes_schema = pa.schema([
             pa.field("visit_no", pa.int64(), nullable=False),
@@ -74,9 +91,60 @@ class Command(BaseCommand):
             pa.field("is_admitting_attending", pa.bool8(), nullable=False)
         ])
 
-        # Write Parquet file
+        # Write VisitAttributes Parquet file
         visit_table = pa.Table.from_pylist(visits, schema=visit_attributes_schema)
-
         pq.write_table(visit_table, visit_file_path)
-
         self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {visit_file_path}"))
+
+        # Define schema for surgery case attributes
+        surgery_case_schema = pa.schema([
+            pa.field("case_id", pa.int64(), nullable=False),
+            pa.field("visit_no", pa.int64(), nullable=False),
+            pa.field("mrn", pa.string(), nullable=True),
+            pa.field("surgeon_prov_id", pa.string(), nullable=True),
+            pa.field("anesth_prov_id", pa.string(), nullable=True),
+            pa.field("surgery_start_dtm", pa.timestamp('us'), nullable=True),
+            pa.field("surgery_end_dtm", pa.timestamp('us'), nullable=True),
+            pa.field("case_date", pa.date32(), nullable=True),
+            pa.field("month", pa.string(), nullable=True),
+            pa.field("quarter", pa.string(), nullable=True),
+            pa.field("year", pa.string(), nullable=True),
+
+            pa.field("pre_hgb", pa.float32(), nullable=True),
+            pa.field("pre_ferritin", pa.float32(), nullable=True),
+            pa.field("pre_plt", pa.float32(), nullable=True),
+            pa.field("pre_fibrinogen", pa.float32(), nullable=True),
+            pa.field("pre_inr", pa.float32(), nullable=True),
+
+            pa.field("post_hgb", pa.float32(), nullable=True),
+            pa.field("post_ferritin", pa.float32(), nullable=True),
+            pa.field("post_plt", pa.float32(), nullable=True),
+            pa.field("post_fibrinogen", pa.float32(), nullable=True),
+            pa.field("post_inr", pa.float32(), nullable=True),
+
+            pa.field("intraop_rbc_units", pa.uint16(), nullable=True),
+            pa.field("intraop_ffp_units", pa.uint16(), nullable=True),
+            pa.field("intraop_plt_units", pa.uint16(), nullable=True),
+            pa.field("intraop_cryo_units", pa.uint16(), nullable=True),
+            pa.field("intraop_cell_saver_ml", pa.uint32(), nullable=True),
+
+            pa.field("los", pa.float32(), nullable=True),
+            pa.field("death", pa.bool8(), nullable=True),
+            pa.field("vent", pa.bool8(), nullable=True),
+            pa.field("stroke", pa.bool8(), nullable=True),
+            pa.field("ecmo", pa.bool8(), nullable=True),
+
+            pa.field("rbc_cost", pa.float32(), nullable=True),
+            pa.field("ffp_cost", pa.float32(), nullable=True),
+            pa.field("plt_cost", pa.float32(), nullable=True),
+            pa.field("cryo_cost", pa.float32(), nullable=True),
+            pa.field("cell_saver_cost", pa.float32(), nullable=True),
+            pa.field("total_cost", pa.float32(), nullable=True),
+        ])
+
+        # Write SurgeryCaseAttributes Parquet file
+        surgery_file_path = cache_dir / "surgery_case_attributes.parquet"
+        surgery_table = pa.Table.from_pylist(cases, schema=surgery_case_schema)
+        pq.write_table(surgery_table, surgery_file_path)
+        self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {surgery_file_path}"))
+

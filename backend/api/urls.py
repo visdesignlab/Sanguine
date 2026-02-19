@@ -16,4 +16,5 @@ urlpatterns = [
     path("api/share_state", views.share_state, name="share_state"),
     path("api/state_unids", views.state_unids, name="state_unids"),
     path("api/get_visit_attributes", views.get_visit_attributes, name="get_visit_attributes"),
+    path("api/get_surgery_case_attributes", views.get_surgery_case_attributes, name="get_surgery_case_attributes"),
 ]
