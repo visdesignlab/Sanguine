@@ -3,7 +3,7 @@ import {
 } from 'react';
 import { useElementSize } from '@mantine/hooks';
 import {
-  ScrollArea, Box, CloseButton, Title, Flex, useMantineTheme,
+  Box, CloseButton, Title, Flex, useMantineTheme,
   Tooltip, MantineTheme, Select, Button, Text, SegmentedControl,
 } from '@mantine/core';
 import {
@@ -1135,9 +1135,44 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   const height = measuredHeight || 400; // Fallback
   const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - DUMBBELL_MARGIN.bottom);
 
+  const yDomain = useMemo(() => {
+    let minVal = Infinity;
+    let maxVal = -Infinity;
+
+    processedData.forEach((binGroup) => {
+      binGroup.nestedBins.forEach((nestedBin) => {
+        nestedBin.cases.forEach((c) => {
+          const preVal = c[labConfig.preKey] as number | null;
+          const postVal = c[labConfig.postKey] as number | null;
+
+          if (preVal !== null && preVal !== undefined) {
+            minVal = Math.min(minVal, preVal);
+            maxVal = Math.max(maxVal, preVal);
+          }
+          if (postVal !== null && postVal !== undefined) {
+            minVal = Math.min(minVal, postVal);
+            maxVal = Math.max(maxVal, postVal);
+          }
+        });
+      });
+    });
+
+    if (minVal === Infinity || maxVal === -Infinity) {
+      return [labConfig.min, labConfig.max];
+    }
+
+    if (minVal === maxVal) {
+      return [minVal - 1, maxVal + 1];
+    }
+
+    const diff = maxVal - minVal;
+    const padding = diff * 0.05; // 5% padding
+    return [minVal - padding, maxVal + padding];
+  }, [processedData, labConfig]);
+
   const yScale = useMemo(() => scaleLinear()
-    .domain([labConfig.min, labConfig.max])
-    .range([innerHeight, 0]), [innerHeight, labConfig]);
+    .domain(yDomain as [number, number])
+    .range([innerHeight, 0]), [innerHeight, yDomain]);
   return (
     <Box h="100%" display="flex" style={{ flexDirection: 'column' }}>
       {/* Header */}
@@ -1345,7 +1380,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
 
           {/* Scrollable Content */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <ScrollArea h={height}>
+            <Box style={{ overflowX: 'auto', overflowY: 'hidden' }}>
               <DumbbellChartContent
                 totalWidth={totalWidth}
                 height={height}
@@ -1369,7 +1404,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 nestedBinLayout={layoutData.nestedBinLayout}
                 theme={theme}
               />
-            </ScrollArea>
+            </Box>
           </div>
         </Flex>
       </div>
