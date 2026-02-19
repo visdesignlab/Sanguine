@@ -46,6 +46,7 @@ interface DumbbellChartSVGProps {
   onToggleNestedBinCollapse: (e: React.MouseEvent, id: string) => void;
   setHoveredCollapse: (id: string | null) => void;
   labConfig: LabConfig;
+  selectedX: string;
   showPre: boolean;
   showPost: boolean;
   targets: { preMin: number; postMin: number; postMax: number };
@@ -388,7 +389,7 @@ const AverageLine = memo(({
   x1: number;
   x2: number;
   y: number;
-  label: string;
+  label: React.ReactNode;
   color: string;
 }) => {
   const [hovered, setHovered] = useState(false);
@@ -438,7 +439,7 @@ const AverageLine = memo(({
 
 DumbbellYAxis.displayName = 'DumbbellYAxis';
 TargetOverlay.displayName = 'TargetOverlay';
-AverageLine.displayName = 'AverageLine';
+AverageLine.displayName = 'MedianLine';
 
 const Dumbbell = memo(({
   caseX,
@@ -484,7 +485,28 @@ const Dumbbell = memo(({
         />
       )}
       {showPre && preVal !== null && (
-        <Tooltip label={`Pre-op: ${preVal.toFixed(1)} ${labConfig.unit}`} position="top" openDelay={200}>
+        <Tooltip
+          label={(
+            <Box>
+              <Text size="xs">
+                Surgical Case:
+                {' '}
+                {d.case_id}
+              </Text>
+              <Text size="xs">
+                Pre-op:
+                {' '}
+                <Text component="span" fw={700} size="xs">
+                  {preVal.toFixed(1)}
+                  {' '}
+                  {labConfig.unit}
+                </Text>
+              </Text>
+            </Box>
+          )}
+          position="top"
+          openDelay={200}
+        >
           <circle
             cx={caseX}
             cy={yScale(preVal)}
@@ -495,7 +517,28 @@ const Dumbbell = memo(({
         </Tooltip>
       )}
       {showPost && postVal !== null && (
-        <Tooltip label={`Post-op: ${postVal.toFixed(1)} ${labConfig.unit}`} position="top" openDelay={200}>
+        <Tooltip
+          label={(
+            <Box>
+              <Text size="xs">
+                Surgical Case:
+                {' '}
+                {d.case_id}
+              </Text>
+              <Text size="xs">
+                Post-op:
+                {' '}
+                <Text component="span" fw={700} size="xs">
+                  {postVal.toFixed(1)}
+                  {' '}
+                  {labConfig.unit}
+                </Text>
+              </Text>
+            </Box>
+          )}
+          position="top"
+          openDelay={200}
+        >
           <circle
             cx={caseX}
             cy={yScale(postVal)}
@@ -529,6 +572,7 @@ const DumbbellChartContent = memo(({
   binGroupLayout,
   nestedBinLayout,
   labConfig,
+  selectedX,
   showPre,
   showPost,
   targets,
@@ -778,7 +822,25 @@ const DumbbellChartContent = memo(({
 
         return (
           <g key={binGroup.id}>
-            <Tooltip label={binGroup.id} openDelay={200}>
+            <Tooltip
+              label={(
+                <Box>
+                  <Text size="xs">
+                    {(() => {
+                      if (selectedX === 'surgeon') return `Surgical Cases for ${binGroup.id}`;
+                      if (selectedX === 'anesthesiologist') return `Surgical Cases for ${binGroup.id}`;
+                      if (selectedX === 'year_quarter') return `Surgical Cases in ${binGroup.id}`;
+                      if (['rbc', 'platelet', 'cryo', 'ffp'].includes(selectedX)) {
+                        return `Surgical Cases where ${binGroup.id} Transfused`;
+                      }
+                      if (selectedX === 'cell_salvage') return `Surgical Cases where ${binGroup.id} used`;
+                      return binGroup.id;
+                    })()}
+                  </Text>
+                </Box>
+              )}
+              openDelay={200}
+            >
               <rect
                 x={binGroupX}
                 y={!hasNestedBins ? innerHeight : innerHeight + 25}
@@ -846,7 +908,20 @@ const DumbbellChartContent = memo(({
                         style={{ pointerEvents: 'none' }}
                       />
                       {hasNestedBins && (
-                        <Tooltip label={nestedBin.label} openDelay={200}>
+                        <Tooltip
+                          label={(
+                            <Box>
+                              <Text size="xs">
+                                Surgical Cases in
+                                {' '}
+                                {nestedBin.label}
+                                {' '}
+                                {binGroup.id}
+                              </Text>
+                            </Box>
+                          )}
+                          openDelay={200}
+                        >
                           <rect
                             x={currentNestedBinX}
                             y={innerHeight}
@@ -927,7 +1002,30 @@ const DumbbellChartContent = memo(({
                     x1={binGroupX}
                     x2={binGroupX + binGroupWidth}
                     y={yScale(avgPre)}
-                    label={`Average Pre-op: ${avgPre.toFixed(1)} ${labConfig.unit}`}
+                    label={(
+                      <Box>
+                        <Text size="xs">
+                          {DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label}
+                          :
+                          {' '}
+                          {binGroup.id}
+                        </Text>
+                        <Text size="xs">
+                          <Text component="span" fw={700}>Median</Text>
+                          {' '}
+                          Pre-op
+                          {' '}
+                          {labConfig.label}
+                          :
+                          {' '}
+                          <Text component="span" fw={700} size="xs">
+                            {avgPre.toFixed(1)}
+                            {' '}
+                            {labConfig.unit}
+                          </Text>
+                        </Text>
+                      </Box>
+                    )}
                     color={theme.colors.teal[4]}
                   />
                 )}
@@ -936,7 +1034,30 @@ const DumbbellChartContent = memo(({
                     x1={binGroupX}
                     x2={binGroupX + binGroupWidth}
                     y={yScale(avgPost)}
-                    label={`Average Post-op: ${avgPost.toFixed(1)} ${labConfig.unit}`}
+                    label={(
+                      <Box>
+                        <Text size="xs">
+                          {DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label}
+                          :
+                          {' '}
+                          {binGroup.id}
+                        </Text>
+                        <Text size="xs">
+                          <Text component="span" fw={700}>Median</Text>
+                          {' '}
+                          Post-op
+                          {' '}
+                          {labConfig.label}
+                          :
+                          {' '}
+                          <Text component="span" fw={700} size="xs">
+                            {avgPost.toFixed(1)}
+                            {' '}
+                            {labConfig.unit}
+                          </Text>
+                        </Text>
+                      </Box>
+                    )}
                     color={theme.colors.indigo[4]}
                   />
                 )}
@@ -946,7 +1067,7 @@ const DumbbellChartContent = memo(({
         );
       })}
     </g>
-  ), [processedData, collapsedBinGroups, collapsedNestedBins, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, hasNestedBins, onToggleBinGroupCollapse, onToggleNestedBinCollapse, setHoveredCollapse, isSelected, totalWidth, showMedian, binGroupLayout, nestedBinLayout]);
+  ), [processedData, collapsedBinGroups, collapsedNestedBins, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, hasNestedBins, onToggleBinGroupCollapse, onToggleNestedBinCollapse, setHoveredCollapse, isSelected, totalWidth, showMedian, binGroupLayout, nestedBinLayout, selectedX]);
 
   return (
     <div
@@ -1199,37 +1320,45 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
               data={[
                 {
                   label: (
-                    <Flex align="center" justify="center" gap={4}>
-                      Pre
-                      {sortMode === 'pre' && <IconArrowUp size={12} stroke={2} />}
-                    </Flex>
+                    <Tooltip label={`Sort cases by pre-operative values per ${DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label}`} openDelay={500}>
+                      <Flex align="center" justify="center" gap={4}>
+                        Pre
+                        {sortMode === 'pre' && <IconArrowUp size={12} stroke={2} />}
+                      </Flex>
+                    </Tooltip>
                   ),
                   value: 'pre',
                 },
                 {
                   label: (
-                    <Flex align="center" justify="center" gap={4}>
-                      Post
-                      {sortMode === 'post' && <IconArrowUp size={12} stroke={2} />}
-                    </Flex>
+                    <Tooltip label={`Sort cases by post-operative values per ${DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label}`} openDelay={500}>
+                      <Flex align="center" justify="center" gap={4}>
+                        Post
+                        {sortMode === 'post' && <IconArrowUp size={12} stroke={2} />}
+                      </Flex>
+                    </Tooltip>
                   ),
                   value: 'post',
                 },
                 {
                   label: (
-                    <Flex align="center" justify="center" gap={4}>
-                      Gap
-                      {sortMode === 'gap' && <IconArrowsVertical size={12} stroke={2} />}
-                    </Flex>
+                    <Tooltip label={`Sort cases by pre-post gap per ${DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label}`} openDelay={500}>
+                      <Flex align="center" justify="center" gap={4}>
+                        Gap
+                        {sortMode === 'gap' && <IconArrowsVertical size={12} stroke={2} />}
+                      </Flex>
+                    </Tooltip>
                   ),
                   value: 'gap',
                 },
                 {
                   label: (
-                    <Flex align="center" justify="center" gap={4}>
-                      Time
-                      {sortMode === 'time' && <IconArrowRightDashed size={12} stroke={2} />}
-                    </Flex>
+                    <Tooltip label={`Sort cases by time per ${DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label}`} openDelay={500}>
+                      <Flex align="center" justify="center" gap={4}>
+                        Time
+                        {sortMode === 'time' && <IconArrowRightDashed size={12} stroke={2} />}
+                      </Flex>
+                    </Tooltip>
                   ),
                   value: 'time',
                 },
@@ -1268,71 +1397,79 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
           <Flex direction="row" align="center" gap="xs" ml={0}>
             <Text size="xs" c="dimmed" fw={500}>Show:</Text>
             <Button.Group>
-              <Button
-                size="xs"
-                px={8}
-                variant={showPre ? 'light' : 'default'}
-                color="teal"
-                onClick={() => setShowPre(!showPre)}
-                styles={{
-                  root: {
-                    borderColor: showPre ? theme.colors.teal[6] : undefined,
-                    fontWeight: 400,
-                  },
-                }}
-              >
-                Pre
-              </Button>
-              <Button
-                size="xs"
-                px={8}
-                variant={showPost ? 'light' : 'default'}
-                color="indigo"
-                onClick={() => setShowPost(!showPost)}
-                styles={{
-                  root: {
-                    borderColor: showPost ? theme.colors.indigo[6] : undefined,
-                    marginLeft: -1,
-                    fontWeight: 400,
-                  },
-                }}
-              >
-                Post
-              </Button>
-              <Button
-                size="xs"
-                px={8}
-                variant={showTargets ? 'light' : 'default'}
-                color="gray"
-                onClick={() => setShowTargets(!showTargets)}
-                styles={{
-                  root: {
-                    marginLeft: -1,
-                    borderColor: showTargets ? theme.colors.gray[6] : theme.colors.gray[4],
-                    fontWeight: 400,
-                    color: theme.colors.gray[9],
-                  },
-                }}
-              >
-                Target
-              </Button>
-              <Button
-                size="xs"
-                px={8}
-                variant={showMedian ? 'light' : 'default'}
-                color="gray"
-                onClick={() => setShowMedian(!showMedian)}
-                styles={{
-                  root: {
-                    marginLeft: -1,
-                    borderColor: showMedian ? theme.colors.gray[6] : theme.colors.gray[4],
-                    fontWeight: 400,
-                    color: theme.colors.gray[9],
-                  },
-                }}
-              >
-                Avg
-              </Button>
+              <Tooltip label="Show/hide pre-operative values" openDelay={500}>
+                <Button
+                  size="xs"
+                  px={8}
+                  variant={showPre ? 'light' : 'default'}
+                  color="teal"
+                  onClick={() => setShowPre(!showPre)}
+                  styles={{
+                    root: {
+                      borderColor: showPre ? theme.colors.teal[6] : undefined,
+                      fontWeight: 400,
+                    },
+                  }}
+                >
+                  Pre
+                </Button>
+              </Tooltip>
+              <Tooltip label="Show/hide post-operative values" openDelay={500}>
+                <Button
+                  size="xs"
+                  px={8}
+                  variant={showPost ? 'light' : 'default'}
+                  color="indigo"
+                  onClick={() => setShowPost(!showPost)}
+                  styles={{
+                    root: {
+                      borderColor: showPost ? theme.colors.indigo[6] : undefined,
+                      marginLeft: -1,
+                      fontWeight: 400,
+                    },
+                  }}
+                >
+                  Post
+                </Button>
+              </Tooltip>
+              <Tooltip label="Show/hide target values" openDelay={500}>
+                <Button
+                  size="xs"
+                  px={8}
+                  variant={showTargets ? 'light' : 'default'}
+                  color="gray"
+                  onClick={() => setShowTargets(!showTargets)}
+                  styles={{
+                    root: {
+                      marginLeft: -1,
+                      borderColor: showTargets ? theme.colors.gray[6] : theme.colors.gray[4],
+                      fontWeight: 400,
+                      color: theme.colors.gray[9],
+                    },
+                  }}
+                >
+                  Target
+                </Button>
+              </Tooltip>
+              <Tooltip label="Show/hide median values" openDelay={500}>
+                <Button
+                  size="xs"
+                  px={8}
+                  variant={showMedian ? 'light' : 'default'}
+                  color="gray"
+                  onClick={() => setShowMedian(!showMedian)}
+                  styles={{
+                    root: {
+                      marginLeft: -1,
+                      borderColor: showMedian ? theme.colors.gray[6] : theme.colors.gray[4],
+                      fontWeight: 400,
+                      color: theme.colors.gray[9],
+                    },
+                  }}
+                >
+                  Avg
+                </Button>
+              </Tooltip>
             </Button.Group>
           </Flex>
           <Select
@@ -1393,6 +1530,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 hoveredCollapse={hoveredCollapse}
                 setHoveredCollapse={setHoveredCollapse}
                 labConfig={labConfig}
+                selectedX={selectedX}
                 showPre={showPre}
                 showPost={showPost}
                 targets={targets}
