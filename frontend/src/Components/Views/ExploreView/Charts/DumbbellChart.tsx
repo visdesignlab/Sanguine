@@ -51,6 +51,7 @@ interface DumbbellChartSVGProps {
   showPre: boolean;
   showPost: boolean;
   targets: { preMin: number; postMin: number; postMax: number };
+  visibleRange: [number, number];
 }
 
 // #region Y-Axis
@@ -478,6 +479,26 @@ const Dumbbell = memo(({
   const activeColor = hovered ? smallHoverColor : (selected ? theme.colors.orange[6] : null);
   const lineColor = hovered ? smallHoverColor : (selected ? theme.colors.orange[4] : theme.colors.gray[4]);
 
+  const preCircle = preVal !== null ? (
+    <circle
+      cx={caseX}
+      cy={yScale(preVal)}
+      r={DUMBBELL_DOT_RADIUS}
+      fill={activeColor || theme.colors.teal[6]}
+      fillOpacity={0.8}
+    />
+  ) : null;
+
+  const postCircle = postVal !== null ? (
+    <circle
+      cx={caseX}
+      cy={yScale(postVal)}
+      r={DUMBBELL_DOT_RADIUS}
+      fill={activeColor || theme.colors.indigo[6]}
+      fillOpacity={0.8}
+    />
+  ) : null;
+
   return (
     <g
       onMouseEnter={() => setHovered(true)}
@@ -495,68 +516,58 @@ const Dumbbell = memo(({
         />
       )}
       {showPre && preVal !== null && (
-        <Tooltip
-          label={(
-            <Box>
-              <Text size="xs">
-                Surgical Case:
-                {' '}
-                {d.case_id}
-              </Text>
-              <Text size="xs">
-                Pre-op:
-                {' '}
-                <Text component="span" fw={700} size="xs">
-                  {preVal.toFixed(1)}
+        hovered ? (
+          <Tooltip
+            label={(
+              <Box>
+                <Text size="xs">
+                  Surgical Case:
                   {' '}
-                  {labConfig.unit}
+                  {d.case_id}
                 </Text>
-              </Text>
-            </Box>
-          )}
-          position="top"
-          openDelay={200}
-        >
-          <circle
-            cx={caseX}
-            cy={yScale(preVal)}
-            r={DUMBBELL_DOT_RADIUS}
-            fill={activeColor || theme.colors.teal[6]}
-            fillOpacity={0.8}
-          />
-        </Tooltip>
+                <Text size="xs">
+                  Pre-op:
+                  {' '}
+                  <Text component="span" fw={700} size="xs">
+                    {preVal.toFixed(1)}
+                    {' '}
+                    {labConfig.unit}
+                  </Text>
+                </Text>
+              </Box>
+            )}
+            position="top"
+          >
+            {preCircle}
+          </Tooltip>
+        ) : preCircle
       )}
       {showPost && postVal !== null && (
-        <Tooltip
-          label={(
-            <Box>
-              <Text size="xs">
-                Surgical Case:
-                {' '}
-                {d.case_id}
-              </Text>
-              <Text size="xs">
-                Post-op:
-                {' '}
-                <Text component="span" fw={700} size="xs">
-                  {postVal.toFixed(1)}
+        hovered ? (
+          <Tooltip
+            label={(
+              <Box>
+                <Text size="xs">
+                  Surgical Case:
                   {' '}
-                  {labConfig.unit}
+                  {d.case_id}
                 </Text>
-              </Text>
-            </Box>
-          )}
-          position="top"
-          openDelay={200}
-        >
-          <circle
-            cx={caseX}
-            cy={yScale(postVal)}
-            r={DUMBBELL_DOT_RADIUS}
-            fill={activeColor || theme.colors.indigo[6]}
-            fillOpacity={0.8}
-          />
-        </Tooltip>
+                <Text size="xs">
+                  Post-op:
+                  {' '}
+                  <Text component="span" fw={700} size="xs">
+                    {postVal.toFixed(1)}
+                    {' '}
+                    {labConfig.unit}
+                  </Text>
+                </Text>
+              </Box>
+            )}
+            position="top"
+          >
+            {postCircle}
+          </Tooltip>
+        ) : postCircle
       )}
     </g>
   );
@@ -588,6 +599,7 @@ const DumbbellChartContent = memo(({
   targets,
   setHoveredTarget,
   showTargets,
+  visibleRange,
 }: DumbbellChartSVGProps & {
   hasNestedBins: boolean,
   showPre: boolean,
@@ -783,6 +795,9 @@ const DumbbellChartContent = memo(({
         const layout = binGroupLayout.get(binGroup.id);
         const binGroupX = layout ? layout.x : 0;
         const binGroupWidth = layout ? layout.width : 100;
+
+        if (binGroupX > visibleRange[1] || binGroupX + binGroupWidth < visibleRange[0]) return null;
+
         const binGroupColor = i % 2 === 0 ? theme.colors.gray[3] : theme.colors.gray[1];
         return (
           <rect
@@ -808,6 +823,9 @@ const DumbbellChartContent = memo(({
         const layout = binGroupLayout.get(binGroup.id);
         const binGroupWidth = layout ? layout.width : 100;
         const binGroupX = layout ? layout.x : 0;
+
+        if (binGroupX > visibleRange[1] || binGroupX + binGroupWidth < visibleRange[0]) return null;
+
         const binGroupLabel = layout ? layout.label : binGroup.id;
         const binGroupColor = binGroupIdx % 2 === 0 ? theme.colors.gray[3] : theme.colors.gray[1];
 
@@ -907,6 +925,9 @@ const DumbbellChartContent = memo(({
                   const nbLayout = nestedBinLayout.get(nestedBin.id);
                   const nestedBinWidth = nbLayout ? nbLayout.width : 40;
                   const currentNestedBinX = nbLayout ? nbLayout.x : 0;
+
+                  if (currentNestedBinX > visibleRange[1] || currentNestedBinX + nestedBinWidth < visibleRange[0]) return null;
+
                   const nestedBinColor = nestedBinIdx % 2 === 0 ? theme.colors.gray[2] : theme.colors.gray[0];
                   const bgShade = (hasNestedBins && nestedBinIdx % 2 === 0) ? theme.colors.gray[1] : 'transparent';
 
@@ -984,9 +1005,11 @@ const DumbbellChartContent = memo(({
                       )}
 
                       {/* Cases */}
-                      {!isNestedBinCollapsed && nestedBin.cases.map((d) => {
-                        const vIdx = nestedBin.cases.indexOf(d);
+                      {!isNestedBinCollapsed && nestedBin.cases.map((d, vIdx) => {
                         const caseX = currentNestedBinX + vIdx * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
+
+                        if (caseX > visibleRange[1] || caseX < visibleRange[0]) return null;
+
                         const preVal = d[labConfig.preKey] as number | null;
                         const postVal = d[labConfig.postKey] as number | null;
 
@@ -1081,7 +1104,7 @@ const DumbbellChartContent = memo(({
         );
       })}
     </g>
-  ), [processedData, collapsedBinGroups, collapsedNestedBins, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, hasNestedBins, onToggleBinGroupCollapse, onToggleNestedBinCollapse, setHoveredCollapse, isSelected, totalWidth, showMedian, binGroupLayout, nestedBinLayout, selectedX]);
+  ), [processedData, collapsedBinGroups, collapsedNestedBins, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, hasNestedBins, onToggleBinGroupCollapse, onToggleNestedBinCollapse, setHoveredCollapse, isSelected, totalWidth, showMedian, binGroupLayout, nestedBinLayout, selectedX, visibleRange]);
 
   return (
     <div
@@ -1194,6 +1217,27 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
 
   const hasNestedBins = useMemo(() => selectedX === 'year_quarter', [selectedX]);
 
+  // Virtualization state
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
+  const [visibleRange, setVisibleRange] = useState<[number, number]>([-1000, 2000]);
+
+  const handleScroll = useCallback(() => {
+    if (scrollViewportRef.current) {
+      const { scrollLeft, clientWidth } = scrollViewportRef.current;
+      // Overscan by 1000px on each side
+      setVisibleRange([scrollLeft - 1000, scrollLeft + clientWidth + 1000]);
+    }
+  }, []);
+
+  useEffect(() => {
+    handleScroll();
+    const ro = new ResizeObserver(() => handleScroll());
+    if (scrollViewportRef.current) {
+      ro.observe(scrollViewportRef.current);
+    }
+    return () => ro.disconnect();
+  }, [handleScroll]);
+
   // Hover state for targets
   const [hoveredTarget, setHoveredTargetRaw] = useState<string | null>(null);
   const hoverTimeoutRef = useRef<number | null>(null);
@@ -1245,7 +1289,6 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     hasNestedBins,
   ), [store.exploreChartData, chartConfig.chartId, labConfig, selectedX, sortMode, hasNestedBins]);
 
-  console.log(processedData);
   // Layout & Width Calculation
   const layoutData = useMemo(() => calculateDumbbellLayout(
     processedData,
@@ -1532,7 +1575,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
 
           {/* Scrollable Content */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <Box style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+            <Box style={{ overflowX: 'auto', overflowY: 'hidden' }} ref={scrollViewportRef} onScroll={handleScroll}>
               <DumbbellChartContent
                 totalWidth={totalWidth}
                 height={height}
@@ -1551,6 +1594,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 targets={targets}
                 setHoveredTarget={setHoveredTarget}
                 showTargets={showTargets}
+                visibleRange={visibleRange}
                 showMedian={showMedian}
                 hasNestedBins={hasNestedBins}
                 binGroupLayout={layoutData.binGroupLayout}
