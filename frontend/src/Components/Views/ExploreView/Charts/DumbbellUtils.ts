@@ -204,11 +204,41 @@ export function getProcessedDumbbellData(
       const postAccess = labConfig.postKey;
 
       if (binGroupSort === 'pre') {
-        sortedCases.sort((a, b) => (a[preAccess] as number) - (b[preAccess] as number));
+        sortedCases.sort((a, b) => {
+          const aVal = a[preAccess] as number | null | undefined;
+          const bVal = b[preAccess] as number | null | undefined;
+          if (aVal == null && bVal == null) return 0;
+          if (aVal == null) return -1;
+          if (bVal == null) return 1;
+          return aVal - bVal;
+        });
       } else if (binGroupSort === 'post') {
-        sortedCases.sort((a, b) => (a[postAccess] as number) - (b[postAccess] as number));
+        sortedCases.sort((a, b) => {
+          const aVal = a[postAccess] as number | null | undefined;
+          const bVal = b[postAccess] as number | null | undefined;
+          if (aVal == null && bVal == null) return 0;
+          if (aVal == null) return -1;
+          if (bVal == null) return 1;
+          return aVal - bVal;
+        });
       } else if (binGroupSort === 'gap') {
-        sortedCases.sort((a, b) => Math.abs((a[preAccess] as number) - (a[postAccess] as number)) - Math.abs((b[preAccess] as number) - (b[postAccess] as number)));
+        sortedCases.sort((a, b) => {
+          const aPre = a[preAccess] as number | null | undefined;
+          const aPost = a[postAccess] as number | null | undefined;
+          const bPre = b[preAccess] as number | null | undefined;
+          const bPost = b[postAccess] as number | null | undefined;
+
+          const aValid = aPre != null && aPost != null;
+          const bValid = bPre != null && bPost != null;
+
+          if (!aValid && !bValid) return 0;
+          if (!aValid) return -1; // place invalid at the beginning
+          if (!bValid) return 1;
+
+          const aGap = Math.abs(aPre! - aPost!);
+          const bGap = Math.abs(bPre! - bPost!);
+          return aGap - bGap;
+        });
       }
 
       const minPre = Math.min(...sortedCases.map((c) => c[preAccess] as number));
