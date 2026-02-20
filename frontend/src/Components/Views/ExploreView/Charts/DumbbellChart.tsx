@@ -1002,7 +1002,10 @@ export const DumbbellChartContent = memo(({
                           const preVal = d[labConfig.preKey] as number | null;
                           const postVal = d[labConfig.postKey] as number | null;
 
-                          const selected = isSelected(caseX, yScale(preVal ?? 0)) || isSelected(caseX, yScale(postVal ?? 0));
+                          const cyPre = preVal !== null ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
+                          const cyPost = postVal !== null ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
+
+                          const selected = (cyPre !== null && isSelected(caseX, cyPre)) || (cyPost !== null && isSelected(caseX, cyPost));
 
                           return (
                             <Dumbbell
