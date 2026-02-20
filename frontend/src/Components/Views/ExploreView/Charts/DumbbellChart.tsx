@@ -1536,13 +1536,15 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
             leftSection={<Title order={6} c="dimmed" style={{ fontSize: '10px' }}>X</Title>}
           />
           <Select
-            data={Array.from(new Set(LAB_RESULTS.map((l) => l.metricId))).map((id) => {
-              const res = LAB_RESULTS.find((l) => l.metricId === id);
-              return {
-                value: id,
-                label: res?.metricLabel || id,
-              };
-            })}
+            data={Array.from(new Set(LAB_RESULTS.map((l) => l.metricId)))
+              .filter((id) => id !== 'ferritin')
+              .map((id) => {
+                const res = LAB_RESULTS.find((l) => l.metricId === id);
+                return {
+                  value: id,
+                  label: res?.metricLabel || id,
+                };
+              })}
             value={selectedLab}
             onChange={(value) => setSelectedLab(value || 'hgb')}
             size="xs"
@@ -1579,7 +1581,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
               >
                 <Tooltip
                   label={`Sort ${DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label} Bins: ${providerSort === 'alpha' ? 'A/Z →' : providerSort === 'count' ? 'Case Count →' : providerSort === 'pre' ? 'Pre-op Avg →' : 'Post-op Avg →'
-                  }`}
+                    }`}
                   position="right"
                 >
                   <Button
