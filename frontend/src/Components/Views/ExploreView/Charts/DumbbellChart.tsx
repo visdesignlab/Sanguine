@@ -506,6 +506,7 @@ const Dumbbell = memo(({
 
   return (
     <g
+      style={{ cursor: 'pointer' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -518,61 +519,58 @@ const Dumbbell = memo(({
           stroke={lineColor}
           strokeWidth={1}
           strokeOpacity={0.8}
+          style={{ pointerEvents: 'none' }}
         />
       )}
       {showPre && preVal !== null && (
-        hovered ? (
-          <Tooltip
-            label={(
-              <Box>
-                <Text size="xs">
-                  Surgical Case:
+        <Tooltip
+          label={(
+            <Box>
+              <Text size="xs">
+                Surgical Case:
+                {' '}
+                {d.case_id}
+              </Text>
+              <Text size="xs">
+                Pre-op:
+                {' '}
+                <Text component="span" fw={700} size="xs">
+                  {preVal.toFixed(1)}
                   {' '}
-                  {d.case_id}
+                  {labConfig.unit}
                 </Text>
-                <Text size="xs">
-                  Pre-op:
-                  {' '}
-                  <Text component="span" fw={700} size="xs">
-                    {preVal.toFixed(1)}
-                    {' '}
-                    {labConfig.unit}
-                  </Text>
-                </Text>
-              </Box>
-            )}
-            position="top"
-          >
-            {preCircle}
-          </Tooltip>
-        ) : preCircle
+              </Text>
+            </Box>
+          )}
+          position="top"
+        >
+          {preCircle}
+        </Tooltip>
       )}
       {showPost && postVal !== null && (
-        hovered ? (
-          <Tooltip
-            label={(
-              <Box>
-                <Text size="xs">
-                  Surgical Case:
+        <Tooltip
+          label={(
+            <Box>
+              <Text size="xs">
+                Surgical Case:
+                {' '}
+                {d.case_id}
+              </Text>
+              <Text size="xs">
+                Post-op:
+                {' '}
+                <Text component="span" fw={700} size="xs">
+                  {postVal.toFixed(1)}
                   {' '}
-                  {d.case_id}
+                  {labConfig.unit}
                 </Text>
-                <Text size="xs">
-                  Post-op:
-                  {' '}
-                  <Text component="span" fw={700} size="xs">
-                    {postVal.toFixed(1)}
-                    {' '}
-                    {labConfig.unit}
-                  </Text>
-                </Text>
-              </Box>
-            )}
-            position="top"
-          >
-            {postCircle}
-          </Tooltip>
-        ) : postCircle
+              </Text>
+            </Box>
+          )}
+          position="bottom"
+        >
+          {postCircle}
+        </Tooltip>
       )}
     </g>
   );
@@ -1578,7 +1576,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
               >
                 <Tooltip
                   label={`Sort ${DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label} Bins: ${providerSort === 'alpha' ? 'A/Z →' : providerSort === 'count' ? 'Case Count →' : providerSort === 'pre' ? 'Pre-op Avg →' : 'Post-op Avg →'
-                    }`}
+                  }`}
                   position="right"
                 >
                   <Button
