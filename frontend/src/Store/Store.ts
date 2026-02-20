@@ -1731,6 +1731,7 @@ export class RootStore {
           SELECT
              CAST(case_id AS VARCHAR) as case_id,
              surgeon_prov_id,
+             surgeon_prov_name,
              CAST(visit_no AS VARCHAR) as visit_no,
              pre_hgb,
              post_hgb,
@@ -1743,6 +1744,7 @@ export class RootStore {
              pre_inr,
              post_inr,
              anesth_prov_id,
+             anesth_prov_name,
              intraop_rbc_units,
              intraop_plt_units,
              intraop_cryo_units,
@@ -1766,7 +1768,9 @@ export class RootStore {
            SELECT
              CAST(case_id AS VARCHAR) as case_id,
              surgeon_prov_id,
+             surgeon_prov_name,
              anesth_prov_id,
+             anesth_prov_name,
              year,
              quarter,
              month,

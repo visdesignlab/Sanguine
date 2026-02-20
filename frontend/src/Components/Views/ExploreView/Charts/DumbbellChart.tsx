@@ -29,6 +29,7 @@ interface DumbbellChartSVGProps {
   yScale: ScaleLinear<number, number>;
   processedData: {
     id: string;
+    label: string;
     cases: DumbbellCase[];
     nestedBins: {
       id: string;
@@ -836,14 +837,14 @@ const DumbbellChartContent = memo(({
                 <Box>
                   <Text size="xs">
                     {(() => {
-                      if (selectedX === 'surgeon') return `Surgical Cases for ${binGroup.id}`;
-                      if (selectedX === 'anesthesiologist') return `Surgical Cases for ${binGroup.id}`;
-                      if (selectedX === 'year_quarter') return `Surgical Cases in ${binGroup.id}`;
+                      if (selectedX === 'surgeon') return `Surgical Cases for ${binGroup.label}`;
+                      if (selectedX === 'anesthesiologist') return `Surgical Cases for ${binGroup.label}`;
+                      if (selectedX === 'year_quarter') return `Surgical Cases in ${binGroup.label}`;
                       if (['rbc', 'platelet', 'cryo', 'ffp'].includes(selectedX)) {
-                        return `Surgical Cases where ${binGroup.id} Transfused`;
+                        return `Surgical Cases where ${binGroup.label} Transfused`;
                       }
-                      if (selectedX === 'cell_salvage') return `Surgical Cases where ${binGroup.id} used`;
-                      return binGroup.id;
+                      if (selectedX === 'cell_salvage') return `Surgical Cases where ${binGroup.label} used`;
+                      return binGroup.label;
                     })()}
                   </Text>
                 </Box>
@@ -925,7 +926,7 @@ const DumbbellChartContent = memo(({
                                 {' '}
                                 {nestedBin.label}
                                 {' '}
-                                {binGroup.id}
+                                {binGroup.label}
                               </Text>
                             </Box>
                           )}
@@ -1017,7 +1018,7 @@ const DumbbellChartContent = memo(({
                           {DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label}
                           :
                           {' '}
-                          {binGroup.id}
+                          {binGroup.label}
                         </Text>
                         <Text size="xs">
                           <Text component="span" fw={700}>Median</Text>
@@ -1049,7 +1050,7 @@ const DumbbellChartContent = memo(({
                           {DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label}
                           :
                           {' '}
-                          {binGroup.id}
+                          {binGroup.label}
                         </Text>
                         <Text size="xs">
                           <Text component="span" fw={700}>Median</Text>
@@ -1240,6 +1241,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     hasNestedBins,
   ), [store.exploreChartData, chartConfig.chartId, labConfig, selectedX, sortMode, hasNestedBins]);
 
+  console.log(processedData);
   // Layout & Width Calculation
   const layoutData = useMemo(() => calculateDumbbellLayout(
     processedData,
@@ -1321,7 +1323,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
         </Flex>
         <Flex direction="row" align="center" gap="sm">
           <Flex direction="row" align="center" gap="xs">
-            <Text size="xs" c="dimmed" fw={500}>Sort:</Text>
+            <Text size="xs" c="dimmed" fw={500}>Sort Cases:</Text>
             <SegmentedControl
               size="xs"
               value={sortMode}

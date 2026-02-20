@@ -12,7 +12,9 @@ def create_materialize_proc(apps, schema_editor):
             visit_no,
             mrn,
             surgeon_prov_id,
+            surgeon_prov_name,
             anesth_prov_id,
+            anesth_prov_name,
             surgery_start_dtm,
             surgery_end_dtm,
             case_date,
@@ -62,7 +64,9 @@ def create_materialize_proc(apps, schema_editor):
             sc.visit_no,
             sc.mrn,
             sc.surgeon_prov_id,
+            sc.surgeon_prov_name,
             sc.anesth_prov_id,
+            sc.anesth_prov_name,
             sc.surgery_start_dtm,
             sc.surgery_end_dtm,
             sc.case_date,
@@ -240,7 +244,9 @@ class Migration(migrations.Migration):
                 visit_no BIGINT,
                 mrn varchar(20),
                 surgeon_prov_id varchar(25),
+                surgeon_prov_name varchar(100),
                 anesth_prov_id varchar(25),
+                anesth_prov_name varchar(100),
                 surgery_start_dtm DATETIME,
                 surgery_end_dtm DATETIME,
                 case_date DATE,
@@ -279,8 +285,8 @@ class Migration(migrations.Migration):
                 cell_saver_cost DECIMAL(8,2),
                 total_cost DECIMAL(10,2),
 
-                FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),
-                FOREIGN KEY (mrn) REFERENCES Patient(mrn)
+                FOREIGN KEY (visit_no) REFERENCES Visit(visit_no) ON DELETE CASCADE,
+                FOREIGN KEY (mrn) REFERENCES Patient(mrn) ON DELETE CASCADE
             ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
             """,
             reverse_sql="""

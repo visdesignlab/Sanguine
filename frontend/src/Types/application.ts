@@ -799,6 +799,7 @@ export interface DumbbellLabConfig {
 export interface DumbbellCase {
   case_id: string;
   surgeon_prov_id: string;
+  surgeon_prov_name: string;
   visit_no: string;
   pre_hgb: number;
   post_hgb: number;
@@ -811,6 +812,7 @@ export interface DumbbellCase {
   pre_inr: number;
   post_inr: number;
   anesth_prov_id: string;
+  anesth_prov_name: string;
   intraop_rbc_units: number;
   intraop_plt_units: number;
   intraop_cryo_units: number;
