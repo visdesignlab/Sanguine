@@ -38,6 +38,8 @@ interface DumbbellChartSVGProps {
       minPre: number;
       minPost: number;
     }[];
+    avgPre: number | null;
+    avgPost: number | null;
   }[];
   collapsedBinGroups: Set<string>;
   collapsedNestedBins: Set<string>;
@@ -59,6 +61,7 @@ interface DumbbellChartSVGProps {
 // Separate Y-Axis
 const DumbbellYAxis = memo(({
   height,
+  hasNestedBins,
   yScale,
   theme,
   labConfig,
@@ -75,8 +78,10 @@ const DumbbellYAxis = memo(({
   setTargets: React.Dispatch<React.SetStateAction<{ preMin: number; postMin: number; postMax: number }>>;
   hoveredTarget: string | null;
   setHoveredTarget: (t: string | null) => void;
+  hasNestedBins: boolean;
 }) => {
-  const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - DUMBBELL_MARGIN.bottom);
+  const bottomMargin = hasNestedBins ? 50 : 25;
+  const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - bottomMargin);
   const [dragging, setDragging] = useState<'preMin' | 'postMin' | 'postMax' | null>(null);
 
   const handleDragStart = (type: 'preMin' | 'postMin' | 'postMax') => (e: React.MouseEvent) => {
@@ -576,7 +581,7 @@ Dumbbell.displayName = 'Dumbbell';
 // #endregion
 
 // #region Dumbbell Chart Content
-const DumbbellChartContent = memo(({
+export const DumbbellChartContent = memo(({
   totalWidth,
   height,
   yScale,
@@ -585,17 +590,17 @@ const DumbbellChartContent = memo(({
   collapsedNestedBins,
   hoveredCollapse,
   theme,
-  onToggleBinGroupCollapse,
-  onToggleNestedBinCollapse,
-  setHoveredCollapse,
-  showMedian,
-  hasNestedBins,
-  binGroupLayout,
-  nestedBinLayout,
   labConfig,
   selectedX,
   showPre,
   showPost,
+  onToggleBinGroupCollapse,
+  onToggleNestedBinCollapse,
+  setHoveredCollapse,
+  hasNestedBins,
+  binGroupLayout,
+  nestedBinLayout,
+  showMedian,
   targets,
   setHoveredTarget,
   showTargets,
@@ -604,39 +609,34 @@ const DumbbellChartContent = memo(({
   hasNestedBins: boolean,
   showPre: boolean,
   showPost: boolean,
-  targets: { preMin: number; postMin: number; postMax: number },
-  setHoveredTarget: (t: string | null) => void,
-  showTargets: boolean,
-  showMedian: boolean,
   binGroupLayout: Map<string, { x: number, width: number, label: string }>,
   nestedBinLayout: Map<string, { x: number, width: number }>,
+  showMedian: boolean,
+  showTargets: boolean,
+  targets: { preMin: number; postMin: number; postMax: number },
+  setHoveredTarget: (t: string | null) => void,
 }) => {
-  const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - DUMBBELL_MARGIN.bottom);
-
-  // Selection Box State
-  const [selection, setSelection] = useState<{
-    x1: number;
-    y1: number;
-    x2: number;
-    y2: number;
-  } | null>(null);
-  const [appliedSelection, setAppliedSelection] = useState<{
-    x1: number;
-    y1: number;
-    x2: number;
-    y2: number;
-  } | null>(null);
-  const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing'>('idle');
-  const [resizeHandle, setResizeHandle] = useState<string | null>(null);
-  const dragStart = useRef<{ x: number; y: number } | null>(null);
-  const initialSelection = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
+  const bottomMargin = hasNestedBins ? 50 : 25;
+  const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - bottomMargin);
+
+  // Interaction State
+  const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing'>('idle');
+  const [selection, setSelection] = useState<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
+  const [appliedSelection, setAppliedSelection] = useState<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
+  const [resizeHandle, setResizeHandle] = useState<string | null>(null);
+
+  const initialSelection = useRef<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
+  const dragStart = useRef<{ x: number, y: number } | null>(null);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
     const rect = chartRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left + (chartRef.current.scrollLeft || 0);
+    const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    const chartTop = DUMBBELL_MARGIN.top;
+    const chartBottom = height - bottomMargin;
 
     if (selection) {
       const minX = Math.min(selection.x1, selection.x2);
@@ -670,8 +670,6 @@ const DumbbellChartContent = memo(({
       }
     }
 
-    const chartBottom = height - DUMBBELL_MARGIN.bottom;
-    const chartTop = DUMBBELL_MARGIN.top;
     if (y < chartTop || y > chartBottom) {
       setAppliedSelection(null);
       setSelection(null);
@@ -692,7 +690,7 @@ const DumbbellChartContent = memo(({
       x2: x,
       y2: y,
     };
-  }, [selection, height]);
+  }, [selection, height, bottomMargin]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
@@ -701,7 +699,7 @@ const DumbbellChartContent = memo(({
     const y = e.clientY - rect.top;
 
     const chartTop = DUMBBELL_MARGIN.top;
-    const chartBottom = height - DUMBBELL_MARGIN.bottom;
+    const chartBottom = height - bottomMargin;
     const clampedY = Math.max(chartTop, Math.min(y, chartBottom));
 
     if (interactionMode === 'idle' && selection) {
@@ -762,7 +760,7 @@ const DumbbellChartContent = memo(({
         y2: newMaxY,
       });
     }
-  }, [interactionMode, selection, height, resizeHandle]);
+  }, [interactionMode, selection, height, resizeHandle, bottomMargin]);
 
   const handleMouseUp = useCallback(() => {
     setInteractionMode('idle');
@@ -829,24 +827,7 @@ const DumbbellChartContent = memo(({
         const binGroupLabel = layout ? layout.label : binGroup.id;
         const binGroupColor = binGroupIdx % 2 === 0 ? theme.colors.gray[3] : theme.colors.gray[1];
 
-        let sumPre = 0; let countPre = 0;
-        let sumPost = 0; let countPost = 0;
-        binGroup.nestedBins.forEach((nb) => {
-          nb.cases.forEach((c) => {
-            const preVal = c[labConfig.preKey] as number;
-            const postVal = c[labConfig.postKey] as number;
-            if (preVal !== undefined && preVal !== null) {
-              sumPre += preVal;
-              countPre += 1;
-            }
-            if (postVal !== undefined && postVal !== null) {
-              sumPost += postVal;
-              countPost += 1;
-            }
-          });
-        });
-        const avgPre = countPre > 0 ? sumPre / countPre : null;
-        const avgPost = countPost > 0 ? sumPost / countPost : null;
+        const { avgPre, avgPost } = binGroup;
 
         return (
           <g key={binGroup.id}>
@@ -1005,30 +986,41 @@ const DumbbellChartContent = memo(({
                       )}
 
                       {/* Cases */}
-                      {!isNestedBinCollapsed && nestedBin.cases.map((d, vIdx) => {
-                        const caseX = currentNestedBinX + vIdx * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
+                      {(() => {
+                        if (isNestedBinCollapsed) return null;
 
-                        if (caseX > visibleRange[1] || caseX < visibleRange[0]) return null;
+                        const startIdxRaw = Math.floor((visibleRange[0] - currentNestedBinX - (DUMBBELL_CHAR_WIDTH_CASE / 2)) / DUMBBELL_CHAR_WIDTH_CASE);
+                        const endIdxRaw = Math.ceil((visibleRange[1] - currentNestedBinX - (DUMBBELL_CHAR_WIDTH_CASE / 2)) / DUMBBELL_CHAR_WIDTH_CASE);
 
-                        const preVal = d[labConfig.preKey] as number | null;
-                        const postVal = d[labConfig.postKey] as number | null;
+                        const startIdx = Math.max(0, startIdxRaw);
+                        const endIdx = Math.min(nestedBin.cases.length, endIdxRaw + 1);
 
-                        const selected = isSelected(caseX, yScale(preVal ?? 0)) || isSelected(caseX, yScale(postVal ?? 0));
+                        if (startIdx >= nestedBin.cases.length || endIdx <= 0 || startIdx >= endIdx) return null;
 
-                        return (
-                          <Dumbbell
-                            key={d.case_id}
-                            caseX={caseX}
-                            yScale={yScale}
-                            d={d}
-                            labConfig={labConfig}
-                            showPre={showPre}
-                            showPost={showPost}
-                            selected={selected}
-                            theme={theme}
-                          />
-                        );
-                      })}
+                        return nestedBin.cases.slice(startIdx, endIdx).map((d, relativeIdx) => {
+                          const vIdx = startIdx + relativeIdx;
+                          const caseX = currentNestedBinX + vIdx * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
+
+                          const preVal = d[labConfig.preKey] as number | null;
+                          const postVal = d[labConfig.postKey] as number | null;
+
+                          const selected = isSelected(caseX, yScale(preVal ?? 0)) || isSelected(caseX, yScale(postVal ?? 0));
+
+                          return (
+                            <Dumbbell
+                              key={d.case_id}
+                              caseX={caseX}
+                              yScale={yScale}
+                              d={d}
+                              labConfig={labConfig}
+                              showPre={showPre}
+                              showPost={showPost}
+                              selected={selected}
+                              theme={theme}
+                            />
+                          );
+                        });
+                      })()}
                     </g>
                   );
                 })}
@@ -1312,7 +1304,8 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   // Responsive Height
   const { ref, height: measuredHeight } = useElementSize();
   const height = measuredHeight || 400; // Fallback
-  const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - DUMBBELL_MARGIN.bottom);
+  const bottomMargin = hasNestedBins ? 50 : 25;
+  const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - bottomMargin);
 
   const yDomain = useMemo(() => {
     let minVal = Infinity;
@@ -1564,6 +1557,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
           {/* Fixed Y Axis */}
           <DumbbellYAxis
             height={height}
+            hasNestedBins={hasNestedBins}
             yScale={yScale}
             theme={theme}
             labConfig={labConfig}

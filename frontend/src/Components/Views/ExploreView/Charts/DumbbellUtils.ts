@@ -58,6 +58,8 @@ export function getProcessedDumbbellData(
       minPre: number;
       minPost: number;
     }[];
+    avgPre: number | null;
+    avgPost: number | null;
   }[] = [];
 
   // Sort Keys
@@ -135,11 +137,34 @@ export function getProcessedDumbbellData(
         });
       }
 
+      const preAccess = labConfig.preKey;
+      const postAccess = labConfig.postKey;
+
+      let sumPre = 0; let countPre = 0;
+      let sumPost = 0; let countPost = 0;
+
+      cases.forEach((c) => {
+        const preVal = c[preAccess] as number | undefined;
+        const postVal = c[postAccess] as number | undefined;
+        if (preVal !== undefined && preVal !== null) {
+          sumPre += preVal;
+          countPre += 1;
+        }
+        if (postVal !== undefined && postVal !== null) {
+          sumPost += postVal;
+          countPost += 1;
+        }
+      });
+      const avgPre = countPre > 0 ? sumPre / countPre : null;
+      const avgPost = countPost > 0 ? sumPost / countPost : null;
+
       hierarchy.push({
         id: binGroupId,
         label: binGroupId,
         cases,
         nestedBins,
+        avgPre,
+        avgPost,
       });
     } else {
       const sortedCases = [...cases];
@@ -165,11 +190,31 @@ export function getProcessedDumbbellData(
         minPost,
       };
 
+      let sumPre = 0; let countPre = 0;
+      let sumPost = 0; let countPost = 0;
+
+      cases.forEach((c) => {
+        const preVal = c[preAccess] as number | undefined;
+        const postVal = c[postAccess] as number | undefined;
+        if (preVal !== undefined && preVal !== null) {
+          sumPre += preVal;
+          countPre += 1;
+        }
+        if (postVal !== undefined && postVal !== null) {
+          sumPost += postVal;
+          countPost += 1;
+        }
+      });
+      const avgPre = countPre > 0 ? sumPre / countPre : null;
+      const avgPost = countPost > 0 ? sumPost / countPost : null;
+
       hierarchy.push({
         id: binGroupId,
         label: binGroupId,
         cases,
         nestedBins: [virtualNestedBin],
+        avgPre,
+        avgPost,
       });
     }
   });
