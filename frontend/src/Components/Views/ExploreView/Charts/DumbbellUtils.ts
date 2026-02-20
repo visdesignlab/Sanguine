@@ -10,6 +10,7 @@ export function getProcessedDumbbellData(
   labConfig: DumbbellLabConfig,
   sortMode: string,
   hasNestedBins: boolean,
+  providerSort: 'alpha' | 'count' | 'pre' | 'post' = 'alpha',
 ) {
   const groupedByBinGroup = new Map<string, DumbbellCase[]>();
 
@@ -62,7 +63,6 @@ export function getProcessedDumbbellData(
     avgPost: number | null;
   }[] = [];
 
-  // Sort Keys
   const sortedKeys = Array.from(groupedByBinGroup.keys());
   if (selectedX === 'year_quarter' || selectedX === 'rbc' || selectedX === 'platelet' || selectedX === 'cryo' || selectedX === 'ffp') {
     sortedKeys.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
@@ -73,6 +73,38 @@ export function getProcessedDumbbellData(
       const aVal = parseInt(a.split('-')[0], 10);
       const bVal = parseInt(b.split('-')[0], 10);
       return aVal - bVal;
+    });
+  } else if (providerSort === 'count') { // Surgeon or Anesthesiologist Sorting
+    sortedKeys.sort((a, b) => {
+      const aCount = groupedByBinGroup.get(a)?.length || 0;
+      const bCount = groupedByBinGroup.get(b)?.length || 0;
+      return bCount - aCount;
+    });
+  } else if (providerSort === 'pre' || providerSort === 'post') {
+    sortedKeys.sort((a, b) => {
+      const casesA = groupedByBinGroup.get(a) || [];
+      const casesB = groupedByBinGroup.get(b) || [];
+
+      const preAccess = labConfig.preKey;
+      const postAccess = labConfig.postKey;
+
+      const getAvg = (cases: DumbbellCase[], type: 'pre' | 'post') => {
+        let sum = 0;
+        let count = 0;
+        cases.forEach((c) => {
+          const val = type === 'pre' ? c[preAccess] : c[postAccess];
+          if (val !== undefined && val !== null) {
+            sum += val as number;
+            count += 1;
+          }
+        });
+        return count > 0 ? sum / count : 0;
+      };
+
+      const aAvg = getAvg(casesA, providerSort);
+      const bAvg = getAvg(casesB, providerSort);
+
+      return bAvg - aAvg; // Descending average
     });
   } else {
     sortedKeys.sort(); // Alphabetical for names

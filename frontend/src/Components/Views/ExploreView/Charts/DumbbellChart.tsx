@@ -1159,6 +1159,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   const [showTargets, setShowTargets] = useState<boolean>(true);
   const [showMedian, setShowMedian] = useState<boolean>(true);
   const [sortMode, setSortMode] = useState<string>('time');
+  const [providerSort, setProviderSort] = useState<'alpha' | 'count' | 'pre' | 'post'>('alpha');
 
   // Clear provider sorts when global sort changes
   const handleSortChange = (value: string) => {
@@ -1279,7 +1280,8 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     labConfig,
     sortMode,
     hasNestedBins,
-  ), [store.exploreChartData, chartConfig.chartId, labConfig, selectedX, sortMode, hasNestedBins]);
+    providerSort,
+  ), [store.exploreChartData, chartConfig.chartId, labConfig, selectedX, sortMode, hasNestedBins, providerSort]);
 
   // Layout & Width Calculation
   const layoutData = useMemo(() => calculateDumbbellLayout(
@@ -1555,17 +1557,56 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
       <div style={{ flex: 1, minHeight: 0, width: '100%' }} ref={ref}>
         <Flex direction="row" h={height}>
           {/* Fixed Y Axis */}
-          <DumbbellYAxis
-            height={height}
-            hasNestedBins={hasNestedBins}
-            yScale={yScale}
-            theme={theme}
-            labConfig={labConfig}
-            targets={targets}
-            setTargets={setTargets}
-            hoveredTarget={hoveredTarget}
-            setHoveredTarget={setHoveredTarget}
-          />
+          <div style={{ position: 'relative' }}>
+            <DumbbellYAxis
+              height={height}
+              hasNestedBins={hasNestedBins}
+              yScale={yScale}
+              theme={theme}
+              labConfig={labConfig}
+              targets={targets}
+              setTargets={setTargets}
+              hoveredTarget={hoveredTarget}
+              setHoveredTarget={setHoveredTarget}
+            />
+
+            {/* Provider Sort Toggle */}
+            {(selectedX === 'surgeon' || selectedX === 'anesthesiologist') && (
+              <Box style={{
+                position: 'absolute', bottom: 0, right: 5, zIndex: 10,
+              }}
+              >
+                <Tooltip
+                  label={`Sort ${DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label} Bins: ${providerSort === 'alpha' ? 'A/Z →' : providerSort === 'count' ? 'Case Count →' : providerSort === 'pre' ? 'Pre-op Avg →' : 'Post-op Avg →'
+                    }`}
+                  position="right"
+                >
+                  <Button
+                    size="compact-xs"
+                    variant="subtle"
+                    color="gray"
+                    px={4}
+                    h={26}
+                    style={{
+                      fontSize: 10,
+                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                      border: `1px solid ${theme.colors.gray[3]}`,
+                    }}
+                    onClick={() => {
+                      const order: ('alpha' | 'count' | 'pre' | 'post')[] = ['alpha', 'count', 'pre', 'post'];
+                      const nextSort = order[(order.indexOf(providerSort) + 1) % order.length];
+                      setProviderSort(nextSort);
+                    }}
+                  >
+                    {providerSort === 'alpha' && 'A/Z →'}
+                    {providerSort === 'count' && 'Cases →'}
+                    {providerSort === 'pre' && <Text size="0.6rem" fw={700} c="teal">Pre →</Text>}
+                    {providerSort === 'post' && <Text size="0.6rem" fw={700} c="indigo">Post →</Text>}
+                  </Button>
+                </Tooltip>
+              </Box>
+            )}
+          </div>
 
           {/* Scrollable Content */}
           <div style={{ flex: 1, minWidth: 0 }}>
