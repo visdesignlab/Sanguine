@@ -11,35 +11,27 @@ export function getProcessedDumbbellData(
   sortMode: string,
   hasNestedBins: boolean,
 ) {
-  const groupedByBinGroup = new Map<string, { cases: DumbbellCase[], label: string }>();
+  const groupedByBinGroup = new Map<string, DumbbellCase[]>();
 
   // Grouping Logic based on selectedX
   rawData.forEach((d: DumbbellCase) => {
-    let key = d.surgeon_prov_id; // Default Surgeon ID
-    let label = d.surgeon_prov_name;
-    if (selectedX === 'anesthesiologist') {
-      key = d.anesth_prov_id;
-      label = d.anesth_prov_name;
-    } else if (selectedX === 'year_quarter') {
+    let key = d.surgeon_prov_name; // Default Surgeon Name
+    if (selectedX === 'anesthesiologist') key = d.anesth_prov_name;
+    else if (selectedX === 'year_quarter') {
       const date = new Date(d.surgery_start_dtm);
       key = `${date.getFullYear()}`;
-      label = key;
     } else if (selectedX === 'rbc') {
       const val = d.intraop_rbc_units;
       key = `${val} ${val === 1 ? 'RBC' : 'RBCs'}`;
-      label = key;
     } else if (selectedX === 'platelet') {
       const val = d.intraop_plt_units;
       key = `${val} ${val === 1 ? 'Platelet' : 'Platelets'}`;
-      label = key;
     } else if (selectedX === 'cryo') {
       const val = d.intraop_cryo_units;
       key = `${val} ${val === 1 ? 'Cryo' : 'Cryo Units'}`;
-      label = key;
     } else if (selectedX === 'ffp') {
       const val = d.intraop_ffp_units;
       key = `${val} ${val === 1 ? 'FFP' : 'FFPs'}`;
-      label = key;
     } else if (selectedX === 'cell_salvage') {
       const val = d.intraop_cell_saver_ml ?? 0;
       if (val === 0) {
@@ -49,13 +41,10 @@ export function getProcessedDumbbellData(
         const upper = lower + 100;
         key = `${lower}-${upper} mL`;
       }
-      label = key;
     }
 
-    if (!groupedByBinGroup.has(key)) {
-      groupedByBinGroup.set(key, { cases: [], label: label || key });
-    }
-    groupedByBinGroup.get(key)?.cases.push(d);
+    if (!groupedByBinGroup.has(key)) groupedByBinGroup.set(key, []);
+    groupedByBinGroup.get(key)?.push(d);
   });
 
   const hierarchy: {
@@ -84,17 +73,11 @@ export function getProcessedDumbbellData(
       return aVal - bVal;
     });
   } else {
-    // Sort by label (name) for providers
-    sortedKeys.sort((a, b) => {
-      const labelA = groupedByBinGroup.get(a)?.label || '';
-      const labelB = groupedByBinGroup.get(b)?.label || '';
-      return labelA.localeCompare(labelB);
-    });
+    sortedKeys.sort(); // Alphabetical for names
   }
 
   sortedKeys.forEach((binGroupId) => {
-    const binGroupData = groupedByBinGroup.get(binGroupId)!;
-    const { cases, label } = binGroupData;
+    const cases = groupedByBinGroup.get(binGroupId)!;
     const binGroupSort = sortMode === 'time' ? 'none' : sortMode as DumbbellSortState;
 
     if (binGroupSort === 'none') {
@@ -154,7 +137,7 @@ export function getProcessedDumbbellData(
 
       hierarchy.push({
         id: binGroupId,
-        label,
+        label: binGroupId,
         cases,
         nestedBins,
       });
@@ -184,7 +167,7 @@ export function getProcessedDumbbellData(
 
       hierarchy.push({
         id: binGroupId,
-        label,
+        label: binGroupId,
         cases,
         nestedBins: [virtualNestedBin],
       });
@@ -223,7 +206,7 @@ export function calculateDumbbellLayout(
 
   processedData.forEach((binGroup) => {
     const binGroupStartX = currentX;
-    let displayLabel = binGroup.label || binGroup.id;
+    let displayLabel = binGroup.id;
 
     if (collapsedBinGroups.has(binGroup.id)) {
       const width = 50;

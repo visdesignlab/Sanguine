@@ -868,32 +868,36 @@ const DumbbellChartContent = memo(({
               textAnchor="middle"
               fontSize={12}
               fontWeight={600}
-              fill={isBinGroupCollapsed ? theme.colors.gray[6] : theme.colors.gray[9]}
+              fill={(isBinGroupCollapsed || (!hasNestedBins && collapsedNestedBins.has(binGroup.nestedBins[0].id))) ? theme.colors.gray[6] : theme.colors.gray[9]}
               style={{ pointerEvents: 'none' }}
             >
-              {isBinGroupCollapsed ? '...' : binGroupLabel}
+              {(isBinGroupCollapsed || (!hasNestedBins && collapsedNestedBins.has(binGroup.nestedBins[0].id))) ? '...' : binGroupLabel}
             </text>
 
-            <rect
-              x={binGroupX + binGroupWidth - 15}
-              y={!hasNestedBins ? innerHeight : innerHeight + 25}
-              width={15}
-              height={25}
-              fill="transparent"
-              style={{ cursor: 'pointer' }}
-              onMouseEnter={() => setHoveredCollapse(binGroup.id)}
-              onMouseLeave={() => setHoveredCollapse(null)}
-              onClick={(e) => onToggleBinGroupCollapse(e, binGroup.id)}
-            />
-            {hoveredCollapse === binGroup.id && (
-              <path
-                d={isBinGroupCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
-                transform={`translate(${binGroupX + binGroupWidth - 12}, ${!hasNestedBins ? innerHeight + 3 : innerHeight + 31}) scale(0.6)`}
-                fill="none"
-                stroke={theme.colors.gray[7]}
-                strokeWidth={2}
-                style={{ pointerEvents: 'none' }}
-              />
+            {!isBinGroupCollapsed && hasNestedBins && (
+              <>
+                <rect
+                  x={binGroupX + binGroupWidth - 15}
+                  y={innerHeight + 25}
+                  width={15}
+                  height={25}
+                  fill="transparent"
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={() => setHoveredCollapse(binGroup.id)}
+                  onMouseLeave={() => setHoveredCollapse(null)}
+                  onClick={(e) => onToggleBinGroupCollapse(e, binGroup.id)}
+                />
+                {hoveredCollapse === binGroup.id && (
+                  <path
+                    d={isBinGroupCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
+                    transform={`translate(${binGroupX + binGroupWidth - 12}, ${innerHeight + 31}) scale(0.6)`}
+                    fill="none"
+                    stroke={theme.colors.gray[7]}
+                    strokeWidth={2}
+                    style={{ pointerEvents: 'none' }}
+                  />
+                )}
+              </>
             )}
 
             {!isBinGroupCollapsed && (
@@ -947,14 +951,14 @@ const DumbbellChartContent = memo(({
                       {hasNestedBins && (
                         <text
                           x={currentNestedBinX + nestedBinWidth / 2}
-                          y={innerHeight + 20}
+                          y={innerHeight + 17}
                           textAnchor="middle"
                           fontSize={10}
                           fontWeight={400}
                           fill={theme.colors.gray[6]}
                           style={{ pointerEvents: 'none' }}
                         >
-                          {nestedBin.label}
+                          {isNestedBinCollapsed ? '...' : nestedBin.label}
                         </text>
                       )}
                       <rect
@@ -968,10 +972,10 @@ const DumbbellChartContent = memo(({
                         onMouseLeave={() => setHoveredCollapse(null)}
                         onClick={(e) => onToggleNestedBinCollapse(e, nestedBin.id)}
                       />
-                      {hoveredCollapse === nestedBin.id && (
+                      {(hoveredCollapse === nestedBin.id || isNestedBinCollapsed) && (
                         <path
                           d={isNestedBinCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
-                          transform={`translate(${currentNestedBinX + nestedBinWidth - 8}, ${innerHeight + 6}) scale(0.5)`}
+                          transform={`translate(${currentNestedBinX + nestedBinWidth - 8}, ${innerHeight + 6.5}) scale(0.5)`}
                           fill="none"
                           stroke={theme.colors.gray[7]}
                           strokeWidth={2}
