@@ -1753,6 +1753,7 @@ export class RootStore {
              (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
           FROM filteredSurgeryCases
           ORDER BY surgery_start_dtm
+          LIMIT 10000
         `;
         try {
           const result = await this.duckDB!.query(query);
@@ -1797,6 +1798,7 @@ export class RootStore {
              rbc_cost,
              case_id
            FROM filteredSurgeryCases
+           LIMIT 10000
         `;
         try {
           const result = await this.duckDB!.query(query);
