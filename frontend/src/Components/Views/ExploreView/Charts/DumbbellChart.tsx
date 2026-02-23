@@ -138,11 +138,19 @@ const DumbbellYAxis = memo(({
       <rect width={DUMBBELL_MARGIN.left} height={height} fill="white" />
 
       {/* Y Axis Ticks */}
-      {yScale.ticks(5).map((tick) => (
-        <g key={tick} transform={`translate(${DUMBBELL_MARGIN.left}, ${yScale(tick) + DUMBBELL_MARGIN.top})`}>
-          <text x={-10} y={4} textAnchor="end" fontSize={12} fill={theme.colors.gray[6]}>{tick}</text>
-        </g>
-      ))}
+      {yScale.ticks(5).map((tick) => {
+        let displayTick = tick.toString();
+        if (Math.abs(tick) >= 1000000) {
+          displayTick = `${+(tick / 1000000).toFixed(1)}M`;
+        } else if (Math.abs(tick) >= 1000) {
+          displayTick = `${+(tick / 1000).toFixed(1)}k`;
+        }
+        return (
+          <g key={tick} transform={`translate(${DUMBBELL_MARGIN.left}, ${yScale(tick) + DUMBBELL_MARGIN.top})`}>
+            <text x={-10} y={4} textAnchor="end" fontSize={12} fill={theme.colors.gray[6]}>{displayTick}</text>
+          </g>
+        );
+      })}
 
       {/* Y Axis Label */}
       <text
