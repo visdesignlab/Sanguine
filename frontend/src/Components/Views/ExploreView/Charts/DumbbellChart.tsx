@@ -464,126 +464,6 @@ const AverageLine = memo(({
 DumbbellYAxis.displayName = 'DumbbellYAxis';
 TargetOverlay.displayName = 'TargetOverlay';
 AverageLine.displayName = 'MedianLine';
-
-const Dumbbell = memo(({
-  caseX,
-  yScale,
-  d,
-  labConfig,
-  showPre,
-  showPost,
-  selected,
-  theme,
-}: {
-  caseX: number;
-  yScale: ScaleLinear<number, number>;
-  d: DumbbellCase;
-  labConfig: LabConfig;
-  showPre: boolean;
-  showPost: boolean;
-  selected: boolean;
-  theme: MantineTheme;
-}) => {
-  const [hovered, setHovered] = useState(false);
-
-  const preVal = d[labConfig.preKey] as number | null;
-  const postVal = d[labConfig.postKey] as number | null;
-
-  const activeColor = hovered ? smallHoverColor : (selected ? theme.colors.orange[6] : null);
-  const lineColor = hovered ? smallHoverColor : (selected ? theme.colors.orange[4] : theme.colors.gray[4]);
-
-  const preCircle = preVal !== null ? (
-    <circle
-      cx={caseX}
-      cy={yScale(preVal)}
-      r={DUMBBELL_DOT_RADIUS}
-      fill={activeColor || theme.colors.teal[6]}
-      fillOpacity={0.8}
-    />
-  ) : null;
-
-  const postCircle = postVal !== null ? (
-    <circle
-      cx={caseX}
-      cy={yScale(postVal)}
-      r={DUMBBELL_DOT_RADIUS}
-      fill={activeColor || theme.colors.indigo[6]}
-      fillOpacity={0.8}
-    />
-  ) : null;
-
-  return (
-    <g
-      style={{ cursor: 'pointer' }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {showPre && showPost && preVal !== null && postVal !== null && (
-        <line
-          x1={caseX}
-          x2={caseX}
-          y1={yScale(preVal)}
-          y2={yScale(postVal)}
-          stroke={lineColor}
-          strokeWidth={1}
-          strokeOpacity={0.8}
-          style={{ pointerEvents: 'none' }}
-        />
-      )}
-      {showPre && preVal !== null && (
-        <Tooltip
-          label={(
-            <Box>
-              <Text size="xs">
-                Surgical Case:
-                {' '}
-                {d.case_id}
-              </Text>
-              <Text size="xs">
-                Pre-op:
-                {' '}
-                <Text component="span" fw={700} size="xs">
-                  {preVal.toFixed(1)}
-                  {' '}
-                  {labConfig.unit}
-                </Text>
-              </Text>
-            </Box>
-          )}
-          position="top"
-        >
-          {preCircle}
-        </Tooltip>
-      )}
-      {showPost && postVal !== null && (
-        <Tooltip
-          label={(
-            <Box>
-              <Text size="xs">
-                Surgical Case:
-                {' '}
-                {d.case_id}
-              </Text>
-              <Text size="xs">
-                Post-op:
-                {' '}
-                <Text component="span" fw={700} size="xs">
-                  {postVal.toFixed(1)}
-                  {' '}
-                  {labConfig.unit}
-                </Text>
-              </Text>
-            </Box>
-          )}
-          position="bottom"
-        >
-          {postCircle}
-        </Tooltip>
-      )}
-    </g>
-  );
-});
-Dumbbell.displayName = 'Dumbbell';
 // #endregion
 
 // #region Dumbbell Chart Content
@@ -792,6 +672,214 @@ export const DumbbellChartContent = memo(({
     return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY;
   }, [appliedSelection]);
 
+  // Canvas rendering for cases
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hoveredCaseRef = useRef<{ caseData: DumbbellCase; x: number; preY: number | null; postY: number | null } | null>(null);
+  const [tooltipData, setTooltipData] = useState<{ x: number; y: number; caseData: DumbbellCase; preVal: number | null; postVal: number | null } | null>(null);
+
+  const drawDumbbells = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.width / dpr;
+    const h = canvas.height / dpr;
+    ctx.clearRect(0, 0, w * dpr, h * dpr);
+    ctx.save();
+    ctx.scale(dpr, dpr);
+
+    const hovered = hoveredCaseRef.current;
+    const sel = appliedSelection;
+
+    for (let bgi = 0; bgi < processedData.length; bgi += 1) {
+      const binGroup = processedData[bgi];
+      if (!collapsedBinGroups.has(binGroup.id)) {
+        for (let nbi = 0; nbi < binGroup.nestedBins.length; nbi += 1) {
+          const nestedBin = binGroup.nestedBins[nbi];
+          if (!collapsedNestedBins.has(nestedBin.id)) {
+            const nbLayout = nestedBinLayout.get(nestedBin.id);
+            if (nbLayout) {
+              const nestedBinX = nbLayout.x;
+              const nestedBinWidth = nbLayout.width;
+
+              if (nestedBinX <= visibleRange[1] && nestedBinX + nestedBinWidth >= visibleRange[0]) {
+                const startIdxRaw = Math.floor((visibleRange[0] - nestedBinX - (DUMBBELL_CHAR_WIDTH_CASE / 2)) / DUMBBELL_CHAR_WIDTH_CASE);
+                const endIdxRaw = Math.ceil((visibleRange[1] - nestedBinX - (DUMBBELL_CHAR_WIDTH_CASE / 2)) / DUMBBELL_CHAR_WIDTH_CASE);
+                const startIdx = Math.max(0, startIdxRaw);
+                const endIdx = Math.min(nestedBin.cases.length, endIdxRaw + 1);
+
+                for (let ci = startIdx; ci < endIdx; ci += 1) {
+                  const d = nestedBin.cases[ci];
+                  const caseX = nestedBinX + ci * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
+                  const preVal = d[labConfig.preKey] as number | null;
+                  const postVal = d[labConfig.postKey] as number | null;
+
+                  const cyPre = preVal !== null ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
+                  const cyPost = postVal !== null ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
+
+                  const isHovered = hovered && hovered.caseData.case_id === d.case_id;
+                  const selected = (cyPre !== null && isSelected(caseX, cyPre)) || (cyPost !== null && isSelected(caseX, cyPost));
+
+                  let preColor = theme.colors.teal[6];
+                  let postColor = theme.colors.indigo[6];
+                  let lineColor = theme.colors.gray[4];
+                  let opacity = 0.8;
+
+                  if (isHovered) {
+                    preColor = smallHoverColor;
+                    postColor = smallHoverColor;
+                    lineColor = smallHoverColor;
+                  } else if (selected) {
+                    preColor = theme.colors.orange[6];
+                    postColor = theme.colors.orange[6];
+                    lineColor = theme.colors.orange[4];
+                  }
+
+                  if (sel && !selected && !isHovered) {
+                    opacity = 0.25;
+                  }
+
+                  // Draw connecting line
+                  if (showPre && showPost && cyPre !== null && cyPost !== null) {
+                    ctx.beginPath();
+                    ctx.moveTo(caseX, cyPre);
+                    ctx.lineTo(caseX, cyPost);
+                    ctx.strokeStyle = lineColor;
+                    ctx.globalAlpha = opacity;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                  }
+
+                  // Draw pre circle
+                  if (showPre && cyPre !== null) {
+                    ctx.beginPath();
+                    ctx.arc(caseX, cyPre, DUMBBELL_DOT_RADIUS, 0, Math.PI * 2);
+                    ctx.fillStyle = preColor;
+                    ctx.globalAlpha = opacity;
+                    ctx.fill();
+                  }
+
+                  // Draw post circle
+                  if (showPost && cyPost !== null) {
+                    ctx.beginPath();
+                    ctx.arc(caseX, cyPost, DUMBBELL_DOT_RADIUS, 0, Math.PI * 2);
+                    ctx.fillStyle = postColor;
+                    ctx.globalAlpha = opacity;
+                    ctx.fill();
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    ctx.restore();
+  }, [processedData, collapsedBinGroups, collapsedNestedBins, nestedBinLayout, visibleRange, labConfig, yScale, showPre, showPost, appliedSelection, isSelected, theme]);
+
+  // Redraw when deps change
+  useEffect(() => { drawDumbbells(); }, [drawDumbbells]);
+
+  // Resize canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = totalWidth * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = `${totalWidth}px`;
+    canvas.style.height = `${height}px`;
+    drawDumbbells();
+  }, [totalWidth, height, drawDumbbells]);
+
+  // Canvas hover detection
+  const handleCanvasHover = useCallback((e: React.MouseEvent) => {
+    if (interactionMode !== 'idle') return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    const chartTop = DUMBBELL_MARGIN.top;
+    const chartBottom = height - bottomMargin + DUMBBELL_MARGIN.top;
+    if (my < chartTop || my > chartBottom) {
+      if (hoveredCaseRef.current) {
+        hoveredCaseRef.current = null;
+        setTooltipData(null);
+        requestAnimationFrame(drawDumbbells);
+      }
+      return;
+    }
+
+    let bestDist = 8; // hit radius
+    let bestCase: { caseData: DumbbellCase; x: number; preY: number | null; postY: number | null } | null = null;
+
+    for (let bgi = 0; bgi < processedData.length; bgi += 1) {
+      const binGroup = processedData[bgi];
+      if (!collapsedBinGroups.has(binGroup.id)) {
+        for (let nbi = 0; nbi < binGroup.nestedBins.length; nbi += 1) {
+          const nestedBin = binGroup.nestedBins[nbi];
+          if (!collapsedNestedBins.has(nestedBin.id)) {
+            const nbLayout = nestedBinLayout.get(nestedBin.id);
+            if (nbLayout) {
+              // Quick: which case index is closest to mx?
+              const approxIdx = Math.round((mx - nbLayout.x - DUMBBELL_CHAR_WIDTH_CASE / 2) / DUMBBELL_CHAR_WIDTH_CASE);
+              const checkFrom = Math.max(0, approxIdx - 1);
+              const checkTo = Math.min(nestedBin.cases.length - 1, approxIdx + 1);
+
+              for (let ci = checkFrom; ci <= checkTo; ci += 1) {
+                const d = nestedBin.cases[ci];
+                const caseX = nbLayout.x + ci * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
+                const dx = Math.abs(mx - caseX);
+                if (dx <= bestDist) {
+                  const preVal = d[labConfig.preKey] as number | null;
+                  const postVal = d[labConfig.postKey] as number | null;
+                  const cyPre = preVal !== null && showPre ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
+                  const cyPost = postVal !== null && showPost ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
+
+                  let minDy = Infinity;
+                  if (cyPre !== null) minDy = Math.min(minDy, Math.abs(my - cyPre));
+                  if (cyPost !== null) minDy = Math.min(minDy, Math.abs(my - cyPost));
+
+                  const dist = Math.sqrt(dx * dx + Math.min(minDy, bestDist) * Math.min(minDy, bestDist));
+                  if (dist < bestDist) {
+                    bestDist = dist;
+                    bestCase = { caseData: d, x: caseX, preY: cyPre, postY: cyPost };
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const prevId = hoveredCaseRef.current?.caseData.case_id;
+    const newId = bestCase?.caseData.case_id;
+    if (prevId !== newId) {
+      hoveredCaseRef.current = bestCase;
+      if (bestCase) {
+        const preVal = bestCase.caseData[labConfig.preKey] as number | null;
+        const postVal = bestCase.caseData[labConfig.postKey] as number | null;
+        const tipY = bestCase.preY ?? bestCase.postY ?? my;
+        setTooltipData({
+          x: bestCase.x,
+          y: tipY,
+          caseData: bestCase.caseData,
+          preVal,
+          postVal,
+        });
+      } else {
+        setTooltipData(null);
+      }
+      requestAnimationFrame(drawDumbbells);
+    }
+  }, [processedData, collapsedBinGroups, collapsedNestedBins, nestedBinLayout, labConfig, yScale, showPre, showPost, height, bottomMargin, interactionMode, drawDumbbells]);
+
   const chartBody = useMemo(() => (
     <g transform={`translate(0, ${DUMBBELL_MARGIN.top})`}>
       {/* Render Stripe backgrounds first */}
@@ -991,45 +1079,7 @@ export const DumbbellChartContent = memo(({
                         />
                       )}
 
-                      {/* Cases */}
-                      {(() => {
-                        if (isNestedBinCollapsed) return null;
-
-                        const startIdxRaw = Math.floor((visibleRange[0] - currentNestedBinX - (DUMBBELL_CHAR_WIDTH_CASE / 2)) / DUMBBELL_CHAR_WIDTH_CASE);
-                        const endIdxRaw = Math.ceil((visibleRange[1] - currentNestedBinX - (DUMBBELL_CHAR_WIDTH_CASE / 2)) / DUMBBELL_CHAR_WIDTH_CASE);
-
-                        const startIdx = Math.max(0, startIdxRaw);
-                        const endIdx = Math.min(nestedBin.cases.length, endIdxRaw + 1);
-
-                        if (startIdx >= nestedBin.cases.length || endIdx <= 0 || startIdx >= endIdx) return null;
-
-                        return nestedBin.cases.slice(startIdx, endIdx).map((d, relativeIdx) => {
-                          const vIdx = startIdx + relativeIdx;
-                          const caseX = currentNestedBinX + vIdx * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
-
-                          const preVal = d[labConfig.preKey] as number | null;
-                          const postVal = d[labConfig.postKey] as number | null;
-
-                          const cyPre = preVal !== null ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
-                          const cyPost = postVal !== null ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
-
-                          const selected = (cyPre !== null && isSelected(caseX, cyPre)) || (cyPost !== null && isSelected(caseX, cyPost));
-
-                          return (
-                            <Dumbbell
-                              key={d.case_id}
-                              caseX={caseX}
-                              yScale={yScale}
-                              d={d}
-                              labConfig={labConfig}
-                              showPre={showPre}
-                              showPost={showPost}
-                              selected={selected}
-                              theme={theme}
-                            />
-                          );
-                        });
-                      })()}
+                      {/* Cases rendered on canvas */}
                     </g>
                   );
                 })}
@@ -1105,7 +1155,7 @@ export const DumbbellChartContent = memo(({
         );
       })}
     </g>
-  ), [processedData, collapsedBinGroups, collapsedNestedBins, hoveredCollapse, theme, labConfig, showPre, showPost, yScale, innerHeight, hasNestedBins, onToggleBinGroupCollapse, onToggleNestedBinCollapse, setHoveredCollapse, isSelected, totalWidth, showMedian, binGroupLayout, nestedBinLayout, selectedX, visibleRange]);
+  ), [processedData, collapsedBinGroups, collapsedNestedBins, hoveredCollapse, theme, labConfig, yScale, innerHeight, hasNestedBins, onToggleBinGroupCollapse, onToggleNestedBinCollapse, setHoveredCollapse, totalWidth, showMedian, binGroupLayout, nestedBinLayout, selectedX, visibleRange]);
 
   return (
     <div
@@ -1117,11 +1167,16 @@ export const DumbbellChartContent = memo(({
         userSelect: 'none',
       }}
       onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
+      onMouseMove={(e) => { handleMouseMove(e); handleCanvasHover(e); }}
       onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseLeave={() => {
+        handleMouseUp();
+        hoveredCaseRef.current = null;
+        setTooltipData(null);
+        requestAnimationFrame(drawDumbbells);
+      }}
     >
-      <svg width={totalWidth} height={height}>
+      <svg width={totalWidth} height={height} style={{ position: 'absolute', top: 0, left: 0 }}>
         {showTargets && (
           <TargetOverlay
             totalWidth={totalWidth}
@@ -1146,6 +1201,54 @@ export const DumbbellChartContent = memo(({
           />
         )}
       </svg>
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          pointerEvents: 'none',
+        }}
+      />
+      {tooltipData && (
+        <Tooltip
+          label={(
+            <Box>
+              <Text size="xs">
+                Surgical Case:
+                {' '}
+                {tooltipData.caseData.case_id}
+              </Text>
+              {tooltipData.preVal !== null && (
+                <Text size="xs">
+                  Pre-op:
+                  {' '}
+                  <Text component="span" fw={700} size="xs">
+                    {tooltipData.preVal.toFixed(1)}
+                    {' '}
+                    {labConfig.unit}
+                  </Text>
+                </Text>
+              )}
+              {tooltipData.postVal !== null && (
+                <Text size="xs">
+                  Post-op:
+                  {' '}
+                  <Text component="span" fw={700} size="xs">
+                    {tooltipData.postVal.toFixed(1)}
+                    {' '}
+                    {labConfig.unit}
+                  </Text>
+                </Text>
+              )}
+            </Box>
+          )}
+          position="top"
+          opened
+        >
+          <div style={{ position: 'absolute', left: tooltipData.x - 1, top: tooltipData.y - 1, width: 2, height: 2, pointerEvents: 'none' }} />
+        </Tooltip>
+      )}
     </div>
   );
 });
