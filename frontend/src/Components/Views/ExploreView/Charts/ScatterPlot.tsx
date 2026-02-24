@@ -1295,36 +1295,38 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                     }}
                   />
 
-                  {/* Tooltip anchor */}
+                  {/* HTML Tooltip styled like Mantine without the lag */}
                   {tooltipData && (
-                    <Tooltip
-                      label={(
-                        <Box>
-                          <Text size="xs">
-                            Case:
-                            {' '}
-                            {tooltipData.caseData.case_id}
-                          </Text>
-                          <Text size="xs">
-                            {varConfig.label}
-                            :
-                            {' '}
-                            <Text component="span" fw={700} size="xs">
-                              {(tooltipData.caseData[varConfig.key] as number)?.toFixed(1)}
-                              {' '}
-                              {varConfig.unit}
-                            </Text>
-                          </Text>
-                        </Box>
-                      )}
-                      position="top"
-                      opened
-                    >
-                      <div style={{
-                        position: 'absolute', left: tooltipData.x - 1, top: tooltipData.y - 1, width: 2, height: 2, pointerEvents: 'none',
+                    <Box
+                      style={{
+                        position: 'absolute',
+                        top: Math.max(10, tooltipData.y - 50),
+                        left: Math.min(totalWidth - 120, tooltipData.x + 10),
+                        backgroundColor: 'white',
+                        border: `1px solid ${theme.colors.gray[3]}`,
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                        padding: '4px 8px',
+                        borderRadius: 4,
+                        pointerEvents: 'none',
+                        zIndex: 100,
                       }}
-                      />
-                    </Tooltip>
+                    >
+                      <Text size="xs">
+                        Case:
+                        {' '}
+                        {tooltipData.caseData.case_id}
+                      </Text>
+                      <Text size="xs">
+                        {varConfig.label}
+                        :
+                        {' '}
+                        <Text component="span" fw={700} size="xs">
+                          {(tooltipData.caseData[varConfig.key] as number)?.toFixed(1)}
+                          {' '}
+                          {varConfig.unit}
+                        </Text>
+                      </Text>
+                    </Box>
                   )}
                 </div>
               </Box>
