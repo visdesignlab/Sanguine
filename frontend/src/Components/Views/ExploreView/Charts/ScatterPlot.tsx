@@ -4,10 +4,10 @@ import {
 import { useElementSize } from '@mantine/hooks';
 import {
   Box, CloseButton, Title, Flex, useMantineTheme,
-  Tooltip, MantineTheme, Select, Button, Text, SegmentedControl,
+  Tooltip, MantineTheme, Select, Button, Text, SegmentedControl, ActionIcon,
 } from '@mantine/core';
 import {
-  IconGripVertical, IconArrowUp, IconArrowDown, IconArrowRightDashed,
+  IconGripVertical, IconArrowUp, IconArrowDown, IconArrowRightDashed, IconCircles,
 } from '@tabler/icons-react';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { useObserver } from 'mobx-react-lite';
@@ -16,8 +16,11 @@ import {
   DumbbellCase, LAB_RESULTS, BLOOD_COMPONENTS,
   SCATTER_X_AXIS_OPTIONS, SCATTER_Y_AXIS_OPTIONS,
   SCATTER_MARGIN, SCATTER_DOT_RADIUS, SCATTER_CHAR_WIDTH_CASE,
-  SCATTER_DRAG_LIMIT, ScatterPlotConfig,
+  SCATTER_DRAG_LIMIT, ScatterPlotConfig, chartColors,
 } from '../../../../Types/application';
+import {
+  AddGroupModal, GroupDefinition, GroupCondition, CONDITION_FIELDS_FLAT,
+} from './AddGroupModal';
 import { smallHoverColor } from '../../../../Theme/mantineTheme';
 import {
   getProcessedScatterData, calculateScatterLayout,
@@ -28,7 +31,7 @@ import {
 // #region Y-Axis
 const ScatterYAxis = memo(({
   height, yScale, theme, varConfig, targets, setTargets,
-  hoveredTarget, setHoveredTarget, hasNestedBins,
+  hoveredTarget, setHoveredTarget, hasNestedBins, isDiscrete,
 }: {
   height: number;
   yScale: ScaleLinear<number, number>;
@@ -39,8 +42,9 @@ const ScatterYAxis = memo(({
   hoveredTarget: string | null;
   setHoveredTarget: (t: string | null) => void;
   hasNestedBins: boolean;
+  isDiscrete: boolean;
 }) => {
-  const bottomMargin = hasNestedBins ? 50 : 25;
+  const bottomMargin = isDiscrete ? (hasNestedBins ? 50 : 25) : 40;
   const innerHeight = Math.max(0, height - SCATTER_MARGIN.top - bottomMargin);
   const [dragging, setDragging] = useState<'min' | 'max' | null>(null);
 
@@ -260,6 +264,29 @@ const AverageLine = memo(({
 AverageLine.displayName = 'AverageLine';
 // #endregion
 
+// Helper: evaluate a single group condition against a case
+function evaluateCondition(c: DumbbellCase, cond: GroupCondition): boolean {
+  const val = ((c as unknown) as Record<string, unknown>)[cond.field];
+  if (val == null) return false;
+  const numVal = Number(val);
+  const condVal = Number(cond.value);
+  // Boolean fields stored as 0/1 or true/false
+  if (cond.value === 'true' || cond.value === 'false') {
+    const boolVal = Boolean(val) && val !== 0 && val !== '0';
+    const condBool = cond.value === 'true';
+    return cond.operator === '=' ? boolVal === condBool : boolVal !== condBool;
+  }
+  switch (cond.operator) {
+    case '>': return numVal > condVal;
+    case '>=': return numVal >= condVal;
+    case '<': return numVal < condVal;
+    case '<=': return numVal <= condVal;
+    case '=': return numVal === condVal;
+    case '!=': return numVal !== condVal;
+    default: return false;
+  }
+}
+
 // #region ScatterPlot Export
 export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig }) {
   const store = useContext(Store);
@@ -273,6 +300,18 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [sortMode, setSortMode] = useState<string>('time');
   const [collapsedBinGroups, setCollapsedBinGroups] = useState<Set<string>>(new Set());
   const [collapsedNestedBins, setCollapsedNestedBins] = useState<Set<string>>(new Set());
+
+  // Groups
+  const [groups, setGroups] = useState<GroupDefinition[]>([]);
+  const [groupModalOpened, setGroupModalOpened] = useState(false);
+  const [hoveredLegendGroup, setHoveredLegendGroup] = useState<string | null>(null);
+  const [selectedLegendGroups, setSelectedLegendGroups] = useState<Set<string>>(new Set());
+
+  // Modal form state
+  const [formName, setFormName] = useState('');
+  const [formColor, setFormColor] = useState(chartColors[0]);
+  const [formConditions, setFormConditions] = useState<GroupCondition[]>([{ field: '', operator: '>', value: 0 }]);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 
   const xAxisOption = useMemo(
     () => SCATTER_X_AXIS_OPTIONS.find((o) => o.value === selectedX),
@@ -393,7 +432,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const { ref: sizeRef, height: measuredHeight, width: measuredWidth } = useElementSize();
   const height = measuredHeight || 400;
   const containerWidth = measuredWidth || 600;
-  const bottomMargin = hasNestedBins ? 50 : 25;
+  const bottomMargin = isDiscrete ? (hasNestedBins ? 50 : 25) : 40;
   const innerHeight = Math.max(0, height - SCATTER_MARGIN.top - bottomMargin);
 
   // For discrete: total SVG width = layout + right margin. For continuous: container width.
@@ -486,6 +525,21 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     return points;
   }, [isDiscrete, xScale, xVarKey, rawData, varConfig.key, yScale, processedData, collapsedBinGroups, collapsedNestedBins, layoutData.nestedBinLayout]);
 
+  // Precompute group color for each case index
+  const caseGroupColors = useMemo(() => {
+    const map = new Map<number, string>();
+    if (groups.length === 0) return map;
+    rawData.forEach((c, idx) => {
+      for (const group of groups) {
+        if (group.conditions.every((cond) => evaluateCondition(c, cond))) {
+          map.set(idx, group.color);
+          break;
+        }
+      }
+    });
+    return map;
+  }, [rawData, groups]);
+
   // Spatial index
   const spatialIndex = useMemo(() => buildSpatialIndex(pointPositions), [pointPositions]);
 
@@ -521,11 +575,28 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     const hovered = hoveredPointRef.current;
     const sel = appliedSelection;
 
+    const legendHover = hoveredLegendGroup;
+    const legendSelected = selectedLegendGroups;
+    const hasLegendEmphasis = legendHover !== null || legendSelected.size > 0;
+
     for (let i = 0; i < pointPositions.length; i += 1) {
       const p = pointPositions[i];
-      let color = theme.colors.blue[6];
+      const groupColor = caseGroupColors.get(p.caseIdx);
+      let color = groupColor || theme.colors.gray[5];
       let radius = SCATTER_DOT_RADIUS;
       let opacity = 0.7;
+
+      // Legend emphasis (selected takes precedence, hover overlays)
+      if (hasLegendEmphasis) {
+        const pointKey = groupColor || '__default__';
+        const isSelected = legendSelected.has(pointKey);
+        const isHovered = legendHover === pointKey;
+        if (isSelected || isHovered) {
+          opacity = 0.9;
+        } else {
+          opacity = 0.08;
+        }
+      }
 
       // Check selection
       if (sel) {
@@ -554,7 +625,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
 
     ctx.restore();
-  }, [pointPositions, appliedSelection, theme]);
+  }, [pointPositions, appliedSelection, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups]);
 
   // Redraw canvas when dependencies change
   useEffect(() => { drawPoints(); }, [drawPoints]);
@@ -676,427 +747,584 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const yLabel = SCATTER_Y_AXIS_OPTIONS.find((o) => o.value === selectedY)?.label || selectedY;
 
   return useObserver(() => (
-    <Box h="100%" display="flex" style={{ flexDirection: 'column' }}>
-      {/* Header */}
-      <Flex direction="row" justify="space-between" align="center" pl="md" pr="md" pt="xs">
-        <Flex direction="row" align="center" gap="md" ml={-12}>
-          <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
-          <Title order={4}>
-            <span style={{ color: theme.colors.gray[6], fontWeight: 500 }}>{yLabel}</span>
-            {' '}
-            <span style={{ color: theme.colors.gray[6], fontWeight: 500 }}>by</span>
-            {' '}
-            {xLabel}
-          </Title>
-        </Flex>
-        <Flex direction="row" align="center" gap="sm">
-          {/* Sort Cases */}
-          {isDiscrete && (
-            <Flex direction="row" align="center" gap="xs">
-              <Text size="xs" c="dimmed" fw={500}>Sort Cases:</Text>
-              <SegmentedControl
-                size="xs"
-                value={sortMode}
-                onChange={setSortMode}
-                data={[
-                  {
-                    label: (
-                      <Tooltip label="Sort ascending by Y value" openDelay={500}>
-                        <Flex align="center" justify="center" gap={4}>
-                          <IconArrowUp size={14} stroke={2} />
-                        </Flex>
-                      </Tooltip>
-                    ),
-                    value: 'asc',
-                  },
-                  {
-                    label: (
-                      <Tooltip label="Sort descending by Y value" openDelay={500}>
-                        <Flex align="center" justify="center" gap={4}>
-                          <IconArrowDown size={14} stroke={2} />
-                        </Flex>
-                      </Tooltip>
-                    ),
-                    value: 'desc',
-                  },
-                  {
-                    label: (
-                      <Tooltip label="Sort by time" openDelay={500}>
-                        <Flex align="center" justify="center" gap={4}>
-                          <IconArrowRightDashed size={14} stroke={2} />
-                        </Flex>
-                      </Tooltip>
-                    ),
-                    value: 'time',
-                  },
-                ]}
-                styles={(t) => ({
-                  root: { backgroundColor: 'transparent', border: `1px solid ${t.colors.gray[3]}` },
-                  control: { border: '0 !important' },
-                  label: { padding: '3px 8px', marginBottom: 2, fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' },
-                  indicator: { backgroundColor: t.colors.gray[2] },
-                })}
-              />
-            </Flex>
-          )}
-
-          {/* Show buttons */}
-          <Flex direction="row" align="center" gap="xs" ml={0}>
-            <Text size="xs" c="dimmed" fw={500}>Show:</Text>
-            <Button.Group>
-              <Tooltip label="Show/hide target range" openDelay={500}>
-                <Button
-                  size="xs"
-                  px={8}
-                  variant={showTargets ? 'light' : 'default'}
-                  color="gray"
-                  onClick={() => setShowTargets(!showTargets)}
-                  styles={{ root: { borderColor: showTargets ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
-                >
-                  Target
-                </Button>
-              </Tooltip>
-              <Tooltip label="Show/hide average line" openDelay={500}>
-                <Button
-                  size="xs"
-                  px={8}
-                  variant={showAvg ? 'light' : 'default'}
-                  color="gray"
-                  onClick={() => setShowAvg(!showAvg)}
-                  styles={{ root: { marginLeft: -1, borderColor: showAvg ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
-                >
-                  Avg
-                </Button>
-              </Tooltip>
-            </Button.Group>
+    <>
+      <Box h="100%" display="flex" style={{ flexDirection: 'column' }}>
+        {/* Header */}
+        <Flex direction="row" justify="space-between" align="center" pl="md" pr="md" pt="xs">
+          <Flex direction="row" align="center" gap="md" ml={-12}>
+            <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
+            <Title order={4}>
+              {yLabel}
+              {' '}
+              <span style={{ color: theme.colors.gray[6], fontWeight: 500 }}>by</span>
+              {' '}
+              {xLabel}
+            </Title>
           </Flex>
-
-          <Select
-            data={SCATTER_X_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-            value={selectedX}
-            onChange={(v) => setSelectedX(v || 'rbc_units')}
-            size="xs"
-            w={200}
-            allowDeselect={false}
-            leftSection={<Title order={6} c="dimmed" style={{ fontSize: '10px' }}>X</Title>}
-          />
-          <Select
-            data={SCATTER_Y_AXIS_OPTIONS}
-            value={selectedY}
-            onChange={(v) => setSelectedY(v || 'post_hgb')}
-            size="xs"
-            w={200}
-            allowDeselect={false}
-            leftSection={<Title order={6} c="dimmed" style={{ fontSize: '10px' }}>Y</Title>}
-          />
-          <CloseButton onClick={() => store.removeExploreChart(chartConfig.chartId)} />
-        </Flex>
-      </Flex>
-
-      {/* Chart Area */}
-      <div style={{ flex: 1, minHeight: 0, width: '100%' }} ref={sizeRef}>
-        <Flex direction="row" h={height}>
-          {/* Fixed Y Axis */}
-          <ScatterYAxis
-            height={height}
-            hasNestedBins={hasNestedBins}
-            yScale={yScale}
-            theme={theme}
-            varConfig={varConfig}
-            targets={targets}
-            setTargets={setTargets}
-            hoveredTarget={hoveredTarget}
-            setHoveredTarget={setHoveredTarget}
-          />
-
-          {/* Scrollable Content */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Box style={{ overflowX: isDiscrete ? 'auto' : 'hidden', overflowY: 'hidden' }} ref={scrollViewportRef} onScroll={handleScroll}>
-              <div
-                ref={chartRef}
-                style={{ width: totalWidth, height, position: 'relative', userSelect: 'none' }}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); requestAnimationFrame(drawPoints); }}
+          <Flex direction="row" align="center" gap="sm">
+            {/* Groups icon */}
+            <Tooltip label="Manage color groups" openDelay={500}>
+              <ActionIcon
+                size="md"
+                variant={groups.length > 0 ? 'light' : 'subtle'}
+                color="blue"
+                onClick={() => setGroupModalOpened(true)}
               >
-                {/* SVG layer for gridlines, bins, targets, avg, brush */}
-                <svg width={totalWidth} height={height} style={{ position: 'absolute', top: 0, left: 0 }}>
-                  {/* Gridlines */}
-                  <g transform={`translate(0, ${SCATTER_MARGIN.top})`}>
-                    {yScale.ticks(5).map((tick) => (
-                      <line key={tick} x1={0} x2={totalWidth} y1={yScale(tick)} y2={yScale(tick)} stroke={theme.colors.gray[3]} strokeDasharray="4 4" />
-                    ))}
-                  </g>
+                <IconCircles size={16} />
+              </ActionIcon>
+            </Tooltip>
 
-                  {/* Continuous x-axis ticks */}
-                  {!isDiscrete && xScale && (
-                    <g transform={`translate(0, ${height - bottomMargin})`}>
-                      {xScale.ticks(8).map((tick) => (
-                        <g key={tick} transform={`translate(${xScale(tick)}, 0)`}>
-                          <line y1={0} y2={6} stroke={theme.colors.gray[5]} />
-                          <text y={18} textAnchor="middle" fontSize={11} fill={theme.colors.gray[6]}>{tick}</text>
-                        </g>
-                      ))}
-                      {/* X-axis label */}
-                      <text
-                        x={totalWidth / 2}
-                        y={bottomMargin - 2}
-                        textAnchor="middle"
-                        fontSize={12}
-                        fontWeight={600}
-                        fill={theme.colors.gray[7]}
+            {/* Sort Cases */}
+            {isDiscrete && (
+              <Flex direction="row" align="center" gap="xs">
+                <Text size="xs" c="dimmed" fw={500}>Sort Cases:</Text>
+                <SegmentedControl
+                  size="xs"
+                  value={sortMode}
+                  onChange={setSortMode}
+                  data={[
+                    {
+                      label: (
+                        <Tooltip label="Sort ascending by Y value" openDelay={500}>
+                          <Flex align="center" justify="center" gap={4}>
+                            <IconArrowUp size={14} stroke={2} />
+                          </Flex>
+                        </Tooltip>
+                      ),
+                      value: 'asc',
+                    },
+                    {
+                      label: (
+                        <Tooltip label="Sort descending by Y value" openDelay={500}>
+                          <Flex align="center" justify="center" gap={4}>
+                            <IconArrowDown size={14} stroke={2} />
+                          </Flex>
+                        </Tooltip>
+                      ),
+                      value: 'desc',
+                    },
+                    {
+                      label: (
+                        <Tooltip label="Sort by time" openDelay={500}>
+                          <Flex align="center" justify="center" gap={4}>
+                            <IconArrowRightDashed size={14} stroke={2} />
+                          </Flex>
+                        </Tooltip>
+                      ),
+                      value: 'time',
+                    },
+                  ]}
+                  styles={(t) => ({
+                    root: { backgroundColor: 'transparent', border: `1px solid ${t.colors.gray[3]}` },
+                    control: { border: '0 !important' },
+                    label: { padding: '3px 8px', marginBottom: 2, fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+                    indicator: { backgroundColor: t.colors.gray[2] },
+                  })}
+                />
+              </Flex>
+            )}
+
+            {/* Show buttons */}
+            <Flex direction="row" align="center" gap="xs" ml={0}>
+              <Text size="xs" c="dimmed" fw={500}>Show:</Text>
+              <Button.Group>
+                <Tooltip label="Show/hide target range" openDelay={500}>
+                  <Button
+                    size="xs"
+                    px={8}
+                    variant={showTargets ? 'light' : 'default'}
+                    color="gray"
+                    onClick={() => setShowTargets(!showTargets)}
+                    styles={{ root: { borderColor: showTargets ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
+                  >
+                    Target
+                  </Button>
+                </Tooltip>
+                <Tooltip label="Show/hide average line" openDelay={500}>
+                  <Button
+                    size="xs"
+                    px={8}
+                    variant={showAvg ? 'light' : 'default'}
+                    color="gray"
+                    onClick={() => setShowAvg(!showAvg)}
+                    styles={{ root: { marginLeft: -1, borderColor: showAvg ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
+                  >
+                    Avg
+                  </Button>
+                </Tooltip>
+              </Button.Group>
+            </Flex>
+
+            <Select
+              data={SCATTER_X_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+              value={selectedX}
+              onChange={(v) => setSelectedX(v || 'rbc_units')}
+              size="xs"
+              w={200}
+              allowDeselect={false}
+              leftSection={<Title order={6} c="dimmed" style={{ fontSize: '10px' }}>X</Title>}
+            />
+            <Select
+              data={SCATTER_Y_AXIS_OPTIONS}
+              value={selectedY}
+              onChange={(v) => setSelectedY(v || 'post_hgb')}
+              size="xs"
+              w={200}
+              allowDeselect={false}
+              leftSection={<Title order={6} c="dimmed" style={{ fontSize: '10px' }}>Y</Title>}
+            />
+            <CloseButton onClick={() => store.removeExploreChart(chartConfig.chartId)} />
+          </Flex>
+        </Flex>
+
+        {/* Chart Area */}
+        <div style={{ flex: 1, minHeight: 0, width: '100%' }} ref={sizeRef}>
+          <Flex direction="row" h={height}>
+            {/* Fixed Y Axis */}
+            <ScatterYAxis
+              height={height}
+              hasNestedBins={hasNestedBins}
+              isDiscrete={isDiscrete}
+              yScale={yScale}
+              theme={theme}
+              varConfig={varConfig}
+              targets={targets}
+              setTargets={setTargets}
+              hoveredTarget={hoveredTarget}
+              setHoveredTarget={setHoveredTarget}
+            />
+
+            {/* Scrollable Content */}
+            <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+              {/* Legend overlay */}
+              <Flex
+                direction="column"
+                gap={2}
+                style={{
+                  position: 'absolute',
+                  top: SCATTER_MARGIN.top + 4,
+                  right: 8,
+                  zIndex: 5,
+                  pointerEvents: 'auto',
+                  background: 'rgba(255,255,255,0.85)',
+                  borderRadius: 4,
+                  padding: '4px 8px',
+                }}
+              >
+                {groups.map((g) => {
+                  const isActive = selectedLegendGroups.has(g.color);
+                  const isDimmed = (hoveredLegendGroup && hoveredLegendGroup !== g.color)
+                    || (selectedLegendGroups.size > 0 && !isActive && !hoveredLegendGroup);
+                  return (
+                    <Flex
+                      key={g.id}
+                      align="center"
+                      gap={4}
+                      onMouseEnter={() => setHoveredLegendGroup(g.color)}
+                      onMouseLeave={() => setHoveredLegendGroup(null)}
+                      onClick={() => setSelectedLegendGroups((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(g.color)) { next.delete(g.color); } else { next.add(g.color); }
+                        return next;
+                      })}
+                      style={{ cursor: 'pointer', opacity: isDimmed ? 0.4 : 1 }}
+                    >
+                      <div style={{
+                        width: 8, height: 8, borderRadius: '50%', background: g.color, flexShrink: 0,
+                        boxShadow: isActive ? `0 0 0 2px ${g.color}40` : undefined,
+                      }}
+                      />
+                      <Text
+                        size="xs"
+                        fw={isActive ? 700 : 400}
+                        style={{ whiteSpace: 'nowrap' }}
                       >
-                        {xAxisOption?.label || selectedX}
-                      </text>
-                    </g>
-                  )}
+                        {g.name || 'Unnamed Group'}
+                      </Text>
+                    </Flex>
+                  );
+                })}
+                {(() => {
+                  const canInteract = groups.length > 0;
+                  const isActive = canInteract && selectedLegendGroups.has('__default__');
+                  const isDimmed = canInteract && ((hoveredLegendGroup && hoveredLegendGroup !== '__default__')
+                    || (selectedLegendGroups.size > 0 && !isActive && !hoveredLegendGroup));
+                  return (
+                    <Flex
+                      align="center"
+                      gap={4}
+                      onMouseEnter={canInteract ? () => setHoveredLegendGroup('__default__') : undefined}
+                      onMouseLeave={canInteract ? () => setHoveredLegendGroup(null) : undefined}
+                      onClick={canInteract ? () => setSelectedLegendGroups((prev) => {
+                        const next = new Set(prev);
+                        if (next.has('__default__')) { next.delete('__default__'); } else { next.add('__default__'); }
+                        return next;
+                      }) : undefined}
+                      style={{ cursor: canInteract ? 'pointer' : 'default', opacity: isDimmed ? 0.4 : 1 }}
+                    >
+                      <div style={{
+                        width: 8, height: 8, borderRadius: '50%', background: theme.colors.gray[5], flexShrink: 0,
+                        boxShadow: isActive ? `0 0 0 2px ${theme.colors.gray[5]}40` : undefined,
+                      }}
+                      />
+                      <Text
+                        size="xs"
+                        fw={isActive ? 700 : 400}
+                        style={{ whiteSpace: 'nowrap' }}
+                      >
+                        All Surgical Cases
+                      </Text>
+                    </Flex>
+                  );
+                })()}
+              </Flex>
 
-                  {/* Discrete: bin backgrounds and labels */}
-                  {isDiscrete && (
+              <Box style={{ overflowX: isDiscrete ? 'auto' : 'hidden', overflowY: 'hidden' }} ref={scrollViewportRef} onScroll={handleScroll}>
+                <div
+                  ref={chartRef}
+                  style={{ width: totalWidth, height, position: 'relative', userSelect: 'none' }}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); requestAnimationFrame(drawPoints); }}
+                >
+                  {/* SVG layer for gridlines, bins, targets, avg, brush */}
+                  <svg width={totalWidth} height={height} style={{ position: 'absolute', top: 0, left: 0 }}>
+                    {/* Gridlines */}
                     <g transform={`translate(0, ${SCATTER_MARGIN.top})`}>
-                      {processedData.map((binGroup, i) => {
-                        const layout = layoutData.binGroupLayout.get(binGroup.id);
-                        if (!layout) return null;
-                        if (layout.x > visibleRange[1] || layout.x + layout.width < visibleRange[0]) return null;
-                        const bgColor = i % 2 === 0 ? theme.colors.gray[3] : theme.colors.gray[1];
-                        const isBinGroupCollapsed = collapsedBinGroups.has(binGroup.id);
-                        return (
-                          <g key={binGroup.id}>
-                            <rect x={layout.x} y={0} width={layout.width} height={innerHeight} fill={bgColor} opacity={0.3} style={{ pointerEvents: 'none' }} />
-                            <Tooltip label={<Text size="xs">{binGroup.label}</Text>} openDelay={200}>
-                              <rect
-                                x={layout.x}
-                                y={!hasNestedBins ? innerHeight : innerHeight + 25}
-                                width={layout.width}
-                                height={25}
-                                fill={isBinGroupCollapsed ? theme.colors.gray[4] : bgColor}
-                                stroke={theme.colors.gray[5]}
-                                strokeWidth={1}
-                              />
-                            </Tooltip>
-                            <text
-                              x={layout.x + layout.width / 2}
-                              y={!hasNestedBins ? innerHeight + 17 : innerHeight + 42}
-                              textAnchor="middle"
-                              fontSize={12}
-                              fontWeight={600}
-                              fill={isBinGroupCollapsed ? theme.colors.gray[6] : theme.colors.gray[9]}
-                              style={{ pointerEvents: 'none' }}
-                            >
-                              {isBinGroupCollapsed ? '...' : layout.label}
-                            </text>
-                            {/* Bin group collapse toggle */}
-                            {!isBinGroupCollapsed && hasNestedBins && (
-                              <>
+                      {yScale.ticks(5).map((tick) => (
+                        <line key={tick} x1={0} x2={totalWidth} y1={yScale(tick)} y2={yScale(tick)} stroke={theme.colors.gray[3]} strokeDasharray="4 4" />
+                      ))}
+                    </g>
+
+                    {/* Continuous x-axis ticks */}
+                    {!isDiscrete && xScale && (
+                      <g transform={`translate(0, ${height - bottomMargin})`}>
+                        {xScale.ticks(8).map((tick) => (
+                          <g key={tick} transform={`translate(${xScale(tick)}, 0)`}>
+                            <line y1={0} y2={6} stroke={theme.colors.gray[5]} />
+                            <text y={18} textAnchor="middle" fontSize={11} fill={theme.colors.gray[6]}>{tick}</text>
+                          </g>
+                        ))}
+                        {/* X-axis label */}
+                        <text
+                          x={totalWidth / 2}
+                          y={bottomMargin - 2}
+                          textAnchor="middle"
+                          fontSize={12}
+                          fontWeight={600}
+                          fill={theme.colors.gray[7]}
+                        >
+                          {xAxisOption?.label || selectedX}
+                        </text>
+                      </g>
+                    )}
+
+                    {/* Discrete: bin backgrounds and labels */}
+                    {isDiscrete && (
+                      <g transform={`translate(0, ${SCATTER_MARGIN.top})`}>
+                        {processedData.map((binGroup, i) => {
+                          const layout = layoutData.binGroupLayout.get(binGroup.id);
+                          if (!layout) return null;
+                          if (layout.x > visibleRange[1] || layout.x + layout.width < visibleRange[0]) return null;
+                          const bgColor = i % 2 === 0 ? theme.colors.gray[3] : theme.colors.gray[1];
+                          const isBinGroupCollapsed = collapsedBinGroups.has(binGroup.id);
+                          return (
+                            <g key={binGroup.id}>
+                              <rect x={layout.x} y={0} width={layout.width} height={innerHeight} fill={bgColor} opacity={0.3} style={{ pointerEvents: 'none' }} />
+                              <Tooltip label={<Text size="xs">{binGroup.label}</Text>} openDelay={200}>
                                 <rect
-                                  x={layout.x + layout.width - 15}
-                                  y={innerHeight + 25}
-                                  width={15}
+                                  x={layout.x}
+                                  y={!hasNestedBins ? innerHeight : innerHeight + 25}
+                                  width={layout.width}
                                   height={25}
-                                  fill="transparent"
-                                  style={{ cursor: 'pointer' }}
-                                  onMouseEnter={() => setHoveredCollapse(binGroup.id)}
-                                  onMouseLeave={() => setHoveredCollapse(null)}
-                                  onClick={(e) => handleToggleBinGroupCollapse(e, binGroup.id)}
+                                  fill={isBinGroupCollapsed ? theme.colors.gray[4] : bgColor}
+                                  stroke={theme.colors.gray[5]}
+                                  strokeWidth={1}
                                 />
-                                {hoveredCollapse === binGroup.id && (
-                                  <path
-                                    d="M 8 5 L 2 12 L 8 19"
-                                    transform={`translate(${layout.x + layout.width - 12}, ${innerHeight + 31}) scale(0.6)`}
-                                    fill="none"
-                                    stroke={theme.colors.gray[7]}
-                                    strokeWidth={2}
-                                    style={{ pointerEvents: 'none' }}
-                                  />
-                                )}
-                              </>
-                            )}
-                            {/* Nested bins */}
-                            {!isBinGroupCollapsed && hasNestedBins && binGroup.nestedBins.map((nb, nbIdx) => {
-                              const nbLayout = layoutData.nestedBinLayout.get(nb.id);
-                              if (!nbLayout) return null;
-                              const isNbCollapsed = collapsedNestedBins.has(nb.id);
-                              const nbColor = nbIdx % 2 === 0 ? theme.colors.gray[2] : theme.colors.gray[0];
-                              return (
-                                <g key={nb.id}>
-                                  <rect x={nbLayout.x} y={innerHeight} width={nbLayout.width} height={25} fill={isNbCollapsed ? theme.colors.gray[4] : nbColor} stroke={theme.colors.gray[4]} strokeWidth={1} />
-                                  <text x={nbLayout.x + nbLayout.width / 2} y={innerHeight + 17} textAnchor="middle" fontSize={10} fontWeight={400} fill={theme.colors.gray[6]} style={{ pointerEvents: 'none' }}>
-                                    {isNbCollapsed ? '...' : nb.label}
-                                  </text>
+                              </Tooltip>
+                              <text
+                                x={layout.x + layout.width / 2}
+                                y={!hasNestedBins ? innerHeight + 17 : innerHeight + 42}
+                                textAnchor="middle"
+                                fontSize={12}
+                                fontWeight={600}
+                                fill={isBinGroupCollapsed ? theme.colors.gray[6] : theme.colors.gray[9]}
+                                style={{ pointerEvents: 'none' }}
+                              >
+                                {isBinGroupCollapsed ? '...' : layout.label}
+                              </text>
+                              {/* Bin group collapse toggle */}
+                              {!isBinGroupCollapsed && hasNestedBins && (
+                                <>
                                   <rect
-                                    x={nbLayout.x + nbLayout.width - 10}
-                                    y={innerHeight}
-                                    width={10}
+                                    x={layout.x + layout.width - 15}
+                                    y={innerHeight + 25}
+                                    width={15}
                                     height={25}
                                     fill="transparent"
                                     style={{ cursor: 'pointer' }}
-                                    onMouseEnter={() => setHoveredCollapse(nb.id)}
+                                    onMouseEnter={() => setHoveredCollapse(binGroup.id)}
                                     onMouseLeave={() => setHoveredCollapse(null)}
-                                    onClick={(e) => handleToggleNestedBinCollapse(e, nb.id)}
+                                    onClick={(e) => handleToggleBinGroupCollapse(e, binGroup.id)}
                                   />
-                                </g>
-                              );
-                            })}
-                            {/* Average line */}
-                            {showAvg && binGroup.avg !== null && (
-                              <AverageLine
-                                x1={layout.x}
-                                x2={layout.x + layout.width}
-                                y={yScale(binGroup.avg)}
-                                label={(
-                                  <Box>
-                                    <Text size="xs">
-                                      {SCATTER_X_AXIS_OPTIONS.find((o) => o.value === selectedX)?.label || selectedX}
-                                      :
-                                      {' '}
-                                      {binGroup.label}
-                                    </Text>
-                                    <Text size="xs">
-                                      <Text component="span" fw={700}>Avg</Text>
-                                      {' '}
-                                      {varConfig.label}
-                                      :
-                                      {' '}
-                                      <Text component="span" fw={700} size="xs">
-                                        {binGroup.avg.toFixed(1)}
+                                  {hoveredCollapse === binGroup.id && (
+                                    <path
+                                      d="M 8 5 L 2 12 L 8 19"
+                                      transform={`translate(${layout.x + layout.width - 12}, ${innerHeight + 31}) scale(0.6)`}
+                                      fill="none"
+                                      stroke={theme.colors.gray[7]}
+                                      strokeWidth={2}
+                                      style={{ pointerEvents: 'none' }}
+                                    />
+                                  )}
+                                </>
+                              )}
+                              {/* Nested bins */}
+                              {!isBinGroupCollapsed && hasNestedBins && binGroup.nestedBins.map((nb, nbIdx) => {
+                                const nbLayout = layoutData.nestedBinLayout.get(nb.id);
+                                if (!nbLayout) return null;
+                                const isNbCollapsed = collapsedNestedBins.has(nb.id);
+                                const nbColor = nbIdx % 2 === 0 ? theme.colors.gray[2] : theme.colors.gray[0];
+                                return (
+                                  <g key={nb.id}>
+                                    <rect x={nbLayout.x} y={innerHeight} width={nbLayout.width} height={25} fill={isNbCollapsed ? theme.colors.gray[4] : nbColor} stroke={theme.colors.gray[4]} strokeWidth={1} />
+                                    <text x={nbLayout.x + nbLayout.width / 2} y={innerHeight + 17} textAnchor="middle" fontSize={10} fontWeight={400} fill={theme.colors.gray[6]} style={{ pointerEvents: 'none' }}>
+                                      {isNbCollapsed ? '...' : nb.label}
+                                    </text>
+                                    <rect
+                                      x={nbLayout.x + nbLayout.width - 10}
+                                      y={innerHeight}
+                                      width={10}
+                                      height={25}
+                                      fill="transparent"
+                                      style={{ cursor: 'pointer' }}
+                                      onMouseEnter={() => setHoveredCollapse(nb.id)}
+                                      onMouseLeave={() => setHoveredCollapse(null)}
+                                      onClick={(e) => handleToggleNestedBinCollapse(e, nb.id)}
+                                    />
+                                  </g>
+                                );
+                              })}
+                              {/* Average line */}
+                              {showAvg && binGroup.avg !== null && (
+                                <AverageLine
+                                  x1={layout.x}
+                                  x2={layout.x + layout.width}
+                                  y={yScale(binGroup.avg)}
+                                  label={(
+                                    <Box>
+                                      <Text size="xs">
+                                        {SCATTER_X_AXIS_OPTIONS.find((o) => o.value === selectedX)?.label || selectedX}
+                                        :
                                         {' '}
-                                        {varConfig.unit}
+                                        {binGroup.label}
                                       </Text>
-                                    </Text>
-                                  </Box>
-                                )}
-                                color={theme.colors.blue[4]}
-                              />
-                            )}
-                          </g>
-                        );
-                      })}
-                    </g>
-                  )}
-
-                  {/* Continuous mode avg line */}
-                  {!isDiscrete && showAvg && processedData[0]?.avg !== null && (
-                    <g transform={`translate(0, ${SCATTER_MARGIN.top})`}>
-                      <AverageLine
-                        x1={0}
-                        x2={totalWidth}
-                        y={yScale(processedData[0].avg!)}
-                        label={(
-                          <Box>
-                            <Text size="xs">
-                              <Text component="span" fw={700}>Avg</Text>
-                              {' '}
-                              {varConfig.label}
-                              :
-                              {' '}
-                              <Text component="span" fw={700} size="xs">
-                                {processedData[0].avg!.toFixed(1)}
-                                {' '}
-                                {varConfig.unit}
-                              </Text>
-                            </Text>
-                          </Box>
-                        )}
-                        color={theme.colors.blue[4]}
-                      />
-                    </g>
-                  )}
-
-                  {/* Target overlay */}
-                  {showTargets && (
-                    <ScatterTargetOverlay
-                      totalWidth={totalWidth}
-                      yScale={yScale}
-                      targets={targets}
-                      theme={theme}
-                      varConfig={varConfig}
-                      setHoveredTarget={setHoveredTarget}
-                    />
-                  )}
-
-                  {/* Brush selection */}
-                  {selection && (
-                    <rect
-                      x={Math.min(selection.x1, selection.x2)}
-                      y={Math.min(selection.y1, selection.y2)}
-                      width={Math.abs(selection.x2 - selection.x1)}
-                      height={Math.abs(selection.y2 - selection.y1)}
-                      fill={theme.colors.orange[2]}
-                      fillOpacity={0.2}
-                      stroke={theme.colors.orange[6]}
-                      strokeDasharray="4 2"
-                    />
-                  )}
-                  {/* Hover crosshair reference lines */}
-                  {tooltipData && (
-                    <g style={{ pointerEvents: 'none' }}>
-                      {/* Vertical line from point down to x-axis */}
-                      <line
-                        x1={tooltipData.x}
-                        x2={tooltipData.x}
-                        y1={SCATTER_MARGIN.top}
-                        y2={height - bottomMargin}
-                        stroke={theme.colors.gray[5]}
-                        strokeWidth={1}
-                        strokeDasharray="4 3"
-                        opacity={0.6}
-                      />
-                      {/* Horizontal line from y-axis to point */}
-                      <line
-                        x1={0}
-                        x2={totalWidth}
-                        y1={tooltipData.y}
-                        y2={tooltipData.y}
-                        stroke={theme.colors.gray[5]}
-                        strokeWidth={1}
-                        strokeDasharray="4 3"
-                        opacity={0.6}
-                      />
-                    </g>
-                  )}
-                </svg>
-
-                {/* Canvas layer for dots */}
-                <canvas
-                  ref={canvasRef}
-                  style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
-                />
-
-                {/* Tooltip anchor */}
-                {tooltipData && (
-                  <Tooltip
-                    label={(
-                      <Box>
-                        <Text size="xs">
-                          Case:
-                          {' '}
-                          {tooltipData.caseData.case_id}
-                        </Text>
-                        <Text size="xs">
-                          {varConfig.label}
-                          :
-                          {' '}
-                          <Text component="span" fw={700} size="xs">
-                            {(tooltipData.caseData[varConfig.key] as number)?.toFixed(1)}
-                            {' '}
-                            {varConfig.unit}
-                          </Text>
-                        </Text>
-                      </Box>
+                                      <Text size="xs">
+                                        <Text component="span" fw={700}>Avg</Text>
+                                        {' '}
+                                        {varConfig.label}
+                                        :
+                                        {' '}
+                                        <Text component="span" fw={700} size="xs">
+                                          {binGroup.avg.toFixed(1)}
+                                          {' '}
+                                          {varConfig.unit}
+                                        </Text>
+                                      </Text>
+                                    </Box>
+                                  )}
+                                  color={theme.colors.blue[4]}
+                                />
+                              )}
+                            </g>
+                          );
+                        })}
+                      </g>
                     )}
-                    position="top"
-                    opened
-                  >
-                    <div style={{ position: 'absolute', left: tooltipData.x - 1, top: tooltipData.y - 1, width: 2, height: 2, pointerEvents: 'none' }} />
-                  </Tooltip>
-                )}
-              </div>
-            </Box>
-          </div>
-        </Flex>
-      </div>
-    </Box>
+
+                    {/* Continuous mode avg line */}
+                    {!isDiscrete && showAvg && processedData[0]?.avg !== null && (
+                      <g transform={`translate(0, ${SCATTER_MARGIN.top})`}>
+                        <AverageLine
+                          x1={0}
+                          x2={totalWidth}
+                          y={yScale(processedData[0].avg!)}
+                          label={(
+                            <Box>
+                              <Text size="xs">
+                                <Text component="span" fw={700}>Avg</Text>
+                                {' '}
+                                {varConfig.label}
+                                :
+                                {' '}
+                                <Text component="span" fw={700} size="xs">
+                                  {processedData[0].avg!.toFixed(1)}
+                                  {' '}
+                                  {varConfig.unit}
+                                </Text>
+                              </Text>
+                            </Box>
+                          )}
+                          color={theme.colors.blue[4]}
+                        />
+                      </g>
+                    )}
+
+                    {/* Target overlay */}
+                    {showTargets && (
+                      <ScatterTargetOverlay
+                        totalWidth={totalWidth}
+                        yScale={yScale}
+                        targets={targets}
+                        theme={theme}
+                        varConfig={varConfig}
+                        setHoveredTarget={setHoveredTarget}
+                      />
+                    )}
+
+                    {/* Brush selection */}
+                    {selection && (
+                      <rect
+                        x={Math.min(selection.x1, selection.x2)}
+                        y={Math.min(selection.y1, selection.y2)}
+                        width={Math.abs(selection.x2 - selection.x1)}
+                        height={Math.abs(selection.y2 - selection.y1)}
+                        fill={theme.colors.orange[2]}
+                        fillOpacity={0.2}
+                        stroke={theme.colors.orange[6]}
+                        strokeDasharray="4 2"
+                      />
+                    )}
+                    {/* Hover crosshair reference lines */}
+                    {tooltipData && (
+                      <g style={{ pointerEvents: 'none' }}>
+                        {/* Vertical line from point down to x-axis */}
+                        <line
+                          x1={tooltipData.x}
+                          x2={tooltipData.x}
+                          y1={SCATTER_MARGIN.top}
+                          y2={height - bottomMargin}
+                          stroke={theme.colors.gray[5]}
+                          strokeWidth={1}
+                          strokeDasharray="4 3"
+                          opacity={0.6}
+                        />
+                        {/* Horizontal line from y-axis to point */}
+                        <line
+                          x1={0}
+                          x2={totalWidth}
+                          y1={tooltipData.y}
+                          y2={tooltipData.y}
+                          stroke={theme.colors.gray[5]}
+                          strokeWidth={1}
+                          strokeDasharray="4 3"
+                          opacity={0.6}
+                        />
+                      </g>
+                    )}
+                  </svg>
+
+                  {/* Canvas layer for dots */}
+                  <canvas
+                    ref={canvasRef}
+                    style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+                  />
+
+                  {/* Tooltip anchor */}
+                  {tooltipData && (
+                    <Tooltip
+                      label={(
+                        <Box>
+                          <Text size="xs">
+                            Case:
+                            {' '}
+                            {tooltipData.caseData.case_id}
+                          </Text>
+                          <Text size="xs">
+                            {varConfig.label}
+                            :
+                            {' '}
+                            <Text component="span" fw={700} size="xs">
+                              {(tooltipData.caseData[varConfig.key] as number)?.toFixed(1)}
+                              {' '}
+                              {varConfig.unit}
+                            </Text>
+                          </Text>
+                        </Box>
+                      )}
+                      position="top"
+                      opened
+                    >
+                      <div style={{ position: 'absolute', left: tooltipData.x - 1, top: tooltipData.y - 1, width: 2, height: 2, pointerEvents: 'none' }} />
+                    </Tooltip>
+                  )}
+                </div>
+              </Box>
+            </div>
+          </Flex>
+        </div>
+      </Box>
+      <AddGroupModal
+        opened={groupModalOpened}
+        onClose={() => setGroupModalOpened(false)}
+        name={formName}
+        onNameChange={setFormName}
+        color={formColor}
+        onColorChange={setFormColor}
+        conditions={formConditions}
+        onConditionsChange={setFormConditions}
+        existingGroups={groups}
+        editingGroupId={editingGroupId}
+        onRemoveGroup={(id) => {
+          setGroups((prev) => prev.filter((g) => g.id !== id));
+          if (editingGroupId === id) {
+            setEditingGroupId(null);
+            setFormName('');
+            setFormColor(chartColors[groups.length > 1 ? groups.length - 1 : 0]);
+            setFormConditions([{ field: '', operator: '>', value: 0 }]);
+          }
+        }}
+        onEditGroup={(group) => {
+          setEditingGroupId(group.id);
+          setFormName(group.name);
+          setFormColor(group.color);
+          setFormConditions([...group.conditions]);
+        }}
+        onResetForm={() => {
+          setEditingGroupId(null);
+          setFormName('');
+          setFormColor(chartColors[groups.length]);
+          setFormConditions([{ field: '', operator: '>', value: 0 }]);
+        }}
+        onSave={() => {
+          const defaultName = formName || formConditions.map((cond) => {
+            const fieldDef = CONDITION_FIELDS_FLAT.find((f) => f.value === cond.field);
+            const label = fieldDef?.label || cond.field;
+            return `${label} ${cond.operator} ${cond.value}`;
+          }).join(', ');
+          if (editingGroupId) {
+            setGroups((prev) => prev.map((g) => (
+              g.id === editingGroupId
+                ? { ...g, name: defaultName, color: formColor, conditions: formConditions }
+                : g)));
+          } else {
+            const newGroup: GroupDefinition = {
+              id: `grp-${Date.now()}`,
+              name: defaultName,
+              color: formColor,
+              conditions: [...formConditions],
+            };
+            setGroups((prev) => [...prev, newGroup]);
+          }
+          setEditingGroupId(null);
+          setFormName('');
+          setFormColor(chartColors[groups.length + (editingGroupId ? 0 : 1)]);
+          setFormConditions([{ field: '', operator: '>', value: 0 }]);
+        }}
+        isFormValid={formConditions.length > 0 && formConditions.every((c) => c.field !== '')}
+      />
+    </>
   ));
 }
 // #endregion

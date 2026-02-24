@@ -52,7 +52,7 @@ const CONDITION_GROUPS = [
 ];
 
 // Flattened list for easy lookup
-const CONDITION_FIELDS_FLAT = CONDITION_GROUPS.flatMap(g => g.items);
+export const CONDITION_FIELDS_FLAT = CONDITION_GROUPS.flatMap((g) => g.items);
 
 const OPERATOR_OPTIONS = [
   { value: '>', label: '>' },
@@ -269,7 +269,6 @@ export function AddGroupModal({
         </Stack>
 
         <Group justify="flex-end" mt="md">
-          <Button variant="default" onClick={onClose}>Close</Button>
           <Button onClick={onSave} disabled={!isFormValid}>
             {editingGroupId ? "Save Group" : "Add Group"}
           </Button>
