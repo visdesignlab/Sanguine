@@ -1,5 +1,5 @@
 import {
-  useMemo, useState, useContext, memo, useCallback, useEffect, useRef,
+  useMemo, useState, useContext, memo, useCallback, useEffect, useRef, useId,
 } from 'react';
 import { useElementSize } from '@mantine/hooks';
 import {
@@ -193,6 +193,71 @@ const ScatterTargetOverlay = memo(({
   );
 });
 ScatterTargetOverlay.displayName = 'ScatterTargetOverlay';
+
+// #region AverageLine
+const AverageLine = memo(({
+  x1, x2, y, label, color,
+}: {
+  x1: number;
+  x2: number;
+  y: number;
+  label: React.ReactNode;
+  color: string;
+}) => {
+  const [hovered, setHovered] = useState(false);
+  const [mouseX, setMouseX] = useState(0);
+  const gradientId = useId();
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    setMouseX(e.nativeEvent.offsetX);
+  }, []);
+
+  return (
+    <g>
+      <defs>
+        <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1={x1} x2={x2} y1={y} y2={y}>
+          <stop offset="0%" stopColor={color} stopOpacity={0} />
+          <stop offset="5%" stopColor={color} stopOpacity={1} />
+          <stop offset="95%" stopColor={color} stopOpacity={1} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <Tooltip label={label} opened={hovered} position="top" offset={5}>
+        <rect
+          x={mouseX}
+          y={y}
+          width={1}
+          height={1}
+          fill="transparent"
+          style={{ pointerEvents: 'none' }}
+        />
+      </Tooltip>
+      <line
+        x1={x1}
+        x2={x2}
+        y1={y}
+        y2={y}
+        stroke={`url(#${gradientId})`}
+        strokeWidth={1.5}
+        strokeOpacity={0.6}
+        style={{ pointerEvents: 'none' }}
+      />
+      {/* Hit Area */}
+      <line
+        x1={x1}
+        x2={x2}
+        y1={y}
+        y2={y}
+        stroke="transparent"
+        strokeWidth={10}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onMouseMove={handleMouseMove}
+      />
+    </g>
+  );
+});
+AverageLine.displayName = 'AverageLine';
 // #endregion
 
 // #region ScatterPlot Export
@@ -666,9 +731,9 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   },
                 ]}
                 styles={(t) => ({
-                  root: { backgroundColor: 'transparent', border: `1px solid ${t.colors.gray[3]}`, minHeight: 30 },
+                  root: { backgroundColor: 'transparent', border: `1px solid ${t.colors.gray[3]}` },
                   control: { border: '0 !important' },
-                  label: { padding: '0 8px', fontWeight: 500 },
+                  label: { padding: '3px 8px', marginBottom: 2, fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' },
                   indicator: { backgroundColor: t.colors.gray[2] },
                 })}
               />
@@ -875,18 +940,34 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                             })}
                             {/* Average line */}
                             {showAvg && binGroup.avg !== null && (
-                              <g>
-                                <line
-                                  x1={layout.x}
-                                  x2={layout.x + layout.width}
-                                  y1={yScale(binGroup.avg)}
-                                  y2={yScale(binGroup.avg)}
-                                  stroke={theme.colors.blue[4]}
-                                  strokeWidth={1.5}
-                                  strokeOpacity={0.6}
-                                  style={{ pointerEvents: 'none' }}
-                                />
-                              </g>
+                              <AverageLine
+                                x1={layout.x}
+                                x2={layout.x + layout.width}
+                                y={yScale(binGroup.avg)}
+                                label={(
+                                  <Box>
+                                    <Text size="xs">
+                                      {SCATTER_X_AXIS_OPTIONS.find((o) => o.value === selectedX)?.label || selectedX}
+                                      :
+                                      {' '}
+                                      {binGroup.label}
+                                    </Text>
+                                    <Text size="xs">
+                                      <Text component="span" fw={700}>Avg</Text>
+                                      {' '}
+                                      {varConfig.label}
+                                      :
+                                      {' '}
+                                      <Text component="span" fw={700} size="xs">
+                                        {binGroup.avg.toFixed(1)}
+                                        {' '}
+                                        {varConfig.unit}
+                                      </Text>
+                                    </Text>
+                                  </Box>
+                                )}
+                                color={theme.colors.blue[4]}
+                              />
                             )}
                           </g>
                         );
@@ -897,15 +978,27 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   {/* Continuous mode avg line */}
                   {!isDiscrete && showAvg && processedData[0]?.avg !== null && (
                     <g transform={`translate(0, ${SCATTER_MARGIN.top})`}>
-                      <line
+                      <AverageLine
                         x1={0}
                         x2={totalWidth}
-                        y1={yScale(processedData[0].avg!)}
-                        y2={yScale(processedData[0].avg!)}
-                        stroke={theme.colors.blue[4]}
-                        strokeWidth={1.5}
-                        strokeOpacity={0.6}
-                        style={{ pointerEvents: 'none' }}
+                        y={yScale(processedData[0].avg!)}
+                        label={(
+                          <Box>
+                            <Text size="xs">
+                              <Text component="span" fw={700}>Avg</Text>
+                              {' '}
+                              {varConfig.label}
+                              :
+                              {' '}
+                              <Text component="span" fw={700} size="xs">
+                                {processedData[0].avg!.toFixed(1)}
+                                {' '}
+                                {varConfig.unit}
+                              </Text>
+                            </Text>
+                          </Box>
+                        )}
+                        color={theme.colors.blue[4]}
                       />
                     </g>
                   )}
@@ -934,6 +1027,33 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                       stroke={theme.colors.orange[6]}
                       strokeDasharray="4 2"
                     />
+                  )}
+                  {/* Hover crosshair reference lines */}
+                  {tooltipData && (
+                    <g style={{ pointerEvents: 'none' }}>
+                      {/* Vertical line from point down to x-axis */}
+                      <line
+                        x1={tooltipData.x}
+                        x2={tooltipData.x}
+                        y1={SCATTER_MARGIN.top}
+                        y2={height - bottomMargin}
+                        stroke={theme.colors.gray[5]}
+                        strokeWidth={1}
+                        strokeDasharray="4 3"
+                        opacity={0.6}
+                      />
+                      {/* Horizontal line from y-axis to point */}
+                      <line
+                        x1={0}
+                        x2={totalWidth}
+                        y1={tooltipData.y}
+                        y2={tooltipData.y}
+                        stroke={theme.colors.gray[5]}
+                        strokeWidth={1}
+                        strokeDasharray="4 3"
+                        opacity={0.6}
+                      />
+                    </g>
                   )}
                 </svg>
 
