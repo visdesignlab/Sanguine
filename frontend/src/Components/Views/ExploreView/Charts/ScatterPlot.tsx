@@ -175,8 +175,13 @@ const ScatterTargetOverlay = memo(({
       </Tooltip>
       <line x1={0} x2={totalWidth} y1={yScale(targets.min)} y2={yScale(targets.min)} stroke={theme.colors.teal[4]} strokeDasharray="5 5" strokeWidth={1} />
       <line
-        x1={0} x2={totalWidth} y1={yScale(targets.min)} y2={yScale(targets.min)}
-        stroke="transparent" strokeWidth={10} style={{ cursor: 'default' }}
+        x1={0}
+        x2={totalWidth}
+        y1={yScale(targets.min)}
+        y2={yScale(targets.min)}
+        stroke="transparent"
+        strokeWidth={10}
+        style={{ cursor: 'default' }}
         onMouseEnter={() => { setHoveredTarget('min'); setHoveredLine('min'); }}
         onMouseLeave={() => { setHoveredTarget(null); setHoveredLine(null); }}
         onMouseMove={handleMouseMove}
@@ -187,8 +192,13 @@ const ScatterTargetOverlay = memo(({
       </Tooltip>
       <line x1={0} x2={totalWidth} y1={yScale(targets.max)} y2={yScale(targets.max)} stroke={theme.colors.indigo[3]} strokeDasharray="5 5" strokeWidth={1} />
       <line
-        x1={0} x2={totalWidth} y1={yScale(targets.max)} y2={yScale(targets.max)}
-        stroke="transparent" strokeWidth={10} style={{ cursor: 'default' }}
+        x1={0}
+        x2={totalWidth}
+        y1={yScale(targets.max)}
+        y2={yScale(targets.max)}
+        stroke="transparent"
+        strokeWidth={10}
+        style={{ cursor: 'default' }}
         onMouseEnter={() => { setHoveredTarget('max'); setHoveredLine('max'); }}
         onMouseLeave={() => { setHoveredTarget(null); setHoveredLine(null); }}
         onMouseMove={handleMouseMove}
@@ -345,7 +355,10 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       };
     }
     return {
-      label: selectedY, unit: '', min: 0, max: 100,
+      label: selectedY,
+      unit: '',
+      min: 0,
+      max: 100,
       key: selectedY as keyof DumbbellCase,
       defaultTargets: { min: 0, max: 50 },
     };
@@ -416,8 +429,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     () => getProcessedScatterData(rawData, selectedX, varConfig.key, sortMode, isDiscrete),
     [rawData, selectedX, varConfig.key, sortMode, isDiscrete],
   );
-
-  console.log("Raw data:", rawData);
 
   // Layout (discrete mode)
   const layoutData = useMemo(() => {
@@ -551,6 +562,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [appliedSelection, setAppliedSelection] = useState<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
   const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing'>('idle');
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
+  const [brushHoverCursor, setBrushHoverCursor] = useState<string>('crosshair');
   const initialSelection = useRef<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
   const dragStart = useRef<{ x: number, y: number } | null>(null);
 
@@ -673,9 +685,13 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
     if (y < chartTop || y > chartBottom) { setAppliedSelection(null); setSelection(null); return; }
     setInteractionMode('selecting');
-    setSelection({ x1: x, y1: y, x2: x, y2: y });
+    setSelection({
+      x1: x, y1: y, x2: x, y2: y,
+    });
     setAppliedSelection(null);
-    initialSelection.current = { x1: x, y1: y, x2: x, y2: y };
+    initialSelection.current = {
+      x1: x, y1: y, x2: x, y2: y,
+    };
   }, [selection, height, bottomMargin]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -705,6 +721,26 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         }
         requestAnimationFrame(drawPoints);
       }
+
+      // Check for brush hover interaction to set dynamic resize/move cursor
+      let cursor = 'crosshair';
+      if (selection) {
+        const minX = Math.min(selection.x1, selection.x2);
+        const maxX = Math.max(selection.x1, selection.x2);
+        const minY = Math.min(selection.y1, selection.y2);
+        const maxY = Math.max(selection.y1, selection.y2);
+        const tol = 10;
+        if (Math.abs(x - minX) < tol && Math.abs(y - minY) < tol) cursor = 'nw-resize';
+        else if (Math.abs(x - maxX) < tol && Math.abs(y - minY) < tol) cursor = 'ne-resize';
+        else if (Math.abs(x - minX) < tol && Math.abs(y - maxY) < tol) cursor = 'sw-resize';
+        else if (Math.abs(x - maxX) < tol && Math.abs(y - maxY) < tol) cursor = 'se-resize';
+        else if (Math.abs(y - minY) < tol && x > minX && x < maxX) cursor = 'n-resize';
+        else if (Math.abs(y - maxY) < tol && x > minX && x < maxX) cursor = 's-resize';
+        else if (Math.abs(x - minX) < tol && y > minY && y < maxY) cursor = 'w-resize';
+        else if (Math.abs(x - maxX) < tol && y > minY && y < maxY) cursor = 'e-resize';
+        else if (x > minX && x < maxX && y > minY && y < maxY) cursor = 'move';
+      }
+      setBrushHoverCursor(cursor);
     }
 
     if (interactionMode === 'selecting' && initialSelection.current) {
@@ -717,7 +753,9 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       let clampedDy = dy;
       if (cMinY + dy < chartTop) clampedDy = chartTop - cMinY;
       if (cMaxY + dy > chartBottom) clampedDy = chartBottom - cMaxY;
-      setSelection({ x1: initialSelection.current.x1 + dx, y1: initialSelection.current.y1 + clampedDy, x2: initialSelection.current.x2 + dx, y2: initialSelection.current.y2 + clampedDy });
+      setSelection({
+        x1: initialSelection.current.x1 + dx, y1: initialSelection.current.y1 + clampedDy, x2: initialSelection.current.x2 + dx, y2: initialSelection.current.y2 + clampedDy,
+      });
     } else if (interactionMode === 'resizing' && initialSelection.current) {
       const minX = Math.min(initialSelection.current.x1, initialSelection.current.x2);
       const maxX = Math.max(initialSelection.current.x1, initialSelection.current.x2);
@@ -728,7 +766,9 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       if (resizeHandle?.includes('e')) nMaxX = x;
       if (resizeHandle?.includes('n')) nMinY = clampedY;
       if (resizeHandle?.includes('s')) nMaxY = clampedY;
-      setSelection({ x1: nMinX, y1: nMinY, x2: nMaxX, y2: nMaxY });
+      setSelection({
+        x1: nMinX, y1: nMinY, x2: nMaxX, y2: nMaxY,
+      });
     }
   }, [interactionMode, selection, height, resizeHandle, bottomMargin, spatialIndex, pointPositions, drawPoints, isDiscrete, processedData, rawData]);
 
@@ -819,7 +859,9 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   styles={(t) => ({
                     root: { backgroundColor: 'transparent', border: `1px solid ${t.colors.gray[3]}` },
                     control: { border: '0 !important' },
-                    label: { padding: '3px 8px', marginBottom: 2, fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+                    label: {
+                      padding: '3px 8px', marginBottom: 2, fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    },
                     indicator: { backgroundColor: t.colors.gray[2] },
                   })}
                 />
@@ -849,7 +891,11 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                     variant={showAvg ? 'light' : 'default'}
                     color="gray"
                     onClick={() => setShowAvg(!showAvg)}
-                    styles={{ root: { marginLeft: -1, borderColor: showAvg ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
+                    styles={{
+                      root: {
+                        marginLeft: -1, borderColor: showAvg ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9],
+                      },
+                    }}
                   >
                     Avg
                   </Button>
@@ -932,7 +978,11 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                       style={{ cursor: 'pointer', opacity: isDimmed ? 0.4 : 1 }}
                     >
                       <div style={{
-                        width: 8, height: 8, borderRadius: '50%', background: g.color, flexShrink: 0,
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: g.color,
+                        flexShrink: 0,
                         boxShadow: isActive ? `0 0 0 2px ${g.color}40` : undefined,
                       }}
                       />
@@ -965,7 +1015,11 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                       style={{ cursor: canInteract ? 'pointer' : 'default', opacity: isDimmed ? 0.4 : 1 }}
                     >
                       <div style={{
-                        width: 8, height: 8, borderRadius: '50%', background: theme.colors.gray[5], flexShrink: 0,
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: theme.colors.gray[5],
+                        flexShrink: 0,
                         boxShadow: isActive ? `0 0 0 2px ${theme.colors.gray[5]}40` : undefined,
                       }}
                       />
@@ -984,11 +1038,17 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
               <Box style={{ overflowX: isDiscrete ? 'auto' : 'hidden', overflowY: 'hidden' }} ref={scrollViewportRef} onScroll={handleScroll}>
                 <div
                   ref={chartRef}
-                  style={{ width: totalWidth, height, position: 'relative', userSelect: 'none' }}
+                  style={{
+                    width: totalWidth,
+                    height,
+                    position: 'relative',
+                    userSelect: 'none',
+                    cursor: interactionMode !== 'idle' ? (interactionMode === 'moving' ? 'move' : (interactionMode === 'resizing' && resizeHandle ? `${resizeHandle}-resize` : 'crosshair')) : brushHoverCursor,
+                  }}
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
-                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); requestAnimationFrame(drawPoints); }}
+                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); setBrushHoverCursor('crosshair'); requestAnimationFrame(drawPoints); }}
                 >
                   {/* SVG layer for gridlines, bins, targets, avg, brush */}
                   <svg width={totalWidth} height={height} style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -1230,7 +1290,9 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   {/* Canvas layer for dots */}
                   <canvas
                     ref={canvasRef}
-                    style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+                    style={{
+                      position: 'absolute', top: 0, left: 0, pointerEvents: 'none',
+                    }}
                   />
 
                   {/* Tooltip anchor */}
@@ -1258,7 +1320,10 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                       position="top"
                       opened
                     >
-                      <div style={{ position: 'absolute', left: tooltipData.x - 1, top: tooltipData.y - 1, width: 2, height: 2, pointerEvents: 'none' }} />
+                      <div style={{
+                        position: 'absolute', left: tooltipData.x - 1, top: tooltipData.y - 1, width: 2, height: 2, pointerEvents: 'none',
+                      }}
+                      />
                     </Tooltip>
                   )}
                 </div>
@@ -1308,7 +1373,9 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
           if (editingGroupId) {
             setGroups((prev) => prev.map((g) => (
               g.id === editingGroupId
-                ? { ...g, name: defaultName, color: formColor, conditions: formConditions }
+                ? {
+                  ...g, name: defaultName, color: formColor, conditions: formConditions,
+                }
                 : g)));
           } else {
             const newGroup: GroupDefinition = {
