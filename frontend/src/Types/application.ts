@@ -382,30 +382,7 @@ export const LAB_RESULTS = [
     units: { sum: 'g/dL', avg: 'g/dL' },
     decimals: { sum: 0, avg: 2 },
   },
-  {
-    value: 'pre_ferritin',
-    metricId: 'ferritin',
-    metricLabel: 'Ferritin',
-    label: {
-      short: 'Pre-op Ferritin', base: 'Pre-op Ferritin', sum: 'Total', avg: 'Avg',
-    },
-    units: { sum: 'ng/mL', avg: 'ng/mL' },
-    range: { min: 0, max: 400 },
-    target: { min: 32.5, max: 350 },
-    decimals: { sum: 0, avg: 1 },
-  },
-  {
-    value: 'post_ferritin',
-    metricId: 'ferritin',
-    metricLabel: 'Ferritin',
-    label: {
-      short: 'Post-op Ferritin', base: 'Post-op Ferritin', sum: 'Total', avg: 'Avg',
-    },
-    units: { sum: 'ng/mL', avg: 'ng/mL' },
-    range: { min: 0, max: 400 },
-    target: { min: 12.5, max: 22.5 },
-    decimals: { sum: 0, avg: 1 },
-  },
+
   {
     value: 'pre_plt',
     metricId: 'platelet',
@@ -812,8 +789,7 @@ export interface DumbbellCase {
   visit_no: string;
   pre_hgb: number;
   post_hgb: number;
-  pre_ferritin: number;
-  post_ferritin: number;
+
   pre_plt: number;
   post_plt: number;
   pre_fibrinogen: number;

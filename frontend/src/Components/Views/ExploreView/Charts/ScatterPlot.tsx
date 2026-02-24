@@ -773,6 +773,17 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                           <text y={18} textAnchor="middle" fontSize={11} fill={theme.colors.gray[6]}>{tick}</text>
                         </g>
                       ))}
+                      {/* X-axis label */}
+                      <text
+                        x={totalWidth / 2}
+                        y={bottomMargin - 2}
+                        textAnchor="middle"
+                        fontSize={12}
+                        fontWeight={600}
+                        fill={theme.colors.gray[7]}
+                      >
+                        {xAxisOption?.label || selectedX}
+                      </text>
                     </g>
                   )}
 

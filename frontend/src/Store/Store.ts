@@ -1735,8 +1735,7 @@ export class RootStore {
              CAST(visit_no AS VARCHAR) as visit_no,
              pre_hgb,
              post_hgb,
-             pre_ferritin,
-             post_ferritin,
+
              pre_plt,
              post_plt,
              pre_fibrinogen,
@@ -1789,7 +1788,6 @@ export class RootStore {
              ecmo,
              
              pre_hgb, post_hgb,
-             pre_ferritin, post_ferritin,
              pre_plt, post_plt,
              pre_fibrinogen, post_fibrinogen,
              pre_inr, post_inr,

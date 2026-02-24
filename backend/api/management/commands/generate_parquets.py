@@ -41,8 +41,8 @@ class Command(BaseCommand):
             for c in cases:
                 c["los"] = float(c["los"]) if c["los"] is not None else None
                 # float decimals
-                for field in ['pre_hgb', 'pre_ferritin', 'pre_plt', 'pre_fibrinogen', 'pre_inr',
-                              'post_hgb', 'post_ferritin', 'post_plt', 'post_fibrinogen', 'post_inr',
+                for field in ['pre_hgb', 'pre_plt', 'pre_fibrinogen', 'pre_inr',
+                              'post_hgb', 'post_plt', 'post_fibrinogen', 'post_inr',
                               'rbc_cost', 'ffp_cost', 'plt_cost', 'cryo_cost', 'cell_saver_cost', 'total_cost']:
                     c[field] = float(c[field]) if c[field] is not None else None
 
@@ -113,13 +113,13 @@ class Command(BaseCommand):
             pa.field("year", pa.string(), nullable=True),
 
             pa.field("pre_hgb", pa.float32(), nullable=True),
-            pa.field("pre_ferritin", pa.float32(), nullable=True),
+
             pa.field("pre_plt", pa.float32(), nullable=True),
             pa.field("pre_fibrinogen", pa.float32(), nullable=True),
             pa.field("pre_inr", pa.float32(), nullable=True),
 
             pa.field("post_hgb", pa.float32(), nullable=True),
-            pa.field("post_ferritin", pa.float32(), nullable=True),
+
             pa.field("post_plt", pa.float32(), nullable=True),
             pa.field("post_fibrinogen", pa.float32(), nullable=True),
             pa.field("post_inr", pa.float32(), nullable=True),

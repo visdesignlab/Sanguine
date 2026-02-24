@@ -1545,7 +1545,6 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
           />
           <Select
             data={Array.from(new Set(LAB_RESULTS.map((l) => l.metricId)))
-              .filter((id) => id !== 'ferritin')
               .map((id) => {
                 const res = LAB_RESULTS.find((l) => l.metricId === id);
                 return {

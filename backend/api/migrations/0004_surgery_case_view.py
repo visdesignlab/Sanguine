@@ -24,7 +24,7 @@ def create_materialize_proc(apps, schema_editor):
 
             -- Pre-op Labs (Last result before surgery start)
             pre_hgb,
-            pre_ferritin,
+
             pre_plt,
             pre_fibrinogen,
             pre_inr,
@@ -32,7 +32,7 @@ def create_materialize_proc(apps, schema_editor):
             -- Post-op Labs (First result after surgery end - within reasonable window e.g., 24h? or just next?)
             -- Decision: Just next result.
             post_hgb,
-            post_ferritin,
+
             post_plt,
             post_fibrinogen,
             post_inr,
@@ -82,13 +82,7 @@ def create_materialize_proc(apps, schema_editor):
                 AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
                 ORDER BY l.lab_draw_dtm DESC LIMIT 1
             ) as pre_hgb,
-            (
-                SELECT l.result_value FROM Lab l 
-                WHERE l.visit_no = sc.visit_no 
-                AND l.lab_draw_dtm < sc.surgery_start_dtm 
-                AND UPPER(l.result_desc) LIKE '%FERRITIN%'
-                ORDER BY l.lab_draw_dtm DESC LIMIT 1
-            ) as pre_ferritin,
+
             (
                 SELECT l.result_value FROM Lab l 
                 WHERE l.visit_no = sc.visit_no 
@@ -119,13 +113,7 @@ def create_materialize_proc(apps, schema_editor):
                 AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
                 ORDER BY l.lab_draw_dtm ASC LIMIT 1
             ) as post_hgb,
-            (
-                SELECT l.result_value FROM Lab l 
-                WHERE l.visit_no = sc.visit_no 
-                AND l.lab_draw_dtm > sc.surgery_end_dtm 
-                AND UPPER(l.result_desc) LIKE '%FERRITIN%'
-                ORDER BY l.lab_draw_dtm ASC LIMIT 1
-            ) as post_ferritin,
+
             (
                 SELECT l.result_value FROM Lab l 
                 WHERE l.visit_no = sc.visit_no 
@@ -255,13 +243,13 @@ class Migration(migrations.Migration):
                 year char(4),
 
                 pre_hgb DECIMAL(10, 4),
-                pre_ferritin DECIMAL(10, 4),
+
                 pre_plt DECIMAL(10, 4),
                 pre_fibrinogen DECIMAL(10, 4),
                 pre_inr DECIMAL(10, 4),
 
                 post_hgb DECIMAL(10, 4),
-                post_ferritin DECIMAL(10, 4),
+
                 post_plt DECIMAL(10, 4),
                 post_fibrinogen DECIMAL(10, 4),
                 post_inr DECIMAL(10, 4),
