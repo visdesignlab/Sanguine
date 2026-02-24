@@ -1776,11 +1776,11 @@ export class RootStore {
              quarter,
              month,
              
-             intraop_rbc_units,
-             intraop_ffp_units,
-             intraop_plt_units,
-             intraop_cryo_units,
-             intraop_cell_saver_ml,
+             intraop_rbc_units AS rbc_units,
+             intraop_ffp_units AS ffp_units,
+             intraop_plt_units AS plt_units,
+             intraop_cryo_units AS cryo_units,
+             intraop_cell_saver_ml AS cell_saver_ml,
              
              los,
              death,
@@ -1795,8 +1795,7 @@ export class RootStore {
              pre_inr, post_inr,
              
              total_cost,
-             rbc_cost,
-             case_id
+             rbc_cost
            FROM filteredSurgeryCases
            LIMIT 10000
         `;

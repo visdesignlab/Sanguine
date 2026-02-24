@@ -20,11 +20,13 @@ import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
 import {
-  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, dashboardXAxisVars, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS, ExploreTableRowOptions, ExploreTableConfig,
+  costYAxisOptions, ExploreTableRowOptions, ExploreTableConfig,
+  SCATTER_X_AXIS_OPTIONS, SCATTER_Y_AXIS_OPTIONS,
+  ScatterXAxisVar, ScatterYAxisVar,
 } from '../../../Types/application';
-import { ScatterPlot } from './Charts/ScatterPlot';
 import { DumbbellChart } from './Charts/DumbbellChart';
 import ExploreTable from './Charts/ExploreTable';
+import { ScatterPlot } from './Charts/ScatterPlot';
 
 export function ExploreView() {
   const store = useContext(Store);
@@ -55,20 +57,20 @@ export function ExploreView() {
   // Add Chart Modal State ---------------------------------
   const [isAddModalOpen, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
 
-  const [chartType, setChartType] = useState<'cost' | 'scatter' | 'dumbbell' | 'exploreTable'>('cost');
+  const [chartType, setChartType] = useState<'cost' | 'dumbbell' | 'exploreTable' | 'scatterPlot'>('cost');
   const [aggregation, setAggregation] = useState<'sum' | 'avg' | 'none'>('sum');
   const [costGroupVar, setCostGroupVar] = useState<string>('');
   const [exploreTableGroupVar, setExploreTableGroupVar] = useState<string>('');
-  const [scatterXAxisVar, setScatterXAxisVar] = useState<string>('quarter');
-  const [scatterYAxisVar, setScatterYAxisVar] = useState<string>('');
+  const [scatterXVar, setScatterXVar] = useState<string>('');
+  const [scatterYVar, setScatterYVar] = useState<string>('');
 
   const resetModal = useCallback(() => {
     setChartType('cost');
     setAggregation('sum');
     setCostGroupVar('');
     setExploreTableGroupVar('');
-    setScatterXAxisVar('quarter');
-    setScatterYAxisVar('');
+    setScatterXVar('');
+    setScatterYVar('');
   }, []);
 
   const handleOpenAdd = () => {
@@ -185,15 +187,6 @@ export function ExploreView() {
         ],
         twoValsPerRow: false,
       });
-    } else if (chartType === 'scatter') {
-      if (!scatterXAxisVar || !scatterYAxisVar) return;
-      store.addExploreChart({
-        chartId: id,
-        chartType: 'scatterPlot',
-        xAxisVar: scatterXAxisVar as typeof dashboardXAxisVars[number],
-        yAxisVar: scatterYAxisVar as typeof dashboardYAxisVars[number],
-        aggregation: 'none',
-      });
     } else if (chartType === 'dumbbell') {
       store.addExploreChart({
         chartId: id,
@@ -201,6 +194,14 @@ export function ExploreView() {
         xAxisVar: 'provider_visit',
         yAxisVar: 'hgb',
         aggregation: 'none',
+      });
+    } else if (chartType === 'scatterPlot') {
+      store.addExploreChart({
+        chartId: id,
+        chartType: 'scatterPlot',
+        xAxisVar: (scatterXVar || 'pre_hgb') as ScatterXAxisVar,
+        yAxisVar: (scatterYVar || 'post_hgb') as ScatterYAxisVar,
+        aggregation: (aggregation === 'none' ? 'none' : aggregation) as 'sum' | 'avg' | 'none',
       });
     }
     closeAddModal();
@@ -213,31 +214,6 @@ export function ExploreView() {
   ];
 
   const costGroupOptions = costYAxisOptions.map((o) => ({ value: o.value, label: o.label }));
-
-  // Scatter X Options: Time Aggregations + Blood Components
-  const scatterXOptions = [
-    ...Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({
-      value,
-      label,
-    })),
-    ...BLOOD_COMPONENT_OPTIONS.map((b) => ({
-      value: b.value,
-      label: b.label.base,
-    })),
-  ];
-
-  // Scatter Y Options: Lab Results + Blood Components
-  // (User requested more correct options; typically Y is Lab Results or Blood Components)
-  const scatterYOptions = [
-    ...LAB_RESULT_OPTIONS.map((l) => ({
-      value: l.value,
-      label: l.label.base,
-    })),
-    ...BLOOD_COMPONENT_OPTIONS.map((b) => ({
-      value: b.value,
-      label: b.label.base,
-    })),
-  ];
 
   // -------------------------------------------------------
   return useObserver(() => (
@@ -274,24 +250,26 @@ export function ExploreView() {
             value={chartType}
             data={[
               { value: 'cost', label: 'Costs & Savings' },
-              { value: 'scatter', label: 'Scatter' },
               { value: 'exploreTable', label: 'Heatmap' },
               { value: 'dumbbell', label: 'Dumbbell Chart' },
+              { value: 'scatterPlot', label: 'Scatter Plot' },
             ]}
             onChange={(v) => {
-              const val = (v as 'cost' | 'scatter' | 'exploreTable' | 'dumbbell') || 'cost';
+              const val = (v as 'cost' | 'exploreTable' | 'dumbbell' | 'scatterPlot') || 'cost';
               setChartType(val);
               if (val === 'exploreTable') {
                 setAggregation('avg');
+              } else if (val === 'scatterPlot') {
+                setAggregation('none');
               }
             }}
           />
-          {(chartType === 'cost' || chartType === 'exploreTable') && (
+          {(chartType === 'cost' || chartType === 'exploreTable' || chartType === 'scatterPlot') && (
             <Select
               label="Aggregation"
               value={aggregation}
-              data={aggregationOptions}
-              onChange={(v) => setAggregation((v as 'sum' | 'avg') || 'sum')}
+              data={chartType === 'scatterPlot' ? [...aggregationOptions, { value: 'none', label: 'None' }] : aggregationOptions}
+              onChange={(v) => setAggregation((v as 'sum' | 'avg' | 'none') || 'sum')}
             />
           )}
 
@@ -311,25 +289,24 @@ export function ExploreView() {
               data={ExploreTableRowOptions}
               onChange={(v) => setExploreTableGroupVar(v || '')}
             />
-          ) : (
-            <>
+          ) : chartType === 'scatterPlot' ? (
+            <Flex gap="md" direction="column">
               <Select
-                label="X Variable"
-                placeholder="Choose X variable"
-                value={scatterXAxisVar}
-                data={scatterXOptions}
-                onChange={(v) => setScatterXAxisVar(v || '')}
+                label="X-Axis"
+                placeholder="Choose X-axis variable"
+                value={scatterXVar}
+                data={SCATTER_X_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                onChange={(v) => setScatterXVar(v || '')}
               />
               <Select
-                label="Y Variable"
-                placeholder="Choose Y variable"
-                value={scatterYAxisVar}
-                data={scatterYOptions}
-                onChange={(v) => setScatterYAxisVar(v || '')}
+                label="Y-Axis"
+                placeholder="Choose Y-axis variable"
+                value={scatterYVar}
+                data={SCATTER_Y_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                onChange={(v) => setScatterYVar(v || '')}
               />
-            </>
-
-          )}
+            </Flex>
+          ) : null}
 
           {chartType === 'dumbbell' && (
             <Text c="dimmed" fs="italic" size="sm">
@@ -341,7 +318,7 @@ export function ExploreView() {
             disabled={
               (chartType === 'cost' && !costGroupVar)
               || (chartType === 'exploreTable' && !exploreTableGroupVar)
-              || (chartType === 'scatter' && (!scatterXAxisVar || !scatterYAxisVar))
+              || (chartType === 'scatterPlot' && (!scatterXVar || !scatterYVar))
             }
             fullWidth
           >
@@ -376,9 +353,9 @@ export function ExploreView() {
               withBorder
               className={classes.gridItem}
             >
-              {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
               {chartConfig.chartType === 'exploreTable' && <ExploreTable chartConfig={chartConfig} />}
               {chartConfig.chartType === 'dumbbell' && <DumbbellChart chartConfig={chartConfig} />}
+              {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
             </Card>
           ))}
         </ResponsiveGridLayout>

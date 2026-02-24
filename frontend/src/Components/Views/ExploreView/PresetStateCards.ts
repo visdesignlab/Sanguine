@@ -80,9 +80,9 @@ export const presetStateCards: PresetGroup[] = [
           {
             chartId: 'preset-scatter-prevent-anemia',
             chartType: 'scatterPlot',
-            xAxisVar: 'rbc_units',
-            yAxisVar: 'post_op_hgb',
-            aggregation: 'sum',
+            xAxisVar: 'quarter',
+            yAxisVar: 'post_hgb',
+            aggregation: 'none',
           },
         ],
         chartLayouts: {

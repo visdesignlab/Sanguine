@@ -824,8 +824,33 @@ export interface DumbbellCase {
 export type DumbbellData = DumbbellCase[];
 
 // --- Scatter plots ---
-// TODO: Update scatterPlotConfig type
-export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS | 'none', 'scatterPlot'>;
+export const SCATTER_X_AXIS_OPTIONS = [
+  ...Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({
+    value: value as keyof typeof TIME_AGGREGATION_OPTIONS,
+    label,
+    isDiscrete: true,
+  })),
+  ...BLOOD_COMPONENT_OPTIONS.map((b) => ({
+    value: b.value,
+    label: b.label.base,
+    isDiscrete: b.value !== 'cell_saver_ml',
+  })),
+  ...LAB_RESULT_OPTIONS.map((l) => ({
+    value: l.value,
+    label: l.label.base,
+    isDiscrete: false,
+  })),
+];
+
+export const SCATTER_Y_AXIS_OPTIONS = [
+  ...LAB_RESULT_OPTIONS.map((l) => ({ value: l.value, label: l.label.base })),
+  ...BLOOD_COMPONENT_OPTIONS.map((b) => ({ value: b.value, label: b.label.base })),
+];
+
+export type ScatterXAxisVar = typeof SCATTER_X_AXIS_OPTIONS[number]['value'];
+export type ScatterYAxisVar = typeof SCATTER_Y_AXIS_OPTIONS[number]['value'];
+
+export type ScatterPlotConfig = ChartConfig<ScatterXAxisVar, ScatterYAxisVar, keyof typeof AGGREGATION_OPTIONS | 'none', 'scatterPlot'>;
 export type ScatterPlotData = ScatterChartSeries[];
 
 // --- Explore Table ---
