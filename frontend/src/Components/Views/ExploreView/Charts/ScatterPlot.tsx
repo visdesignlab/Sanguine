@@ -417,6 +417,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     [rawData, selectedX, varConfig.key, sortMode, isDiscrete],
   );
 
+  console.log("Raw data:", rawData);
+
   // Layout (discrete mode)
   const layoutData = useMemo(() => {
     if (!isDiscrete) return { binGroupLayout: new Map(), nestedBinLayout: new Map(), totalWidth: 0 };

@@ -31,6 +31,50 @@ export type SpatialIndex = Map<string, number[]>;
 
 // ---------- Data Processing ----------
 
+function sortCases(cases: DumbbellCase[], yKey: keyof DumbbellCase, sortMode: string): DumbbellCase[] {
+  if (sortMode === 'asc') {
+    cases.sort((a, b) => {
+      const aVal = a[yKey] as number | null | undefined;
+      const bVal = b[yKey] as number | null | undefined;
+      if (aVal == null && bVal == null) return 0;
+      if (aVal == null) return -1;
+      if (bVal == null) return 1;
+      return aVal - bVal;
+    });
+  } else if (sortMode === 'desc') {
+    cases.sort((a, b) => {
+      const aVal = a[yKey] as number | null | undefined;
+      const bVal = b[yKey] as number | null | undefined;
+      if (aVal == null && bVal == null) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      return bVal - aVal;
+    });
+  } else {
+    // 'time' or default: loosely sort by month string or case_id
+    cases.sort((a, b) => {
+      const m1 = ((a as unknown) as Record<string, unknown>).month as string || '';
+      const m2 = ((b as unknown) as Record<string, unknown>).month as string || '';
+      if (m1 !== m2) return m1.localeCompare(m2);
+      return a.case_id.localeCompare(b.case_id);
+    });
+  }
+  return cases;
+}
+
+function computeAvg(cases: DumbbellCase[], yKey: keyof DumbbellCase): number | null {
+  let sum = 0;
+  let count = 0;
+  cases.forEach((c) => {
+    const val = c[yKey] as number | undefined;
+    if (val !== undefined && val !== null) {
+      sum += val;
+      count += 1;
+    }
+  });
+  return count > 0 ? sum / count : null;
+}
+
 /**
  * Groups raw DumbbellCase[] into bin groups for discrete x-axis mode.
  * For continuous x-axis mode, returns a single flat bin with all cases.
@@ -61,8 +105,8 @@ export function getProcessedScatterData(
   rawData.forEach((d: DumbbellCase) => {
     let key = '';
     if (selectedX === 'year_quarter') {
-      const date = new Date(d.surgery_start_dtm);
-      key = `${date.getFullYear()}`;
+      const yearRaw = ((d as unknown) as Record<string, unknown>).year as string;
+      key = yearRaw || 'Unknown';
     } else if (selectedX === 'rbc_units') {
       const val = ((d as unknown) as Record<string, unknown>).rbc_units as number ?? 0;
       key = `${val} ${val === 1 ? 'RBC' : 'RBCs'}`;
@@ -115,9 +159,8 @@ export function getProcessedScatterData(
       const groupedByNestedBin = new Map<string, DumbbellCase[]>();
 
       cases.forEach((d) => {
-        const date = new Date(d.surgery_start_dtm);
-        const q = Math.floor((date.getMonth() + 3) / 3);
-        const subKey = `Q${q}`;
+        const qRaw = ((d as unknown) as Record<string, unknown>).quarter as string;
+        const subKey = qRaw ? qRaw.split('-')[1] : 'Unknown';
         if (!groupedByNestedBin.has(subKey)) groupedByNestedBin.set(subKey, []);
         groupedByNestedBin.get(subKey)?.push(d);
       });
@@ -133,7 +176,13 @@ export function getProcessedScatterData(
       const nestedBins = Array.from(groupedByNestedBin.entries())
         .map(([nestedBinLabel, nestedBinCases]) => {
           const sortedCases = [...nestedBinCases];
-          sortedCases.sort((a, b) => a.surgery_start_dtm - b.surgery_start_dtm);
+          // Since we don't have surgery_start_dtm, sort loosely by month string or case_id
+          sortedCases.sort((a, b) => {
+            const m1 = ((a as unknown) as Record<string, unknown>).month as string || '';
+            const m2 = ((b as unknown) as Record<string, unknown>).month as string || '';
+            if (m1 !== m2) return m1.localeCompare(m2);
+            return a.case_id.localeCompare(b.case_id);
+          });
           return {
             id: `${binGroupId}-${nestedBinLabel}`,
             label: nestedBinLabel,
@@ -287,61 +336,20 @@ export function findNearestPoint(
     for (let dy = -1; dy <= 1; dy += 1) {
       const key = cellKey(cx + dx, cy + dy);
       const bucket = index.get(key);
-      if (!bucket) continue;
-
-      for (let i = 0; i < bucket.length; i += 1) {
-        const p = points[bucket[i]];
-        const distSq = (p.x - mouseX) ** 2 + (p.y - mouseY) ** 2;
-        if (distSq < nearestDist) {
-          nearestDist = distSq;
-          nearest = p;
+      if (bucket) {
+        for (let i = 0; i < bucket.length; i += 1) {
+          const p = points[bucket[i]];
+          const distSq = (p.x - mouseX) ** 2 + (p.y - mouseY) ** 2;
+          if (distSq < nearestDist) {
+            nearestDist = distSq;
+            nearest = p;
+          }
         }
       }
     }
   }
 
   return nearest;
-}
-
-// ---------- Helpers ----------
-
-function sortCases(cases: DumbbellCase[], yKey: keyof DumbbellCase, sortMode: string): DumbbellCase[] {
-  if (sortMode === 'asc') {
-    cases.sort((a, b) => {
-      const aVal = a[yKey] as number | null | undefined;
-      const bVal = b[yKey] as number | null | undefined;
-      if (aVal == null && bVal == null) return 0;
-      if (aVal == null) return -1;
-      if (bVal == null) return 1;
-      return aVal - bVal;
-    });
-  } else if (sortMode === 'desc') {
-    cases.sort((a, b) => {
-      const aVal = a[yKey] as number | null | undefined;
-      const bVal = b[yKey] as number | null | undefined;
-      if (aVal == null && bVal == null) return 0;
-      if (aVal == null) return 1;
-      if (bVal == null) return -1;
-      return bVal - aVal;
-    });
-  } else {
-    // 'time' or default: sort by surgery time
-    cases.sort((a, b) => a.surgery_start_dtm - b.surgery_start_dtm);
-  }
-  return cases;
-}
-
-function computeAvg(cases: DumbbellCase[], yKey: keyof DumbbellCase): number | null {
-  let sum = 0;
-  let count = 0;
-  cases.forEach((c) => {
-    const val = c[yKey] as number | undefined;
-    if (val !== undefined && val !== null) {
-      sum += val;
-      count += 1;
-    }
-  });
-  return count > 0 ? sum / count : null;
 }
 
 // Export the PointPosition type for use in ScatterPlot.tsx
