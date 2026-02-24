@@ -80,7 +80,7 @@ export const presetStateCards: PresetGroup[] = [
           {
             chartId: 'preset-scatter-prevent-anemia',
             chartType: 'scatterPlot',
-            xAxisVar: 'quarter',
+            xAxisVar: 'year_quarter',
             yAxisVar: 'post_hgb',
             aggregation: 'none',
           },

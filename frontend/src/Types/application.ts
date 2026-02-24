@@ -1,7 +1,5 @@
 // Time formatting ------------------------------------------------
 // Time period types
-// TODO: Update ScatterPlot data type
-import { ScatterChartSeries } from '@mantine/charts';
 
 export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
 export type Month = `${number}-${string}`; // e.g. "2023-Jan"
@@ -785,6 +783,17 @@ export const DUMBBELL_DRAG_LIMIT = 1.0;
 
 export type DumbbellSortState = 'none' | 'pre' | 'post' | 'gap';
 
+// Scatter Plot constants
+export const SCATTER_MARGIN = {
+  top: 40, right: 30, bottom: 60, left: 60,
+};
+export const SCATTER_DOT_RADIUS = 3;
+export const SCATTER_CHAR_WIDTH_CASE = 4;
+export const SCATTER_EMPTY_NESTED_BIN_WIDTH = 30;
+export const SCATTER_DRAG_LIMIT = 1.0;
+
+export type ScatterSortState = 'asc' | 'desc' | 'time';
+
 export interface DumbbellLabConfig {
   label: string;
   unit: string;
@@ -825,11 +834,7 @@ export type DumbbellData = DumbbellCase[];
 
 // --- Scatter plots ---
 export const SCATTER_X_AXIS_OPTIONS = [
-  ...Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({
-    value: value as keyof typeof TIME_AGGREGATION_OPTIONS,
-    label,
-    isDiscrete: true,
-  })),
+  { value: 'year_quarter' as const, label: 'Year & Quarter', isDiscrete: true },
   ...BLOOD_COMPONENT_OPTIONS.map((b) => ({
     value: b.value,
     label: b.label.base,
@@ -851,7 +856,7 @@ export type ScatterXAxisVar = typeof SCATTER_X_AXIS_OPTIONS[number]['value'];
 export type ScatterYAxisVar = typeof SCATTER_Y_AXIS_OPTIONS[number]['value'];
 
 export type ScatterPlotConfig = ChartConfig<ScatterXAxisVar, ScatterYAxisVar, keyof typeof AGGREGATION_OPTIONS | 'none', 'scatterPlot'>;
-export type ScatterPlotData = ScatterChartSeries[];
+export type ScatterPlotData = DumbbellCase[];
 
 // --- Explore Table ---
 

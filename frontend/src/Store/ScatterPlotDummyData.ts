@@ -1,4 +1,4 @@
-import { ScatterPlotData, LabResult, BloodComponent } from '../Types/application';
+import { LabResult, BloodComponent } from '../Types/application';
 
 // Reference Lines Configuration
 export const SCATTER_PLOT_REFERENCE_LINES: Record<string, { value: number; label: string; color: string; direction: 'x' | 'y'; maxAdjustment?: number }[]> = {
@@ -94,7 +94,8 @@ const generateScatterData = (
 };
 
 // Generate dummy data for all scatter plot combinations
-export const SCATTER_PLOT_DUMMY_DATA: Record<string, ScatterPlotData> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const SCATTER_PLOT_DUMMY_DATA: Record<string, any> = {
     // RBC Units vs Post-op Hemoglobin
     sum_post_hgb_rbc_units: [
         {
