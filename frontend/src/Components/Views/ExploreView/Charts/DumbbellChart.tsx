@@ -1,5 +1,5 @@
 import {
-  useMemo, useState, useContext, memo, useCallback, useEffect, useRef, useId,
+  useMemo, useState, useContext, memo, useCallback, useEffect, useRef,
 } from 'react';
 import { useElementSize } from '@mantine/hooks';
 import {
@@ -397,73 +397,10 @@ const TargetOverlay = memo(({
 });
 // #endregion
 
-// #region Average Line
-const AverageLine = memo(({
-  x1, x2, y, label, color,
-}: {
-  x1: number;
-  x2: number;
-  y: number;
-  label: React.ReactNode;
-  color: string;
-}) => {
-  const [hovered, setHovered] = useState(false);
-  const [mouseX, setMouseX] = useState(0);
-  const gradientId = useId();
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    setMouseX(e.nativeEvent.offsetX);
-  }, []);
-
-  return (
-    <g>
-      <defs>
-        <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1={x1} x2={x2} y1={y} y2={y}>
-          <stop offset="0%" stopColor={color} stopOpacity={0} />
-          <stop offset="5%" stopColor={color} stopOpacity={1} />
-          <stop offset="95%" stopColor={color} stopOpacity={1} />
-          <stop offset="100%" stopColor={color} stopOpacity={0} />
-        </linearGradient>
-      </defs>
-      <Tooltip label={label} opened={hovered} position="top" offset={5}>
-        <rect
-          x={mouseX}
-          y={y}
-          width={1}
-          height={1}
-          fill="transparent"
-          style={{ pointerEvents: 'none' }}
-        />
-      </Tooltip>
-      <line
-        x1={x1}
-        x2={x2}
-        y1={y}
-        y2={y}
-        stroke={`url(#${gradientId})`}
-        strokeWidth={1.5}
-        strokeOpacity={0.6}
-        style={{ pointerEvents: 'none' }}
-      />
-      {/* Hit Area */}
-      <line
-        x1={x1}
-        x2={x2}
-        y1={y}
-        y2={y}
-        stroke="transparent"
-        strokeWidth={10}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        onMouseMove={handleMouseMove}
-      />
-    </g>
-  );
-});
+// #endregion
 
 DumbbellYAxis.displayName = 'DumbbellYAxis';
 TargetOverlay.displayName = 'TargetOverlay';
-AverageLine.displayName = 'MedianLine';
 // #endregion
 
 // #region Dumbbell Chart Content
@@ -674,8 +611,11 @@ export const DumbbellChartContent = memo(({
 
   // Canvas rendering for cases
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const hoveredCaseRef = useRef<{ caseData: DumbbellCase; x: number; preY: number | null; postY: number | null } | null>(null);
+  const gradientCacheRef = useRef<Map<string, CanvasGradient>>(new Map());
+  const hoveredCaseRef = useRef<{ caseData: DumbbellCase; x: number; preY: number | null; postY: number | null; hoveredDot: 'pre' | 'post' | null } | null>(null);
   const [tooltipData, setTooltipData] = useState<{ x: number; y: number; caseData: DumbbellCase; preVal: number | null; postVal: number | null } | null>(null);
+  const hoveredAvgRef = useRef<{ bgId: string; type: 'pre' | 'post' } | null>(null);
+  const [avgTooltipData, setAvgTooltipData] = useState<{ bgId: string; type: 'pre' | 'post'; x: number; y: number; val: number; bgLabel: string } | null>(null);
 
   const drawDumbbells = useCallback(() => {
     const canvas = canvasRef.current;
@@ -690,11 +630,75 @@ export const DumbbellChartContent = memo(({
     ctx.save();
     ctx.scale(dpr, dpr);
 
+    // Draw grid lines
+    ctx.strokeStyle = theme.colors.gray[3];
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    yScale.ticks(5).forEach((tick) => {
+      const cy = yScale(tick) + DUMBBELL_MARGIN.top;
+      ctx.beginPath();
+      ctx.moveTo(0, cy);
+      ctx.lineTo(totalWidth - DUMBBELL_MARGIN.right, cy);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]); // Reset dash for subsequent drawing
+
     const hovered = hoveredCaseRef.current;
     const sel = appliedSelection;
 
+    const getGradient = (gradWidth: number, baseColorHex: string) => {
+      const key = `${gradWidth.toFixed(1)}-${baseColorHex}`;
+      let grad = gradientCacheRef.current.get(key);
+      if (!grad) {
+        grad = ctx.createLinearGradient(0, 0, gradWidth, 0);
+        grad.addColorStop(0, `${baseColorHex}00`);
+        grad.addColorStop(0.05, `${baseColorHex}FF`);
+        grad.addColorStop(0.95, `${baseColorHex}FF`);
+        grad.addColorStop(1, `${baseColorHex}00`);
+        gradientCacheRef.current.set(key, grad);
+      }
+      return grad;
+    };
+
     for (let bgi = 0; bgi < processedData.length; bgi += 1) {
       const binGroup = processedData[bgi];
+      const bgLayout = binGroupLayout.get(binGroup.id);
+
+      // Draw median lines
+      if (showMedian && bgLayout && !collapsedBinGroups.has(binGroup.id)) {
+        const { avgPre, avgPost } = binGroup;
+        const bgX = bgLayout.x;
+        const bgW = bgLayout.width;
+
+        // Only draw if visible
+        if (bgX <= visibleRange[1] && bgX + bgW >= visibleRange[0]) {
+          if (showPre && avgPre !== null) {
+            const cy = yScale(avgPre) + DUMBBELL_MARGIN.top;
+            ctx.save();
+            ctx.translate(bgX, cy);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(bgW, 0);
+            ctx.strokeStyle = getGradient(bgW, theme.colors.teal[4]);
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+          }
+          if (showPost && avgPost !== null) {
+            const cy = yScale(avgPost) + DUMBBELL_MARGIN.top;
+            ctx.save();
+            ctx.translate(bgX, cy);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(bgW, 0);
+            ctx.strokeStyle = getGradient(bgW, theme.colors.indigo[4]);
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+      }
+
       if (!collapsedBinGroups.has(binGroup.id)) {
         for (let nbi = 0; nbi < binGroup.nestedBins.length; nbi += 1) {
           const nestedBin = binGroup.nestedBins[nbi];
@@ -778,7 +782,7 @@ export const DumbbellChartContent = memo(({
     }
 
     ctx.restore();
-  }, [processedData, collapsedBinGroups, collapsedNestedBins, nestedBinLayout, visibleRange, labConfig, yScale, showPre, showPost, appliedSelection, isSelected, theme]);
+  }, [processedData, collapsedBinGroups, collapsedNestedBins, nestedBinLayout, visibleRange, labConfig, yScale, showPre, showPost, appliedSelection, isSelected, theme, binGroupLayout, showMedian, totalWidth]);
 
   // Redraw when deps change
   useEffect(() => { drawDumbbells(); }, [drawDumbbells]);
@@ -816,7 +820,7 @@ export const DumbbellChartContent = memo(({
     }
 
     let bestDist = 8; // hit radius
-    let bestCase: { caseData: DumbbellCase; x: number; preY: number | null; postY: number | null } | null = null;
+    let bestCase: { caseData: DumbbellCase; x: number; preY: number | null; postY: number | null; hoveredDot: 'pre' | 'post' | null } | null = null;
 
     for (let bgi = 0; bgi < processedData.length; bgi += 1) {
       const binGroup = processedData[bgi];
@@ -842,13 +846,22 @@ export const DumbbellChartContent = memo(({
                   const cyPost = postVal !== null && showPost ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
 
                   let minDy = Infinity;
-                  if (cyPre !== null) minDy = Math.min(minDy, Math.abs(my - cyPre));
-                  if (cyPost !== null) minDy = Math.min(minDy, Math.abs(my - cyPost));
+                  let dot: 'pre' | 'post' | null = null;
+                  if (cyPre !== null) {
+                    const dt = Math.abs(my - cyPre);
+                    if (dt < minDy) { minDy = dt; dot = 'pre'; }
+                  }
+                  if (cyPost !== null) {
+                    const dt = Math.abs(my - cyPost);
+                    if (dt < minDy) { minDy = dt; dot = 'post'; }
+                  }
 
                   const dist = Math.sqrt(dx * dx + Math.min(minDy, bestDist) * Math.min(minDy, bestDist));
                   if (dist < bestDist) {
                     bestDist = dist;
-                    bestCase = { caseData: d, x: caseX, preY: cyPre, postY: cyPost };
+                    bestCase = {
+                      caseData: d, x: caseX, preY: cyPre, postY: cyPost, hoveredDot: dot,
+                    };
                   }
                 }
               }
@@ -858,14 +871,58 @@ export const DumbbellChartContent = memo(({
       }
     }
 
+    let hoveredAvg: { bgId: string; type: 'pre' | 'post'; x: number; y: number; val: number; bgLabel: string } | null = null;
+    if (!bestCase && showMedian) {
+      for (const binGroup of processedData) {
+        if (!collapsedBinGroups.has(binGroup.id)) {
+          const bgLayout = binGroupLayout.get(binGroup.id);
+          if (bgLayout && mx >= bgLayout.x && mx <= bgLayout.x + bgLayout.width) {
+            let minAvgDy = Infinity;
+            if (showPre && binGroup.avgPre !== null) {
+              const cy = yScale(binGroup.avgPre) + DUMBBELL_MARGIN.top;
+              const dy = Math.abs(my - cy);
+              if (dy < 6 && dy < minAvgDy) {
+                minAvgDy = dy;
+                hoveredAvg = {
+                  bgId: binGroup.id, type: 'pre', x: bgLayout.x + bgLayout.width / 2, y: cy, val: binGroup.avgPre, bgLabel: bgLayout.label,
+                };
+              }
+            }
+            if (showPost && binGroup.avgPost !== null) {
+              const cy = yScale(binGroup.avgPost) + DUMBBELL_MARGIN.top;
+              const dy = Math.abs(my - cy);
+              if (dy < 6 && dy < minAvgDy) {
+                minAvgDy = dy;
+                hoveredAvg = {
+                  bgId: binGroup.id, type: 'post', x: bgLayout.x + bgLayout.width / 2, y: cy, val: binGroup.avgPost, bgLabel: bgLayout.label,
+                };
+              }
+            }
+          }
+        }
+      }
+    }
+
     const prevId = hoveredCaseRef.current?.caseData.case_id;
+    const prevDot = hoveredCaseRef.current?.hoveredDot;
     const newId = bestCase?.caseData.case_id;
-    if (prevId !== newId) {
+    const newDot = bestCase?.hoveredDot;
+
+    const prevAvgId = hoveredAvgRef.current?.bgId;
+    const prevAvgType = hoveredAvgRef.current?.type;
+    const newAvgId = hoveredAvg?.bgId;
+    const newAvgType = hoveredAvg?.type;
+
+    let redrawNeeded = false;
+
+    if (prevId !== newId || prevDot !== newDot) {
       hoveredCaseRef.current = bestCase;
       if (bestCase) {
         const preVal = bestCase.caseData[labConfig.preKey] as number | null;
         const postVal = bestCase.caseData[labConfig.postKey] as number | null;
-        const tipY = bestCase.preY ?? bestCase.postY ?? my;
+        const tipY = bestCase.hoveredDot === 'post'
+          ? (bestCase.postY ?? bestCase.preY ?? my)
+          : (bestCase.preY ?? bestCase.postY ?? my);
         setTooltipData({
           x: bestCase.x,
           y: tipY,
@@ -876,9 +933,18 @@ export const DumbbellChartContent = memo(({
       } else {
         setTooltipData(null);
       }
+      redrawNeeded = true;
+    }
+
+    if (prevAvgId !== newAvgId || prevAvgType !== newAvgType) {
+      hoveredAvgRef.current = hoveredAvg;
+      setAvgTooltipData(hoveredAvg);
+    }
+
+    if (redrawNeeded) {
       requestAnimationFrame(drawDumbbells);
     }
-  }, [processedData, collapsedBinGroups, collapsedNestedBins, nestedBinLayout, labConfig, yScale, showPre, showPost, height, bottomMargin, interactionMode, drawDumbbells]);
+  }, [processedData, collapsedBinGroups, collapsedNestedBins, nestedBinLayout, binGroupLayout, showMedian, labConfig, yScale, showPre, showPost, height, bottomMargin, interactionMode, drawDumbbells]);
 
   const chartBody = useMemo(() => (
     <g transform={`translate(0, ${DUMBBELL_MARGIN.top})`}>
@@ -904,11 +970,6 @@ export const DumbbellChartContent = memo(({
           />
         );
       })}
-      {yScale.ticks(5).map((tick) => (
-        <g key={tick} transform={`translate(0, ${yScale(tick)})`}>
-          <line x1={0} x2={totalWidth - DUMBBELL_MARGIN.right} y1={0} y2={0} stroke={theme.colors.gray[3]} strokeDasharray="4 4" />
-        </g>
-      ))}
 
       {processedData.map((binGroup, binGroupIdx) => {
         const isBinGroupCollapsed = collapsedBinGroups.has(binGroup.id);
@@ -921,39 +982,30 @@ export const DumbbellChartContent = memo(({
         const binGroupLabel = layout ? layout.label : binGroup.id;
         const binGroupColor = binGroupIdx % 2 === 0 ? theme.colors.gray[3] : theme.colors.gray[1];
 
-        const { avgPre, avgPost } = binGroup;
-
         return (
           <g key={binGroup.id}>
-            <Tooltip
-              label={(
-                <Box>
-                  <Text size="xs">
-                    {(() => {
-                      if (selectedX === 'surgeon') return `Surgical Cases for ${binGroup.label}`;
-                      if (selectedX === 'anesthesiologist') return `Surgical Cases for ${binGroup.label}`;
-                      if (selectedX === 'year_quarter') return `Surgical Cases in ${binGroup.label}`;
-                      if (['rbc', 'platelet', 'cryo', 'ffp'].includes(selectedX)) {
-                        return `Surgical Cases where ${binGroup.label} Transfused`;
-                      }
-                      if (selectedX === 'cell_salvage') return `Surgical Cases where ${binGroup.label} used`;
-                      return binGroup.label;
-                    })()}
-                  </Text>
-                </Box>
-              )}
-              openDelay={200}
+            <rect
+              x={binGroupX}
+              y={!hasNestedBins ? innerHeight : innerHeight + 25}
+              width={binGroupWidth}
+              height={25}
+              fill={isBinGroupCollapsed ? theme.colors.gray[4] : binGroupColor}
+              stroke={theme.colors.gray[5]}
+              strokeWidth={1}
             >
-              <rect
-                x={binGroupX}
-                y={!hasNestedBins ? innerHeight : innerHeight + 25}
-                width={binGroupWidth}
-                height={25}
-                fill={isBinGroupCollapsed ? theme.colors.gray[4] : binGroupColor}
-                stroke={theme.colors.gray[5]}
-                strokeWidth={1}
-              />
-            </Tooltip>
+              <title>
+                {(() => {
+                  if (selectedX === 'surgeon') return `Surgical Cases for ${binGroup.label}`;
+                  if (selectedX === 'anesthesiologist') return `Surgical Cases for ${binGroup.label}`;
+                  if (selectedX === 'year_quarter') return `Surgical Cases in ${binGroup.label}`;
+                  if (['rbc', 'platelet', 'cryo', 'ffp'].includes(selectedX)) {
+                    return `Surgical Cases where ${binGroup.label} Transfused`;
+                  }
+                  if (selectedX === 'cell_salvage') return `Surgical Cases where ${binGroup.label} used`;
+                  return binGroup.label;
+                })()}
+              </title>
+            </rect>
 
             <text
               x={binGroupX + binGroupWidth / 2}
@@ -1018,30 +1070,19 @@ export const DumbbellChartContent = memo(({
                         style={{ pointerEvents: 'none' }}
                       />
                       {hasNestedBins && (
-                        <Tooltip
-                          label={(
-                            <Box>
-                              <Text size="xs">
-                                Surgical Cases in
-                                {' '}
-                                {nestedBin.label}
-                                {' '}
-                                {binGroup.label}
-                              </Text>
-                            </Box>
-                          )}
-                          openDelay={200}
+                        <rect
+                          x={currentNestedBinX}
+                          y={innerHeight}
+                          width={nestedBinWidth}
+                          height={25}
+                          fill={isNestedBinCollapsed ? theme.colors.gray[4] : nestedBinColor}
+                          stroke={theme.colors.gray[4]}
+                          strokeWidth={1}
                         >
-                          <rect
-                            x={currentNestedBinX}
-                            y={innerHeight}
-                            width={nestedBinWidth}
-                            height={25}
-                            fill={isNestedBinCollapsed ? theme.colors.gray[4] : nestedBinColor}
-                            stroke={theme.colors.gray[4]}
-                            strokeWidth={1}
-                          />
-                        </Tooltip>
+                          <title>
+                            {`Surgical Cases in ${nestedBin.label} ${binGroup.label}`}
+                          </title>
+                        </rect>
                       )}
                       {/* Nested Bin Label */}
                       {hasNestedBins && (
@@ -1083,79 +1124,13 @@ export const DumbbellChartContent = memo(({
                     </g>
                   );
                 })}
-
-                {/* Average Lines */}
-                {showMedian && showPre && avgPre !== null && (
-                  <AverageLine
-                    x1={binGroupX}
-                    x2={binGroupX + binGroupWidth}
-                    y={yScale(avgPre)}
-                    label={(
-                      <Box>
-                        <Text size="xs">
-                          {DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label}
-                          :
-                          {' '}
-                          {binGroup.label}
-                        </Text>
-                        <Text size="xs">
-                          <Text component="span" fw={700}>Median</Text>
-                          {' '}
-                          Pre-op
-                          {' '}
-                          {labConfig.label}
-                          :
-                          {' '}
-                          <Text component="span" fw={700} size="xs">
-                            {avgPre.toFixed(1)}
-                            {' '}
-                            {labConfig.unit}
-                          </Text>
-                        </Text>
-                      </Box>
-                    )}
-                    color={theme.colors.teal[4]}
-                  />
-                )}
-                {showMedian && showPost && avgPost !== null && (
-                  <AverageLine
-                    x1={binGroupX}
-                    x2={binGroupX + binGroupWidth}
-                    y={yScale(avgPost)}
-                    label={(
-                      <Box>
-                        <Text size="xs">
-                          {DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label}
-                          :
-                          {' '}
-                          {binGroup.label}
-                        </Text>
-                        <Text size="xs">
-                          <Text component="span" fw={700}>Median</Text>
-                          {' '}
-                          Post-op
-                          {' '}
-                          {labConfig.label}
-                          :
-                          {' '}
-                          <Text component="span" fw={700} size="xs">
-                            {avgPost.toFixed(1)}
-                            {' '}
-                            {labConfig.unit}
-                          </Text>
-                        </Text>
-                      </Box>
-                    )}
-                    color={theme.colors.indigo[4]}
-                  />
-                )}
               </g>
             )}
           </g>
         );
       })}
     </g>
-  ), [processedData, collapsedBinGroups, collapsedNestedBins, hoveredCollapse, theme, labConfig, yScale, innerHeight, hasNestedBins, onToggleBinGroupCollapse, onToggleNestedBinCollapse, setHoveredCollapse, totalWidth, showMedian, binGroupLayout, nestedBinLayout, selectedX, visibleRange]);
+  ), [processedData, collapsedBinGroups, collapsedNestedBins, hoveredCollapse, theme, innerHeight, hasNestedBins, onToggleBinGroupCollapse, onToggleNestedBinCollapse, setHoveredCollapse, binGroupLayout, nestedBinLayout, selectedX, visibleRange]);
 
   return (
     <div
@@ -1167,7 +1142,10 @@ export const DumbbellChartContent = memo(({
         userSelect: 'none',
       }}
       onMouseDown={handleMouseDown}
-      onMouseMove={(e) => { handleMouseMove(e); handleCanvasHover(e); }}
+      onMouseMove={(e) => {
+        handleMouseMove(e);
+        handleCanvasHover(e);
+      }}
       onMouseUp={handleMouseUp}
       onMouseLeave={() => {
         handleMouseUp();
@@ -1246,7 +1224,40 @@ export const DumbbellChartContent = memo(({
           position="top"
           opened
         >
-          <div style={{ position: 'absolute', left: tooltipData.x - 1, top: tooltipData.y - 1, width: 2, height: 2, pointerEvents: 'none' }} />
+          <div style={{
+            position: 'absolute', left: tooltipData.x - 1, top: tooltipData.y - 1, width: 2, height: 2, pointerEvents: 'none',
+          }}
+          />
+        </Tooltip>
+      )}
+      {avgTooltipData && (
+        <Tooltip
+          label={(
+            <Box>
+              <Text size="xs" fw={600}>
+                {avgTooltipData.bgLabel}
+                {' '}
+                Average
+              </Text>
+              <Text size="xs">
+                {avgTooltipData.type === 'pre' ? 'Pre-op' : 'Post-op'}
+                :
+                {' '}
+                <Text component="span" fw={700} size="xs">
+                  {avgTooltipData.val.toFixed(1)}
+                  {' '}
+                  {labConfig.unit}
+                </Text>
+              </Text>
+            </Box>
+          )}
+          position="top"
+          opened
+        >
+          <div style={{
+            position: 'absolute', left: avgTooltipData.x - 1, top: avgTooltipData.y - 1, width: 2, height: 2, pointerEvents: 'none',
+          }}
+          />
         </Tooltip>
       )}
     </div>
@@ -1691,7 +1702,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
               >
                 <Tooltip
                   label={`Sort ${DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label} Bins: ${providerSort === 'alpha' ? 'A/Z →' : providerSort === 'count' ? 'Case Count →' : providerSort === 'pre' ? 'Pre-op Avg →' : 'Post-op Avg →'
-                    }`}
+                  }`}
                   position="right"
                 >
                   <Button
