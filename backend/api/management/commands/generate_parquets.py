@@ -216,7 +216,7 @@ def build_procedure_hierarchy_payload(
 
 class Command(BaseCommand):
     help = "Generate a Parquet cache of the database data"
-    GENERATE_CHOICES = ("all", "visit_attributes", "procedure_hierarchy")
+    GENERATE_CHOICES = ("all", "visit_attributes", "procedure_hierarchy", "surgery_cases")
     BILLING_FETCH_BATCH_SIZE = 50000
     NULLABLE_BOOL_FIELDS = (
         "death",
@@ -244,6 +244,7 @@ class Command(BaseCommand):
         generate_target = kwargs["generate"]
         should_generate_visit_attributes = generate_target in ("all", "visit_attributes")
         should_generate_procedure_hierarchy = generate_target in ("all", "procedure_hierarchy")
+        should_generate_surgery_cases = generate_target in ("all", "surgery_cases")
 
         cache_dir = Path(settings.BASE_DIR) / "parquet_cache"
         cache_dir.mkdir(exist_ok=True)
@@ -273,21 +274,23 @@ class Command(BaseCommand):
                     visit[field_name] = bool(visit[field_name])
 
             # Materialize SurgeryCaseAttributes
-            cursor.execute("CALL intelvia.materializeSurgeryCaseAttributes()")
-            self.stdout.write(self.style.SUCCESS("Successfully materialized SurgeryCaseAttributes."))
-            
-            cursor.execute("SELECT * FROM SurgeryCaseAttributes")
-            columns_cases = [col[0] for col in cursor.description]
-            rows_cases = cursor.fetchall()
-            cases = [dict(zip(columns_cases, row)) for row in rows_cases]
-            for c in cases:
-                c["los"] = float(c["los"]) if c["los"] is not None else None
-                for field in ['pre_hgb', 'pre_plt', 'pre_fibrinogen', 'pre_inr',
-                              'post_hgb', 'post_plt', 'post_fibrinogen', 'post_inr',
-                              'rbc_cost', 'ffp_cost', 'plt_cost', 'cryo_cost', 'whole_cost', 'cell_saver_cost', 'total_cost']:
-                    c[field] = float(c[field]) if c[field] is not None else None
-                for field in ["death", "vent", "stroke", "ecmo"]:
-                    c[field] = bool(c[field]) if c[field] is not None else None
+            cases = []
+            if should_generate_surgery_cases:
+                cursor.execute("CALL intelvia.materializeSurgeryCaseAttributes()")
+                self.stdout.write(self.style.SUCCESS("Successfully materialized SurgeryCaseAttributes."))
+
+                cursor.execute("SELECT * FROM SurgeryCaseAttributes")
+                columns_cases = [col[0] for col in cursor.description]
+                rows_cases = cursor.fetchall()
+                cases = [dict(zip(columns_cases, row)) for row in rows_cases]
+                for c in cases:
+                    c["los"] = float(c["los"]) if c["los"] is not None else None
+                    for field in ['pre_hgb', 'pre_plt', 'pre_fibrinogen', 'pre_inr',
+                                  'post_hgb', 'post_plt', 'post_fibrinogen', 'post_inr',
+                                  'rbc_cost', 'ffp_cost', 'plt_cost', 'cryo_cost', 'whole_cost', 'cell_saver_cost', 'total_cost']:
+                        c[field] = float(c[field]) if c[field] is not None else None
+                    for field in ["death", "vent", "stroke", "ecmo"]:
+                        c[field] = bool(c[field]) if c[field] is not None else None
 
         hierarchy = get_cpt_hierarchy()
         visits = attach_cpt_dimensions(
@@ -307,7 +310,9 @@ class Command(BaseCommand):
                 hierarchy_departments=hierarchy.departments,
             )
 
-        surgery_table = pa.Table.from_pylist(cases, schema=get_surgery_case_attributes_schema())
+        surgery_table = None
+        if should_generate_surgery_cases:
+            surgery_table = pa.Table.from_pylist(cases, schema=get_surgery_case_attributes_schema())
 
         try:
             if should_generate_visit_attributes:
@@ -317,13 +322,15 @@ class Command(BaseCommand):
                     json.dumps(procedure_hierarchy_payload, separators=(",", ":")),
                     encoding="utf-8",
                 )
-            pq.write_table(surgery_table, temp_surgery_file_path)
+            if should_generate_surgery_cases:
+                pq.write_table(surgery_table, temp_surgery_file_path)
 
             if should_generate_visit_attributes:
                 temp_visit_file_path.replace(visit_file_path)
             if should_generate_procedure_hierarchy:
                 temp_procedure_hierarchy_file_path.replace(procedure_hierarchy_file_path)
-            temp_surgery_file_path.replace(surgery_file_path)
+            if should_generate_surgery_cases:
+                temp_surgery_file_path.replace(surgery_file_path)
         finally:
             if temp_visit_file_path.exists():
                 temp_visit_file_path.unlink()
@@ -340,4 +347,5 @@ class Command(BaseCommand):
                     f"Procedure hierarchy cache generated at {procedure_hierarchy_file_path}"
                 )
             )
-        self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {surgery_file_path}"))
+        if should_generate_surgery_cases:
+            self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {surgery_file_path}"))

@@ -7,6 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('api', '0004_billingcode_cpt_visit_idx'),
+        ('api', '0004_surgery_case_view'),
         ('api', '0005_delete_guidelineadherence'),
     ]
 
