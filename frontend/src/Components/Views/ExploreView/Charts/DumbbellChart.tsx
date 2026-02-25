@@ -624,11 +624,12 @@ export const DumbbellChartContent = memo(({
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const w = canvas.width / dpr;
+    const vWidth = Math.min(totalWidth, visibleRange[1] - visibleRange[0]);
     const h = canvas.height / dpr;
-    ctx.clearRect(0, 0, w * dpr, h * dpr);
+    ctx.clearRect(0, 0, vWidth, h);
     ctx.save();
     ctx.scale(dpr, dpr);
+    ctx.translate(-Math.max(0, visibleRange[0]), 0);
 
     // Draw grid lines
     ctx.strokeStyle = theme.colors.gray[3];
@@ -791,20 +792,21 @@ export const DumbbellChartContent = memo(({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const vWidth = Math.min(totalWidth, visibleRange[1] - visibleRange[0]);
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = totalWidth * dpr;
+    canvas.width = vWidth * dpr;
     canvas.height = height * dpr;
-    canvas.style.width = `${totalWidth}px`;
+    canvas.style.width = `${vWidth}px`;
     canvas.style.height = `${height}px`;
+    canvas.style.left = `${Math.max(0, visibleRange[0])}px`;
     drawDumbbells();
-  }, [totalWidth, height, drawDumbbells]);
+  }, [totalWidth, height, visibleRange, drawDumbbells]);
 
   // Canvas hover detection
   const handleCanvasHover = useCallback((e: React.MouseEvent) => {
     if (interactionMode !== 'idle') return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
+    if (!chartRef.current) return;
+    const rect = chartRef.current.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
 
@@ -1169,7 +1171,12 @@ export const DumbbellChartContent = memo(({
         requestAnimationFrame(drawDumbbells);
       }}
     >
-      <svg width={totalWidth} height={height} style={{ position: 'absolute', top: 0, left: 0 }}>
+      <svg
+        width={Math.min(totalWidth, visibleRange[1] - visibleRange[0])}
+        height={height}
+        style={{ position: 'absolute', top: 0, left: Math.max(0, visibleRange[0]) }}
+        viewBox={`${Math.max(0, visibleRange[0])} 0 ${Math.min(totalWidth, visibleRange[1] - visibleRange[0])} ${height}`}
+      >
         {showTargets && (
           <TargetOverlay
             totalWidth={totalWidth}
