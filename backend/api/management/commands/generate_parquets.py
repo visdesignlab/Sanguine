@@ -276,7 +276,7 @@ class Command(BaseCommand):
             # Materialize SurgeryCaseAttributes
             cases = []
             if should_generate_surgery_cases:
-                cursor.execute("CALL intelvia.materializeSurgeryCaseAttributes()")
+                cursor.execute("CALL materializeSurgeryCaseAttributes()")
                 self.stdout.write(self.style.SUCCESS("Successfully materialized SurgeryCaseAttributes."))
 
                 cursor.execute("SELECT * FROM SurgeryCaseAttributes")
