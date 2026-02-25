@@ -420,7 +420,7 @@ export const LAB_RESULTS = [
     },
     units: { sum: 'K/µL', avg: 'K/µL' },
     range: { min: 0, max: 600 },
-    target: { min: 100, max: 149 },
+    target: { min: 50, max: 125 },
     decimals: { sum: 0, avg: 0 },
   },
   {
@@ -444,7 +444,7 @@ export const LAB_RESULTS = [
     },
     units: { sum: 'mg/dL', avg: 'mg/dL' },
     range: { min: 30, max: 500 },
-    target: { min: 150, max: 199 },
+    target: { min: 150, max: 200 },
     decimals: { sum: 0, avg: 0 },
   },
   {
@@ -468,7 +468,7 @@ export const LAB_RESULTS = [
     },
     units: { sum: 'Ratio', avg: 'Ratio' },
     range: { min: 0, max: 6 },
-    target: { min: 1.2, max: 1.5 },
+    target: { min: 0.8, max: 1.5 },
     decimals: { sum: 1, avg: 2 },
   },
 ] as const;
