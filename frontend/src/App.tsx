@@ -75,7 +75,7 @@ function App() {
         }
         await db.registerFileBuffer('visit_attributes.parquet', new Uint8Array(await res.arrayBuffer()));
 
-        const resSurgery = await fetch(`${queryUrl}get_surgery_case_attributes`);
+        const resSurgery = await fetch(apiPath('get_surgery_case_attributes'));
         if (!resSurgery.ok) {
           console.warn(`Failed to fetch surgery cases. Status: ${resSurgery.status}`);
           // Optional: throw error if critical

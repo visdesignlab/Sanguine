@@ -3,7 +3,9 @@ import {
   Title,
 } from '@mantine/core';
 import { IconTrash, IconPlus, IconX } from '@tabler/icons-react';
-import { chartColors, BLOOD_COMPONENT_OPTIONS, OUTCOME_OPTIONS, PROPHYL_MED_OPTIONS, GUIDELINE_ADHERENT_OPTIONS, COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST, CASE_MIX_INDEX } from '../../../../Types/application';
+import {
+  BLOOD_COMPONENT_OPTIONS, OUTCOME_OPTIONS, PROPHYL_MED_OPTIONS, GUIDELINE_ADHERENT_OPTIONS,
+} from '../../../../Types/application';
 
 // Types for Group Definition
 export type Operator = '>' | '>=' | '<' | '<=' | '=' | '!=';
@@ -23,32 +25,42 @@ export type GroupDefinition = {
 const CONDITION_GROUPS = [
   {
     group: 'Blood components used',
-    items: BLOOD_COMPONENT_OPTIONS.map(o => ({ value: o.value, label: o.label.base, type: 'number', units: o.units.sum }))
+    items: BLOOD_COMPONENT_OPTIONS.map((o) => ({
+      value: o.value, label: o.label.base, type: 'number', units: o.units.sum,
+    })),
   },
   {
     group: 'Outcomes',
-    items: OUTCOME_OPTIONS.map(o => ({
+    items: OUTCOME_OPTIONS.map((o) => ({
       value: o.value,
       label: o.label.base,
       type: o.value === 'los' ? 'number' : 'boolean', // Explicitly make LOS numeric
-      units: o.units.sum
-    }))
+      units: o.units.sum,
+    })),
   },
   {
     group: 'Prophylactic meds used',
-    items: PROPHYL_MED_OPTIONS.map(o => ({ value: o.value, label: o.label.base, type: 'boolean', units: o.units.sum }))
+    items: PROPHYL_MED_OPTIONS.map((o) => ({
+      value: o.value, label: o.label.base, type: 'boolean', units: o.units.sum,
+    })),
   },
   {
     group: 'Guideline adherence',
-    items: GUIDELINE_ADHERENT_OPTIONS.map(o => ({ value: o.value, label: o.label.base, type: 'boolean', units: o.units.sum }))
+    items: GUIDELINE_ADHERENT_OPTIONS.map((o) => ({
+      value: o.value, label: o.label.base, type: 'boolean', units: o.units.sum,
+    })),
   },
   {
     group: 'General',
     items: [
-      { value: 'total_blood_product_cost', label: 'Total Blood Product Cost', type: 'number', units: '$' },
-      { value: 'case_mix_index', label: 'Case Mix Index', type: 'number', units: '' },
-    ]
-  }
+      {
+        value: 'total_blood_product_cost', label: 'Total Blood Product Cost', type: 'number', units: '$',
+      },
+      {
+        value: 'case_mix_index', label: 'Case Mix Index', type: 'number', units: '',
+      },
+    ],
+  },
 ];
 
 // Flattened list for easy lookup
@@ -97,9 +109,8 @@ export function AddGroupModal({
   color, onColorChange,
   conditions, onConditionsChange,
   existingGroups, editingGroupId,
-  onRemoveGroup, onEditGroup, onResetForm, onSave, isFormValid
+  onRemoveGroup, onEditGroup, onResetForm, onSave, isFormValid,
 }: AddGroupModalProps) {
-
   const handleAddCondition = () => {
     onConditionsChange([...conditions, { field: '', operator: '>', value: 0 }]);
   };
@@ -109,12 +120,12 @@ export function AddGroupModal({
     onConditionsChange(newConds);
   };
 
-  const updateCondition = (index: number, key: keyof GroupCondition, val: any) => {
+  const updateCondition = (index: number, key: keyof GroupCondition, val: string | number | boolean | null) => {
     const newConditions = [...conditions];
-    newConditions[index] = { ...newConditions[index], [key]: val };
+    newConditions[index] = { ...newConditions[index], [key]: val ?? '' };
 
     if (key === 'field') {
-      const fieldDef = CONDITION_FIELDS_FLAT.find(f => f.value === val);
+      const fieldDef = CONDITION_FIELDS_FLAT.find((f) => f.value === val);
       if (fieldDef?.type === 'boolean') {
         newConditions[index].value = 'true';
         newConditions[index].operator = '=';
@@ -130,34 +141,34 @@ export function AddGroupModal({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={
+      title={(
         <Group justify="space-between" align="center" style={{ flex: 1 }}>
           <Title order={3}>Groups</Title>
-          <ActionIcon size="md" variant="outline" color={"blue"} onClick={onResetForm} aria-label="Add New Group">
+          <ActionIcon size="md" variant="outline" color="blue" onClick={onResetForm} aria-label="Add New Group">
             <IconPlus size={18} />
           </ActionIcon>
         </Group>
-      }
+      )}
       size="lg"
       styles={{
         header: { paddingRight: 16 },
-        title: { width: '100%', paddingRight: 10 }
+        title: { width: '100%', paddingRight: 10 },
       }}
     >
       <Stack gap="md">
         {existingGroups.length > 0 && (
           <Stack gap="xs">
             <Group gap="xs" wrap="wrap">
-              {existingGroups.map(g => (
+              {existingGroups.map((g) => (
                 <Badge
                   key={g.id}
                   color={g.color}
-                  variant={editingGroupId === g.id ? "filled" : "light"}
+                  variant={editingGroupId === g.id ? 'filled' : 'light'}
                   size="lg"
                   pr={3}
                   style={{ cursor: 'pointer' }}
                   onClick={() => onEditGroup(g)}
-                  rightSection={
+                  rightSection={(
                     <ActionIcon
                       size="xs"
                       color={g.color}
@@ -169,7 +180,7 @@ export function AddGroupModal({
                     >
                       <IconX size={14} />
                     </ActionIcon>
-                  }
+                  )}
                 >
                   {g.name}
                 </Badge>
@@ -179,7 +190,7 @@ export function AddGroupModal({
           </Stack>
         )}
 
-        <Text fw={500}>{editingGroupId ? "Edit Group" : "Add New Group"}</Text>
+        <Text fw={500}>{editingGroupId ? 'Edit Group' : 'Add New Group'}</Text>
         <Group grow>
           <TextInput
             label="Group Name (Optional)"
@@ -200,18 +211,18 @@ export function AddGroupModal({
         <Stack gap="xs">
           <Group justify="space-between">
             <Text size="sm" fw={500}>Conditions</Text>
-            <ActionIcon size={24} mr={6.5} variant="outline" color={"blue"} onClick={handleAddCondition} aria-label="Add Condition">
+            <ActionIcon size={24} mr={6.5} variant="outline" color="blue" onClick={handleAddCondition} aria-label="Add Condition">
               <IconPlus size={16} />
             </ActionIcon>
           </Group>
           {conditions.map((condition, index) => {
-            const fieldDef = CONDITION_FIELDS_FLAT.find(f => f.value === condition.field);
+            const fieldDef = CONDITION_FIELDS_FLAT.find((f) => f.value === condition.field);
             const isBoolean = fieldDef?.type === 'boolean';
             const units = fieldDef?.units || '';
 
             const isPrefix = units === '$';
             const prefix = isPrefix ? units : undefined;
-            const suffix = !isPrefix && units ? ' ' + units : undefined;
+            const suffix = !isPrefix && units ? ` ${units}` : undefined;
 
             return (
               <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
@@ -264,13 +275,13 @@ export function AddGroupModal({
                   <IconTrash size={14} />
                 </ActionIcon>
               </div>
-            )
+            );
           })}
         </Stack>
 
         <Group justify="flex-end" mt="md">
           <Button onClick={onSave} disabled={!isFormValid}>
-            {editingGroupId ? "Save Group" : "Add Group"}
+            {editingGroupId ? 'Save Group' : 'Add Group'}
           </Button>
         </Group>
       </Stack>

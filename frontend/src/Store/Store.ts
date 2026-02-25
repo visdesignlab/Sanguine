@@ -1915,20 +1915,20 @@ export class RootStore {
           const result = await this.duckDB!.query(query);
           const data = result.toArray().map((row) => row.toJSON());
 
-          // We need to group by the 'grouping variable'. 
-          const groupingVar = (config as any).groupingVar || 'surgeon_prov_id';
+          // We need to group by the 'grouping variable'.
+          const groupingVar = 'groupingVar' in config ? String((config as Record<string, unknown>).groupingVar) : 'surgeon_prov_id';
 
           // We can do the grouping in JS.
-          const grouped: Record<string, any[]> = {};
-          data.forEach(row => {
-            const key = row[groupingVar] || 'Unknown';
+          const grouped: Record<string, Record<string, unknown>[]> = {};
+          data.forEach((row) => {
+            const key = String(row[groupingVar] || 'Unknown');
             if (!grouped[key]) grouped[key] = [];
-            grouped[key].push(row);
+            grouped[key].push(row as Record<string, unknown>);
           });
 
           const formattedData = Object.entries(grouped).map(([name, groupData]) => ({
             name,
-            data: groupData
+            data: groupData,
           }));
 
           return { id: config.chartId, data: formattedData };

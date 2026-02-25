@@ -812,7 +812,6 @@ export interface DumbbellLabConfig {
   defaultTargets: { preMin: number; postMin: number; postMax: number };
 }
 
-
 export interface DumbbellCase {
   case_id: string;
   surgeon_prov_id: string;
