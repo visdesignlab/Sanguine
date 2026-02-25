@@ -19,13 +19,13 @@ export function FilterHeader({
 
     return (
       <Flex align="center">
-        <Accordion.Control px={5}>
-          <Flex align="center">
+        <Accordion.Control px={2}>
+          <Flex align="center" wrap="nowrap">
             <Tooltip label={tooltipLabel}>
-              <Title order={4} c={count ? 'blue.6' : undefined}>{title}</Title>
+              <Title order={4} c={count ? 'blue.6' : undefined} style={{ whiteSpace: 'nowrap' }}>{title}</Title>
             </Tooltip>
 
-            <Flex align="center" gap="xs" ml="auto" mr="xs">
+            <Flex align="center" gap={4} ml="auto">
               {count > 0 && (
                 <>
                   <Badge color="blue" radius="sm" variant="light">

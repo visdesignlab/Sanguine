@@ -1,4 +1,6 @@
+from django.apps import apps
 from django.core.management.base import BaseCommand
+from django.db import connection, transaction
 
 
 class Command(BaseCommand):
@@ -6,8 +8,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write("Deleting all data from the database...")
-        from django.apps import apps
-        from django.db import transaction
 
         with transaction.atomic():
             from django.db import connection

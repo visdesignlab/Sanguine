@@ -868,7 +868,7 @@ export type ScatterPlotData = DumbbellCase[];
 // --- Explore Table ---
 
 // Column options
-const RBC_COUNTS = ['1', '2', '3', '4', 'above_5'] as const;
+const RBC_COUNTS = ['0', '1', '2', '3', '4', 'above_5'] as const;
 const RBC_PERCENT_OPTIONS = RBC_COUNTS.map((count) => ({
   value: `percent_${count}_rbc`,
   label: count === 'above_5' ? '≥5 RBC' : `${count} RBC`,
@@ -1053,9 +1053,34 @@ export type ExploreTableData = ExploreTableRow[]; // E.g. [{ attending_provider:
 export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData | DumbbellData>;
 export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig | DumbbellChartConfig;
 
+// Procedure hierarchy ---------------------------------------------------
+export type ProcedureHierarchyProcedure = {
+  id: string;
+  name: string;
+  visit_count: number;
+  cpt_codes: string[];
+};
+
+export type ProcedureHierarchyDepartment = {
+  id: string;
+  name: string;
+  visit_count: number;
+  procedures: ProcedureHierarchyProcedure[];
+};
+
+export type ProcedureHierarchyResponse = {
+  version: string;
+  source: string;
+  department_level: 'department';
+  procedure_level: 'procedure';
+  departments: ProcedureHierarchyDepartment[];
+};
+
 // Filter Counts ---------------------------------------------------
 export type FilterCountKey =
   | 'dateFiltersAppliedCount'
   | 'bloodComponentFiltersAppliedCount'
   | 'medicationsFiltersAppliedCount'
-  | 'outcomeFiltersAppliedCount';
+  | 'outcomeFiltersAppliedCount'
+  | 'procedureDepartmentsAppliedCount'
+  | 'procedureFiltersAppliedCount';

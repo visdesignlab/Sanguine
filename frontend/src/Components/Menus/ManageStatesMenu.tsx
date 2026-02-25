@@ -38,7 +38,6 @@ import { captureScreenshot } from '../../Utils/screenshotUtils';
 import { useThemeConstants } from '../../Theme/mantineTheme';
 import { formatStateDetailName, formatStateDetailValue } from '../../Utils/humanReadableColsVals';
 import { formatTimestamp } from '../../Utils/dates';
-import classes from '../../Shell/Shell.module.css';
 import { Store, ApplicationState } from '../../Store/Store';
 import {
   AGGREGATION_OPTIONS,

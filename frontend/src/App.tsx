@@ -7,13 +7,20 @@ import { Store } from './Store/Store';
 import { mantineTheme } from './Theme/mantineTheme';
 import { logoutHandler, whoamiAPICall } from './Store/UserManagement';
 import { DataRetrieval } from './Components/Modals/DataRetrieval';
+import {
+  EmailGateBoundary,
+  isEmailGateBlocked,
+} from './Components/Onboarding/EmailGate';
 import { initDuckDB } from './duckdb';
+import { apiPath } from './Utils/api';
+import type { ProcedureHierarchyResponse } from './Types/application';
 
 function App() {
   // Data Loading states
   const store = useContext(Store);
   const [dataLoading, setDataLoading] = useState(true);
   const [dataLoadingFailed, setDataLoadingFailed] = useState(false);
+  const [gateBlocked, setGateBlocked] = useState(() => isEmailGateBlocked());
 
   // Idle timer to log out user after 30 minutes of inactivity
   useIdleTimer({
@@ -22,15 +29,37 @@ function App() {
     onAction: () => whoamiAPICall(),
     events: ['mousedown', 'keydown'],
     throttle: 1000 * 60,
+    disabled: gateBlocked,
   });
 
   // Fetch all visits data on initial load
   useEffect(() => {
+    if (gateBlocked) {
+      setDataLoading(false);
+      return;
+    }
+
     async function fetchAllVisits() {
       setDataLoading(true);
       try {
+        const fetchProcedureHierarchy = async () => {
+          try {
+            const hierarchyRes = await fetch(apiPath('get_procedure_hierarchy'));
+            if (!hierarchyRes.ok) {
+              throw new Error(`HTTP error! status: ${hierarchyRes.status}`);
+            }
+            store.procedureHierarchy = (await hierarchyRes.json()) as ProcedureHierarchyResponse;
+          } catch (hierarchyError) {
+            console.error('Error fetching procedure hierarchy:', hierarchyError);
+            store.procedureHierarchy = null;
+          }
+        };
+
         if (store.duckDB) {
-          // DuckDB is already initialized so don't re-initialize
+          // DuckDB is already initialized so don't re-initialize.
+          if (!store.procedureHierarchy) {
+            await fetchProcedureHierarchy();
+          }
           setDataLoading(false);
           return;
         }
@@ -39,16 +68,8 @@ function App() {
         const { db, conn } = await initDuckDB();
         store.duckDB = conn!;
 
-        const queryUrl = import.meta.env.VITE_QUERY_URL;
-        if (typeof queryUrl === 'undefined' || !queryUrl) {
-          console.error('VITE_QUERY_URL is undefined');
-          setDataLoadingFailed(true);
-          setDataLoading(false);
-          return;
-        }
-
         // Fetch visit attributes Parquet file from backend
-        const res = await fetch(`${queryUrl}get_visit_attributes`);
+        const res = await fetch(apiPath('get_visit_attributes'));
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
@@ -64,7 +85,11 @@ function App() {
 
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
-          SELECT * FROM read_parquet('visit_attributes.parquet');
+          SELECT * REPLACE (
+            COALESCE(CAST(department_ids AS VARCHAR[]), []::VARCHAR[]) AS department_ids,
+            COALESCE(CAST(procedure_ids AS VARCHAR[]), []::VARCHAR[]) AS procedure_ids
+          )
+          FROM read_parquet('visit_attributes.parquet');
 
           CREATE TABLE IF NOT EXISTS surgery_cases AS
           SELECT * FROM read_parquet('surgery_case_attributes.parquet');
@@ -150,6 +175,8 @@ function App() {
           GROUP BY visit_no, month, quarter, year, dsch_dtm;
         `);
 
+        await fetchProcedureHierarchy();
+
         // Update all stores
         await store.updateAllVisitsLength();
         await store.calculateDefaultFilterValues();
@@ -169,17 +196,17 @@ function App() {
     }
     // Call the function to fetch visits data
     fetchAllVisits();
-  }, [store]);
+  }, [store, gateBlocked]);
 
   return (
     // MantineProvider to apply the custom theme
     <MantineProvider theme={mantineTheme}>
-      {/** App Shell (Header, Main Content, etc.) */}
-      <Shell />
-      <>
+      <EmailGateBoundary onBlockedChange={setGateBlocked}>
+        {/** App Shell (Header, Main Content, etc.) */}
+        <Shell />
         { /* Data loading modal */}
         <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
-      </>
+      </EmailGateBoundary>
     </MantineProvider>
   );
 }
