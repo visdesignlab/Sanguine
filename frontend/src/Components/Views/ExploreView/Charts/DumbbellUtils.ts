@@ -292,6 +292,14 @@ function getShortenedLabel(label: string) {
   return label;
 }
 
+function getProviderLastName(label: string) {
+  if (label.includes(',')) {
+    return label.split(',')[0].trim();
+  }
+  const parts = label.split(' ');
+  return parts[parts.length - 1];
+}
+
 // Layout calculation logic
 export function calculateDumbbellLayout(
   processedData: ReturnType<typeof getProcessedDumbbellData>,
@@ -306,7 +314,7 @@ export function calculateDumbbellLayout(
     width: number
   }[] = [];
 
-  const binGroupLayout = new Map<string, { x: number, width: number, label: string }>();
+  const binGroupLayout = new Map<string, { x: number, width: number, label: string, isOverflowing: boolean }>();
   const nestedBinLayout = new Map<string, { x: number, width: number }>();
 
   let currentX = 0;
@@ -342,6 +350,7 @@ export function calculateDumbbellLayout(
     }
 
     let binGroupWidth = currentX - binGroupStartX;
+    let isOverflowing = false;
     const isSurgeon = selectedX === 'surgeon' || selectedX === 'anesthesiologist';
 
     if (isSurgeon) {
@@ -352,28 +361,35 @@ export function calculateDumbbellLayout(
         currentX += deficit;
         binGroupWidth += deficit;
       }
-    } else {
-      const fullWidth = measureText(displayLabel);
-      if (binGroupWidth < fullWidth + 10) {
+    }
+
+    const fullWidth = measureText(displayLabel);
+    if (binGroupWidth < fullWidth + 10) {
+      if (isSurgeon) {
+        const lastName = getProviderLastName(displayLabel);
+        const shortWidth = measureText(lastName);
+        displayLabel = lastName;
+        if (binGroupWidth < shortWidth + 10) {
+          isOverflowing = true;
+        }
+      } else {
         const shortLabel = getShortenedLabel(displayLabel);
         const shortWidth = measureText(shortLabel);
-
-        if (shortLabel !== displayLabel && binGroupWidth >= shortWidth + 8) {
+        if (shortLabel !== displayLabel) {
           displayLabel = shortLabel;
-        } else {
-          const targetWidth = (shortLabel !== displayLabel) ? shortWidth : fullWidth;
-          if (binGroupWidth < targetWidth + 10) {
-            const deficit = (targetWidth + 10) - binGroupWidth;
-            items.push({ type: 'spacer', width: deficit });
-            currentX += deficit;
-            binGroupWidth += deficit;
-            if (shortLabel !== displayLabel) displayLabel = shortLabel;
-          }
+        }
+        if (binGroupWidth < shortWidth + 10) {
+          isOverflowing = true;
         }
       }
     }
 
-    binGroupLayout.set(binGroup.id, { x: binGroupStartX, width: binGroupWidth, label: displayLabel });
+    binGroupLayout.set(binGroup.id, {
+      x: binGroupStartX,
+      width: binGroupWidth,
+      label: displayLabel,
+      isOverflowing,
+    });
   });
 
   return { items, binGroupLayout, nestedBinLayout };

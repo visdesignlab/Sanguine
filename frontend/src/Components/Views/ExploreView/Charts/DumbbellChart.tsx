@@ -432,7 +432,7 @@ export const DumbbellChartContent = memo(({
   hasNestedBins: boolean,
   showPre: boolean,
   showPost: boolean,
-  binGroupLayout: Map<string, { x: number, width: number, label: string }>,
+  binGroupLayout: Map<string, { x: number, width: number, label: string, isOverflowing: boolean }>,
   nestedBinLayout: Map<string, { x: number, width: number }>,
   showMedian: boolean,
   showTargets: boolean,
@@ -1007,17 +1007,32 @@ export const DumbbellChartContent = memo(({
               </title>
             </rect>
 
-            <text
-              x={binGroupX + binGroupWidth / 2}
-              y={!hasNestedBins ? innerHeight + 17 : innerHeight + 42}
-              textAnchor="middle"
-              fontSize={12}
-              fontWeight={600}
-              fill={(isBinGroupCollapsed || (!hasNestedBins && collapsedNestedBins.has(binGroup.nestedBins[0].id))) ? theme.colors.gray[6] : theme.colors.gray[9]}
+            <foreignObject
+              x={binGroupX}
+              y={!hasNestedBins ? innerHeight : innerHeight + 25}
+              width={binGroupWidth}
+              height={25}
               style={{ pointerEvents: 'none' }}
             >
-              {(isBinGroupCollapsed || (!hasNestedBins && collapsedNestedBins.has(binGroup.nestedBins[0].id))) ? '...' : binGroupLabel}
-            </text>
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: (isBinGroupCollapsed || (!hasNestedBins && collapsedNestedBins.has(binGroup.nestedBins[0].id))) ? theme.colors.gray[6] : theme.colors.gray[9],
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  WebkitMaskImage: layout?.isOverflowing && !isBinGroupCollapsed ? 'linear-gradient(to right, black 70%, transparent 100%)' : 'none',
+                  maskImage: layout?.isOverflowing && !isBinGroupCollapsed ? 'linear-gradient(to right, black 70%, transparent 100%)' : 'none',
+                }}
+              >
+                {(isBinGroupCollapsed || (!hasNestedBins && collapsedNestedBins.has(binGroup.nestedBins[0].id))) ? '...' : binGroupLabel}
+              </div>
+            </foreignObject>
 
             {!isBinGroupCollapsed && hasNestedBins && (
               <>

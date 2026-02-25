@@ -1105,17 +1105,32 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                                   strokeWidth={1}
                                 />
                               </Tooltip>
-                              <text
-                                x={layout.x + layout.width / 2}
-                                y={!hasNestedBins ? innerHeight + 17 : innerHeight + 42}
-                                textAnchor="middle"
-                                fontSize={12}
-                                fontWeight={600}
-                                fill={isBinGroupCollapsed ? theme.colors.gray[6] : theme.colors.gray[9]}
+                              <foreignObject
+                                x={layout.x}
+                                y={!hasNestedBins ? innerHeight : innerHeight + 25}
+                                width={layout.width}
+                                height={25}
                                 style={{ pointerEvents: 'none' }}
                               >
-                                {isBinGroupCollapsed ? '...' : layout.label}
-                              </text>
+                                <div
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: isBinGroupCollapsed ? theme.colors.gray[6] : theme.colors.gray[9],
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    WebkitMaskImage: layout.isOverflowing && !isBinGroupCollapsed ? 'linear-gradient(to right, black 70%, transparent 100%)' : 'none',
+                                    maskImage: layout.isOverflowing && !isBinGroupCollapsed ? 'linear-gradient(to right, black 70%, transparent 100%)' : 'none',
+                                  }}
+                                >
+                                  {isBinGroupCollapsed ? '...' : layout.label}
+                                </div>
+                              </foreignObject>
                               {/* Bin group collapse toggle */}
                               {!isBinGroupCollapsed && hasNestedBins && (
                                 <>

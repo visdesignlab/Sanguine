@@ -229,6 +229,14 @@ function getShortenedLabel(label: string) {
   return label;
 }
 
+function getProviderLastName(label: string) {
+  if (label.includes(',')) {
+    return label.split(',')[0].trim();
+  }
+  const parts = label.split(' ');
+  return parts[parts.length - 1];
+}
+
 export function calculateScatterLayout(
   processedData: ScatterBinGroup[],
   collapsedBinGroups: Set<string>,
@@ -236,7 +244,7 @@ export function calculateScatterLayout(
   selectedX: string,
   measureText: (text: string) => number,
 ) {
-  const binGroupLayout = new Map<string, { x: number, width: number, label: string }>();
+  const binGroupLayout = new Map<string, { x: number, width: number, label: string, isOverflowing: boolean }>();
   const nestedBinLayout = new Map<string, { x: number, width: number }>();
 
   let currentX = 0;
@@ -261,28 +269,39 @@ export function calculateScatterLayout(
       });
     }
 
-    let binGroupWidth = currentX - binGroupStartX;
+    const binGroupWidth = currentX - binGroupStartX;
+    let isOverflowing = false;
+
+    const isProvider = selectedX === 'surgeon' || selectedX === 'anesthesiologist';
 
     // Ensure bin group labels fit
     const fullWidth = measureText(displayLabel);
     if (binGroupWidth < fullWidth + 10) {
-      const shortLabel = getShortenedLabel(displayLabel);
-      const shortWidth = measureText(shortLabel);
-
-      if (shortLabel !== displayLabel && binGroupWidth >= shortWidth + 8) {
-        displayLabel = shortLabel;
+      if (isProvider) {
+        const lastName = getProviderLastName(displayLabel);
+        const shortWidth = measureText(lastName);
+        displayLabel = lastName;
+        if (binGroupWidth < shortWidth + 10) {
+          isOverflowing = true;
+        }
       } else {
-        const targetWidth = (shortLabel !== displayLabel) ? shortWidth : fullWidth;
-        if (binGroupWidth < targetWidth + 10) {
-          const deficit = (targetWidth + 10) - binGroupWidth;
-          currentX += deficit;
-          binGroupWidth += deficit;
-          if (shortLabel !== displayLabel) displayLabel = shortLabel;
+        const shortLabel = getShortenedLabel(displayLabel);
+        const shortWidth = measureText(shortLabel);
+        if (shortLabel !== displayLabel) {
+          displayLabel = shortLabel;
+        }
+        if (binGroupWidth < shortWidth + 10) {
+          isOverflowing = true;
         }
       }
     }
 
-    binGroupLayout.set(binGroup.id, { x: binGroupStartX, width: binGroupWidth, label: displayLabel });
+    binGroupLayout.set(binGroup.id, {
+      x: binGroupStartX,
+      width: binGroupWidth,
+      label: displayLabel,
+      isOverflowing,
+    });
   });
 
   return { binGroupLayout, nestedBinLayout, totalWidth: currentX };
