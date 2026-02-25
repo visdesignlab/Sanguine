@@ -921,6 +921,7 @@ export class RootStore {
             `${aggFn}(plt_units_cost) AS ${aggregation}_plt_units_cost`,
             `${aggFn}(ffp_units_cost) AS ${aggregation}_ffp_units_cost`,
             `${aggFn}(cryo_units_cost) AS ${aggregation}_cryo_units_cost`,
+            `${aggFn}(whole_cost) AS ${aggregation}_whole_cost`,
             `${aggFn}(cell_saver_cost) AS ${aggregation}_cell_saver_cost`,
           ];
         }
@@ -967,6 +968,7 @@ export class RootStore {
                     plt_units_cost: Number(row[`${aggType}_plt_units_cost`] || 0),
                     ffp_units_cost: Number(row[`${aggType}_ffp_units_cost`] || 0),
                     cryo_units_cost: Number(row[`${aggType}_cryo_units_cost`] || 0),
+                    whole_cost: Number(row[`${aggType}_whole_cost`] || 0),
                     cell_saver_cost: Number(row[`${aggType}_cell_saver_cost`] || 0),
                   },
                   counts_per_period: Number(row.visit_count || 0),
@@ -994,6 +996,7 @@ export class RootStore {
                       plt_units_cost: existing.data.plt_units_cost + curr.data.plt_units_cost,
                       ffp_units_cost: existing.data.ffp_units_cost + curr.data.ffp_units_cost,
                       cryo_units_cost: existing.data.cryo_units_cost + curr.data.cryo_units_cost,
+                      whole_cost: existing.data.whole_cost + curr.data.whole_cost,
                       cell_saver_cost: existing.data.cell_saver_cost + curr.data.cell_saver_cost,
                     };
                   } else {
@@ -1084,9 +1087,9 @@ export class RootStore {
         if (yAxisVar === 'total_blood_product_cost') {
           return `
                 ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
-                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_current_${aggregation},
+                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_current_${aggregation},
                 ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
-                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
+                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
               `;
         }
         // Exception: Case mix index
@@ -1135,7 +1138,7 @@ export class RootStore {
       // Exception: Total blood product cost
       if (yAxisVar === 'total_blood_product_cost') {
         sparklineSelects.push(
-          `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
+          `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
         );
         return;
       }
@@ -1668,7 +1671,7 @@ export class RootStore {
 
           // Special case: total_cost (stacked bar components)
           if (colVar === 'total_cost') {
-            const comps = ['rbc_units_cost', 'ffp_units_cost', 'plt_units_cost', 'cryo_units_cost'];
+            const comps = ['rbc_units_cost', 'ffp_units_cost', 'plt_units_cost', 'cryo_units_cost', 'whole_cost'];
             comps.forEach((c) => {
               columnClauses.push(`${aggFn}(${c}) AS ${c.replace('_units_cost', '_cost')}`);
             });
@@ -1851,7 +1854,7 @@ export class RootStore {
     if (!this.duckDB) return;
     await this.duckDB.query(`
       DELETE FROM costs;
-      INSERT INTO costs VALUES (${this.unitCosts.rbc_units_cost}, ${this.unitCosts.ffp_units_cost}, ${this.unitCosts.plt_units_cost}, ${this.unitCosts.cryo_units_cost}, ${this.unitCosts.cell_saver_cost});
+      INSERT INTO costs VALUES (${this.unitCosts.rbc_units_cost}, ${this.unitCosts.ffp_units_cost}, ${this.unitCosts.plt_units_cost}, ${this.unitCosts.cryo_units_cost}, ${this.unitCosts.whole_cost}, ${this.unitCosts.cell_saver_cost});
     `);
     await this.computeDashboardStatData();
     await this.computeDashboardChartData();

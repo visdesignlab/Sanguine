@@ -43,7 +43,7 @@ class Command(BaseCommand):
                 # float decimals
                 for field in ['pre_hgb', 'pre_plt', 'pre_fibrinogen', 'pre_inr',
                               'post_hgb', 'post_plt', 'post_fibrinogen', 'post_inr',
-                              'rbc_cost', 'ffp_cost', 'plt_cost', 'cryo_cost', 'cell_saver_cost', 'total_cost']:
+                              'rbc_cost', 'ffp_cost', 'plt_cost', 'cryo_cost', 'whole_cost', 'cell_saver_cost', 'total_cost']:
                     c[field] = float(c[field]) if c[field] is not None else None
 
         # Define schema for visit attributes
@@ -128,6 +128,7 @@ class Command(BaseCommand):
             pa.field("intraop_ffp_units", pa.uint16(), nullable=True),
             pa.field("intraop_plt_units", pa.uint16(), nullable=True),
             pa.field("intraop_cryo_units", pa.uint16(), nullable=True),
+            pa.field("intraop_whole_units", pa.uint16(), nullable=True),
             pa.field("intraop_cell_saver_ml", pa.uint32(), nullable=True),
 
             pa.field("los", pa.float32(), nullable=True),
@@ -140,6 +141,7 @@ class Command(BaseCommand):
             pa.field("ffp_cost", pa.float32(), nullable=True),
             pa.field("plt_cost", pa.float32(), nullable=True),
             pa.field("cryo_cost", pa.float32(), nullable=True),
+            pa.field("whole_cost", pa.float32(), nullable=True),
             pa.field("cell_saver_cost", pa.float32(), nullable=True),
             pa.field("total_cost", pa.float32(), nullable=True),
         ])

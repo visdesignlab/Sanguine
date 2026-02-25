@@ -81,6 +81,22 @@ export const BLOOD_COMPONENTS = [
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
+    value: 'whole_units',
+    label: {
+      short: 'Whole Blood',
+      base: 'Whole Blood Transfused',
+      sum: 'Total Whole Blood Transfused',
+      avg: 'Average Whole Blood Transfused Per Visit',
+    },
+    units: {
+      sum: 'Whole Blood Units',
+      avg: 'Whole Blood Units Per Visit',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: BLOOD_COMPONENT_DECIMALS,
+  },
+  {
     value: 'cell_saver_ml',
     label: {
       short: 'Cell Salvage',
@@ -520,6 +536,19 @@ export const COSTS = {
     },
     decimals: { sum: 0, avg: 0 },
   },
+  whole_cost: {
+    value: 'whole_cost',
+    label: {
+      short: 'Whole Blood Cost',
+      base: 'Whole Blood Cost',
+      sum: 'Total Whole Blood Cost',
+      avg: 'Average Whole Blood Cost Per Visit',
+    },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
+    decimals: { sum: 0, avg: 0 },
+  },
   // TODO: Unit cost is wrong
   cell_saver_cost: {
     value: 'cell_saver_cost',
@@ -605,6 +634,7 @@ export const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
   ffp_units_cost: 55,
   plt_units_cost: 650,
   cryo_units_cost: 70,
+  whole_cost: 300,
   cell_saver_cost: 500,
 };
 
@@ -696,6 +726,7 @@ export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
   ffp_units: '#C99700',
   plt_units: '#decfa2',
   cryo_units: '#58a2c8',
+  whole_units: '#600000',
   cell_saver_ml: '#E4572E',
   cell_saver: '#E4572E',
 };

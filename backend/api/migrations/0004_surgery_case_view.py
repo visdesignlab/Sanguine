@@ -37,11 +37,11 @@ def create_materialize_proc(apps, schema_editor):
             post_fibrinogen,
             post_inr,
 
-            -- Intraop Transfusions
             intraop_rbc_units,
             intraop_ffp_units,
             intraop_plt_units,
             intraop_cryo_units,
+            intraop_whole_units,
             intraop_cell_saver_ml,
 
             -- Visit Outcomes (Repeated per case for easier querying)
@@ -56,6 +56,7 @@ def create_materialize_proc(apps, schema_editor):
             ffp_cost,
             plt_cost,
             cryo_cost,
+            whole_cost,
             cell_saver_cost,
             total_cost
         )
@@ -141,6 +142,7 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(intra.sum_ffp, 0) as intraop_ffp_units,
             COALESCE(intra.sum_plt, 0) as intraop_plt_units,
             COALESCE(intra.sum_cryo, 0) as intraop_cryo_units,
+            COALESCE(intra.sum_whole, 0) as intraop_whole_units,
             COALESCE(intra.sum_cs, 0) as intraop_cell_saver_ml,
 
             -- Visit Outcomes
@@ -155,6 +157,7 @@ def create_materialize_proc(apps, schema_editor):
             (COALESCE(intra.sum_ffp, 0) * 50.00) as ffp_cost,
             (COALESCE(intra.sum_plt, 0) * 500.00) as plt_cost,
             (COALESCE(intra.sum_cryo, 0) * 30.00) as cryo_cost,
+            (COALESCE(intra.sum_whole, 0) * 300.00) as whole_cost,
             (CASE WHEN COALESCE(intra.sum_cs, 0) > 0 THEN 225.00 ELSE 0.00 END) as cell_saver_cost,
             
             -- Total Cost computation
@@ -162,6 +165,7 @@ def create_materialize_proc(apps, schema_editor):
              (COALESCE(intra.sum_ffp, 0) * 50.00) +
              (COALESCE(intra.sum_plt, 0) * 500.00) +
              (COALESCE(intra.sum_cryo, 0) * 30.00) +
+             (COALESCE(intra.sum_whole, 0) * 300.00) +
              (CASE WHEN COALESCE(intra.sum_cs, 0) > 0 THEN 225.00 ELSE 0.00 END)) as total_cost
 
         FROM SurgeryCase sc
@@ -175,6 +179,7 @@ def create_materialize_proc(apps, schema_editor):
                 SUM(ffp_units) as sum_ffp,
                 SUM(plt_units) as sum_plt,
                 SUM(cryo_units) as sum_cryo,
+                SUM(whole_units) as sum_whole,
                 SUM(cell_saver_ml) as sum_cs,
                 -- We need min/max time? No, we filter in join. 
                 -- Wait, we can't easily join on time range inside a subquery if we group by visit_no unless we carry time.
@@ -258,6 +263,7 @@ class Migration(migrations.Migration):
                 intraop_ffp_units SMALLINT UNSIGNED DEFAULT 0,
                 intraop_plt_units SMALLINT UNSIGNED DEFAULT 0,
                 intraop_cryo_units SMALLINT UNSIGNED DEFAULT 0,
+                intraop_whole_units SMALLINT UNSIGNED DEFAULT 0,
                 intraop_cell_saver_ml MEDIUMINT UNSIGNED DEFAULT 0,
 
                 los FLOAT,
@@ -270,6 +276,7 @@ class Migration(migrations.Migration):
                 ffp_cost DECIMAL(8,2),
                 plt_cost DECIMAL(8,2),
                 cryo_cost DECIMAL(8,2),
+                whole_cost DECIMAL(8,2),
                 cell_saver_cost DECIMAL(8,2),
                 total_cost DECIMAL(10,2),
 

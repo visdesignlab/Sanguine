@@ -128,7 +128,7 @@ function mulberry32(a: number) {
     // eslint-disable-next-line no-bitwise
     let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
     // eslint-disable-next-line no-bitwise
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
     // eslint-disable-next-line no-bitwise
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
@@ -310,7 +310,13 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
   return result;
 };
 
-const chartColors = ['#2c7bb6', '#abd9e9', '#ffffbf', '#fdae61', '#d7191c'];
+// Cost Savings Palette
+// 1. Pale Sand (Lowest/Background, FFP)
+// 2. Soft Orange (Low-mid, Platelets)
+// 3. Vivid Orange (Median)
+// 4. Classic Red (High-mid, RBCs)
+// 5. Deep Maroon (Peak/Maximum, Cryo)
+const chartColors = ['#fdf5e6', '#ffb366', '#fb7e07', '#d0021b', '#67000d'];
 
 function NumericBarCell({
   value, max, colVar, opts = {}, setHoveredValue, agg,
@@ -430,16 +436,19 @@ function StackedBarCell({
 }) {
   const parts = [
     {
-      key: 'rbc_cost', label: 'RBC Cost', value: Number(row.rbc_cost ?? 0), color: chartColors[4],
+      key: 'rbc_cost', label: 'RBC Cost', value: Number(row.rbc_cost ?? 0), color: chartColors[3], // Classic Red
     },
     {
-      key: 'ffp_cost', label: 'FFP Cost', value: Number(row.ffp_cost ?? 0), color: chartColors[2],
+      key: 'ffp_cost', label: 'FFP Cost', value: Number(row.ffp_cost ?? 0), color: chartColors[0], // Pale Sand
     },
     {
-      key: 'plt_cost', label: 'Platelets Cost', value: Number(row.plt_cost ?? 0), color: chartColors[0],
+      key: 'plt_cost', label: 'Platelets Cost', value: Number(row.plt_cost ?? 0), color: chartColors[1], // Soft Orange
     },
     {
-      key: 'cryo_cost', label: 'Cryo Cost', value: Number(row.cryo_cost ?? 0), color: chartColors[1],
+      key: 'whole_cost', label: 'Whole Blood Cost', value: Number(row.whole_cost ?? 0), color: chartColors[2], // Vivid Orange
+    },
+    {
+      key: 'cryo_cost', label: 'Cryo Cost', value: Number(row.cryo_cost ?? 0), color: chartColors[4], // Deep Maroon
     },
   ];
 
@@ -452,11 +461,17 @@ function StackedBarCell({
       label={(
         <Stack gap={4}>
           {parts.map((p) => (
-            <Text key={p.key} fz="xs" style={{ whiteSpace: 'nowrap' }}>
-              {p.label}
-              {': '}
-              {getFormattedValue(p.value, colVar, agg, true)}
-            </Text>
+            <Flex key={p.key} align="center" gap={6}>
+              <div style={{
+                width: 8, height: 8, borderRadius: '50%', backgroundColor: p.color,
+              }}
+              />
+              <Text fz="xs" style={{ whiteSpace: 'nowrap' }}>
+                {p.label}
+                {': '}
+                {getFormattedValue(p.value, colVar, agg, true)}
+              </Text>
+            </Flex>
           ))}
           <Box pt={4} style={{ borderTop: '1px solid rgba(255,255,255,0.2)' }}>
             <Text fz="xs" fw={700}>
@@ -883,8 +898,14 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             <div style={{ width: '100%', marginTop: 2 }}>
               <div
                 style={{
-                  width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  boxSizing: 'border-box', fontSize: 10, fontWeight: 600, opacity: 0.7,
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  boxSizing: 'border-box',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  opacity: 0.7,
                 }}
               >
                 <div style={{ paddingLeft: 4, color: '#6f6f6f' }}>{violinAggregate.minAll.toFixed(2)}</div>
@@ -901,7 +922,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         if (agg && titleMap[agg]) displayTitle = titleMap[agg];
       }
       if (colVar === 'salvage_savings') {
-        const titleMap: Record<string, string> = { sum: 'Total Savings', avg: 'Savings from Cell Salvage per Visit' };
+        const titleMap: Record<string, string> = { sum: 'Total Savings from Cell Salvage', avg: 'Savings from Cell Salvage per Visit' };
         if (agg && titleMap[agg]) displayTitle = titleMap[agg];
       }
 
