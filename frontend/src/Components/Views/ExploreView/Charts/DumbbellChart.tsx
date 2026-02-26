@@ -624,9 +624,7 @@ export const DumbbellChartContent = memo(({
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const vWidth = Math.min(totalWidth, visibleRange[1] - visibleRange[0]);
-    const h = canvas.height / dpr;
-    ctx.clearRect(0, 0, vWidth, h);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.scale(dpr, dpr);
     ctx.translate(-Math.max(0, visibleRange[0]), 0);

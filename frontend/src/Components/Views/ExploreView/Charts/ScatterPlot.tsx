@@ -580,11 +580,10 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const w = canvas.width / dpr;
-    const h = canvas.height / dpr;
-    ctx.clearRect(0, 0, w * dpr, h * dpr);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.scale(dpr, dpr);
+    ctx.translate(-Math.max(0, visibleRange[0]), 0);
 
     const hovered = hoveredPointRef.current;
     const sel = appliedSelection;
@@ -639,7 +638,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
 
     ctx.restore();
-  }, [pointPositions, appliedSelection, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups]);
+  }, [pointPositions, appliedSelection, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange]);
 
   // Redraw canvas when dependencies change
   useEffect(() => { drawPoints(); }, [drawPoints]);
@@ -648,13 +647,15 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const vWidth = Math.min(totalWidth, visibleRange[1] - visibleRange[0]);
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = totalWidth * dpr;
+    canvas.width = vWidth * dpr;
     canvas.height = height * dpr;
-    canvas.style.width = `${totalWidth}px`;
+    canvas.style.width = `${vWidth}px`;
     canvas.style.height = `${height}px`;
+    canvas.style.left = `${Math.max(0, visibleRange[0])}px`;
     drawPoints();
-  }, [totalWidth, height, drawPoints]);
+  }, [totalWidth, height, visibleRange, drawPoints]);
 
   // Mouse handlers for brush + hover
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -1051,7 +1052,12 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); setBrushHoverCursor('crosshair'); requestAnimationFrame(drawPoints); }}
                 >
                   {/* SVG layer for gridlines, bins, targets, avg, brush */}
-                  <svg width={totalWidth} height={height} style={{ position: 'absolute', top: 0, left: 0 }}>
+                  <svg
+                    width={Math.min(totalWidth, visibleRange[1] - visibleRange[0])}
+                    height={height}
+                    style={{ position: 'absolute', top: 0, left: Math.max(0, visibleRange[0]) }}
+                    viewBox={`${Math.max(0, visibleRange[0])} 0 ${Math.min(totalWidth, visibleRange[1] - visibleRange[0])} ${height}`}
+                  >
                     {/* Gridlines */}
                     <g transform={`translate(0, ${SCATTER_MARGIN.top})`}>
                       {yScale.ticks(5).map((tick) => (
@@ -1306,7 +1312,10 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   <canvas
                     ref={canvasRef}
                     style={{
-                      position: 'absolute', top: 0, left: 0, pointerEvents: 'none',
+                      position: 'absolute',
+                      top: 0,
+                      left: Math.max(0, visibleRange[0]),
+                      pointerEvents: 'none',
                     }}
                   />
 
