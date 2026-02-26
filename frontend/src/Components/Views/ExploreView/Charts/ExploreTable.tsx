@@ -950,9 +950,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
       // Custom Render Logic
       if (type === 'stackedBar') {
-        column.render = (row) => <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} />;
+        column.render = (row: ExploreTableRow) => <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} />;
       } else if (type === 'numericBar') {
-        column.render = (row) => {
+        column.render = (row: ExploreTableRow) => {
           const val = Number(row[colVar]);
           return (
             <NumericBarCell
