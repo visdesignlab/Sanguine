@@ -86,8 +86,8 @@ export const presetStateCards: PresetGroup[] = [
           {
             chartId: 'preset-scatter-prevent-anemia',
             chartType: 'scatterPlot',
-            xAxisVar: 'year_quarter',
-            yAxisVar: 'post_hgb',
+            xAxisVar: 'rbc_units',
+            yAxisVar: 'pre_hgb',
             aggregation: 'none',
           },
         ],
@@ -123,7 +123,7 @@ export const presetStateCards: PresetGroup[] = [
           },
           {
             chartId: 'preset-explore-table-hgb',
-            title: 'RBC Transfusions per Surgeon',
+            title: 'Transfusions per Surgeon',
             chartType: 'exploreTable',
             rowVar: 'attending_provider',
             columns: [
@@ -144,6 +144,12 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'sum',
                 type: 'numeric',
                 title: 'Cases',
+              },
+              {
+                colVar: 'percent_0_rbc',
+                aggregation: 'avg',
+                type: 'heatmap',
+                title: '0 RBC',
               },
               {
                 colVar: 'percent_1_rbc',
@@ -295,7 +301,7 @@ export const presetStateCards: PresetGroup[] = [
         chartConfigs: [
           {
             chartId: 'preset-explore-table-cell-salvage',
-            title: 'Outcomes per Provider (Cell Salvage)',
+            title: 'Cell Salvage per Anesthesiologist',
             chartType: 'exploreTable',
             rowVar: 'anesth_prov_id',
             columns: [
@@ -306,7 +312,7 @@ export const presetStateCards: PresetGroup[] = [
                 title: 'DRG Weight',
               },
               {
-                colVar: 'surgeon_prov_id',
+                colVar: 'anesth_prov_id',
                 aggregation: 'none',
                 type: 'text',
                 title: 'Anesthesiologist',
@@ -322,36 +328,6 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'sum',
                 type: 'numeric',
                 title: 'Cases',
-              },
-              {
-                colVar: 'percent_1_rbc',
-                aggregation: 'avg',
-                type: 'heatmap',
-                title: '1 RBC',
-              },
-              {
-                colVar: 'percent_2_rbc',
-                aggregation: 'avg',
-                type: 'heatmap',
-                title: '2 RBC',
-              },
-              {
-                colVar: 'percent_3_rbc',
-                aggregation: 'avg',
-                type: 'heatmap',
-                title: '3 RBC',
-              },
-              {
-                colVar: 'percent_4_rbc',
-                aggregation: 'avg',
-                type: 'heatmap',
-                title: '4 RBC',
-              },
-              {
-                colVar: 'percent_above_5_rbc',
-                aggregation: 'avg',
-                type: 'heatmap',
-                title: '≥5 RBC',
               },
             ],
             twoValsPerRow: false,
