@@ -12,10 +12,20 @@ export function getProcessedDumbbellData(
   hasNestedBins: boolean,
   providerSort: 'alpha' | 'count' | 'pre' | 'post' = 'alpha',
 ) {
+  const preAccess = labConfig.preKey;
+  const postAccess = labConfig.postKey;
+
+  // Filter out cases where either pre or post values are missing
+  const filteredData = rawData.filter((d) => {
+    const preVal = d[preAccess];
+    const postVal = d[postAccess];
+    return preVal != null && postVal != null;
+  });
+
   const groupedByBinGroup = new Map<string, DumbbellCase[]>();
 
   // Grouping Logic based on selectedX
-  rawData.forEach((d: DumbbellCase) => {
+  filteredData.forEach((d: DumbbellCase) => {
     let key = d.surgeon_prov_name; // Default Surgeon Name
     if (selectedX === 'anesthesiologist') key = d.anesth_prov_name;
     else if (selectedX === 'year_quarter') {
@@ -85,9 +95,6 @@ export function getProcessedDumbbellData(
       const casesA = groupedByBinGroup.get(a) || [];
       const casesB = groupedByBinGroup.get(b) || [];
 
-      const preAccess = labConfig.preKey;
-      const postAccess = labConfig.postKey;
-
       const getAvg = (cases: DumbbellCase[], type: 'pre' | 'post') => {
         let sum = 0;
         let count = 0;
@@ -140,8 +147,6 @@ export function getProcessedDumbbellData(
       }
 
       const nestedBins = Array.from(groupedByNestedBin.entries()).map(([nestedBinLabel, nestedBinCases]) => {
-        const preAccess = labConfig.preKey;
-        const postAccess = labConfig.postKey;
         const preValues = nestedBinCases.map((c) => c[preAccess] as number);
         const postValues = nestedBinCases.map((c) => c[postAccess] as number);
         const minPre = preValues.length > 0 ? Math.min(...preValues) : Infinity;
@@ -168,9 +173,6 @@ export function getProcessedDumbbellData(
           return timeA - timeB;
         });
       }
-
-      const preAccess = labConfig.preKey;
-      const postAccess = labConfig.postKey;
 
       let sumPre = 0; let countPre = 0;
       let sumPost = 0; let countPost = 0;
@@ -200,8 +202,6 @@ export function getProcessedDumbbellData(
       });
     } else {
       const sortedCases = [...cases];
-      const preAccess = labConfig.preKey;
-      const postAccess = labConfig.postKey;
 
       if (binGroupSort === 'pre') {
         sortedCases.sort((a, b) => {

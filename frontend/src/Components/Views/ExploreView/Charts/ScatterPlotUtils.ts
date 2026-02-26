@@ -85,10 +85,19 @@ export function getProcessedScatterData(
   yKey: keyof DumbbellCase,
   sortMode: string,
   isDiscrete: boolean,
+  xVarKey?: keyof DumbbellCase | null,
 ): ScatterBinGroup[] {
+  // Filter out cases where Y is null
+  let filteredData = rawData.filter((d) => d[yKey] != null);
+
+  // If continuous, also filter out cases where X is null
+  if (!isDiscrete && xVarKey) {
+    filteredData = filteredData.filter((d) => d[xVarKey] != null);
+  }
+
   // --- Continuous mode: return all cases in a single "virtual" bin ---
   if (!isDiscrete) {
-    const sortedCases = sortCases([...rawData], yKey, sortMode);
+    const sortedCases = sortCases([...filteredData], yKey, sortMode);
     const avg = computeAvg(sortedCases, yKey);
     return [{
       id: '__continuous__',
@@ -102,7 +111,7 @@ export function getProcessedScatterData(
   // --- Discrete mode: group into bins ---
   const groupedByBinGroup = new Map<string, DumbbellCase[]>();
 
-  rawData.forEach((d: DumbbellCase) => {
+  filteredData.forEach((d: DumbbellCase) => {
     let key = '';
     if (selectedX === 'year_quarter') {
       const yearRaw = ((d as unknown) as Record<string, unknown>).year as string;

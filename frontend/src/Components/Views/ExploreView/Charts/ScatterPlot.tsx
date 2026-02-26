@@ -430,8 +430,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     return (storeData as DumbbellCase[]) || [];
   }, [store.exploreChartData, chartConfig.chartId]);
   const processedData = useMemo(
-    () => getProcessedScatterData(rawData, selectedX, varConfig.key, sortMode, isDiscrete),
-    [rawData, selectedX, varConfig.key, sortMode, isDiscrete],
+    () => getProcessedScatterData(rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey),
+    [rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey],
   );
 
   // Layout (discrete mode)
