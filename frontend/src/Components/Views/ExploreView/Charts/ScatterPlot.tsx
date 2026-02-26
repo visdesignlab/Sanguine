@@ -309,7 +309,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [selectedY, setSelectedY] = useState<string>(chartConfig.yAxisVar || 'post_hgb');
   const [showTargets, setShowTargets] = useState(true);
   const [showAvg, setShowAvg] = useState(true);
-  const [sortMode, setSortMode] = useState<string>('time');
+  const [sortMode, setSortMode] = useState<string>('asc');
   const [collapsedBinGroups, setCollapsedBinGroups] = useState<Set<string>>(new Set());
   const [collapsedNestedBins, setCollapsedNestedBins] = useState<Set<string>>(new Set());
 

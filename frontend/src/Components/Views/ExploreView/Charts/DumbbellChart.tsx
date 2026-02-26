@@ -1301,7 +1301,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   const [showPost, setShowPost] = useState<boolean>(true);
   const [showTargets, setShowTargets] = useState<boolean>(true);
   const [showMedian, setShowMedian] = useState<boolean>(true);
-  const [sortMode, setSortMode] = useState<string>('time');
+  const [sortMode, setSortMode] = useState<string>('pre');
   const [providerSort, setProviderSort] = useState<'alpha' | 'count' | 'pre' | 'post'>('alpha');
 
   // Clear provider sorts when global sort changes
@@ -1721,8 +1721,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
               }}
               >
                 <Tooltip
-                  label={`Sort ${DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label} Bins: ${providerSort === 'alpha' ? 'A/Z →' : providerSort === 'count' ? 'Case Count →' : providerSort === 'pre' ? 'Pre-op Avg →' : 'Post-op Avg →'
-                  }`}
+                  label={`Sort ${DUMBBELL_X_AXIS_OPTIONS.find((opt) => opt.value === selectedX)?.label} Bins: ${providerSort === 'alpha' ? 'A/Z →' : providerSort === 'count' ? 'Case Count →' : providerSort === 'pre' ? 'Pre-op Avg →' : 'Post-op Avg →'}`}
                   position="right"
                 >
                   <Button
