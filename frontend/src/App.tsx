@@ -77,11 +77,9 @@ function App() {
 
         const resSurgery = await fetch(apiPath('get_surgery_case_attributes'));
         if (!resSurgery.ok) {
-          console.warn(`Failed to fetch surgery cases. Status: ${resSurgery.status}`);
-          // Optional: throw error if critical
-        } else {
-          await db.registerFileBuffer('surgery_case_attributes.parquet', new Uint8Array(await resSurgery.arrayBuffer()));
+          throw new Error(`Failed to fetch surgery cases. Status: ${resSurgery.status}`);
         }
+        await db.registerFileBuffer('surgery_case_attributes.parquet', new Uint8Array(await resSurgery.arrayBuffer()));
 
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
