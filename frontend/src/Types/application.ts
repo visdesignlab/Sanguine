@@ -404,7 +404,7 @@ export const LAB_RESULTS = [
     metricId: 'platelet',
     metricLabel: 'Platelet Count',
     label: {
-      short: 'Pre-op Platelet', base: 'Pre-op Platelet', sum: 'Total', avg: 'Avg',
+      short: 'Pre-op Platelet Count', base: 'Pre-op Platelet Count', sum: 'Total', avg: 'Avg',
     },
     units: { sum: 'K/µL', avg: 'K/µL' },
     range: { min: 0, max: 600 },
@@ -416,7 +416,7 @@ export const LAB_RESULTS = [
     metricId: 'platelet',
     metricLabel: 'Platelet Count',
     label: {
-      short: 'Post-op Platelet', base: 'Post-op Platelet', sum: 'Total', avg: 'Avg',
+      short: 'Post-op Platelet Count', base: 'Post-op Platelet Count', sum: 'Total', avg: 'Avg',
     },
     units: { sum: 'K/µL', avg: 'K/µL' },
     range: { min: 0, max: 600 },
