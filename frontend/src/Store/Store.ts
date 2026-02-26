@@ -1727,9 +1727,6 @@ export class RootStore {
         // Iterate over the columns and build the column selection clauses
         tableConfig.columns.forEach((col) => {
           const { colVar } = col;
-
-          if (col.type === 'violin') return;
-
           let colAggregation = config.aggregation || col.aggregation;
 
           if (colAggregation === 'none' && colVar !== tableConfig.rowVar) {
@@ -1802,6 +1799,11 @@ export class RootStore {
               // Count occurrences: SUM(1|0)
               columnClauses.push(`SUM(CAST(${colVar} AS INT)) AS ${colVar}`);
             }
+          } else if (col.type === 'violin') {
+            // Special case for violin: fetch all values as a list for distribution
+            // We use apr_drg_weight specifically for drg_weight colVar
+            const dbCol = colVar === 'drg_weight' ? 'apr_drg_weight' : colVar;
+            columnClauses.push(`list(CAST(${dbCol} AS DOUBLE)) AS ${colVar}`);
           } else {
             // Standard numeric aggregation
             columnClauses.push(`${aggFn}(${colVar}) AS ${colVar}`);

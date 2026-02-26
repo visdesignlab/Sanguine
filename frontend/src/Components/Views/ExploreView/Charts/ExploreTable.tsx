@@ -3,7 +3,7 @@ import React, {
   useCallback,
 } from 'react';
 import { area, curveCatmullRom } from 'd3-shape';
-import { scaleLinear } from 'd3-scale';
+import { scaleLinear, scaleLog } from 'd3-scale';
 import { mean as d3Mean, max as d3Max } from 'd3-array';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import {
@@ -118,37 +118,6 @@ function kernelDensityEstimator(kernel: (v: number) => number, X: number[]) {
   };
 }
 
-function mulberry32(a: number) {
-  let seed = a;
-  return function rng() {
-    // eslint-disable-next-line no-bitwise
-    seed |= 0;
-    // eslint-disable-next-line no-bitwise
-    seed = (seed + 0x6d2b79f5) | 0;
-    // eslint-disable-next-line no-bitwise
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    // eslint-disable-next-line no-bitwise
-    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
-    // eslint-disable-next-line no-bitwise
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function makeFakeSamplesForRow(row: ExploreTableRow, count = 40) {
-  const seedStr = `${row.attending_provider ?? row.year ?? row.quarter ?? ''}:${row.cases ?? 0}`;
-  let h = 2166136261;
-  for (let i = 0; i < seedStr.length; i += 1) {
-    // eslint-disable-next-line no-bitwise
-    h = Math.imul(h ^ seedStr.charCodeAt(i), 16777619);
-  }
-  const rnd = mulberry32(h);
-  const samples = new Array(count).fill(0).map(() => {
-    const v = rnd() ** 1.3 * 1.5 + 0.2 + (Number(row.cases ?? 0) % 5) * 0.05;
-    return Math.round(v * 100) / 100;
-  });
-  return samples;
-}
-
 function computeMedian(arr: number[]) {
   if (!arr || arr.length === 0) return 0;
   const s = [...arr].sort((a, b) => a - b);
@@ -176,15 +145,22 @@ function ViolinCell({
 
   const domainMin = (domain && typeof domain[0] === 'number') ? domain[0] : sampleMin;
   const domainMax = (domain && typeof domain[1] === 'number') ? domain[1] : sampleMax;
-  const domainRange = Math.max(1e-6, domainMax - domainMin);
-
-  const ticks = 20;
+  const ticks = 60;
   const centerY = height / 2;
 
-  const xScale = scaleLinear().domain([domainMin, domainMax]).range([padding, internalWidth - padding]);
+  // Use log scale as MS-DRG weights are highly skewed
+  const effectiveMin = Math.max(0.1, domainMin);
+  const xScale = scaleLog().domain([effectiveMin, domainMax]).range([padding, internalWidth - padding]);
 
-  const liner = Array.from({ length: ticks }).map((_, i) => domainMin + (i * domainRange) / Math.max(1, ticks - 1));
-  const bandwidth = Math.max(domainRange / 8, 1e-3);
+  // Logarithmic sampling for KDE points to ensure resolution at the dense low end
+  const logMin = Math.log(effectiveMin);
+  const logMax = Math.log(domainMax);
+  const liner = Array.from({ length: ticks }).map((_, i) => (
+    Math.exp(logMin + (i * (logMax - logMin)) / (ticks - 1))
+  ));
+
+  // Bandwidth adjusted for log scale sampling
+  const bandwidth = Math.max(0.2, (domainMax - effectiveMin) / 15);
   const kde = kernelDensityEstimator(kernelEpanechnikov(bandwidth), liner);
   const density = kde(samples);
   const maxDens = d3Max(density.map((d) => d[1])) ?? 1;
@@ -192,7 +168,7 @@ function ViolinCell({
   const yDensityScale = scaleLinear().domain([0, maxDens]).range([0, ((height - padding * 2) / 2) * 0.85]);
 
   const path = area<[number, number]>()
-    .x((d) => xScale(d[0]))
+    .x((d) => xScale(Math.max(effectiveMin, d[0])))
     .y0((d) => centerY - yDensityScale(d[1]))
     .y1((d) => centerY + yDensityScale(d[1]))
     .curve(curveCatmullRom);
@@ -248,8 +224,8 @@ function ViolinCell({
 // ---------- end DRG Violin helpers ----------
 
 // Helper function to sort rows
-const sortRows = <T, >(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] => (
-  [...data].sort((a, b) => {
+function sortRows<T>(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] {
+  return [...data].sort((a, b) => {
     const valueA = getter(a);
     const valueB = getter(b);
 
@@ -271,8 +247,8 @@ const sortRows = <T, >(data: T[], getter: (item: T) => string | number | boolean
     if (strA < strB) return -1;
     if (strA > strB) return 1;
     return 0;
-  })
-);
+  });
+}
 
 // Compute histogram bins for a given set of values
 const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
@@ -680,7 +656,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Check column config to see if we should force numeric sort or handle violin
       const colConfig = chartConfig.columns.find((c) => c.colVar === accessor);
       if (colConfig?.type === 'violin') {
-        const samples = makeFakeSamplesForRow(row, 40);
+        const samples = row[accessor] as number[];
         return computeMedian(samples);
       }
       if (colConfig?.type === 'numeric' || colConfig?.type === 'heatmap') {
@@ -848,7 +824,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Compute violin aggregate for footer when violin columns exist
       const violinAggregate = (() => {
         if (type !== 'violin') return null;
-        const perRow = rows.map((r: ExploreTableRow) => makeFakeSamplesForRow(r, 40));
+        const perRow = rows.map((r: ExploreTableRow) => r[colVar] as number[]);
         const allSamples = perRow.flat();
         if (allSamples.length === 0) return { samples: [] as number[], minAll: 0, maxAll: 0 };
         const mins = perRow.map((s) => Math.min(...s));
@@ -1024,7 +1000,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       } else if (type === 'violin') {
         column.textAlign = 'center';
         column.render = (row: ExploreTableRow) => {
-          const samples = makeFakeSamplesForRow(row, 40);
+          const samples = row[colVar] as number[];
           const domain: [number, number] = violinAggregate
             ? [violinAggregate.minAll, violinAggregate.maxAll]
             : [Math.min(...samples), Math.max(...samples)];
