@@ -1837,6 +1837,8 @@ export class RootStore {
         }
       }
       if (config.chartType === 'dumbbell') {
+
+        // TODO: Don't limit to only 10,000 surgeries.
         const query = `
           SELECT
              CAST(case_id AS VARCHAR) as case_id,
@@ -1874,6 +1876,8 @@ export class RootStore {
         }
       }
       if (config.chartType === 'scatterPlot') {
+        
+        // TODO: Don't limit to only 10,000 surgeries.
         const query = `
            SELECT
              CAST(case_id AS VARCHAR) as case_id,
