@@ -55,7 +55,7 @@ const ScatterYAxis = memo(({
   };
 
   useEffect(() => {
-    if (!dragging) return undefined;
+    if (!dragging || !varConfig.defaultTargets) return undefined;
     const handleMouseMove = (e: MouseEvent) => {
       const pixelRange = innerHeight;
       const valueRange = varConfig.max - varConfig.min;
@@ -64,7 +64,7 @@ const ScatterYAxis = memo(({
       setTargets((prev) => {
         const val = prev[dragging];
         let newVal = val - deltaValue;
-        const baseVal = varConfig.defaultTargets[dragging];
+        const baseVal = varConfig.defaultTargets![dragging];
         if (newVal > baseVal + SCATTER_DRAG_LIMIT) newVal = baseVal + SCATTER_DRAG_LIMIT;
         if (newVal < baseVal - SCATTER_DRAG_LIMIT) newVal = baseVal - SCATTER_DRAG_LIMIT;
         return { ...prev, [dragging]: newVal };
@@ -105,36 +105,38 @@ const ScatterYAxis = memo(({
         {varConfig.unit}
         )
       </text>
-      <g>
-        {(hoveredTarget === 'min' || dragging === 'min') && (
-          <Tooltip label={`Target Min: ${targets.min.toFixed(1)} ${varConfig.unit}`} position="right">
-            <g
-              transform={`translate(${SCATTER_MARGIN.left}, ${yScale(targets.min) + SCATTER_MARGIN.top})`}
-              style={{ cursor: 'ns-resize' }}
-              onMouseDown={handleDragStart('min')}
-              onMouseEnter={() => setHoveredTarget('min')}
-              onMouseLeave={() => setHoveredTarget(null)}
-            >
-              <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
-              <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.teal[6]} />
-            </g>
-          </Tooltip>
-        )}
-        {(hoveredTarget === 'max' || dragging === 'max') && (
-          <Tooltip label={`Target Max: ${targets.max.toFixed(1)} ${varConfig.unit}`} position="right">
-            <g
-              transform={`translate(${SCATTER_MARGIN.left}, ${yScale(targets.max) + SCATTER_MARGIN.top})`}
-              style={{ cursor: 'ns-resize' }}
-              onMouseDown={handleDragStart('max')}
-              onMouseEnter={() => setHoveredTarget('max')}
-              onMouseLeave={() => setHoveredTarget(null)}
-            >
-              <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
-              <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.indigo[6]} />
-            </g>
-          </Tooltip>
-        )}
-      </g>
+      {varConfig.defaultTargets && (
+        <g>
+          {(hoveredTarget === 'min' || dragging === 'min') && (
+            <Tooltip label={`Target Min: ${targets.min.toFixed(1)} ${varConfig.unit}`} position="right">
+              <g
+                transform={`translate(${SCATTER_MARGIN.left}, ${yScale(targets.min) + SCATTER_MARGIN.top})`}
+                style={{ cursor: 'ns-resize' }}
+                onMouseDown={handleDragStart('min')}
+                onMouseEnter={() => setHoveredTarget('min')}
+                onMouseLeave={() => setHoveredTarget(null)}
+              >
+                <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
+                <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.teal[6]} />
+              </g>
+            </Tooltip>
+          )}
+          {(hoveredTarget === 'max' || dragging === 'max') && (
+            <Tooltip label={`Target Max: ${targets.max.toFixed(1)} ${varConfig.unit}`} position="right">
+              <g
+                transform={`translate(${SCATTER_MARGIN.left}, ${yScale(targets.max) + SCATTER_MARGIN.top})`}
+                style={{ cursor: 'ns-resize' }}
+                onMouseDown={handleDragStart('max')}
+                onMouseEnter={() => setHoveredTarget('max')}
+                onMouseLeave={() => setHoveredTarget(null)}
+              >
+                <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
+                <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.indigo[6]} />
+              </g>
+            </Tooltip>
+          )}
+        </g>
+      )}
     </svg>
   );
 });
@@ -351,7 +353,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         min: 0,
         max: 20,
         key: bloodComp.value as keyof DumbbellCase,
-        defaultTargets: { min: 0, max: 10 },
       };
     }
     return {
@@ -360,7 +361,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       min: 0,
       max: 100,
       key: selectedY as keyof DumbbellCase,
-      defaultTargets: { min: 0, max: 50 },
     };
   }, [selectedY]);
 
@@ -375,8 +375,12 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   }, [selectedX, isDiscrete]);
 
   // Targets
-  const [targets, setTargets] = useState(varConfig.defaultTargets);
-  useEffect(() => { setTargets(varConfig.defaultTargets); }, [varConfig.defaultTargets]);
+  const [targets, setTargets] = useState(varConfig.defaultTargets || { min: 0, max: 0 });
+  useEffect(() => {
+    if (varConfig.defaultTargets) {
+      setTargets(varConfig.defaultTargets);
+    }
+  }, [varConfig.defaultTargets]);
 
   // Hover state
   const [hoveredTarget, setHoveredTargetRaw] = useState<string | null>(null);
@@ -873,18 +877,20 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
             <Flex direction="row" align="center" gap="xs" ml={0}>
               <Text size="xs" c="dimmed" fw={500}>Show:</Text>
               <Button.Group>
-                <Tooltip label="Show/hide target range" openDelay={500}>
-                  <Button
-                    size="xs"
-                    px={8}
-                    variant={showTargets ? 'light' : 'default'}
-                    color="gray"
-                    onClick={() => setShowTargets(!showTargets)}
-                    styles={{ root: { borderColor: showTargets ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
-                  >
-                    Target
-                  </Button>
-                </Tooltip>
+                {varConfig.defaultTargets && (
+                  <Tooltip label="Show/hide target range" openDelay={500}>
+                    <Button
+                      size="xs"
+                      px={8}
+                      variant={showTargets ? 'light' : 'default'}
+                      color="gray"
+                      onClick={() => setShowTargets(!showTargets)}
+                      styles={{ root: { borderColor: showTargets ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
+                    >
+                      Target
+                    </Button>
+                  </Tooltip>
+                )}
                 <Tooltip label="Show/hide average line" openDelay={500}>
                   <Button
                     size="xs"
@@ -1255,7 +1261,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                     )}
 
                     {/* Target overlay */}
-                    {showTargets && (
+                    {showTargets && varConfig.defaultTargets && (
                       <ScatterTargetOverlay
                         totalWidth={totalWidth}
                         yScale={yScale}

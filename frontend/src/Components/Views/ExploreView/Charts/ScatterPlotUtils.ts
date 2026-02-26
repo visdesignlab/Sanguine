@@ -24,7 +24,7 @@ export interface ScatterVarConfig {
   min: number;
   max: number;
   key: keyof DumbbellCase;
-  defaultTargets: { min: number; max: number };
+  defaultTargets?: { min: number; max: number };
 }
 
 export type SpatialIndex = Map<string, number[]>;
