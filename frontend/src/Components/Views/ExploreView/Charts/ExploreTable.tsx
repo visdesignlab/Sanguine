@@ -4,7 +4,7 @@ import React, {
 } from 'react';
 import { area, curveCatmullRom } from 'd3-shape';
 import { scaleLinear } from 'd3-scale';
-import { mean as d3Mean, max as d3Max } from 'd3-array';
+import { max as d3Max, ticks as d3Ticks } from 'd3-array';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import {
   MultiSelect,
@@ -28,6 +28,7 @@ import {
 import { BarChart } from '@mantine/charts';
 import { interpolateReds } from 'd3';
 import { Store } from '../../../../Store/Store';
+import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3Utils';
 import {
   ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions, ExploreTableColumnOptionsGrouped, ExploreTableRowOptions,
 } from '../../../../Types/application';
@@ -105,18 +106,6 @@ const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColum
 };
 
 // ---------- DRG Violin helpers ----------
-function kernelEpanechnikov(k: number) {
-  return function kernelFn(v: number) {
-    const u = v / k;
-    return Math.abs(u) <= 1 ? (0.75 * (1 - u * u)) / k : 0;
-  };
-}
-
-function kernelDensityEstimator(kernel: (v: number) => number, X: number[]) {
-  return function estimator(V: number[]) {
-    return X.map((x) => [x, d3Mean(V, (v) => kernel(x - v)) ?? 0] as [number, number]);
-  };
-}
 
 function mulberry32(a: number) {
   let seed = a;
@@ -183,7 +172,7 @@ function ViolinCell({
 
   const xScale = scaleLinear().domain([domainMin, domainMax]).range([padding, internalWidth - padding]);
 
-  const liner = Array.from({ length: ticks }).map((_, i) => domainMin + (i * domainRange) / Math.max(1, ticks - 1));
+  const liner = d3Ticks(domainMin, domainMax, ticks);
   const bandwidth = Math.max(domainRange / 8, 1e-3);
   const kde = kernelDensityEstimator(kernelEpanechnikov(bandwidth), liner);
   const density = kde(samples);
@@ -248,8 +237,8 @@ function ViolinCell({
 // ---------- end DRG Violin helpers ----------
 
 // Helper function to sort rows
-const sortRows = <T, >(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] => (
-  [...data].sort((a, b) => {
+function sortRows<T>(data: T[], getter: (item: T) => string | number | boolean | null | undefined | object): T[] {
+  return [...data].sort((a, b) => {
     const valueA = getter(a);
     const valueB = getter(b);
 
@@ -271,8 +260,8 @@ const sortRows = <T, >(data: T[], getter: (item: T) => string | number | boolean
     if (strA < strB) return -1;
     if (strA > strB) return 1;
     return 0;
-  })
-);
+  });
+}
 
 // Compute histogram bins for a given set of values
 const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
