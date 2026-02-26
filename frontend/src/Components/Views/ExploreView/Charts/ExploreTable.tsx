@@ -126,10 +126,14 @@ function computeMedian(arr: number[]) {
 }
 
 function ViolinCell({
-  samples, domain, height = 25, padding = 0,
-}: { samples: number[]; domain?: [number, number]; height?: number; padding?: number }) {
+  samples: rawSamples, domain, height = 25, padding = 0,
+}: { samples: number[] | Iterable<number>; domain?: [number, number]; height?: number; padding?: number }) {
   const internalWidth = 120;
-  if (!samples || samples.length === 0) {
+
+  // Normalize to a plain number[] — DuckDB list() may return typed arrays or proxy objects
+  const samples: number[] = rawSamples ? Array.from(rawSamples, Number) : [];
+
+  if (samples.length === 0) {
     return (
       <div style={{ width: '100%', height }}>
         <div style={{
@@ -140,8 +144,9 @@ function ViolinCell({
     );
   }
 
-  const sampleMin = Math.min(...samples);
-  const sampleMax = Math.max(...samples);
+  // Use reduce instead of Math.min/max(...spread) to avoid call-stack overflow on large arrays
+  const sampleMin = samples.reduce((a, b) => Math.min(a, b), Infinity);
+  const sampleMax = samples.reduce((a, b) => Math.max(a, b), -Infinity);
 
   const domainMin = (domain && typeof domain[0] === 'number') ? domain[0] : sampleMin;
   const domainMax = (domain && typeof domain[1] === 'number') ? domain[1] : sampleMax;
@@ -656,7 +661,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Check column config to see if we should force numeric sort or handle violin
       const colConfig = chartConfig.columns.find((c) => c.colVar === accessor);
       if (colConfig?.type === 'violin') {
-        const samples = row[accessor] as number[];
+        const raw = row[accessor];
+        const samples = raw ? Array.from(raw as Iterable<number>, Number) : [];
         return computeMedian(samples);
       }
       if (colConfig?.type === 'numeric' || colConfig?.type === 'heatmap') {
@@ -824,12 +830,23 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Compute violin aggregate for footer when violin columns exist
       const violinAggregate = (() => {
         if (type !== 'violin') return null;
-        const perRow = rows.map((r: ExploreTableRow) => r[colVar] as number[]);
+        const perRow = rows.map((r: ExploreTableRow) => {
+          const raw = r[colVar];
+          return raw ? Array.from(raw as Iterable<number>, Number) : [] as number[];
+        });
         const allSamples = perRow.flat();
         if (allSamples.length === 0) return { samples: [] as number[], minAll: 0, maxAll: 0 };
-        const mins = perRow.map((s) => Math.min(...s));
-        const maxs = perRow.map((s) => Math.max(...s));
-        return { samples: allSamples, minAll: Math.min(...mins), maxAll: Math.max(...maxs) };
+        const minAll = allSamples.reduce((a, b) => Math.min(a, b), Infinity);
+        const maxAll = allSamples.reduce((a, b) => Math.max(a, b), -Infinity);
+
+        // Downsample for footer violin to avoid flat-line KDE on massive arrays
+        const maxFooterSamples = 2000;
+        let footerSamples = allSamples;
+        if (allSamples.length > maxFooterSamples) {
+          const step = allSamples.length / maxFooterSamples;
+          footerSamples = Array.from({ length: maxFooterSamples }, (_, i) => allSamples[Math.floor(i * step)]);
+        }
+        return { samples: footerSamples, minAll, maxAll };
       })();
 
       // Filter component
