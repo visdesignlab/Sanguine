@@ -93,7 +93,6 @@ export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
   },
 ];
 
-// --- Dummy Data Generator REMOVED ---
 // endregion
 
 // region Types
@@ -170,9 +169,7 @@ export class RootStore {
 
   _transientExploreLayouts: { [key: string]: Layout[] } | null = null;
 
-  exploreDummyData: ExploreChartData = {};
-
-  exploreChartData: ExploreChartData = { ...this.exploreDummyData };
+  exploreChartData: ExploreChartData = {};
 
   // --- Filters State ---
   _initialFilterValues = {
@@ -1731,7 +1728,6 @@ export class RootStore {
         tableConfig.columns.forEach((col) => {
           const { colVar } = col;
 
-          // Skip client-only columns (e.g. violin plots use dummy data generated in the component)
           if (col.type === 'violin') return;
 
           let colAggregation = config.aggregation || col.aggregation;
@@ -1941,7 +1937,7 @@ export class RootStore {
     });
 
     const results = await Promise.all(promises);
-    const data: ExploreChartData = { ...this.exploreDummyData };
+    const data: ExploreChartData = {};
     results.forEach(({ id, data: d }) => {
       data[id] = d;
     });
