@@ -24,7 +24,6 @@ def create_materialize_proc(apps, schema_editor):
 
             -- Pre-op Labs (Last result before surgery start)
             pre_hgb,
-
             pre_plt,
             pre_fibrinogen,
             pre_inr,
