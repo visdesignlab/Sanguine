@@ -772,7 +772,8 @@ export type DumbbellChartConfig = ChartConfig<
 export const DUMBBELL_X_AXIS_OPTIONS = [
   { value: 'surgeon', label: 'Surgeon' },
   { value: 'anesthesiologist', label: 'Anesthesiologist' },
-  { value: 'year_quarter', label: 'Year & Quarter' },
+  { value: 'year', label: 'Year' },
+  { value: 'quarter', label: 'Quarter' },
   { value: 'rbc', label: 'Intraoperative RBCs Transfused' },
   { value: 'platelet', label: 'Intraoperative Platelets Transfused' },
   { value: 'cryo', label: 'Intraoperative Cryo Transfused' },
@@ -786,7 +787,6 @@ export const DUMBBELL_MARGIN = {
 
 export const DUMBBELL_CHAR_WIDTH_CASE = 4;
 export const DUMBBELL_DOT_RADIUS = 3;
-export const DUMBBELL_EMPTY_NESTED_BIN_WIDTH = 30;
 export const DUMBBELL_DRAG_LIMIT = 1.0;
 
 export type DumbbellSortState = 'none' | 'pre' | 'post' | 'gap';
@@ -797,7 +797,6 @@ export const SCATTER_MARGIN = {
 };
 export const SCATTER_DOT_RADIUS = 3;
 export const SCATTER_CHAR_WIDTH_CASE = 4;
-export const SCATTER_EMPTY_NESTED_BIN_WIDTH = 30;
 export const SCATTER_DRAG_LIMIT = 1.0;
 
 export type ScatterSortState = 'asc' | 'desc' | 'time';
@@ -840,7 +839,8 @@ export type DumbbellData = DumbbellCase[];
 
 // --- Scatter plots ---
 export const SCATTER_X_AXIS_OPTIONS = [
-  { value: 'year_quarter' as const, label: 'Year & Quarter', isDiscrete: true },
+  { value: 'year' as const, label: 'Year', isDiscrete: true },
+  { value: 'quarter' as const, label: 'Quarter', isDiscrete: true },
   ...BLOOD_COMPONENT_OPTIONS.map((b) => ({
     value: b.value,
     label: b.label.base,

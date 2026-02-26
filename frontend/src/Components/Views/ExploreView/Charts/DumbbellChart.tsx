@@ -31,22 +31,13 @@ interface DumbbellChartSVGProps {
     id: string;
     label: string;
     cases: DumbbellCase[];
-    nestedBins: {
-      id: string;
-      label: string;
-      cases: DumbbellCase[];
-      minPre: number;
-      minPost: number;
-    }[];
     avgPre: number | null;
     avgPost: number | null;
   }[];
   collapsedBinGroups: Set<string>;
-  collapsedNestedBins: Set<string>;
   hoveredCollapse: string | null;
   theme: MantineTheme;
   onToggleBinGroupCollapse: (e: React.MouseEvent, id: string) => void;
-  onToggleNestedBinCollapse: (e: React.MouseEvent, id: string) => void;
   setHoveredCollapse: (id: string | null) => void;
   labConfig: LabConfig;
   selectedX: string;
@@ -61,7 +52,6 @@ interface DumbbellChartSVGProps {
 // Separate Y-Axis
 const DumbbellYAxis = memo(({
   height,
-  hasNestedBins,
   yScale,
   theme,
   labConfig,
@@ -78,9 +68,8 @@ const DumbbellYAxis = memo(({
   setTargets: React.Dispatch<React.SetStateAction<{ preMin: number; postMin: number; postMax: number }>>;
   hoveredTarget: string | null;
   setHoveredTarget: (t: string | null) => void;
-  hasNestedBins: boolean;
 }) => {
-  const bottomMargin = hasNestedBins ? 50 : 25;
+  const bottomMargin = 25;
   const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - bottomMargin);
   const [dragging, setDragging] = useState<'preMin' | 'postMin' | 'postMax' | null>(null);
 
@@ -410,7 +399,6 @@ export const DumbbellChartContent = memo(({
   yScale,
   processedData,
   collapsedBinGroups,
-  collapsedNestedBins,
   hoveredCollapse,
   theme,
   labConfig,
@@ -418,29 +406,24 @@ export const DumbbellChartContent = memo(({
   showPre,
   showPost,
   onToggleBinGroupCollapse,
-  onToggleNestedBinCollapse,
   setHoveredCollapse,
-  hasNestedBins,
   binGroupLayout,
-  nestedBinLayout,
   showMedian,
   targets,
   setHoveredTarget,
   showTargets,
   visibleRange,
 }: DumbbellChartSVGProps & {
-  hasNestedBins: boolean,
   showPre: boolean,
   showPost: boolean,
   binGroupLayout: Map<string, { x: number, width: number, label: string, isOverflowing: boolean }>,
-  nestedBinLayout: Map<string, { x: number, width: number }>,
   showMedian: boolean,
   showTargets: boolean,
   targets: { preMin: number; postMin: number; postMax: number },
   setHoveredTarget: (t: string | null) => void,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
-  const bottomMargin = hasNestedBins ? 50 : 25;
+  const bottomMargin = 25;
   const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - bottomMargin);
 
   // Interaction State
@@ -699,80 +682,75 @@ export const DumbbellChartContent = memo(({
       }
 
       if (!collapsedBinGroups.has(binGroup.id)) {
-        for (let nbi = 0; nbi < binGroup.nestedBins.length; nbi += 1) {
-          const nestedBin = binGroup.nestedBins[nbi];
-          if (!collapsedNestedBins.has(nestedBin.id)) {
-            const nbLayout = nestedBinLayout.get(nestedBin.id);
-            if (nbLayout) {
-              const nestedBinX = nbLayout.x;
-              const nestedBinWidth = nbLayout.width;
+        const drawBgLayout = binGroupLayout.get(binGroup.id);
+        if (drawBgLayout) {
+          const binGroupX = drawBgLayout.x;
+          const binGroupWidth = drawBgLayout.width;
 
-              if (nestedBinX <= visibleRange[1] && nestedBinX + nestedBinWidth >= visibleRange[0]) {
-                const startIdxRaw = Math.floor((visibleRange[0] - nestedBinX - (DUMBBELL_CHAR_WIDTH_CASE / 2)) / DUMBBELL_CHAR_WIDTH_CASE);
-                const endIdxRaw = Math.ceil((visibleRange[1] - nestedBinX - (DUMBBELL_CHAR_WIDTH_CASE / 2)) / DUMBBELL_CHAR_WIDTH_CASE);
-                const startIdx = Math.max(0, startIdxRaw);
-                const endIdx = Math.min(nestedBin.cases.length, endIdxRaw + 1);
+          if (binGroupX <= visibleRange[1] && binGroupX + binGroupWidth >= visibleRange[0]) {
+            const startIdxRaw = Math.floor((visibleRange[0] - binGroupX - (DUMBBELL_CHAR_WIDTH_CASE / 2)) / DUMBBELL_CHAR_WIDTH_CASE);
+            const endIdxRaw = Math.ceil((visibleRange[1] - binGroupX - (DUMBBELL_CHAR_WIDTH_CASE / 2)) / DUMBBELL_CHAR_WIDTH_CASE);
+            const startIdx = Math.max(0, startIdxRaw);
+            const endIdx = Math.min(binGroup.cases.length, endIdxRaw + 1);
 
-                for (let ci = startIdx; ci < endIdx; ci += 1) {
-                  const d = nestedBin.cases[ci];
-                  const caseX = nestedBinX + ci * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
-                  const preVal = d[labConfig.preKey] as number | null;
-                  const postVal = d[labConfig.postKey] as number | null;
+            for (let ci = startIdx; ci < endIdx; ci += 1) {
+              const d = binGroup.cases[ci];
+              const caseX = binGroupX + ci * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
+              const preVal = d[labConfig.preKey] as number | null;
+              const postVal = d[labConfig.postKey] as number | null;
 
-                  const cyPre = preVal !== null ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
-                  const cyPost = postVal !== null ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
+              const cyPre = preVal !== null ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
+              const cyPost = postVal !== null ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
 
-                  const isHovered = hovered && hovered.caseData.case_id === d.case_id;
-                  const selected = (cyPre !== null && isSelected(caseX, cyPre)) || (cyPost !== null && isSelected(caseX, cyPost));
+              const isHovered = hovered && hovered.caseData.case_id === d.case_id;
+              const selected = (cyPre !== null && isSelected(caseX, cyPre)) || (cyPost !== null && isSelected(caseX, cyPost));
 
-                  let preColor = theme.colors.teal[6];
-                  let postColor = theme.colors.indigo[6];
-                  let lineColor = theme.colors.gray[4];
-                  let opacity = 0.8;
+              let preColor = theme.colors.teal[6];
+              let postColor = theme.colors.indigo[6];
+              let lineColor = theme.colors.gray[4];
+              let opacity = 0.8;
 
-                  if (isHovered) {
-                    preColor = smallHoverColor;
-                    postColor = smallHoverColor;
-                    lineColor = smallHoverColor;
-                  } else if (selected) {
-                    preColor = theme.colors.orange[6];
-                    postColor = theme.colors.orange[6];
-                    lineColor = theme.colors.orange[4];
-                  }
+              if (isHovered) {
+                preColor = smallHoverColor;
+                postColor = smallHoverColor;
+                lineColor = smallHoverColor;
+              } else if (selected) {
+                preColor = theme.colors.orange[6];
+                postColor = theme.colors.orange[6];
+                lineColor = theme.colors.orange[4];
+              }
 
-                  if (sel && !selected && !isHovered) {
-                    opacity = 0.25;
-                  }
+              if (sel && !selected && !isHovered) {
+                opacity = 0.25;
+              }
 
-                  // Draw connecting line
-                  if (showPre && showPost && cyPre !== null && cyPost !== null) {
-                    ctx.beginPath();
-                    ctx.moveTo(caseX, cyPre);
-                    ctx.lineTo(caseX, cyPost);
-                    ctx.strokeStyle = lineColor;
-                    ctx.globalAlpha = opacity;
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                  }
+              // Draw connecting line
+              if (showPre && showPost && cyPre !== null && cyPost !== null) {
+                ctx.beginPath();
+                ctx.moveTo(caseX, cyPre);
+                ctx.lineTo(caseX, cyPost);
+                ctx.strokeStyle = lineColor;
+                ctx.globalAlpha = opacity;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+              }
 
-                  // Draw pre circle
-                  if (showPre && cyPre !== null) {
-                    ctx.beginPath();
-                    ctx.arc(caseX, cyPre, DUMBBELL_DOT_RADIUS, 0, Math.PI * 2);
-                    ctx.fillStyle = preColor;
-                    ctx.globalAlpha = opacity;
-                    ctx.fill();
-                  }
+              // Draw pre circle
+              if (showPre && cyPre !== null) {
+                ctx.beginPath();
+                ctx.arc(caseX, cyPre, DUMBBELL_DOT_RADIUS, 0, Math.PI * 2);
+                ctx.fillStyle = preColor;
+                ctx.globalAlpha = opacity;
+                ctx.fill();
+              }
 
-                  // Draw post circle
-                  if (showPost && cyPost !== null) {
-                    ctx.beginPath();
-                    ctx.arc(caseX, cyPost, DUMBBELL_DOT_RADIUS, 0, Math.PI * 2);
-                    ctx.fillStyle = postColor;
-                    ctx.globalAlpha = opacity;
-                    ctx.fill();
-                  }
-                }
+              // Draw post circle
+              if (showPost && cyPost !== null) {
+                ctx.beginPath();
+                ctx.arc(caseX, cyPost, DUMBBELL_DOT_RADIUS, 0, Math.PI * 2);
+                ctx.fillStyle = postColor;
+                ctx.globalAlpha = opacity;
+                ctx.fill();
               }
             }
           }
@@ -781,7 +759,7 @@ export const DumbbellChartContent = memo(({
     }
 
     ctx.restore();
-  }, [processedData, collapsedBinGroups, collapsedNestedBins, nestedBinLayout, visibleRange, labConfig, yScale, showPre, showPost, appliedSelection, isSelected, theme, binGroupLayout, showMedian, totalWidth]);
+  }, [processedData, collapsedBinGroups, visibleRange, labConfig, yScale, showPre, showPost, appliedSelection, isSelected, theme, binGroupLayout, showMedian, totalWidth]);
 
   // Redraw when deps change
   useEffect(() => { drawDumbbells(); }, [drawDumbbells]);
@@ -825,45 +803,39 @@ export const DumbbellChartContent = memo(({
     for (let bgi = 0; bgi < processedData.length; bgi += 1) {
       const binGroup = processedData[bgi];
       if (!collapsedBinGroups.has(binGroup.id)) {
-        for (let nbi = 0; nbi < binGroup.nestedBins.length; nbi += 1) {
-          const nestedBin = binGroup.nestedBins[nbi];
-          if (!collapsedNestedBins.has(nestedBin.id)) {
-            const nbLayout = nestedBinLayout.get(nestedBin.id);
-            if (nbLayout) {
-              // Quick: which case index is closest to mx?
-              const approxIdx = Math.round((mx - nbLayout.x - DUMBBELL_CHAR_WIDTH_CASE / 2) / DUMBBELL_CHAR_WIDTH_CASE);
-              const checkFrom = Math.max(0, approxIdx - 1);
-              const checkTo = Math.min(nestedBin.cases.length - 1, approxIdx + 1);
+        const drawBgLayout = binGroupLayout.get(binGroup.id);
+        if (drawBgLayout) {
+          const approxIdx = Math.round((mx - drawBgLayout.x - DUMBBELL_CHAR_WIDTH_CASE / 2) / DUMBBELL_CHAR_WIDTH_CASE);
+          const checkFrom = Math.max(0, approxIdx - 1);
+          const checkTo = Math.min(binGroup.cases.length - 1, approxIdx + 1);
 
-              for (let ci = checkFrom; ci <= checkTo; ci += 1) {
-                const d = nestedBin.cases[ci];
-                const caseX = nbLayout.x + ci * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
-                const dx = Math.abs(mx - caseX);
-                if (dx <= bestDist) {
-                  const preVal = d[labConfig.preKey] as number | null;
-                  const postVal = d[labConfig.postKey] as number | null;
-                  const cyPre = preVal !== null && showPre ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
-                  const cyPost = postVal !== null && showPost ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
+          for (let ci = checkFrom; ci <= checkTo; ci += 1) {
+            const d = binGroup.cases[ci];
+            const caseX = drawBgLayout.x + ci * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
+            const dx = Math.abs(mx - caseX);
+            if (dx <= bestDist) {
+              const preVal = d[labConfig.preKey] as number | null;
+              const postVal = d[labConfig.postKey] as number | null;
+              const cyPre = preVal !== null && showPre ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
+              const cyPost = postVal !== null && showPost ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
 
-                  let minDy = Infinity;
-                  let dot: 'pre' | 'post' | null = null;
-                  if (cyPre !== null) {
-                    const dt = Math.abs(my - cyPre);
-                    if (dt < minDy) { minDy = dt; dot = 'pre'; }
-                  }
-                  if (cyPost !== null) {
-                    const dt = Math.abs(my - cyPost);
-                    if (dt < minDy) { minDy = dt; dot = 'post'; }
-                  }
+              let minDy = Infinity;
+              let dot: 'pre' | 'post' | null = null;
+              if (cyPre !== null) {
+                const dt = Math.abs(my - cyPre);
+                if (dt < minDy) { minDy = dt; dot = 'pre'; }
+              }
+              if (cyPost !== null) {
+                const dt = Math.abs(my - cyPost);
+                if (dt < minDy) { minDy = dt; dot = 'post'; }
+              }
 
-                  const dist = Math.sqrt(dx * dx + Math.min(minDy, bestDist) * Math.min(minDy, bestDist));
-                  if (dist < bestDist) {
-                    bestDist = dist;
-                    bestCase = {
-                      caseData: d, x: caseX, preY: cyPre, postY: cyPost, hoveredDot: dot,
-                    };
-                  }
-                }
+              const dist = Math.sqrt(dx * dx + Math.min(minDy, bestDist) * Math.min(minDy, bestDist));
+              if (dist < bestDist) {
+                bestDist = dist;
+                bestCase = {
+                  caseData: d, x: caseX, preY: cyPre, postY: cyPost, hoveredDot: dot,
+                };
               }
             }
           }
@@ -944,7 +916,7 @@ export const DumbbellChartContent = memo(({
     if (redrawNeeded) {
       requestAnimationFrame(drawDumbbells);
     }
-  }, [processedData, collapsedBinGroups, collapsedNestedBins, nestedBinLayout, binGroupLayout, showMedian, labConfig, yScale, showPre, showPost, height, bottomMargin, interactionMode, drawDumbbells]);
+  }, [processedData, collapsedBinGroups, binGroupLayout, showMedian, labConfig, yScale, showPre, showPost, height, bottomMargin, interactionMode, drawDumbbells]);
 
   const chartBody = useMemo(() => (
     <g transform={`translate(0, ${DUMBBELL_MARGIN.top})`}>
@@ -986,7 +958,7 @@ export const DumbbellChartContent = memo(({
           <g key={binGroup.id}>
             <rect
               x={binGroupX}
-              y={!hasNestedBins ? innerHeight : innerHeight + 25}
+              y={innerHeight}
               width={binGroupWidth}
               height={25}
               fill={isBinGroupCollapsed ? theme.colors.gray[4] : binGroupColor}
@@ -997,7 +969,7 @@ export const DumbbellChartContent = memo(({
                 {(() => {
                   if (selectedX === 'surgeon') return `Surgical Cases for ${binGroup.label}`;
                   if (selectedX === 'anesthesiologist') return `Surgical Cases for ${binGroup.label}`;
-                  if (selectedX === 'year_quarter') return `Surgical Cases in ${binGroup.label}`;
+                  if (selectedX === 'year' || selectedX === 'quarter') return `Surgical Cases in ${binGroup.label}`;
                   if (['rbc', 'platelet', 'cryo', 'ffp'].includes(selectedX)) {
                     return `Surgical Cases where ${binGroup.label} Transfused`;
                   }
@@ -1009,7 +981,7 @@ export const DumbbellChartContent = memo(({
 
             <foreignObject
               x={binGroupX}
-              y={!hasNestedBins ? innerHeight : innerHeight + 25}
+              y={innerHeight}
               width={binGroupWidth}
               height={25}
               style={{ pointerEvents: 'none' }}
@@ -1023,129 +995,44 @@ export const DumbbellChartContent = memo(({
                   justifyContent: 'center',
                   fontSize: 12,
                   fontWeight: 600,
-                  color: (isBinGroupCollapsed || (!hasNestedBins && collapsedNestedBins.has(binGroup.nestedBins[0].id))) ? theme.colors.gray[6] : theme.colors.gray[9],
+                  color: isBinGroupCollapsed ? theme.colors.gray[6] : theme.colors.gray[9],
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   WebkitMaskImage: layout?.isOverflowing && !isBinGroupCollapsed ? 'linear-gradient(to right, black 70%, transparent 100%)' : 'none',
                   maskImage: layout?.isOverflowing && !isBinGroupCollapsed ? 'linear-gradient(to right, black 70%, transparent 100%)' : 'none',
                 }}
               >
-                {(isBinGroupCollapsed || (!hasNestedBins && collapsedNestedBins.has(binGroup.nestedBins[0].id))) ? '...' : binGroupLabel}
+                {isBinGroupCollapsed ? '...' : binGroupLabel}
               </div>
             </foreignObject>
 
-            {!isBinGroupCollapsed && hasNestedBins && (
-              <>
-                <rect
-                  x={binGroupX + binGroupWidth - 15}
-                  y={innerHeight + 25}
-                  width={15}
-                  height={25}
-                  fill="transparent"
-                  style={{ cursor: 'pointer' }}
-                  onMouseEnter={() => setHoveredCollapse(binGroup.id)}
-                  onMouseLeave={() => setHoveredCollapse(null)}
-                  onClick={(e) => onToggleBinGroupCollapse(e, binGroup.id)}
-                />
-                {hoveredCollapse === binGroup.id && (
-                  <path
-                    d={isBinGroupCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
-                    transform={`translate(${binGroupX + binGroupWidth - 12}, ${innerHeight + 31}) scale(0.6)`}
-                    fill="none"
-                    stroke={theme.colors.gray[7]}
-                    strokeWidth={2}
-                    style={{ pointerEvents: 'none' }}
-                  />
-                )}
-              </>
+            <rect
+              x={binGroupX + binGroupWidth - 15}
+              y={innerHeight}
+              width={15}
+              height={25}
+              fill="transparent"
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={() => setHoveredCollapse(binGroup.id)}
+              onMouseLeave={() => setHoveredCollapse(null)}
+              onClick={(e) => onToggleBinGroupCollapse(e, binGroup.id)}
+            />
+            {hoveredCollapse === binGroup.id && (
+              <path
+                d={isBinGroupCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
+                transform={`translate(${binGroupX + binGroupWidth - 12}, ${innerHeight + 6}) scale(0.6)`}
+                fill="none"
+                stroke={theme.colors.gray[7]}
+                strokeWidth={2}
+                style={{ pointerEvents: 'none' }}
+              />
             )}
 
-            {!isBinGroupCollapsed && (
-              <g>
-                {binGroup.nestedBins.map((nestedBin, nestedBinIdx) => {
-                  const isNestedBinCollapsed = collapsedNestedBins.has(nestedBin.id);
-                  const nbLayout = nestedBinLayout.get(nestedBin.id);
-                  const nestedBinWidth = nbLayout ? nbLayout.width : 40;
-                  const currentNestedBinX = nbLayout ? nbLayout.x : 0;
-
-                  if (currentNestedBinX > visibleRange[1] || currentNestedBinX + nestedBinWidth < visibleRange[0]) return null;
-
-                  const nestedBinColor = nestedBinIdx % 2 === 0 ? theme.colors.gray[2] : theme.colors.gray[0];
-                  const bgShade = (hasNestedBins && nestedBinIdx % 2 === 0) ? theme.colors.gray[1] : 'transparent';
-
-                  return (
-                    <g key={nestedBin.id}>
-                      <rect
-                        x={currentNestedBinX}
-                        y={0}
-                        width={nestedBinWidth}
-                        height={innerHeight}
-                        fill={bgShade}
-                        opacity={0.3}
-                        style={{ pointerEvents: 'none' }}
-                      />
-                      {hasNestedBins && (
-                        <rect
-                          x={currentNestedBinX}
-                          y={innerHeight}
-                          width={nestedBinWidth}
-                          height={25}
-                          fill={isNestedBinCollapsed ? theme.colors.gray[4] : nestedBinColor}
-                          stroke={theme.colors.gray[4]}
-                          strokeWidth={1}
-                        >
-                          <title>
-                            {`Surgical Cases in ${nestedBin.label} ${binGroup.label}`}
-                          </title>
-                        </rect>
-                      )}
-                      {/* Nested Bin Label */}
-                      {hasNestedBins && (
-                        <text
-                          x={currentNestedBinX + nestedBinWidth / 2}
-                          y={innerHeight + 17}
-                          textAnchor="middle"
-                          fontSize={10}
-                          fontWeight={400}
-                          fill={theme.colors.gray[6]}
-                          style={{ pointerEvents: 'none' }}
-                        >
-                          {isNestedBinCollapsed ? '...' : nestedBin.label}
-                        </text>
-                      )}
-                      <rect
-                        x={currentNestedBinX + nestedBinWidth - 10}
-                        y={innerHeight}
-                        width={10}
-                        height={25}
-                        fill="transparent"
-                        style={{ cursor: 'pointer' }}
-                        onMouseEnter={() => setHoveredCollapse(nestedBin.id)}
-                        onMouseLeave={() => setHoveredCollapse(null)}
-                        onClick={(e) => onToggleNestedBinCollapse(e, nestedBin.id)}
-                      />
-                      {(hoveredCollapse === nestedBin.id || isNestedBinCollapsed) && (
-                        <path
-                          d={isNestedBinCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
-                          transform={`translate(${currentNestedBinX + nestedBinWidth - 8}, ${innerHeight + 6.5}) scale(0.5)`}
-                          fill="none"
-                          stroke={theme.colors.gray[7]}
-                          strokeWidth={2}
-                          style={{ pointerEvents: 'none' }}
-                        />
-                      )}
-
-                      {/* Cases rendered on canvas */}
-                    </g>
-                  );
-                })}
-              </g>
-            )}
           </g>
         );
       })}
     </g>
-  ), [processedData, collapsedBinGroups, collapsedNestedBins, hoveredCollapse, theme, innerHeight, hasNestedBins, onToggleBinGroupCollapse, onToggleNestedBinCollapse, setHoveredCollapse, binGroupLayout, nestedBinLayout, selectedX, visibleRange]);
+  ), [processedData, collapsedBinGroups, hoveredCollapse, theme, innerHeight, onToggleBinGroupCollapse, setHoveredCollapse, binGroupLayout, selectedX, visibleRange]);
 
   return (
     <div
@@ -1294,7 +1181,6 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
 
   // State
   const [collapsedBinGroups, setCollapsedBinGroups] = useState<Set<string>>(new Set());
-  const [collapsedNestedBins, setCollapsedNestedBins] = useState<Set<string>>(new Set());
   const [selectedLab, setSelectedLab] = useState<string>('hgb');
   const [selectedX, setSelectedX] = useState<string>('surgeon');
   const [showPre, setShowPre] = useState<boolean>(true);
@@ -1351,8 +1237,6 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   // Hover state for collapse arrows
   const [hoveredCollapse, setHoveredCollapse] = useState<string | null>(null);
 
-  const hasNestedBins = useMemo(() => selectedX === 'year_quarter', [selectedX]);
-
   // Virtualization state
   const scrollViewportRef = useRef<HTMLDivElement>(null);
   const [visibleRange, setVisibleRange] = useState<[number, number]>([-1000, 2000]);
@@ -1405,32 +1289,19 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     });
   }, []);
 
-  const handleToggleNestedBinCollapse = useCallback((e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setCollapsedNestedBins((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
   // Process Data
   const processedData = useMemo(() => getProcessedDumbbellData(
     (store.exploreChartData[chartConfig.chartId] as DumbbellData) || [],
     selectedX,
     labConfig,
     sortMode,
-    hasNestedBins,
     providerSort,
-  ), [store.exploreChartData, chartConfig.chartId, labConfig, selectedX, sortMode, hasNestedBins, providerSort]);
+  ), [store.exploreChartData, chartConfig.chartId, labConfig, selectedX, sortMode, providerSort]);
 
   // Layout & Width Calculation
   const layoutData = useMemo(() => calculateDumbbellLayout(
     processedData,
     collapsedBinGroups,
-    collapsedNestedBins,
     selectedX,
     (t: string) => {
       const canvas = document.createElement('canvas');
@@ -1441,7 +1312,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
       }
       return t.length * 7;
     },
-  ), [processedData, collapsedBinGroups, collapsedNestedBins, selectedX, theme.fontFamily]);
+  ), [processedData, collapsedBinGroups, selectedX, theme.fontFamily]);
 
   // Calculate total width - content starts at 0, only add Right margin
   const totalWidth = layoutData.items.reduce((acc, item) => acc + item.width, 0) + DUMBBELL_MARGIN.right;
@@ -1449,7 +1320,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   // Responsive Height
   const { ref, height: measuredHeight } = useElementSize();
   const height = measuredHeight || 400; // Fallback
-  const bottomMargin = hasNestedBins ? 50 : 25;
+  const bottomMargin = 25;
   const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - bottomMargin);
 
   const yDomain = useMemo(() => {
@@ -1457,20 +1328,18 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
     let maxVal = -Infinity;
 
     processedData.forEach((binGroup) => {
-      binGroup.nestedBins.forEach((nestedBin) => {
-        nestedBin.cases.forEach((c) => {
-          const preVal = c[labConfig.preKey] as number | null;
-          const postVal = c[labConfig.postKey] as number | null;
+      binGroup.cases.forEach((c) => {
+        const preVal = c[labConfig.preKey] as number | null;
+        const postVal = c[labConfig.postKey] as number | null;
 
-          if (preVal !== null && preVal !== undefined) {
-            minVal = Math.min(minVal, preVal);
-            maxVal = Math.max(maxVal, preVal);
-          }
-          if (postVal !== null && postVal !== undefined) {
-            minVal = Math.min(minVal, postVal);
-            maxVal = Math.max(maxVal, postVal);
-          }
-        });
+        if (preVal !== null && preVal !== undefined) {
+          minVal = Math.min(minVal, preVal);
+          maxVal = Math.max(maxVal, preVal);
+        }
+        if (postVal !== null && postVal !== undefined) {
+          minVal = Math.min(minVal, postVal);
+          maxVal = Math.max(maxVal, postVal);
+        }
       });
     });
 
@@ -1704,7 +1573,6 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
           <div style={{ position: 'relative' }}>
             <DumbbellYAxis
               height={height}
-              hasNestedBins={hasNestedBins}
               yScale={yScale}
               theme={theme}
               labConfig={labConfig}
@@ -1760,9 +1628,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 yScale={yScale}
                 processedData={processedData}
                 collapsedBinGroups={collapsedBinGroups}
-                collapsedNestedBins={collapsedNestedBins}
                 onToggleBinGroupCollapse={handleToggleBinGroupCollapse}
-                onToggleNestedBinCollapse={handleToggleNestedBinCollapse}
                 hoveredCollapse={hoveredCollapse}
                 setHoveredCollapse={setHoveredCollapse}
                 labConfig={labConfig}
@@ -1774,9 +1640,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
                 showTargets={showTargets}
                 visibleRange={visibleRange}
                 showMedian={showMedian}
-                hasNestedBins={hasNestedBins}
                 binGroupLayout={layoutData.binGroupLayout}
-                nestedBinLayout={layoutData.nestedBinLayout}
                 theme={theme}
               />
             </Box>

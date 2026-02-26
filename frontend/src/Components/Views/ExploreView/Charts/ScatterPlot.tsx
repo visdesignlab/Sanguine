@@ -31,7 +31,7 @@ import {
 // #region Y-Axis
 const ScatterYAxis = memo(({
   height, yScale, theme, varConfig, targets, setTargets,
-  hoveredTarget, setHoveredTarget, hasNestedBins, isDiscrete,
+  hoveredTarget, setHoveredTarget, isDiscrete,
 }: {
   height: number;
   yScale: ScaleLinear<number, number>;
@@ -41,10 +41,9 @@ const ScatterYAxis = memo(({
   setTargets: React.Dispatch<React.SetStateAction<{ min: number; max: number }>>;
   hoveredTarget: string | null;
   setHoveredTarget: (t: string | null) => void;
-  hasNestedBins: boolean;
   isDiscrete: boolean;
 }) => {
-  const bottomMargin = isDiscrete ? (hasNestedBins ? 50 : 25) : 40;
+  const bottomMargin = isDiscrete ? (25) : 40;
   const innerHeight = Math.max(0, height - SCATTER_MARGIN.top - bottomMargin);
   const [dragging, setDragging] = useState<'min' | 'max' | null>(null);
 
@@ -311,7 +310,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [showAvg, setShowAvg] = useState(true);
   const [sortMode, setSortMode] = useState<string>('asc');
   const [collapsedBinGroups, setCollapsedBinGroups] = useState<Set<string>>(new Set());
-  const [collapsedNestedBins, setCollapsedNestedBins] = useState<Set<string>>(new Set());
 
   // Groups
   const [groups, setGroups] = useState<GroupDefinition[]>([]);
@@ -330,7 +328,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     [selectedX],
   );
   const isDiscrete = xAxisOption?.isDiscrete ?? true;
-  const hasNestedBins = selectedX === 'year_quarter';
 
   // Derive var config for Y axis
   const varConfig = useMemo((): ScatterVarConfig => {
@@ -396,6 +393,17 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
   // Virtualization
   const scrollViewportRef = useRef<HTMLDivElement>(null);
+  const handleToggleBinGroupCollapse = useCallback((e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCollapsedBinGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
   const [visibleRange, setVisibleRange] = useState<[number, number]>([-1000, 2000]);
   const handleScroll = useCallback(() => {
     if (scrollViewportRef.current) {
@@ -410,19 +418,11 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     return () => ro.disconnect();
   }, [handleScroll]);
 
-  // Collapse handlers
-  const handleToggleBinGroupCollapse = useCallback((_e: React.MouseEvent, id: string) => {
-    setCollapsedBinGroups((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-  }, []);
-  const handleToggleNestedBinCollapse = useCallback((_e: React.MouseEvent, id: string) => {
-    setCollapsedNestedBins((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-  }, []);
-
   // Flatten nested series data: store format is [{name, color, data: case[]}, ...]
   const rawData = useMemo(() => {
     const storeData = store.exploreChartData[chartConfig.chartId];
     if (!storeData) return [] as DumbbellCase[];
-    // Check if data is in the old series format ({data: [...]}) or flat DumbbellCase[]
+    // Check if data is in the old series format ({data: [...]})
     if (Array.isArray(storeData) && storeData.length > 0 && 'data' in storeData[0]) {
       // Old series format: flatten the inner data arrays
       return ((storeData as unknown) as { data: DumbbellCase[] }[]).flatMap((s) => s.data);
@@ -436,20 +436,20 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
   // Layout (discrete mode)
   const layoutData = useMemo(() => {
-    if (!isDiscrete) return { binGroupLayout: new Map(), nestedBinLayout: new Map(), totalWidth: 0 };
-    return calculateScatterLayout(processedData, collapsedBinGroups, collapsedNestedBins, selectedX, (t: string) => {
+    if (!isDiscrete) return { binGroupLayout: new Map(), totalWidth: 0 };
+    return calculateScatterLayout(processedData, collapsedBinGroups, selectedX, (t: string) => {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       if (context) { context.font = `600 12px ${theme.fontFamily}`; return context.measureText(t).width; }
       return t.length * 7;
     });
-  }, [processedData, collapsedBinGroups, collapsedNestedBins, selectedX, isDiscrete, theme.fontFamily]);
+  }, [processedData, collapsedBinGroups, selectedX, isDiscrete, theme.fontFamily]);
 
   // Responsive size
   const { ref: sizeRef, height: measuredHeight, width: measuredWidth } = useElementSize();
   const height = measuredHeight || 400;
   const containerWidth = measuredWidth || 600;
-  const bottomMargin = isDiscrete ? (hasNestedBins ? 50 : 25) : 40;
+  const bottomMargin = isDiscrete ? (25) : 40;
   const innerHeight = Math.max(0, height - SCATTER_MARGIN.top - bottomMargin);
 
   // For discrete: total SVG width = layout + right margin. For continuous: container width.
@@ -507,8 +507,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
             y: yScale(yVal) + SCATTER_MARGIN.top,
             caseIdx: globalCaseIdx,
             binGroupIdx: 0,
-            nestedBinIdx: 0,
-            caseInBinIdx: globalCaseIdx,
           });
         }
         globalCaseIdx += 1;
@@ -517,30 +515,25 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       // Discrete mode
       processedData.forEach((binGroup, bgIdx) => {
         if (collapsedBinGroups.has(binGroup.id)) return;
-        binGroup.nestedBins.forEach((nestedBin, nbIdx) => {
-          if (collapsedNestedBins.has(nestedBin.id)) return;
-          const nbLayout = layoutData.nestedBinLayout.get(nestedBin.id);
-          if (!nbLayout) return;
-          nestedBin.cases.forEach((c, cIdx) => {
-            const yVal = c[varConfig.key] as number | null;
-            if (yVal !== null && yVal !== undefined) {
-              const caseX = nbLayout.x + cIdx * SCATTER_CHAR_WIDTH_CASE + SCATTER_CHAR_WIDTH_CASE / 2;
-              points.push({
-                x: caseX,
-                y: yScale(yVal) + SCATTER_MARGIN.top,
-                caseIdx: globalCaseIdx,
-                binGroupIdx: bgIdx,
-                nestedBinIdx: nbIdx,
-                caseInBinIdx: cIdx,
-              });
-            }
-            globalCaseIdx += 1;
-          });
+        const bgLayout = layoutData.binGroupLayout.get(binGroup.id);
+        if (!bgLayout) return;
+        binGroup.cases.forEach((c, cIdx) => {
+          const yVal = c[varConfig.key] as number | null;
+          if (yVal !== null && yVal !== undefined) {
+            const caseX = bgLayout.x + cIdx * SCATTER_CHAR_WIDTH_CASE + SCATTER_CHAR_WIDTH_CASE / 2;
+            points.push({
+              x: caseX,
+              y: yScale(yVal) + SCATTER_MARGIN.top,
+              caseIdx: globalCaseIdx,
+              binGroupIdx: bgIdx,
+            });
+          }
+          globalCaseIdx += 1;
         });
       });
     }
     return points;
-  }, [isDiscrete, xScale, xVarKey, rawData, varConfig.key, yScale, processedData, collapsedBinGroups, collapsedNestedBins, layoutData.nestedBinLayout]);
+  }, [isDiscrete, xScale, xVarKey, rawData, varConfig.key, yScale, processedData, collapsedBinGroups, layoutData.binGroupLayout]);
 
   // Precompute group color for each case index
   const caseGroupColors = useMemo(() => {
@@ -717,7 +710,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         if (nearest) {
           // Find the case data
           const allCases = isDiscrete
-            ? processedData.flatMap((bg) => bg.nestedBins.flatMap((nb) => nb.cases))
+            ? processedData.flatMap((bg) => bg.cases)
             : rawData;
           const caseData = allCases[nearest.caseIdx];
           if (caseData) setTooltipData({ x: nearest.x, y: nearest.y, caseData });
@@ -938,7 +931,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
             {/* Fixed Y Axis */}
             <ScatterYAxis
               height={height}
-              hasNestedBins={hasNestedBins}
               isDiscrete={isDiscrete}
               yScale={yScale}
               theme={theme}
@@ -1109,7 +1101,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                               <Tooltip label={<Text size="xs">{binGroup.label}</Text>} openDelay={200}>
                                 <rect
                                   x={layout.x}
-                                  y={!hasNestedBins ? innerHeight : innerHeight + 25}
+                                  y={innerHeight}
                                   width={layout.width}
                                   height={25}
                                   fill={isBinGroupCollapsed ? theme.colors.gray[4] : bgColor}
@@ -1119,7 +1111,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                               </Tooltip>
                               <foreignObject
                                 x={layout.x}
-                                y={!hasNestedBins ? innerHeight : innerHeight + 25}
+                                y={innerHeight}
                                 width={layout.width}
                                 height={25}
                                 style={{ pointerEvents: 'none' }}
@@ -1143,58 +1135,28 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                                   {isBinGroupCollapsed ? '...' : layout.label}
                                 </div>
                               </foreignObject>
-                              {/* Bin group collapse toggle */}
-                              {!isBinGroupCollapsed && hasNestedBins && (
-                                <>
-                                  <rect
-                                    x={layout.x + layout.width - 15}
-                                    y={innerHeight + 25}
-                                    width={15}
-                                    height={25}
-                                    fill="transparent"
-                                    style={{ cursor: 'pointer' }}
-                                    onMouseEnter={() => setHoveredCollapse(binGroup.id)}
-                                    onMouseLeave={() => setHoveredCollapse(null)}
-                                    onClick={(e) => handleToggleBinGroupCollapse(e, binGroup.id)}
-                                  />
-                                  {hoveredCollapse === binGroup.id && (
-                                    <path
-                                      d="M 8 5 L 2 12 L 8 19"
-                                      transform={`translate(${layout.x + layout.width - 12}, ${innerHeight + 31}) scale(0.6)`}
-                                      fill="none"
-                                      stroke={theme.colors.gray[7]}
-                                      strokeWidth={2}
-                                      style={{ pointerEvents: 'none' }}
-                                    />
-                                  )}
-                                </>
+                              {/* Collapse handle */}
+                              <rect
+                                x={layout.x + layout.width - 15}
+                                y={innerHeight}
+                                width={15}
+                                height={25}
+                                fill="transparent"
+                                style={{ cursor: 'pointer' }}
+                                onMouseEnter={() => setHoveredCollapse(binGroup.id)}
+                                onMouseLeave={() => setHoveredCollapse(null)}
+                                onClick={(e) => handleToggleBinGroupCollapse(e, binGroup.id)}
+                              />
+                              {hoveredCollapse === binGroup.id && (
+                                <path
+                                  d={isBinGroupCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
+                                  transform={`translate(${layout.x + layout.width - 12}, ${innerHeight + 6}) scale(0.6)`}
+                                  fill="none"
+                                  stroke={theme.colors.gray[7]}
+                                  strokeWidth={2}
+                                  style={{ pointerEvents: 'none' }}
+                                />
                               )}
-                              {/* Nested bins */}
-                              {!isBinGroupCollapsed && hasNestedBins && binGroup.nestedBins.map((nb, nbIdx) => {
-                                const nbLayout = layoutData.nestedBinLayout.get(nb.id);
-                                if (!nbLayout) return null;
-                                const isNbCollapsed = collapsedNestedBins.has(nb.id);
-                                const nbColor = nbIdx % 2 === 0 ? theme.colors.gray[2] : theme.colors.gray[0];
-                                return (
-                                  <g key={nb.id}>
-                                    <rect x={nbLayout.x} y={innerHeight} width={nbLayout.width} height={25} fill={isNbCollapsed ? theme.colors.gray[4] : nbColor} stroke={theme.colors.gray[4]} strokeWidth={1} />
-                                    <text x={nbLayout.x + nbLayout.width / 2} y={innerHeight + 17} textAnchor="middle" fontSize={10} fontWeight={400} fill={theme.colors.gray[6]} style={{ pointerEvents: 'none' }}>
-                                      {isNbCollapsed ? '...' : nb.label}
-                                    </text>
-                                    <rect
-                                      x={nbLayout.x + nbLayout.width - 10}
-                                      y={innerHeight}
-                                      width={10}
-                                      height={25}
-                                      fill="transparent"
-                                      style={{ cursor: 'pointer' }}
-                                      onMouseEnter={() => setHoveredCollapse(nb.id)}
-                                      onMouseLeave={() => setHoveredCollapse(null)}
-                                      onClick={(e) => handleToggleNestedBinCollapse(e, nb.id)}
-                                    />
-                                  </g>
-                                );
-                              })}
                               {/* Average line */}
                               {showAvg && binGroup.avg !== null && (
                                 <AverageLine
