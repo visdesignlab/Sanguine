@@ -10,11 +10,6 @@ class Command(BaseCommand):
         self.stdout.write("Deleting all data from the database...")
 
         with transaction.atomic():
-            from django.db import connection
-            with connection.cursor() as cursor:
-                cursor.execute("TRUNCATE TABLE SurgeryCaseAttributes;")
-                self.stdout.write("Truncated SurgeryCaseAttributes table")
-            
             for model in apps.get_models():
                 if model._meta.app_label == "api":
                     model.objects.all().delete()
