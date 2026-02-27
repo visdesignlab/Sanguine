@@ -762,13 +762,6 @@ export interface CostBarDatum extends Record<Cost, number> {
 export type CostBarData = CostBarDatum[];
 
 // --- Dumbbell Chart ---
-export type DumbbellChartConfig = ChartConfig<
-  'provider_visit', // Fixed x-axis structure
-  'hgb', // Fixed y-axis variable for now
-  'none', // No aggregation
-  'dumbbell'
->;
-
 export const DUMBBELL_X_AXIS_OPTIONS = [
   { value: 'surgeon', label: 'Surgeon' },
   { value: 'anesthesiologist', label: 'Anesthesiologist' },
@@ -779,7 +772,23 @@ export const DUMBBELL_X_AXIS_OPTIONS = [
   { value: 'cryo', label: 'Intraoperative Cryo Transfused' },
   { value: 'ffp', label: 'Intraoperative FFP Transfused' },
   { value: 'cell_salvage', label: 'Cell Salvage Volume (mL)' },
-];
+] as const;
+export type DumbbellXAxisVar = typeof DUMBBELL_X_AXIS_OPTIONS[number]['value'];
+
+export const DUMBBELL_Y_AXIS_OPTIONS = [
+  { value: 'hgb', label: 'Hemoglobin' },
+  { value: 'platelet', label: 'Platelet Count' },
+  { value: 'fibrinogen', label: 'Fibrinogen' },
+  { value: 'inr', label: 'INR' },
+] as const;
+export type DumbbellYAxisVar = typeof DUMBBELL_Y_AXIS_OPTIONS[number]['value'];
+
+export type DumbbellChartConfig = ChartConfig<
+  DumbbellXAxisVar,
+  DumbbellYAxisVar,
+  'none', // No aggregation
+  'dumbbell'
+>;
 
 export const DUMBBELL_MARGIN = {
   top: 40, right: 30, bottom: 60, left: 60,
@@ -839,6 +848,8 @@ export type DumbbellData = DumbbellCase[];
 
 // --- Scatter plots ---
 export const SCATTER_X_AXIS_OPTIONS = [
+  { value: 'surgeon' as const, label: 'Surgeon', isDiscrete: true },
+  { value: 'anesthesiologist' as const, label: 'Anesthesiologist', isDiscrete: true },
   { value: 'year' as const, label: 'Year', isDiscrete: true },
   { value: 'quarter' as const, label: 'Quarter', isDiscrete: true },
   ...BLOOD_COMPONENT_OPTIONS.map((b) => ({

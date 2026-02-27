@@ -23,6 +23,8 @@ import {
   costYAxisOptions, ExploreTableRowOptions, ExploreTableConfig,
   SCATTER_X_AXIS_OPTIONS, SCATTER_Y_AXIS_OPTIONS,
   ScatterXAxisVar, ScatterYAxisVar,
+  DumbbellXAxisVar, DumbbellYAxisVar,
+  DUMBBELL_X_AXIS_OPTIONS, DUMBBELL_Y_AXIS_OPTIONS,
 } from '../../../Types/application';
 import { DumbbellChart } from './Charts/DumbbellChart';
 import ExploreTable from './Charts/ExploreTable';
@@ -61,6 +63,8 @@ export function ExploreView() {
   const [aggregation, setAggregation] = useState<'sum' | 'avg' | 'none'>('sum');
   const [costGroupVar, setCostGroupVar] = useState<string>('');
   const [exploreTableGroupVar, setExploreTableGroupVar] = useState<string>('');
+  const [dumbbellXVar, setDumbbellXVar] = useState<string>('');
+  const [dumbbellYVar, setDumbbellYVar] = useState<string>('');
   const [scatterXVar, setScatterXVar] = useState<string>('');
   const [scatterYVar, setScatterYVar] = useState<string>('');
 
@@ -69,8 +73,10 @@ export function ExploreView() {
     setAggregation('sum');
     setCostGroupVar('');
     setExploreTableGroupVar('');
-    setScatterXVar('');
-    setScatterYVar('');
+    setDumbbellXVar('surgeon');
+    setDumbbellYVar('hgb');
+    setScatterXVar('surgeon');
+    setScatterYVar('pre_fibrinogen');
   }, []);
 
   const handleOpenAdd = () => {
@@ -197,16 +203,16 @@ export function ExploreView() {
       store.addExploreChart({
         chartId: id,
         chartType: 'dumbbell',
-        xAxisVar: 'provider_visit',
-        yAxisVar: 'hgb',
+        xAxisVar: (dumbbellXVar || 'surgeon') as DumbbellXAxisVar,
+        yAxisVar: (dumbbellYVar || 'hgb') as DumbbellYAxisVar,
         aggregation: 'none',
       });
     } else if (chartType === 'scatterPlot') {
       store.addExploreChart({
         chartId: id,
         chartType: 'scatterPlot',
-        xAxisVar: (scatterXVar || 'pre_hgb') as ScatterXAxisVar,
-        yAxisVar: (scatterYVar || 'post_hgb') as ScatterYAxisVar,
+        xAxisVar: (scatterXVar || 'surgeon') as ScatterXAxisVar,
+        yAxisVar: (scatterYVar || 'pre_fibrinogen') as ScatterYAxisVar,
         aggregation: (aggregation === 'none' ? 'none' : aggregation) as 'sum' | 'avg' | 'none',
       });
     }
@@ -265,16 +271,16 @@ export function ExploreView() {
               setChartType(val);
               if (val === 'exploreTable') {
                 setAggregation('avg');
-              } else if (val === 'scatterPlot') {
+              } else if (val === 'scatterPlot' || val === 'dumbbell') {
                 setAggregation('none');
               }
             }}
           />
-          {(chartType === 'cost' || chartType === 'exploreTable' || chartType === 'scatterPlot') && (
+          {(chartType === 'cost' || chartType === 'exploreTable') && (
             <Select
               label="Aggregation"
               value={aggregation}
-              data={chartType === 'scatterPlot' ? [...aggregationOptions, { value: 'none', label: 'None' }] : aggregationOptions}
+              data={aggregationOptions}
               onChange={(v) => setAggregation((v as 'sum' | 'avg' | 'none') || 'sum')}
             />
           )}
@@ -312,19 +318,31 @@ export function ExploreView() {
                 onChange={(v) => setScatterYVar(v || '')}
               />
             </Flex>
+          ) : chartType === 'dumbbell' ? (
+            <Flex gap="md" direction="column">
+              <Select
+                label="X-Axis"
+                placeholder="Choose X-axis variable"
+                value={dumbbellXVar}
+                data={DUMBBELL_X_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                onChange={(v) => setDumbbellXVar(v || '')}
+              />
+              <Select
+                label="Y-Axis"
+                placeholder="Choose Y-axis variable"
+                value={dumbbellYVar}
+                data={DUMBBELL_Y_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                onChange={(v) => setDumbbellYVar(v || '')}
+              />
+            </Flex>
           ) : null}
-
-          {chartType === 'dumbbell' && (
-            <Text c="dimmed" fs="italic" size="sm">
-              Dumbbell chart groups by Provider and Visit automatically. No aggregation options available.
-            </Text>
-          )}
           <Button
             onClick={handleAddChart}
             disabled={
               (chartType === 'cost' && !costGroupVar)
               || (chartType === 'exploreTable' && !exploreTableGroupVar)
               || (chartType === 'scatterPlot' && (!scatterXVar || !scatterYVar))
+              || (chartType === 'dumbbell' && (!dumbbellXVar || !dumbbellYVar))
             }
             fullWidth
           >

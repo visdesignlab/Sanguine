@@ -106,7 +106,11 @@ export function getProcessedScatterData(
 
   filteredData.forEach((d: DumbbellCase) => {
     let key = '';
-    if (selectedX === 'year') {
+    if (selectedX === 'surgeon') {
+      key = d.surgeon_prov_name || 'Unknown';
+    } else if (selectedX === 'anesthesiologist') {
+      key = d.anesth_prov_name || 'Unknown';
+    } else if (selectedX === 'year') {
       const yearRaw = ((d as unknown) as Record<string, unknown>).year as string;
       key = yearRaw || 'Unknown';
     } else if (selectedX === 'quarter') {
