@@ -29,11 +29,11 @@ export function getProcessedDumbbellData(
     if (selectedX === 'anesthesiologist') key = d.anesth_prov_name;
     else if (selectedX === 'year') {
       const date = new Date(d.surgery_start_dtm);
-      key = `${date.getFullYear()}`;
+      key = `${date.getUTCFullYear()}`;
     } else if (selectedX === 'quarter') {
       const date = new Date(d.surgery_start_dtm);
-      const year = date.getFullYear();
-      const q = Math.floor((date.getMonth() + 3) / 3);
+      const year = date.getUTCFullYear();
+      const q = Math.floor((date.getUTCMonth() + 3) / 3);
       key = `${year}-Q${q}`;
     } else if (selectedX === 'rbc') {
       const val = d.intraop_rbc_units;

@@ -58,7 +58,7 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
   }
   if (['adm_dtm', 'dsch_dtm'].includes(columnName)) {
     const date = new Date(value as number);
-    return Number.isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleString();
+    return Number.isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString(undefined, { timeZone: 'UTC' });
   }
   if (['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'].includes(columnName)) {
     return (value === 1 || value === true) ? 'Yes' : 'No';
@@ -130,12 +130,12 @@ export const formatStateDetailValue = (value: unknown, key?: string): string => 
   if ((key === 'dateFrom' || key === 'dateTo') && typeof value === 'string') {
     const date = new Date(value);
     if (!Number.isNaN(date.getTime())) {
-      return date.toLocaleDateString();
+      return date.toLocaleDateString(undefined, { timeZone: 'UTC' });
     }
   }
 
   if (value instanceof Date) {
-    return value.toLocaleDateString();
+    return value.toLocaleDateString(undefined, { timeZone: 'UTC' });
   }
   if (typeof value === 'boolean') {
     return value ? 'Yes' : 'No';
