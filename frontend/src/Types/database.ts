@@ -21,9 +21,9 @@ export interface Surgery {
   case_id: string; // BigIntegerField, primary key
   visit_no: string; // ForeignKey to DatabaseVisit, use string to match DatabaseVisit.visit_no
   mrn: string; // ForeignKey to Patient, use string to match Patient.mrn
-  case_date: number; // timestamp
-  surgery_start_dtm: string; // ISO datetime string
-  surgery_end_dtm: string; // ISO datetime string
+  case_date: number; // UTC timestamp
+  surgery_start_dtm: string; // UTC ISO datetime string
+  surgery_end_dtm: string; // UTC ISO datetime string
   surgery_elap: number;
   surgery_type_desc: SurgeryUrgencyType;
   surgeon_prov_id: string;
@@ -92,8 +92,8 @@ export type Patient = {
 export interface DatabaseVisit {
   visit_no: string; // BigIntegerField, primary key
   mrn: string; // ForeignKey to Patient, use string to match Patient.mrn
-  adm_dtm: string; // ISO date string
-  dsch_dtm: string; // ISO date string
+  adm_dtm: string; // UTC ISO datetime string
+  dsch_dtm: string; // UTC ISO datetime string
   age_at_adm: number;
   pat_class_desc: string;
   apr_drg_weight: number;
