@@ -7,9 +7,9 @@ from sentry_sdk.integrations.django import DjangoIntegration
 
 
 env = environ.Env(
-    DJANGO_DEBUG=(bool, True),  # Cast to bool, default to False
+    DJANGO_DEBUG=(bool, False),
     DJANGO_HOSTNAME=(str, "localhost"),
-    DJANGO_DISABLE_LOGINS=(bool, True),
+    DJANGO_DISABLE_LOGINS=(bool, False),
     DJANGO_LOGOUT_REDIRECT=(str, ""),
     SENTRY_DSN=(str, ""),
     SENTRY_ENVIRONMENT=(str, "development"),
