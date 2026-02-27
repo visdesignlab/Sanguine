@@ -71,12 +71,6 @@ At minimum, do **not** expose these values in git, logs, or screenshots:
 - `MARIADB_ROOT_PASSWORD`
 - `SENTRY_DSN`
 
-#### VM deployment suggestions for secrets
-
-- Store secrets in a local `.env` file on the VM with restrictive permissions (`chmod 600`) and inject via `docker-compose --env-file`.
-- Prefer hospital-managed secret stores (for example Vault, cloud secret managers, or configuration management encrypted vars) when available.
-- Use one DSN and one environment label per hospital deployment so alerts stay separated by domain/site.
-
 #### Deployment Steps
 
 To run the application in production, use either of the following commands:
