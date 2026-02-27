@@ -2,8 +2,8 @@ import json
 import logging
 from pathlib import Path
 
-from django.http import HttpResponse, FileResponse, JsonResponse
 from django.conf import settings
+from django.http import HttpResponse, FileResponse, JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.cache import never_cache
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["GET"])
 def index(request):
     log_request(request)
-    return HttpResponse("Bloodvis API endpoint. Please use the client application to access the data here.")
+    return HttpResponse("Intelvia API endpoint. Please use the client application to access the data here.")
 
 
 @require_http_methods(["GET"])
@@ -134,6 +134,15 @@ def get_visit_attributes(request):
         return HttpResponse("Parquet file not found. Please generate it first.", status=404)
     return FileResponse(open(file_path, 'rb'), content_type='application/vnd.apache.arrow.file')
 
+@never_cache
+@require_http_methods(["HEAD", "GET"])
+@conditional_login_required
+def get_surgery_case_attributes(request):
+    log_request(request)
+    file_path = Path(settings.BASE_DIR) / "parquet_cache" / "surgery_case_attributes.parquet"
+    if not file_path.exists():
+        return HttpResponse("Parquet file not found. Please generate it first.", status=404)
+    return FileResponse(open(file_path, 'rb'), content_type='application/vnd.apache.arrow.file')
 
 @never_cache
 @require_http_methods(["GET"])

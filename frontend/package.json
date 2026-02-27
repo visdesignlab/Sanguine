@@ -3,6 +3,9 @@
     "version": "0.1.0",
     "private": true,
     "type": "module",
+    "lint-staged": {
+        "*.{tsx,jsx,ts,js}": "yarn lint"
+    },
     "dependencies": {
         "@duckdb/duckdb-wasm": "^1.30.0",
         "@mantine/charts": "^8.2.8",
@@ -43,12 +46,15 @@
         "eslint-plugin-jsx-a11y": "^6.10.2",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^5.2.0",
+        "husky": "^9.1.7",
+        "lint-staged": "^16.1.2",
         "typescript": "^5.9.2"
     },
     "scripts": {
         "serve": "vite --host=0.0.0.0 --port=8080",
         "build": "vite build",
         "typecheck": "tsc --noEmit",
-        "lint": "eslint src"
+        "lint": "eslint src",
+        "postinstall": "sh -c 'if command -v husky >/dev/null 2>&1 && [ -d ../.git ] && [ -w ../.git/config ]; then cd .. && husky frontend/.husky || true; fi'"
     }
 }

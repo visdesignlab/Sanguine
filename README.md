@@ -90,21 +90,16 @@ We provide 2 docker-compose files to run the application, docker-compose.yml and
 
 #### Development Steps
 
-As you can guess by the docker-compose filename, we leverage the power of devcontainers to provide a consistent development environment for all developers. 
-To run the devcontainer, you need to have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed on your machine. Once you have Docker Desktop installed, you can use vscode or the CLI to run the devcontainer. Our preferred method is to use vscode, as it provides a seamless experience for developers.
+For local development, run backend and MariaDB in Docker and run the frontend directly on your host for fast HMR.
 
-There are a couple of precursor steps to running the devcontainer using vscode. 
+1. Copy `.env.default` to `.env` in the project root.
+1. Start backend + MariaDB:
 
-You will need to make a .env file, but you should be able to copy the default .env.default file (in the directory) to .env (or make one under the main directory) without modification. Also make sure there is one in `frontend` and one in `backend`, and for `frontend/.env`, update the last line to:
-`VITE_QUERY_URL=http://localhost:8000/api/ # Only used in development`
+    ```bash
+    docker compose -f docker-compose.devcontainer.yml up
+    ```
 
-Now, to run the devcontainer using vscode, follow these steps:
-
-1. Open the project in vscode.
-1. Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
-1. Click on the button in the bottom right corner of vscode that says "Reopen in Container".
-1. Wait for the devcontainer to build and start. This may take a few minutes the first time you run it as it will need to build the containers and install all the dependencies.
-1. Once the devcontainer is running, the backend is started automatically. You can start the frontend by running the following command in the terminal:
+1. In another terminal, start the frontend locally:
 
     ```bash
     cd frontend
@@ -112,8 +107,9 @@ Now, to run the devcontainer using vscode, follow these steps:
     yarn serve
     ```
 
-1. The frontend should now be running on http://localhost:3000. You can access the application by navigating to that URL in your browser. Note: On the first run, there is no data entry, so there will be an error on the web page.
-1. To populate the database with data, you will need to connect to the backend container and run the following command:
+1. Open `http://localhost:8080`. API calls from the frontend use relative `/api/...` paths and are proxied by Vite to the backend at `http://localhost:8000`.
+1. If you run `yarn serve` inside the `frontend` devcontainer service, Vite uses `VITE_DEV_PROXY_TARGET=http://backend:8000` automatically (Docker network target). For host-based frontend dev, leave it unset and it defaults to `http://localhost:8000`.
+1. To populate the database with mock data, run:
 
 ```bash
 docker-compose exec -it backend bash
@@ -130,8 +126,26 @@ poetry run python manage.py mock50million
 poetry run python manage.py generate_parquets
 ```
 
+To generate only one artifact:
+
+```bash
+poetry run python manage.py generate_parquets --generate visit_attributes
+poetry run python manage.py generate_parquets --generate procedure_hierarchy
+```
+
     
 1. The database should now be populated with mock data and you should be able to see it in the frontend by adding a chart to the dashboard.
+
+#### Backend tests
+
+The backend test suite covers Django app behavior end-to-end, including API logic, auth-related behavior, migrations, materialized-view generation, and parquet generation paths.
+
+Run all backend tests from a shell where `.env` is loaded and MariaDB is available:
+
+```bash
+docker-compose exec -it backend bash
+poetry run python manage.py test api.tests --verbosity 2
+```
 
 #### Setting up the vscode extensions to connect to the databases
 

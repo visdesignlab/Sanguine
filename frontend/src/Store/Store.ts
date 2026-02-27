@@ -92,6 +92,7 @@ export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
     statId: '6', yAxisVar: 'plt_adherent', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
   },
 ];
+
 // endregion
 
 // region Types
@@ -168,82 +169,7 @@ export class RootStore {
 
   _transientExploreLayouts: { [key: string]: Layout[] } | null = null;
 
-  exploreDummyData: ExploreChartData = {
-    sum_post_op_hgb_cell_saver_ml: [
-      {
-        name: 'Anesth 101',
-        color: 'blue',
-        data: [
-          { cell_saver_ml: 50, post_op_hgb: 11.2 },
-          { cell_saver_ml: 120, post_op_hgb: 10.8 },
-          { cell_saver_ml: 180, post_op_hgb: 10.5 },
-          { cell_saver_ml: 240, post_op_hgb: 10.1 },
-          { cell_saver_ml: 310, post_op_hgb: 9.7 },
-          { cell_saver_ml: 400, post_op_hgb: 9.4 },
-        ],
-      },
-      {
-        name: 'Anesth 204',
-        color: 'teal',
-        data: [
-          { cell_saver_ml: 40, post_op_hgb: 12.0 },
-          { cell_saver_ml: 90, post_op_hgb: 11.6 },
-          { cell_saver_ml: 150, post_op_hgb: 11.1 },
-          { cell_saver_ml: 200, post_op_hgb: 10.9 },
-          { cell_saver_ml: 270, post_op_hgb: 10.2 },
-          { cell_saver_ml: 350, post_op_hgb: 9.9 },
-        ],
-      },
-      {
-        name: 'Anesth 317',
-        color: 'grape',
-        data: [
-          { cell_saver_ml: 30, post_op_hgb: 12.5 },
-          { cell_saver_ml: 70, post_op_hgb: 12.1 },
-          { cell_saver_ml: 110, post_op_hgb: 11.7 },
-          { cell_saver_ml: 160, post_op_hgb: 11.3 },
-          { cell_saver_ml: 220, post_op_hgb: 10.8 },
-          { cell_saver_ml: 300, post_op_hgb: 10.4 },
-        ],
-      },
-    ],
-    sum_surgeon_prov_id_cost: [
-      {
-        surgeon_prov_id: 'Dr. Smith',
-        rbc_units_cost: 600,
-        ffp_units_cost: 950,
-        plt_units_cost: 900,
-        cryo_units_cost: 850,
-        cell_saver_cost: 800,
-      },
-      {
-        surgeon_prov_id: 'Dr. Lee',
-        rbc_units_cost: 400,
-        ffp_units_cost: 800,
-        plt_units_cost: 750,
-        cryo_units_cost: 700,
-        cell_saver_cost: 650,
-      },
-      {
-        surgeon_prov_id: 'Dr. Patel',
-        rbc_units_cost: 700,
-        ffp_units_cost: 1000,
-        plt_units_cost: 950,
-        cryo_units_cost: 900,
-        cell_saver_cost: 850,
-      },
-      {
-        surgeon_prov_id: 'Dr. Jones',
-        rbc_units_cost: 300,
-        ffp_units_cost: 700,
-        plt_units_cost: 650,
-        cryo_units_cost: 600,
-        cell_saver_cost: 550,
-      },
-    ],
-  };
-
-  exploreChartData: ExploreChartData = { ...this.exploreDummyData };
+  exploreChartData: ExploreChartData = {};
 
   // --- Filters State ---
   _initialFilterValues = {
@@ -709,7 +635,8 @@ export class RootStore {
         const artifacts = provenance.getAllArtifacts(node.id);
         if (!artifacts.length) return [];
 
-        const timestamp = (node as any).createdOn || node.metadata?.createdOn || 0;
+        const nodeWithCreatedOn = node as { createdOn?: number; metadata?: { createdOn?: number } };
+        const timestamp = nodeWithCreatedOn.createdOn || nodeWithCreatedOn.metadata?.createdOn || 0;
         const screenshot = artifacts.find((a) => a.artifact.type === 'screenshot')?.artifact.value;
         const names = new Set(
           artifacts
@@ -1022,6 +949,7 @@ export class RootStore {
             `${aggFn}(plt_units_cost) AS ${aggregation}_plt_units_cost`,
             `${aggFn}(ffp_units_cost) AS ${aggregation}_ffp_units_cost`,
             `${aggFn}(cryo_units_cost) AS ${aggregation}_cryo_units_cost`,
+            `${aggFn}(whole_cost) AS ${aggregation}_whole_cost`,
             `${aggFn}(cell_saver_cost) AS ${aggregation}_cell_saver_cost`,
           ];
         }
@@ -1068,6 +996,7 @@ export class RootStore {
                     plt_units_cost: Number(row[`${aggType}_plt_units_cost`] || 0),
                     ffp_units_cost: Number(row[`${aggType}_ffp_units_cost`] || 0),
                     cryo_units_cost: Number(row[`${aggType}_cryo_units_cost`] || 0),
+                    whole_cost: Number(row[`${aggType}_whole_cost`] || 0),
                     cell_saver_cost: Number(row[`${aggType}_cell_saver_cost`] || 0),
                   },
                   counts_per_period: Number(row.visit_count || 0),
@@ -1095,6 +1024,7 @@ export class RootStore {
                       plt_units_cost: existing.data.plt_units_cost + curr.data.plt_units_cost,
                       ffp_units_cost: existing.data.ffp_units_cost + curr.data.ffp_units_cost,
                       cryo_units_cost: existing.data.cryo_units_cost + curr.data.cryo_units_cost,
+                      whole_cost: existing.data.whole_cost + curr.data.whole_cost,
                       cell_saver_cost: existing.data.cell_saver_cost + curr.data.cell_saver_cost,
                     };
                   } else {
@@ -1185,9 +1115,9 @@ export class RootStore {
         if (yAxisVar === 'total_blood_product_cost') {
           return `
                 ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
-                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_current_${aggregation},
+                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_current_${aggregation},
                 ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
-                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
+                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
               `;
         }
         // Exception: Case mix index
@@ -1236,7 +1166,7 @@ export class RootStore {
       // Exception: Total blood product cost
       if (yAxisVar === 'total_blood_product_cost') {
         sparklineSelects.push(
-          `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
+          `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
         );
         return;
       }
@@ -1346,11 +1276,11 @@ export class RootStore {
     const currentConfigs = this.exploreChartConfigs;
     const currentLayouts = this.exploreChartLayouts;
     const newConfigs = [config, ...currentConfigs];
-    const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 1 }));
+    const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 2 }));
     shifted.unshift({
-      i: config.chartId, x: 0, y: 0, w: 2, h: 1, maxH: 2,
+      i: config.chartId, x: 0, y: 0, w: 4, h: 3, maxH: 4,
     });
-    const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 2) };
+    const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 4) };
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Explore Chart');
     this._transientExploreLayouts = null;
   }
@@ -1843,6 +1773,22 @@ export class RootStore {
             return;
           }
 
+          // Special case: total_cost (stacked bar components)
+          if (colVar === 'total_cost') {
+            const comps = ['rbc_units_cost', 'ffp_units_cost', 'plt_units_cost', 'cryo_units_cost', 'whole_cost'];
+            comps.forEach((c) => {
+              columnClauses.push(`${aggFn}(${c}) AS ${c.replace('_units_cost', '_cost')}`);
+            });
+            columnClauses.push(`${aggFn}(${comps.join(' + ')}) AS total_cost`);
+            return;
+          }
+
+          // Special case: salvage_savings
+          if (colVar === 'salvage_savings') {
+            columnClauses.push(`${aggFn}(cell_saver_cost) AS salvage_savings`);
+            return;
+          }
+
           // Standard numeric & boolean fields
           const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
           if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
@@ -1853,6 +1799,11 @@ export class RootStore {
               // Count occurrences: SUM(1|0)
               columnClauses.push(`SUM(CAST(${colVar} AS INT)) AS ${colVar}`);
             }
+          } else if (col.type === 'violin') {
+            // Special case for violin: fetch all values as a list for distribution
+            // We use apr_drg_weight specifically for drg_weight colVar
+            const dbCol = colVar === 'drg_weight' ? 'apr_drg_weight' : colVar;
+            columnClauses.push(`list(CAST(${dbCol} AS DOUBLE)) AS ${colVar}`);
           } else {
             // Standard numeric aggregation
             columnClauses.push(`${aggFn}(${colVar}) AS ${colVar}`);
@@ -1887,11 +1838,112 @@ export class RootStore {
           return { id: config.chartId, data: [] };
         }
       }
+      if (config.chartType === 'dumbbell') {
+        // TODO: Don't limit to only 10,000 surgeries.
+        const query = `
+          SELECT
+             CAST(case_id AS VARCHAR) as case_id,
+             surgeon_prov_id,
+             surgeon_prov_name,
+             CAST(visit_no AS VARCHAR) as visit_no,
+             pre_hgb,
+             post_hgb,
+
+             pre_plt,
+             post_plt,
+             pre_fibrinogen,
+             post_fibrinogen,
+             pre_inr,
+             post_inr,
+             anesth_prov_id,
+             anesth_prov_name,
+             intraop_rbc_units,
+             intraop_plt_units,
+             intraop_cryo_units,
+             intraop_ffp_units,
+             intraop_whole_units,
+             intraop_cell_saver_ml,
+             (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
+          FROM filteredSurgeryCases
+          ORDER BY surgery_start_dtm
+          LIMIT 10000
+        `;
+        try {
+          const result = await this.duckDB!.query(query);
+          const data = result.toArray().map((row) => row.toJSON());
+          return { id: config.chartId, data };
+        } catch (error) {
+          console.error('Error executing dumbbell query:', error);
+          return { id: config.chartId, data: [] };
+        }
+      }
+      if (config.chartType === 'scatterPlot') {
+        // TODO: Don't limit to only 10,000 surgeries.
+        const query = `
+           SELECT
+             CAST(case_id AS VARCHAR) as case_id,
+             surgeon_prov_id,
+             surgeon_prov_name,
+             anesth_prov_id,
+             anesth_prov_name,
+             year,
+             quarter,
+             month,
+             
+             intraop_rbc_units AS rbc_units,
+             intraop_ffp_units AS ffp_units,
+             intraop_plt_units AS plt_units,
+             intraop_cryo_units AS cryo_units,
+             intraop_whole_units AS whole_units,
+             intraop_cell_saver_ml AS cell_saver_ml,
+             
+             los,
+             death,
+             vent,
+             stroke,
+             ecmo,
+             
+             pre_hgb, post_hgb,
+             pre_plt, post_plt,
+             pre_fibrinogen, post_fibrinogen,
+             pre_inr, post_inr,
+             
+             total_cost,
+             rbc_cost
+           FROM filteredSurgeryCases
+           LIMIT 10000
+        `;
+        try {
+          const result = await this.duckDB!.query(query);
+          const data = result.toArray().map((row) => row.toJSON());
+
+          // We need to group by the 'grouping variable'.
+          const groupingVar = 'groupingVar' in config ? String((config as Record<string, unknown>).groupingVar) : 'surgeon_prov_id';
+
+          // We can do the grouping in JS.
+          const grouped: Record<string, Record<string, unknown>[]> = {};
+          data.forEach((row) => {
+            const key = String(row[groupingVar] || 'Unknown');
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(row as Record<string, unknown>);
+          });
+
+          const formattedData = Object.entries(grouped).map(([name, groupData]) => ({
+            name,
+            data: groupData,
+          }));
+
+          return { id: config.chartId, data: formattedData };
+        } catch (error) {
+          console.error('Error executing scatter query:', error);
+          return { id: config.chartId, data: [] };
+        }
+      }
       return { id: config.chartId, data: [] };
     });
 
     const results = await Promise.all(promises);
-    const data: ExploreChartData = { ...this.exploreDummyData };
+    const data: ExploreChartData = {};
     results.forEach(({ id, data: d }) => {
       data[id] = d;
     });
@@ -1915,7 +1967,7 @@ export class RootStore {
     if (!this.duckDB) return;
     await this.duckDB.query(`
       DELETE FROM costs;
-      INSERT INTO costs VALUES (${this.unitCosts.rbc_units_cost}, ${this.unitCosts.ffp_units_cost}, ${this.unitCosts.plt_units_cost}, ${this.unitCosts.cryo_units_cost}, ${this.unitCosts.cell_saver_cost});
+      INSERT INTO costs VALUES (${this.unitCosts.rbc_units_cost}, ${this.unitCosts.ffp_units_cost}, ${this.unitCosts.plt_units_cost}, ${this.unitCosts.cryo_units_cost}, ${this.unitCosts.whole_cost}, ${this.unitCosts.cell_saver_cost});
     `);
     await this.computeDashboardStatData();
     await this.computeDashboardChartData();

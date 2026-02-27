@@ -3,7 +3,7 @@ from django.db import migrations
 
 def create_materialize_proc(apps, schema_editor):
     create_sql = """
-    CREATE PROCEDURE intelvia.materializeVisitAttributes()
+    CREATE PROCEDURE materializeVisitAttributes()
     BEGIN
         TRUNCATE TABLE VisitAttributes;
 
@@ -219,14 +219,14 @@ def create_materialize_proc(apps, schema_editor):
     """
     conn = schema_editor.connection
     with conn.cursor() as cursor:
-        cursor.execute("DROP PROCEDURE IF EXISTS intelvia.materializeVisitAttributes")
+        cursor.execute("DROP PROCEDURE IF EXISTS materializeVisitAttributes")
         cursor.execute(create_sql)
 
 
 def drop_materialize_proc(apps, schema_editor):
     conn = schema_editor.connection
     with conn.cursor() as cursor:
-        cursor.execute("DROP PROCEDURE IF EXISTS intelvia.materializeVisitAttributes")
+        cursor.execute("DROP PROCEDURE IF EXISTS materializeVisitAttributes")
 
 
 class Migration(migrations.Migration):
@@ -284,7 +284,8 @@ class Migration(migrations.Migration):
                 ffp_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (ffp_units * 50.00) VIRTUAL,
                 plt_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (plt_units * 500.00) VIRTUAL,
                 cryo_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (cryo_units * 30.00) VIRTUAL,
-                overall_cost DECIMAL(8,2) GENERATED ALWAYS AS ((rbc_units * 200.00) + (ffp_units * 50.00) + (plt_units * 500.00) + (cryo_units * 30.00)) VIRTUAL,
+                whole_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (whole_units * 300.00) VIRTUAL,
+                overall_cost DECIMAL(8,2) GENERATED ALWAYS AS ((rbc_units * 200.00) + (ffp_units * 50.00) + (plt_units * 500.00) + (cryo_units * 30.00) + (whole_units * 300.00)) VIRTUAL,
 
                 attending_provider varchar(100),
                 attending_provider_id varchar(25),
@@ -310,7 +311,7 @@ class Migration(migrations.Migration):
             CREATE EVENT IF NOT EXISTS updateVisitAttributesEvent
             ON SCHEDULE EVERY 1 DAY
             STARTS (CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 4 HOUR)
-            DO CALL intelvia.materializeVisitAttributes();
+            DO CALL materializeVisitAttributes();
             """,
             reverse_sql="""
             DROP EVENT IF EXISTS updateVisitAttributesEvent;
