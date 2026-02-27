@@ -12,19 +12,19 @@ class GenericExceptionMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        try:
-            return self.get_response(request)
-        except Exception as exc:
-            logger.exception("Unhandled server exception")
-            sentry_sdk.capture_exception(exc)
+        return self.get_response(request)
 
-            if settings.DEBUG:
-                raise
+    def process_exception(self, request, exception):
+        logger.exception("Unhandled server exception")
+        sentry_sdk.capture_exception(exception)
 
-            if request.path.startswith("/api/"):
-                return JsonResponse(
-                    {"detail": "An unexpected server error occurred."},
-                    status=500,
-                )
+        if settings.DEBUG:
+            return None
 
-            return HttpResponse("An unexpected server error occurred.", status=500)
+        if request.path.startswith("/api/"):
+            return JsonResponse(
+                {"detail": "An unexpected server error occurred."},
+                status=500,
+            )
+
+        return HttpResponse("An unexpected server error occurred.", status=500)
