@@ -4,7 +4,7 @@ import React, {
 } from 'react';
 import { area, curveCatmullRom } from 'd3-shape';
 import { scaleLinear, scaleLog } from 'd3-scale';
-import { mean as d3Mean, max as d3Max, ticks as d3Ticks } from 'd3-array';
+import { max as d3Max, ticks as d3Ticks } from 'd3-array';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import {
   MultiSelect,
