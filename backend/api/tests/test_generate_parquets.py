@@ -1,6 +1,6 @@
 import json
 import io
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -15,6 +15,7 @@ from django.test import TransactionTestCase, override_settings
 from api.management.commands.generate_parquets import (
     attach_cpt_dimensions,
     build_visit_attributes_table,
+    get_surgery_case_attributes_schema,
     get_visit_attributes_schema,
 )
 from api.views.utils.cpt_hierarchy import DepartmentTaxonomy, ProcedureTaxonomy
@@ -581,3 +582,40 @@ class GenerateParquetsTests(TransactionTestCase):
                     self.assertIn("Procedure hierarchy cache generated at", output)
                 else:
                     self.assertNotIn("Procedure hierarchy cache generated at", output)
+
+    def test_surgery_case_attributes_schema_has_utc_timestamps(self):
+        schema = get_surgery_case_attributes_schema()
+        for field_name in ("surgery_start_dtm", "surgery_end_dtm"):
+            field = schema.field(field_name)
+            self.assertEqual(field.type, pa.timestamp('us', tz='UTC'),
+                             f"{field_name} must be a UTC-annotated timestamp to avoid timezone offset issues")
+
+    def test_surgery_case_attributes_naive_datetimes_are_localized_to_utc(self):
+        schema = get_surgery_case_attributes_schema()
+        utc_dt_val = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        row = {
+            "case_id": 1,
+            "visit_no": 1001,
+            "mrn": "MRN-1",
+            "surgeon_prov_id": "SURG-1",
+            "surgeon_prov_name": "Surgeon One",
+            "anesth_prov_id": "ANES-1",
+            "anesth_prov_name": "Anesthesiologist One",
+            "surgery_start_dtm": utc_dt_val,
+            "surgery_end_dtm": utc_dt_val,
+            "case_date": date(2024, 6, 15),
+            "month": "2024-Jun",
+            "quarter": "2024-Q2",
+            "year": "2024",
+            "pre_hgb": None, "pre_plt": None, "pre_fibrinogen": None, "pre_inr": None,
+            "post_hgb": None, "post_plt": None, "post_fibrinogen": None, "post_inr": None,
+            "intraop_rbc_units": None, "intraop_ffp_units": None, "intraop_plt_units": None,
+            "intraop_cryo_units": None, "intraop_whole_units": None, "intraop_cell_saver_ml": None,
+            "los": None, "death": None, "vent": None, "stroke": None, "ecmo": None,
+            "rbc_cost": None, "ffp_cost": None, "plt_cost": None, "cryo_cost": None,
+            "whole_cost": None, "cell_saver_cost": None, "total_cost": None,
+        }
+        table = pa.Table.from_pylist([row], schema=schema)
+        result = table.to_pylist()[0]
+        self.assertEqual(result["surgery_start_dtm"], utc_dt_val)
+        self.assertEqual(result["surgery_end_dtm"], utc_dt_val)

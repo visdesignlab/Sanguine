@@ -1083,8 +1083,8 @@ export class RootStore {
     const latestDate = new Date(latestDateRow.latest_date as string);
     // Get the start of the current period
     const currentPeriodStart = new Date(latestDate.getTime() - (30 * 24 * 60 * 60 * 1000));
-    const currentPeriodStartMonth = currentPeriodStart.getMonth();
-    const currentPeriodStartYear = currentPeriodStart.getFullYear();
+    const currentPeriodStartMonth = currentPeriodStart.getUTCMonth();
+    const currentPeriodStartYear = currentPeriodStart.getUTCFullYear();
     // Get the start of the comparison period
     let comparisonMonth = currentPeriodStartMonth - 1;
     let comparisonYear = currentPeriodStartYear;
@@ -1092,9 +1092,9 @@ export class RootStore {
       comparisonMonth = 11;
       comparisonYear -= 1;
     }
-    const comparisonPeriodStart = new Date(comparisonYear, comparisonMonth, 1);
-    const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
-    const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
+    const comparisonPeriodStart = new Date(Date.UTC(comparisonYear, comparisonMonth, 1));
+    const comparisonPeriodEnd = new Date(Date.UTC(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999));
+    const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
     // Build the select statements for the stats data
     const statSelects = [
       // Visit counts
@@ -1152,9 +1152,9 @@ export class RootStore {
     // Get the sparkline months from the last 6 months
     const sparklineMonths: string[] = [];
     for (let i = 5; i >= 0; i -= 1) {
-      const d = new Date(latestDate.getFullYear(), latestDate.getMonth() - i, 1);
-      const year = d.getFullYear();
-      const monthShort = d.toLocaleString('en-US', { month: 'short' });
+      const d = new Date(Date.UTC(latestDate.getUTCFullYear(), latestDate.getUTCMonth() - i, 1));
+      const year = d.getUTCFullYear();
+      const monthShort = d.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
       sparklineMonths.push(`${year}-${monthShort}`);
     }
 

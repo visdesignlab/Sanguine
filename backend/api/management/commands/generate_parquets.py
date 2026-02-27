@@ -78,8 +78,8 @@ def get_surgery_case_attributes_schema() -> pa.Schema:
         pa.field("surgeon_prov_name", pa.string(), nullable=True),
         pa.field("anesth_prov_id", pa.string(), nullable=True),
         pa.field("anesth_prov_name", pa.string(), nullable=True),
-        pa.field("surgery_start_dtm", pa.timestamp('us'), nullable=True),
-        pa.field("surgery_end_dtm", pa.timestamp('us'), nullable=True),
+        pa.field("surgery_start_dtm", pa.timestamp('us', tz='UTC'), nullable=True),
+        pa.field("surgery_end_dtm", pa.timestamp('us', tz='UTC'), nullable=True),
         pa.field("case_date", pa.date32(), nullable=True),
         pa.field("month", pa.string(), nullable=True),
         pa.field("quarter", pa.string(), nullable=True),
@@ -293,6 +293,10 @@ class Command(BaseCommand):
                         c[field] = float(c[field]) if c[field] is not None else None
                     for field in ["death", "vent", "stroke", "ecmo"]:
                         c[field] = bool(c[field]) if c[field] is not None else None
+                    for field in ["surgery_start_dtm", "surgery_end_dtm"]:
+                        dt = c.get(field)
+                        if dt is not None and dt.tzinfo is None:
+                            c[field] = dt.replace(tzinfo=timezone.utc)
 
         if should_generate_visit_attributes or should_generate_procedure_hierarchy:
             hierarchy = get_cpt_hierarchy()

@@ -58,7 +58,7 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
   }
   if (['adm_dtm', 'dsch_dtm'].includes(columnName)) {
     const date = new Date(value as number);
-    return Number.isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleString();
+    return Number.isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString(undefined, { timeZone: 'UTC' });
   }
   if (['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'].includes(columnName)) {
     return (value === 1 || value === true) ? 'Yes' : 'No';
