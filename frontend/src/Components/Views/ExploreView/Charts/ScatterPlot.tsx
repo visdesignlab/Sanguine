@@ -433,6 +433,11 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     () => getProcessedScatterData(rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey),
     [rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey],
   );
+  const rawIndexByCaseRef = useMemo(() => {
+    const map = new Map<DumbbellCase, number>();
+    rawData.forEach((c, idx) => map.set(c, idx));
+    return map;
+  }, [rawData]);
 
   // Layout (discrete mode)
   const layoutData = useMemo(() => {
@@ -494,22 +499,20 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   // Build point positions
   const pointPositions = useMemo((): PointPosition[] => {
     const points: PointPosition[] = [];
-    let globalCaseIdx = 0;
 
     if (!isDiscrete && xScale && xVarKey) {
       // Continuous mode
-      rawData.forEach((c) => {
+      rawData.forEach((c, rawIdx) => {
         const xVal = c[xVarKey] as number | null;
         const yVal = c[varConfig.key] as number | null;
         if (xVal !== null && xVal !== undefined && yVal !== null && yVal !== undefined) {
           points.push({
             x: xScale(xVal),
             y: yScale(yVal) + SCATTER_MARGIN.top,
-            caseIdx: globalCaseIdx,
+            caseIdx: rawIdx,
             binGroupIdx: 0,
           });
         }
-        globalCaseIdx += 1;
       });
     } else {
       // Discrete mode
@@ -518,22 +521,23 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         const bgLayout = layoutData.binGroupLayout.get(binGroup.id);
         if (!bgLayout) return;
         binGroup.cases.forEach((c, cIdx) => {
+          const rawIdx = rawIndexByCaseRef.get(c);
+          if (rawIdx === undefined) return;
           const yVal = c[varConfig.key] as number | null;
           if (yVal !== null && yVal !== undefined) {
             const caseX = bgLayout.x + cIdx * SCATTER_CHAR_WIDTH_CASE + SCATTER_CHAR_WIDTH_CASE / 2;
             points.push({
               x: caseX,
               y: yScale(yVal) + SCATTER_MARGIN.top,
-              caseIdx: globalCaseIdx,
+              caseIdx: rawIdx,
               binGroupIdx: bgIdx,
             });
           }
-          globalCaseIdx += 1;
         });
       });
     }
     return points;
-  }, [isDiscrete, xScale, xVarKey, rawData, varConfig.key, yScale, processedData, collapsedBinGroups, layoutData.binGroupLayout]);
+  }, [isDiscrete, xScale, xVarKey, rawData, varConfig.key, yScale, processedData, collapsedBinGroups, layoutData.binGroupLayout, rawIndexByCaseRef]);
 
   // Precompute group color for each case index
   const caseGroupColors = useMemo(() => {
@@ -709,10 +713,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         hoveredPointRef.current = nearest;
         if (nearest) {
           // Find the case data
-          const allCases = isDiscrete
-            ? processedData.flatMap((bg) => bg.cases)
-            : rawData;
-          const caseData = allCases[nearest.caseIdx];
+          const caseData = rawData[nearest.caseIdx];
           if (caseData) setTooltipData({ x: nearest.x, y: nearest.y, caseData });
         } else {
           setTooltipData(null);
@@ -768,7 +769,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         x1: nMinX, y1: nMinY, x2: nMaxX, y2: nMaxY,
       });
     }
-  }, [interactionMode, selection, height, resizeHandle, bottomMargin, spatialIndex, pointPositions, drawPoints, isDiscrete, processedData, rawData]);
+  }, [interactionMode, selection, height, resizeHandle, bottomMargin, spatialIndex, pointPositions, drawPoints, rawData]);
 
   const handleMouseUp = useCallback(() => {
     setInteractionMode('idle');
