@@ -39,6 +39,38 @@ Security is a top priority for the Sanguine application. We use a variety of tec
 - Logging: We log all requests to the application and monitor for any unusual activity at backend/sanguine.log.
 - Data encryption: All data is encrypted in transit using SSL.
 
+### Sentry Monitoring Setup (Backend)
+
+The backend now supports Sentry for error monitoring and usage visibility across deployments.
+
+1. Create a Django project in [sentry.io](https://sentry.io/) and copy the DSN.
+2. Set the following environment variables for the backend service:
+   - `SENTRY_DSN` (**secret**): Sentry DSN for your hospital deployment
+   - `SENTRY_ENVIRONMENT`: Environment label (for example `university-of-utah` or `st-marys`) to keep Sentry alerts separated by deployment
+   - `SENTRY_TRACES_SAMPLE_RATE`: Decimal sample rate for performance traces (for example `0.1`)
+   - `SENTRY_SEND_DEFAULT_PII`: `True` or `False` (recommend `False` unless your compliance team approves otherwise)
+   - `SENTRY_CAPTURE_HANDLED_HTTP_ERRORS`: `True` or `False` (captures handled `4xx/5xx` responses as Sentry events, default `True`)
+3. Restart the backend container/process after updating environment variables.
+
+When `SENTRY_DSN` is not set, Sentry is disabled.
+
+Production API errors are intentionally generic to avoid exposing internal details. In local development (`DJANGO_DEBUG=True`), full exception behavior/logs are preserved for debugging.
+
+Unhandled backend exceptions are both:
+- sent to Sentry (when `SENTRY_DSN` is configured), and
+- written to container logs (via Django/Gunicorn stdout/stderr), viewable with `docker-compose logs -f backend`.
+
+Handled `4xx/5xx` responses returned by Django views are also sent to Sentry as handled error events when `SENTRY_CAPTURE_HANDLED_HTTP_ERRORS=True`.
+
+#### Secrets to keep private
+
+At minimum, do **not** expose these values in git, logs, or screenshots:
+
+- `DJANGO_SECRET_KEY`
+- `MARIADB_PASSWORD`
+- `MARIADB_ROOT_PASSWORD`
+- `SENTRY_DSN`
+
 #### Deployment Steps
 
 To run the application in production, use either of the following commands:
