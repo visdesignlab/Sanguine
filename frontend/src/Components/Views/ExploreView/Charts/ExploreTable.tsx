@@ -147,6 +147,7 @@ function ViolinCell({
   const xScale = scaleLog().domain([effectiveMin, domainMax]).range([padding, internalWidth - padding]);
 
   const liner = d3Ticks(domainMin, domainMax, ticks);
+  const domainRange = domainMax - domainMin;
   const bandwidth = Math.max(domainRange / 8, 1e-3);
   const kde = kernelDensityEstimator(kernelEpanechnikov(bandwidth), liner);
   const density = kde(samples);
