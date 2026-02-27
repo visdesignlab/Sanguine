@@ -1,6 +1,6 @@
 from collections import defaultdict
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, time, timezone
 from pathlib import Path
 
 import pyarrow as pa
@@ -12,12 +12,27 @@ from django.db import connection
 from api.views.utils.cpt_hierarchy import get_cpt_hierarchy, normalize_cpt_code
 
 
+def coerce_temporal_value_to_utc(value):
+    if value is None:
+        return None
+
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
+
+    if isinstance(value, date):
+        return datetime.combine(value, time.min, tzinfo=timezone.utc)
+
+    return value
+
+
 def get_visit_attributes_schema() -> pa.Schema:
     return pa.schema([
         pa.field("visit_no", pa.int64(), nullable=False),
         pa.field("mrn", pa.string(), nullable=False),
-        pa.field("adm_dtm", pa.date32(), nullable=True),
-        pa.field("dsch_dtm", pa.date32(), nullable=True),
+        pa.field("adm_dtm", pa.timestamp('us', tz='UTC'), nullable=True),
+        pa.field("dsch_dtm", pa.timestamp('us', tz='UTC'), nullable=True),
         pa.field("age_at_adm", pa.uint8(), nullable=True),
         pa.field("pat_class_desc", pa.string(), nullable=True),
         pa.field("apr_drg_weight", pa.float32(), nullable=True),
@@ -80,7 +95,7 @@ def get_surgery_case_attributes_schema() -> pa.Schema:
         pa.field("anesth_prov_name", pa.string(), nullable=True),
         pa.field("surgery_start_dtm", pa.timestamp('us', tz='UTC'), nullable=True),
         pa.field("surgery_end_dtm", pa.timestamp('us', tz='UTC'), nullable=True),
-        pa.field("case_date", pa.date32(), nullable=True),
+        pa.field("case_date", pa.timestamp('us', tz='UTC'), nullable=True),
         pa.field("month", pa.string(), nullable=True),
         pa.field("quarter", pa.string(), nullable=True),
         pa.field("year", pa.string(), nullable=True),
@@ -268,6 +283,8 @@ class Command(BaseCommand):
                 visits = [dict(zip(columns, row)) for row in rows]
                 
                 for visit in visits:
+                    for field_name in ("adm_dtm", "dsch_dtm"):
+                        visit[field_name] = coerce_temporal_value_to_utc(visit.get(field_name))
                     visit["los"] = float(visit["los"]) if visit["los"] is not None else None
                     for field_name in self.NULLABLE_BOOL_FIELDS:
                         value = visit[field_name]
@@ -293,10 +310,8 @@ class Command(BaseCommand):
                         c[field] = float(c[field]) if c[field] is not None else None
                     for field in ["death", "vent", "stroke", "ecmo"]:
                         c[field] = bool(c[field]) if c[field] is not None else None
-                    for field in ["surgery_start_dtm", "surgery_end_dtm"]:
-                        dt = c.get(field)
-                        if dt is not None and dt.tzinfo is None:
-                            c[field] = dt.replace(tzinfo=timezone.utc)
+                    for field in ["surgery_start_dtm", "surgery_end_dtm", "case_date"]:
+                        c[field] = coerce_temporal_value_to_utc(c.get(field))
 
         if should_generate_visit_attributes or should_generate_procedure_hierarchy:
             hierarchy = get_cpt_hierarchy()

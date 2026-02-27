@@ -130,12 +130,12 @@ export const formatStateDetailValue = (value: unknown, key?: string): string => 
   if ((key === 'dateFrom' || key === 'dateTo') && typeof value === 'string') {
     const date = new Date(value);
     if (!Number.isNaN(date.getTime())) {
-      return date.toLocaleDateString();
+      return date.toLocaleDateString(undefined, { timeZone: 'UTC' });
     }
   }
 
   if (value instanceof Date) {
-    return value.toLocaleDateString();
+    return value.toLocaleDateString(undefined, { timeZone: 'UTC' });
   }
   if (typeof value === 'boolean') {
     return value ? 'Yes' : 'No';

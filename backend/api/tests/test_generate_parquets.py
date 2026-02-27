@@ -1,6 +1,6 @@
 import json
 import io
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -15,6 +15,7 @@ from django.test import TransactionTestCase, override_settings
 from api.management.commands.generate_parquets import (
     attach_cpt_dimensions,
     build_visit_attributes_table,
+    coerce_temporal_value_to_utc,
     get_surgery_case_attributes_schema,
     get_visit_attributes_schema,
 )
@@ -37,8 +38,8 @@ def valid_visit_attributes_row() -> dict:
     return {
         "visit_no": 1,
         "mrn": "MRN-1",
-        "adm_dtm": date(2024, 1, 1),
-        "dsch_dtm": date(2024, 1, 5),
+        "adm_dtm": datetime(2024, 1, 1, tzinfo=timezone.utc),
+        "dsch_dtm": datetime(2024, 1, 5, tzinfo=timezone.utc),
         "age_at_adm": 64,
         "pat_class_desc": "Inpatient",
         "apr_drg_weight": 1.2,
@@ -165,6 +166,8 @@ class GenerateParquetsTests(TransactionTestCase):
             row = rows[0]
             self.assertEqual(row["visit_no"], visit.visit_no)
             self.assertEqual(row["mrn"], "MRN-2001")
+            self.assertEqual(row["adm_dtm"], datetime(2024, 1, 1, tzinfo=timezone.utc))
+            self.assertEqual(row["dsch_dtm"], datetime(2024, 1, 5, tzinfo=timezone.utc))
             self.assertEqual(row["age_at_adm"], 64)
             self.assertEqual(row["rbc_units"], 2)
             self.assertEqual(row["ffp_units"], 1)
@@ -393,6 +396,22 @@ class GenerateParquetsTests(TransactionTestCase):
                 with self.assertRaises(ARROW_ERRORS):
                     build_visit_attributes_table([row])
 
+    def test_coerce_temporal_value_to_utc_handles_date_and_datetime(self):
+        naive_dt = datetime(2024, 7, 4, 11, 30)
+        aware_non_utc_dt = datetime(2024, 7, 4, 11, 30, tzinfo=timezone(timedelta(hours=-5)))
+        date_value = date(2024, 7, 4)
+
+        converted_naive_dt = coerce_temporal_value_to_utc(naive_dt)
+        self.assertEqual(converted_naive_dt, datetime(2024, 7, 4, 11, 30, tzinfo=timezone.utc))
+
+        converted_aware_dt = coerce_temporal_value_to_utc(aware_non_utc_dt)
+        self.assertEqual(converted_aware_dt, datetime(2024, 7, 4, 16, 30, tzinfo=timezone.utc))
+
+        converted_date = coerce_temporal_value_to_utc(date_value)
+        self.assertEqual(converted_date, datetime(2024, 7, 4, 0, 0, tzinfo=timezone.utc))
+
+        self.assertIsNone(coerce_temporal_value_to_utc(None))
+
     def test_generate_parquets_failure_does_not_overwrite_existing_artifact(self):
         create_visit_fixture(
             visit_no=2003,
@@ -585,10 +604,20 @@ class GenerateParquetsTests(TransactionTestCase):
 
     def test_surgery_case_attributes_schema_has_utc_timestamps(self):
         schema = get_surgery_case_attributes_schema()
-        for field_name in ("surgery_start_dtm", "surgery_end_dtm"):
+        for field_name in ("surgery_start_dtm", "surgery_end_dtm", "case_date"):
             field = schema.field(field_name)
             self.assertEqual(field.type, pa.timestamp('us', tz='UTC'),
                              f"{field_name} must be a UTC-annotated timestamp to avoid timezone offset issues")
+
+    def test_visit_attributes_schema_has_utc_timestamps(self):
+        schema = get_visit_attributes_schema()
+        for field_name in ("adm_dtm", "dsch_dtm"):
+            field = schema.field(field_name)
+            self.assertEqual(
+                field.type,
+                pa.timestamp('us', tz='UTC'),
+                f"{field_name} must be a UTC-annotated timestamp to avoid timezone offset issues",
+            )
 
     def test_surgery_case_attributes_naive_datetimes_are_localized_to_utc(self):
         schema = get_surgery_case_attributes_schema()
@@ -603,7 +632,7 @@ class GenerateParquetsTests(TransactionTestCase):
             "anesth_prov_name": "Anesthesiologist One",
             "surgery_start_dtm": utc_dt_val,
             "surgery_end_dtm": utc_dt_val,
-            "case_date": date(2024, 6, 15),
+            "case_date": datetime(2024, 6, 15, 0, 0, 0, tzinfo=timezone.utc),
             "month": "2024-Jun",
             "quarter": "2024-Q2",
             "year": "2024",
@@ -619,3 +648,4 @@ class GenerateParquetsTests(TransactionTestCase):
         result = table.to_pylist()[0]
         self.assertEqual(result["surgery_start_dtm"], utc_dt_val)
         self.assertEqual(result["surgery_end_dtm"], utc_dt_val)
+        self.assertEqual(result["case_date"], datetime(2024, 6, 15, 0, 0, 0, tzinfo=timezone.utc))
