@@ -1,0 +1,380 @@
+import {
+  DumbbellCase, DumbbellData, DumbbellLabConfig, DumbbellSortState,
+  DUMBBELL_EMPTY_NESTED_BIN_WIDTH, DUMBBELL_CHAR_WIDTH_CASE,
+} from '../../../../Types/application';
+
+// Grouping and processing logic
+export function getProcessedDumbbellData(
+  rawData: DumbbellData,
+  selectedX: string,
+  labConfig: DumbbellLabConfig,
+  sortMode: string,
+  hasNestedBins: boolean,
+  providerSort: 'alpha' | 'count' | 'pre' | 'post' = 'alpha',
+) {
+  const groupedByBinGroup = new Map<string, DumbbellCase[]>();
+
+  // Grouping Logic based on selectedX
+  rawData.forEach((d: DumbbellCase) => {
+    let key = d.surgeon_prov_name; // Default Surgeon Name
+    if (selectedX === 'anesthesiologist') key = d.anesth_prov_name;
+    else if (selectedX === 'year_quarter') {
+      const date = new Date(d.surgery_start_dtm);
+      key = `${date.getFullYear()}`;
+    } else if (selectedX === 'rbc') {
+      const val = d.intraop_rbc_units;
+      key = `${val} ${val === 1 ? 'RBC' : 'RBCs'}`;
+    } else if (selectedX === 'platelet') {
+      const val = d.intraop_plt_units;
+      key = `${val} ${val === 1 ? 'Platelet' : 'Platelets'}`;
+    } else if (selectedX === 'cryo') {
+      const val = d.intraop_cryo_units;
+      key = `${val} ${val === 1 ? 'Cryo' : 'Cryo Units'}`;
+    } else if (selectedX === 'ffp') {
+      const val = d.intraop_ffp_units;
+      key = `${val} ${val === 1 ? 'FFP' : 'FFPs'}`;
+    } else if (selectedX === 'cell_salvage') {
+      const val = d.intraop_cell_saver_ml ?? 0;
+      if (val === 0) {
+        key = '0 mL';
+      } else {
+        const lower = Math.floor(val / 100) * 100;
+        const upper = lower + 100;
+        key = `${lower}-${upper} mL`;
+      }
+    }
+
+    if (!groupedByBinGroup.has(key)) groupedByBinGroup.set(key, []);
+    groupedByBinGroup.get(key)?.push(d);
+  });
+
+  const hierarchy: {
+    id: string;
+    label: string;
+    cases: DumbbellCase[];
+    nestedBins: {
+      id: string;
+      label: string;
+      cases: DumbbellCase[];
+      minPre: number;
+      minPost: number;
+    }[];
+    avgPre: number | null;
+    avgPost: number | null;
+  }[] = [];
+
+  const sortedKeys = Array.from(groupedByBinGroup.keys());
+  if (selectedX === 'year_quarter' || selectedX === 'rbc' || selectedX === 'platelet' || selectedX === 'cryo' || selectedX === 'ffp') {
+    sortedKeys.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  } else if (selectedX === 'cell_salvage') {
+    sortedKeys.sort((a, b) => {
+      if (a === '0 mL') return -1;
+      if (b === '0 mL') return 1;
+      const aVal = parseInt(a.split('-')[0], 10);
+      const bVal = parseInt(b.split('-')[0], 10);
+      return aVal - bVal;
+    });
+  } else if (providerSort === 'count') { // Surgeon or Anesthesiologist Sorting
+    sortedKeys.sort((a, b) => {
+      const aCount = groupedByBinGroup.get(a)?.length || 0;
+      const bCount = groupedByBinGroup.get(b)?.length || 0;
+      return bCount - aCount;
+    });
+  } else if (providerSort === 'pre' || providerSort === 'post') {
+    sortedKeys.sort((a, b) => {
+      const casesA = groupedByBinGroup.get(a) || [];
+      const casesB = groupedByBinGroup.get(b) || [];
+
+      const preAccess = labConfig.preKey;
+      const postAccess = labConfig.postKey;
+
+      const getAvg = (cases: DumbbellCase[], type: 'pre' | 'post') => {
+        let sum = 0;
+        let count = 0;
+        cases.forEach((c) => {
+          const val = type === 'pre' ? c[preAccess] : c[postAccess];
+          if (val !== undefined && val !== null) {
+            sum += val as number;
+            count += 1;
+          }
+        });
+        return count > 0 ? sum / count : 0;
+      };
+
+      const aAvg = getAvg(casesA, providerSort);
+      const bAvg = getAvg(casesB, providerSort);
+
+      return bAvg - aAvg; // Descending average
+    });
+  } else {
+    sortedKeys.sort(); // Alphabetical for names
+  }
+
+  sortedKeys.forEach((binGroupId) => {
+    const cases = groupedByBinGroup.get(binGroupId)!;
+    const binGroupSort = sortMode === 'time' ? 'none' : sortMode as DumbbellSortState;
+
+    if (binGroupSort === 'none') {
+      const groupedByNestedBin = new Map<string, DumbbellCase[]>();
+
+      cases.forEach((d) => {
+        let subKey = d.visit_no; // Default Visit ID
+        if (selectedX === 'year_quarter') {
+          const date = new Date(d.surgery_start_dtm);
+          const q = Math.floor((date.getMonth() + 3) / 3);
+          subKey = `Q${q}`;
+        } else if (!hasNestedBins) {
+          subKey = 'All Cases';
+        }
+        if (!groupedByNestedBin.has(subKey)) groupedByNestedBin.set(subKey, []);
+        groupedByNestedBin.get(subKey)?.push(d);
+      });
+
+      if (selectedX === 'year_quarter') {
+        for (let q = 1; q <= 4; q += 1) {
+          const qKey = `Q${q}`;
+          if (!groupedByNestedBin.has(qKey)) {
+            groupedByNestedBin.set(qKey, []);
+          }
+        }
+      }
+
+      const nestedBins = Array.from(groupedByNestedBin.entries()).map(([nestedBinLabel, nestedBinCases]) => {
+        const preAccess = labConfig.preKey;
+        const postAccess = labConfig.postKey;
+        const preValues = nestedBinCases.map((c) => c[preAccess] as number);
+        const postValues = nestedBinCases.map((c) => c[postAccess] as number);
+        const minPre = preValues.length > 0 ? Math.min(...preValues) : Infinity;
+        const minPost = postValues.length > 0 ? Math.min(...postValues) : Infinity;
+
+        const sortedCases = [...nestedBinCases];
+        sortedCases.sort((a, b) => a.surgery_start_dtm - b.surgery_start_dtm);
+
+        return {
+          id: `${binGroupId}-${nestedBinLabel}`,
+          label: nestedBinLabel,
+          cases: sortedCases,
+          minPre,
+          minPost,
+        };
+      });
+
+      if (selectedX === 'year_quarter') {
+        nestedBins.sort((a, b) => a.label.localeCompare(b.label));
+      } else if (['surgeon', 'anesthesiologist'].includes(selectedX)) {
+        nestedBins.sort((a, b) => {
+          const timeA = a.cases[0]?.surgery_start_dtm || 0;
+          const timeB = b.cases[0]?.surgery_start_dtm || 0;
+          return timeA - timeB;
+        });
+      }
+
+      const preAccess = labConfig.preKey;
+      const postAccess = labConfig.postKey;
+
+      let sumPre = 0; let countPre = 0;
+      let sumPost = 0; let countPost = 0;
+
+      cases.forEach((c) => {
+        const preVal = c[preAccess] as number | undefined;
+        const postVal = c[postAccess] as number | undefined;
+        if (preVal !== undefined && preVal !== null) {
+          sumPre += preVal;
+          countPre += 1;
+        }
+        if (postVal !== undefined && postVal !== null) {
+          sumPost += postVal;
+          countPost += 1;
+        }
+      });
+      const avgPre = countPre > 0 ? sumPre / countPre : null;
+      const avgPost = countPost > 0 ? sumPost / countPost : null;
+
+      hierarchy.push({
+        id: binGroupId,
+        label: binGroupId,
+        cases,
+        nestedBins,
+        avgPre,
+        avgPost,
+      });
+    } else {
+      const sortedCases = [...cases];
+      const preAccess = labConfig.preKey;
+      const postAccess = labConfig.postKey;
+
+      if (binGroupSort === 'pre') {
+        sortedCases.sort((a, b) => {
+          const aVal = a[preAccess] as number | null | undefined;
+          const bVal = b[preAccess] as number | null | undefined;
+          if (aVal == null && bVal == null) return 0;
+          if (aVal == null) return -1;
+          if (bVal == null) return 1;
+          return aVal - bVal;
+        });
+      } else if (binGroupSort === 'post') {
+        sortedCases.sort((a, b) => {
+          const aVal = a[postAccess] as number | null | undefined;
+          const bVal = b[postAccess] as number | null | undefined;
+          if (aVal == null && bVal == null) return 0;
+          if (aVal == null) return -1;
+          if (bVal == null) return 1;
+          return aVal - bVal;
+        });
+      } else if (binGroupSort === 'gap') {
+        sortedCases.sort((a, b) => {
+          const aPre = a[preAccess] as number | null | undefined;
+          const aPost = a[postAccess] as number | null | undefined;
+          const bPre = b[preAccess] as number | null | undefined;
+          const bPost = b[postAccess] as number | null | undefined;
+
+          const aValid = aPre != null && aPost != null;
+          const bValid = bPre != null && bPost != null;
+
+          if (!aValid && !bValid) return 0;
+          if (!aValid) return -1; // place invalid at the beginning
+          if (!bValid) return 1;
+
+          const aGap = Math.abs(aPre! - aPost!);
+          const bGap = Math.abs(bPre! - bPost!);
+          return aGap - bGap;
+        });
+      }
+
+      const minPre = Math.min(...sortedCases.map((c) => c[preAccess] as number));
+      const minPost = Math.min(...sortedCases.map((c) => c[postAccess] as number));
+
+      const virtualNestedBin = {
+        id: `${binGroupId}-all-sorted`,
+        label: 'All Cases',
+        cases: sortedCases,
+        minPre,
+        minPost,
+      };
+
+      let sumPre = 0; let countPre = 0;
+      let sumPost = 0; let countPost = 0;
+
+      cases.forEach((c) => {
+        const preVal = c[preAccess] as number | undefined;
+        const postVal = c[postAccess] as number | undefined;
+        if (preVal !== undefined && preVal !== null) {
+          sumPre += preVal;
+          countPre += 1;
+        }
+        if (postVal !== undefined && postVal !== null) {
+          sumPost += postVal;
+          countPost += 1;
+        }
+      });
+      const avgPre = countPre > 0 ? sumPre / countPre : null;
+      const avgPost = countPost > 0 ? sumPost / countPost : null;
+
+      hierarchy.push({
+        id: binGroupId,
+        label: binGroupId,
+        cases,
+        nestedBins: [virtualNestedBin],
+        avgPre,
+        avgPost,
+      });
+    }
+  });
+
+  return hierarchy;
+}
+
+function getShortenedLabel(label: string) {
+  if (label.includes('RBC')) return label.split(' ')[0];
+  if (label.includes('Platelet')) return label.split(' ')[0];
+  if (label.includes('Cryo')) return label.split(' ')[0];
+  if (label.includes('FFP')) return label.split(' ')[0];
+  return label;
+}
+
+// Layout calculation logic
+export function calculateDumbbellLayout(
+  processedData: ReturnType<typeof getProcessedDumbbellData>,
+  collapsedBinGroups: Set<string>,
+  collapsedNestedBins: Set<string>,
+  selectedX: string,
+  measureText: (text: string) => number,
+) {
+  const items: {
+    type: 'case' | 'visit_gap' | 'provider_gap' | 'spacer',
+    data?: DumbbellCase,
+    width: number
+  }[] = [];
+
+  const binGroupLayout = new Map<string, { x: number, width: number, label: string }>();
+  const nestedBinLayout = new Map<string, { x: number, width: number }>();
+
+  let currentX = 0;
+
+  processedData.forEach((binGroup) => {
+    const binGroupStartX = currentX;
+    let displayLabel = binGroup.id;
+
+    if (collapsedBinGroups.has(binGroup.id)) {
+      const width = 50;
+      items.push({ type: 'provider_gap', width });
+      currentX += width;
+    } else {
+      binGroup.nestedBins.forEach((nestedBin) => {
+        const nestedBinStartX = currentX;
+        if (collapsedNestedBins.has(nestedBin.id)) {
+          const width = 40;
+          items.push({ type: 'visit_gap', width });
+          currentX += width;
+        } else if (nestedBin.cases.length === 0) {
+          const width = DUMBBELL_EMPTY_NESTED_BIN_WIDTH;
+          items.push({ type: 'visit_gap', width });
+          currentX += width;
+        } else {
+          nestedBin.cases.forEach((c) => {
+            const width = DUMBBELL_CHAR_WIDTH_CASE;
+            items.push({ type: 'case', data: c, width });
+            currentX += width;
+          });
+        }
+        nestedBinLayout.set(nestedBin.id, { x: nestedBinStartX, width: currentX - nestedBinStartX });
+      });
+    }
+
+    let binGroupWidth = currentX - binGroupStartX;
+    const isSurgeon = selectedX === 'surgeon' || selectedX === 'anesthesiologist';
+
+    if (isSurgeon) {
+      const MIN_SURGEON_WIDTH = 40;
+      if (binGroupWidth < MIN_SURGEON_WIDTH) {
+        const deficit = MIN_SURGEON_WIDTH - binGroupWidth;
+        items.push({ type: 'spacer', width: deficit });
+        currentX += deficit;
+        binGroupWidth += deficit;
+      }
+    } else {
+      const fullWidth = measureText(displayLabel);
+      if (binGroupWidth < fullWidth + 10) {
+        const shortLabel = getShortenedLabel(displayLabel);
+        const shortWidth = measureText(shortLabel);
+
+        if (shortLabel !== displayLabel && binGroupWidth >= shortWidth + 8) {
+          displayLabel = shortLabel;
+        } else {
+          const targetWidth = (shortLabel !== displayLabel) ? shortWidth : fullWidth;
+          if (binGroupWidth < targetWidth + 10) {
+            const deficit = (targetWidth + 10) - binGroupWidth;
+            items.push({ type: 'spacer', width: deficit });
+            currentX += deficit;
+            binGroupWidth += deficit;
+            if (shortLabel !== displayLabel) displayLabel = shortLabel;
+          }
+        }
+      }
+    }
+
+    binGroupLayout.set(binGroup.id, { x: binGroupStartX, width: binGroupWidth, label: displayLabel });
+  });
+
+  return { items, binGroupLayout, nestedBinLayout };
+}

@@ -759,7 +759,12 @@ class Command(BaseCommand):
                             cryo_units = fake.random_int(min=0, max=1)
                     cryo = cryo_units
 
-                    whole = 0
+                    # Whole Blood if HGB < 7
+                    whole_units = 0
+                    if lab["result_desc"] in ["HGB", "Hemoglobin"]:
+                        if lab["result_value"] < 7:
+                            whole_units = fake.random_int(min=0, max=2)
+                    whole = whole_units
                     type = fake.random_element(elements=("unit", "vol"))
 
                     total_transfused = sum((x if x is not None else 0) for x in (rbcs, cell_saver, ffp, plt, cryo, whole))

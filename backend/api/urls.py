@@ -18,5 +18,6 @@ urlpatterns = [
     path("api/email_gate/csrf", views.email_gate_csrf, name="email_gate_csrf"),
     path("api/email_gate/submit", views.submit_email_gate, name="submit_email_gate"),
     path("api/get_visit_attributes", views.get_visit_attributes, name="get_visit_attributes"),
+    path("api/get_surgery_case_attributes", views.get_surgery_case_attributes, name="get_surgery_case_attributes"),
     path("api/get_procedure_hierarchy", views.get_procedure_hierarchy, name="get_procedure_hierarchy"),
 ]

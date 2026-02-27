@@ -69,6 +69,50 @@ def build_visit_attributes_table(rows: list[dict]) -> pa.Table:
     return pa.Table.from_pylist(rows, schema=schema)
 
 
+def get_surgery_case_attributes_schema() -> pa.Schema:
+    return pa.schema([
+        pa.field("case_id", pa.int64(), nullable=False),
+        pa.field("visit_no", pa.int64(), nullable=False),
+        pa.field("mrn", pa.string(), nullable=True),
+        pa.field("surgeon_prov_id", pa.string(), nullable=True),
+        pa.field("surgeon_prov_name", pa.string(), nullable=True),
+        pa.field("anesth_prov_id", pa.string(), nullable=True),
+        pa.field("anesth_prov_name", pa.string(), nullable=True),
+        pa.field("surgery_start_dtm", pa.timestamp('us'), nullable=True),
+        pa.field("surgery_end_dtm", pa.timestamp('us'), nullable=True),
+        pa.field("case_date", pa.date32(), nullable=True),
+        pa.field("month", pa.string(), nullable=True),
+        pa.field("quarter", pa.string(), nullable=True),
+        pa.field("year", pa.string(), nullable=True),
+        pa.field("pre_hgb", pa.float32(), nullable=True),
+        pa.field("pre_plt", pa.float32(), nullable=True),
+        pa.field("pre_fibrinogen", pa.float32(), nullable=True),
+        pa.field("pre_inr", pa.float32(), nullable=True),
+        pa.field("post_hgb", pa.float32(), nullable=True),
+        pa.field("post_plt", pa.float32(), nullable=True),
+        pa.field("post_fibrinogen", pa.float32(), nullable=True),
+        pa.field("post_inr", pa.float32(), nullable=True),
+        pa.field("intraop_rbc_units", pa.uint16(), nullable=True),
+        pa.field("intraop_ffp_units", pa.uint16(), nullable=True),
+        pa.field("intraop_plt_units", pa.uint16(), nullable=True),
+        pa.field("intraop_cryo_units", pa.uint16(), nullable=True),
+        pa.field("intraop_whole_units", pa.uint16(), nullable=True),
+        pa.field("intraop_cell_saver_ml", pa.uint32(), nullable=True),
+        pa.field("los", pa.float32(), nullable=True),
+        pa.field("death", pa.bool_(), nullable=True),
+        pa.field("vent", pa.bool_(), nullable=True),
+        pa.field("stroke", pa.bool_(), nullable=True),
+        pa.field("ecmo", pa.bool_(), nullable=True),
+        pa.field("rbc_cost", pa.float32(), nullable=True),
+        pa.field("ffp_cost", pa.float32(), nullable=True),
+        pa.field("plt_cost", pa.float32(), nullable=True),
+        pa.field("cryo_cost", pa.float32(), nullable=True),
+        pa.field("whole_cost", pa.float32(), nullable=True),
+        pa.field("cell_saver_cost", pa.float32(), nullable=True),
+        pa.field("total_cost", pa.float32(), nullable=True),
+    ])
+
+
 def attach_cpt_dimensions(
     rows: list[dict],
     code_map: dict[str, tuple[str, str, str, str]],
@@ -172,7 +216,7 @@ def build_procedure_hierarchy_payload(
 
 class Command(BaseCommand):
     help = "Generate a Parquet cache of the database data"
-    GENERATE_CHOICES = ("all", "visit_attributes", "procedure_hierarchy")
+    GENERATE_CHOICES = ("all", "visit_attributes", "procedure_hierarchy", "surgery_cases")
     BILLING_FETCH_BATCH_SIZE = 50000
     NULLABLE_BOOL_FIELDS = (
         "death",
@@ -200,6 +244,7 @@ class Command(BaseCommand):
         generate_target = kwargs["generate"]
         should_generate_visit_attributes = generate_target in ("all", "visit_attributes")
         should_generate_procedure_hierarchy = generate_target in ("all", "procedure_hierarchy")
+        should_generate_surgery_cases = generate_target in ("all", "surgery_cases")
 
         cache_dir = Path(settings.BASE_DIR) / "parquet_cache"
         cache_dir.mkdir(exist_ok=True)
@@ -207,29 +252,55 @@ class Command(BaseCommand):
         temp_visit_file_path = cache_dir / "visit_attributes.parquet.tmp"
         procedure_hierarchy_file_path = cache_dir / "procedure_hierarchy.json"
         temp_procedure_hierarchy_file_path = cache_dir / "procedure_hierarchy.json.tmp"
+        
+        surgery_file_path = cache_dir / "surgery_case_attributes.parquet"
+        temp_surgery_file_path = cache_dir / "surgery_case_attributes.parquet.tmp"
 
         with connection.cursor() as cursor:
-            cursor.execute("CALL materializeVisitAttributes()")
-            self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
+            visits = []
+            if should_generate_visit_attributes or should_generate_procedure_hierarchy:
+                cursor.execute("CALL materializeVisitAttributes()")
+                self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
 
-            cursor.execute("SELECT * FROM VisitAttributes")
-            columns = [col[0] for col in cursor.description]
-            rows = cursor.fetchall()
-            visits = [dict(zip(columns, row)) for row in rows]
-            for visit in visits:
-                visit["los"] = float(visit["los"]) if visit["los"] is not None else None
-                for field_name in self.NULLABLE_BOOL_FIELDS:
-                    value = visit[field_name]
-                    visit[field_name] = None if value is None else bool(value)
-                for field_name in self.REQUIRED_BOOL_FIELDS:
-                    visit[field_name] = bool(visit[field_name])
+                cursor.execute("SELECT * FROM VisitAttributes")
+                columns = [col[0] for col in cursor.description]
+                rows = cursor.fetchall()
+                visits = [dict(zip(columns, row)) for row in rows]
+                
+                for visit in visits:
+                    visit["los"] = float(visit["los"]) if visit["los"] is not None else None
+                    for field_name in self.NULLABLE_BOOL_FIELDS:
+                        value = visit[field_name]
+                        visit[field_name] = None if value is None else bool(value)
+                    for field_name in self.REQUIRED_BOOL_FIELDS:
+                        visit[field_name] = bool(visit[field_name])
 
-        hierarchy = get_cpt_hierarchy()
-        visits = attach_cpt_dimensions(
-            rows=visits,
-            code_map=hierarchy.code_map,
-            billing_fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
-        )
+            # Materialize SurgeryCaseAttributes
+            cases = []
+            if should_generate_surgery_cases:
+                cursor.execute("CALL materializeSurgeryCaseAttributes()")
+                self.stdout.write(self.style.SUCCESS("Successfully materialized SurgeryCaseAttributes."))
+
+                cursor.execute("SELECT * FROM SurgeryCaseAttributes")
+                columns_cases = [col[0] for col in cursor.description]
+                rows_cases = cursor.fetchall()
+                cases = [dict(zip(columns_cases, row)) for row in rows_cases]
+                for c in cases:
+                    c["los"] = float(c["los"]) if c["los"] is not None else None
+                    for field in ['pre_hgb', 'pre_plt', 'pre_fibrinogen', 'pre_inr',
+                                  'post_hgb', 'post_plt', 'post_fibrinogen', 'post_inr',
+                                  'rbc_cost', 'ffp_cost', 'plt_cost', 'cryo_cost', 'whole_cost', 'cell_saver_cost', 'total_cost']:
+                        c[field] = float(c[field]) if c[field] is not None else None
+                    for field in ["death", "vent", "stroke", "ecmo"]:
+                        c[field] = bool(c[field]) if c[field] is not None else None
+
+        if should_generate_visit_attributes or should_generate_procedure_hierarchy:
+            hierarchy = get_cpt_hierarchy()
+            visits = attach_cpt_dimensions(
+                rows=visits,
+                code_map=hierarchy.code_map,
+                billing_fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
+            )
 
         visit_table = None
         if should_generate_visit_attributes:
@@ -242,6 +313,10 @@ class Command(BaseCommand):
                 hierarchy_departments=hierarchy.departments,
             )
 
+        surgery_table = None
+        if should_generate_surgery_cases:
+            surgery_table = pa.Table.from_pylist(cases, schema=get_surgery_case_attributes_schema())
+
         try:
             if should_generate_visit_attributes:
                 pq.write_table(visit_table, temp_visit_file_path)
@@ -250,15 +325,22 @@ class Command(BaseCommand):
                     json.dumps(procedure_hierarchy_payload, separators=(",", ":")),
                     encoding="utf-8",
                 )
+            if should_generate_surgery_cases:
+                pq.write_table(surgery_table, temp_surgery_file_path)
+
             if should_generate_visit_attributes:
                 temp_visit_file_path.replace(visit_file_path)
             if should_generate_procedure_hierarchy:
                 temp_procedure_hierarchy_file_path.replace(procedure_hierarchy_file_path)
+            if should_generate_surgery_cases:
+                temp_surgery_file_path.replace(surgery_file_path)
         finally:
             if temp_visit_file_path.exists():
                 temp_visit_file_path.unlink()
             if temp_procedure_hierarchy_file_path.exists():
                 temp_procedure_hierarchy_file_path.unlink()
+            if temp_surgery_file_path.exists():
+                temp_surgery_file_path.unlink()
 
         if should_generate_visit_attributes:
             self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {visit_file_path}"))
@@ -268,3 +350,5 @@ class Command(BaseCommand):
                     f"Procedure hierarchy cache generated at {procedure_hierarchy_file_path}"
                 )
             )
+        if should_generate_surgery_cases:
+            self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {surgery_file_path}"))
