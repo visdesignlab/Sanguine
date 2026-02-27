@@ -257,21 +257,23 @@ class Command(BaseCommand):
         temp_surgery_file_path = cache_dir / "surgery_case_attributes.parquet.tmp"
 
         with connection.cursor() as cursor:
-            cursor.execute("CALL materializeVisitAttributes()")
-            self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
+            visits = []
+            if should_generate_visit_attributes or should_generate_procedure_hierarchy:
+                cursor.execute("CALL materializeVisitAttributes()")
+                self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
 
-            cursor.execute("SELECT * FROM VisitAttributes")
-            columns = [col[0] for col in cursor.description]
-            rows = cursor.fetchall()
-            visits = [dict(zip(columns, row)) for row in rows]
-            
-            for visit in visits:
-                visit["los"] = float(visit["los"]) if visit["los"] is not None else None
-                for field_name in self.NULLABLE_BOOL_FIELDS:
-                    value = visit[field_name]
-                    visit[field_name] = None if value is None else bool(value)
-                for field_name in self.REQUIRED_BOOL_FIELDS:
-                    visit[field_name] = bool(visit[field_name])
+                cursor.execute("SELECT * FROM VisitAttributes")
+                columns = [col[0] for col in cursor.description]
+                rows = cursor.fetchall()
+                visits = [dict(zip(columns, row)) for row in rows]
+                
+                for visit in visits:
+                    visit["los"] = float(visit["los"]) if visit["los"] is not None else None
+                    for field_name in self.NULLABLE_BOOL_FIELDS:
+                        value = visit[field_name]
+                        visit[field_name] = None if value is None else bool(value)
+                    for field_name in self.REQUIRED_BOOL_FIELDS:
+                        visit[field_name] = bool(visit[field_name])
 
             # Materialize SurgeryCaseAttributes
             cases = []
@@ -292,12 +294,13 @@ class Command(BaseCommand):
                     for field in ["death", "vent", "stroke", "ecmo"]:
                         c[field] = bool(c[field]) if c[field] is not None else None
 
-        hierarchy = get_cpt_hierarchy()
-        visits = attach_cpt_dimensions(
-            rows=visits,
-            code_map=hierarchy.code_map,
-            billing_fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
-        )
+        if should_generate_visit_attributes or should_generate_procedure_hierarchy:
+            hierarchy = get_cpt_hierarchy()
+            visits = attach_cpt_dimensions(
+                rows=visits,
+                code_map=hierarchy.code_map,
+                billing_fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
+            )
 
         visit_table = None
         if should_generate_visit_attributes:

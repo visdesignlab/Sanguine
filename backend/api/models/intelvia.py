@@ -242,3 +242,54 @@ class RoomTrace(models.Model):
 
     class Meta:
         db_table = "RoomTrace"
+
+
+class SurgeryCaseAttributes(models.Model):
+    case_id = models.BigIntegerField(primary_key=True)
+    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
+    mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
+    surgeon_prov_id = models.CharField(max_length=25)
+    surgeon_prov_name = models.CharField(max_length=100)
+    anesth_prov_id = models.CharField(max_length=25)
+    anesth_prov_name = models.CharField(max_length=100)
+    surgery_start_dtm = models.DateTimeField()
+    surgery_end_dtm = models.DateTimeField()
+    case_date = models.DateField()
+    month = models.CharField(max_length=8)
+    quarter = models.CharField(max_length=7)
+    year = models.CharField(max_length=4)
+
+    pre_hgb = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+    pre_plt = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+    pre_fibrinogen = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+    pre_inr = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+
+    post_hgb = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+    post_plt = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+    post_fibrinogen = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+    post_inr = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+
+    intraop_rbc_units = models.PositiveSmallIntegerField(default=0)
+    intraop_ffp_units = models.PositiveSmallIntegerField(default=0)
+    intraop_plt_units = models.PositiveSmallIntegerField(default=0)
+    intraop_cryo_units = models.PositiveSmallIntegerField(default=0)
+    intraop_whole_units = models.PositiveSmallIntegerField(default=0)
+    intraop_cell_saver_ml = models.PositiveIntegerField(default=0)
+
+    los = models.FloatField(null=True)
+    death = models.BooleanField(null=True)
+    vent = models.BooleanField(null=True)
+    stroke = models.BooleanField(null=True)
+    ecmo = models.BooleanField(null=True)
+
+    rbc_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    ffp_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    plt_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    cryo_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    whole_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    cell_saver_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    total_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
+    class Meta:
+        db_table = "SurgeryCaseAttributes"
+        managed = False

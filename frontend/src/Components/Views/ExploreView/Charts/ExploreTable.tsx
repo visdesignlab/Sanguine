@@ -4,7 +4,7 @@ import React, {
 } from 'react';
 import { area, curveCatmullRom } from 'd3-shape';
 import { scaleLinear, scaleLog } from 'd3-scale';
-import { mean as d3Mean, max as d3Max } from 'd3-array';
+import { mean as d3Mean, max as d3Max, ticks as d3Ticks } from 'd3-array';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import {
   MultiSelect,
@@ -28,6 +28,7 @@ import {
 import { BarChart } from '@mantine/charts';
 import { interpolateReds } from 'd3';
 import { Store } from '../../../../Store/Store';
+import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3Utils';
 import {
   ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions, ExploreTableColumnOptionsGrouped, ExploreTableRowOptions,
 } from '../../../../Types/application';
@@ -105,18 +106,6 @@ const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColum
 };
 
 // ---------- DRG Violin helpers ----------
-function kernelEpanechnikov(k: number) {
-  return function kernelFn(v: number) {
-    const u = v / k;
-    return Math.abs(u) <= 1 ? (0.75 * (1 - u * u)) / k : 0;
-  };
-}
-
-function kernelDensityEstimator(kernel: (v: number) => number, X: number[]) {
-  return function estimator(V: number[]) {
-    return X.map((x) => [x, d3Mean(V, (v) => kernel(x - v)) ?? 0] as [number, number]);
-  };
-}
 
 function computeMedian(arr: number[]) {
   if (!arr || arr.length === 0) return 0;
@@ -157,15 +146,8 @@ function ViolinCell({
   const effectiveMin = Math.max(0.1, domainMin);
   const xScale = scaleLog().domain([effectiveMin, domainMax]).range([padding, internalWidth - padding]);
 
-  // Logarithmic sampling for KDE points to ensure resolution at the dense low end
-  const logMin = Math.log(effectiveMin);
-  const logMax = Math.log(domainMax);
-  const liner = Array.from({ length: ticks }).map((_, i) => (
-    Math.exp(logMin + (i * (logMax - logMin)) / (ticks - 1))
-  ));
-
-  // Bandwidth adjusted for log scale sampling
-  const bandwidth = Math.max(0.2, (domainMax - effectiveMin) / 15);
+  const liner = d3Ticks(domainMin, domainMax, ticks);
+  const bandwidth = Math.max(domainRange / 8, 1e-3);
   const kde = kernelDensityEstimator(kernelEpanechnikov(bandwidth), liner);
   const density = kde(samples);
   const maxDens = d3Max(density.map((d) => d[1])) ?? 1;
@@ -943,9 +925,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
       // Custom Render Logic
       if (type === 'stackedBar') {
-        column.render = (row) => <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} />;
+        column.render = (row: ExploreTableRow) => <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} />;
       } else if (type === 'numericBar') {
-        column.render = (row) => {
+        column.render = (row: ExploreTableRow) => {
           const val = Number(row[colVar]);
           return (
             <NumericBarCell

@@ -1839,6 +1839,7 @@ export class RootStore {
         }
       }
       if (config.chartType === 'dumbbell') {
+        // TODO: Don't limit to only 10,000 surgeries.
         const query = `
           SELECT
              CAST(case_id AS VARCHAR) as case_id,
@@ -1860,6 +1861,7 @@ export class RootStore {
              intraop_plt_units,
              intraop_cryo_units,
              intraop_ffp_units,
+             intraop_whole_units,
              intraop_cell_saver_ml,
              (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
           FROM filteredSurgeryCases
@@ -1876,6 +1878,7 @@ export class RootStore {
         }
       }
       if (config.chartType === 'scatterPlot') {
+        // TODO: Don't limit to only 10,000 surgeries.
         const query = `
            SELECT
              CAST(case_id AS VARCHAR) as case_id,
@@ -1891,6 +1894,7 @@ export class RootStore {
              intraop_ffp_units AS ffp_units,
              intraop_plt_units AS plt_units,
              intraop_cryo_units AS cryo_units,
+             intraop_whole_units AS whole_units,
              intraop_cell_saver_ml AS cell_saver_ml,
              
              los,
