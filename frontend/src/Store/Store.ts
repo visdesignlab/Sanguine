@@ -1278,7 +1278,7 @@ export class RootStore {
     const newConfigs = [config, ...currentConfigs];
     const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 2 }));
     shifted.unshift({
-      i: config.chartId, x: 0, y: 0, w: 2, h: 2, maxH: 4,
+      i: config.chartId, x: 0, y: 0, w: 4, h: 3, maxH: 4,
     });
     const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 4) };
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Explore Chart');
@@ -1727,9 +1727,6 @@ export class RootStore {
         // Iterate over the columns and build the column selection clauses
         tableConfig.columns.forEach((col) => {
           const { colVar } = col;
-
-          if (col.type === 'violin') return;
-
           let colAggregation = config.aggregation || col.aggregation;
 
           if (colAggregation === 'none' && colVar !== tableConfig.rowVar) {
@@ -1802,6 +1799,11 @@ export class RootStore {
               // Count occurrences: SUM(1|0)
               columnClauses.push(`SUM(CAST(${colVar} AS INT)) AS ${colVar}`);
             }
+          } else if (col.type === 'violin') {
+            // Special case for violin: fetch all values as a list for distribution
+            // We use apr_drg_weight specifically for drg_weight colVar
+            const dbCol = colVar === 'drg_weight' ? 'apr_drg_weight' : colVar;
+            columnClauses.push(`list(CAST(${dbCol} AS DOUBLE)) AS ${colVar}`);
           } else {
             // Standard numeric aggregation
             columnClauses.push(`${aggFn}(${colVar}) AS ${colVar}`);

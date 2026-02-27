@@ -31,7 +31,7 @@ import {
 // #region Y-Axis
 const ScatterYAxis = memo(({
   height, yScale, theme, varConfig, targets, setTargets,
-  hoveredTarget, setHoveredTarget, hasNestedBins, isDiscrete,
+  hoveredTarget, setHoveredTarget, isDiscrete,
 }: {
   height: number;
   yScale: ScaleLinear<number, number>;
@@ -41,10 +41,9 @@ const ScatterYAxis = memo(({
   setTargets: React.Dispatch<React.SetStateAction<{ min: number; max: number }>>;
   hoveredTarget: string | null;
   setHoveredTarget: (t: string | null) => void;
-  hasNestedBins: boolean;
   isDiscrete: boolean;
 }) => {
-  const bottomMargin = isDiscrete ? (hasNestedBins ? 50 : 25) : 40;
+  const bottomMargin = isDiscrete ? (25) : 40;
   const innerHeight = Math.max(0, height - SCATTER_MARGIN.top - bottomMargin);
   const [dragging, setDragging] = useState<'min' | 'max' | null>(null);
 
@@ -55,7 +54,7 @@ const ScatterYAxis = memo(({
   };
 
   useEffect(() => {
-    if (!dragging) return undefined;
+    if (!dragging || !varConfig.defaultTargets) return undefined;
     const handleMouseMove = (e: MouseEvent) => {
       const pixelRange = innerHeight;
       const valueRange = varConfig.max - varConfig.min;
@@ -64,7 +63,7 @@ const ScatterYAxis = memo(({
       setTargets((prev) => {
         const val = prev[dragging];
         let newVal = val - deltaValue;
-        const baseVal = varConfig.defaultTargets[dragging];
+        const baseVal = varConfig.defaultTargets![dragging];
         if (newVal > baseVal + SCATTER_DRAG_LIMIT) newVal = baseVal + SCATTER_DRAG_LIMIT;
         if (newVal < baseVal - SCATTER_DRAG_LIMIT) newVal = baseVal - SCATTER_DRAG_LIMIT;
         return { ...prev, [dragging]: newVal };
@@ -105,36 +104,38 @@ const ScatterYAxis = memo(({
         {varConfig.unit}
         )
       </text>
-      <g>
-        {(hoveredTarget === 'min' || dragging === 'min') && (
-          <Tooltip label={`Target Min: ${targets.min.toFixed(1)} ${varConfig.unit}`} position="right">
-            <g
-              transform={`translate(${SCATTER_MARGIN.left}, ${yScale(targets.min) + SCATTER_MARGIN.top})`}
-              style={{ cursor: 'ns-resize' }}
-              onMouseDown={handleDragStart('min')}
-              onMouseEnter={() => setHoveredTarget('min')}
-              onMouseLeave={() => setHoveredTarget(null)}
-            >
-              <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
-              <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.teal[6]} />
-            </g>
-          </Tooltip>
-        )}
-        {(hoveredTarget === 'max' || dragging === 'max') && (
-          <Tooltip label={`Target Max: ${targets.max.toFixed(1)} ${varConfig.unit}`} position="right">
-            <g
-              transform={`translate(${SCATTER_MARGIN.left}, ${yScale(targets.max) + SCATTER_MARGIN.top})`}
-              style={{ cursor: 'ns-resize' }}
-              onMouseDown={handleDragStart('max')}
-              onMouseEnter={() => setHoveredTarget('max')}
-              onMouseLeave={() => setHoveredTarget(null)}
-            >
-              <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
-              <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.indigo[6]} />
-            </g>
-          </Tooltip>
-        )}
-      </g>
+      {varConfig.defaultTargets && (
+        <g>
+          {(hoveredTarget === 'min' || dragging === 'min') && (
+            <Tooltip label={`Target Min: ${targets.min.toFixed(1)} ${varConfig.unit}`} position="right">
+              <g
+                transform={`translate(${SCATTER_MARGIN.left}, ${yScale(targets.min) + SCATTER_MARGIN.top})`}
+                style={{ cursor: 'ns-resize' }}
+                onMouseDown={handleDragStart('min')}
+                onMouseEnter={() => setHoveredTarget('min')}
+                onMouseLeave={() => setHoveredTarget(null)}
+              >
+                <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
+                <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.teal[6]} />
+              </g>
+            </Tooltip>
+          )}
+          {(hoveredTarget === 'max' || dragging === 'max') && (
+            <Tooltip label={`Target Max: ${targets.max.toFixed(1)} ${varConfig.unit}`} position="right">
+              <g
+                transform={`translate(${SCATTER_MARGIN.left}, ${yScale(targets.max) + SCATTER_MARGIN.top})`}
+                style={{ cursor: 'ns-resize' }}
+                onMouseDown={handleDragStart('max')}
+                onMouseEnter={() => setHoveredTarget('max')}
+                onMouseLeave={() => setHoveredTarget(null)}
+              >
+                <rect x={-20} y={-10} width={40} height={20} fill="transparent" />
+                <path d="M 0 0 L -8 -5 L -8 5 Z" fill={theme.colors.indigo[6]} />
+              </g>
+            </Tooltip>
+          )}
+        </g>
+      )}
     </svg>
   );
 });
@@ -307,9 +308,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [selectedY, setSelectedY] = useState<string>(chartConfig.yAxisVar || 'post_hgb');
   const [showTargets, setShowTargets] = useState(true);
   const [showAvg, setShowAvg] = useState(true);
-  const [sortMode, setSortMode] = useState<string>('time');
+  const [sortMode, setSortMode] = useState<string>('asc');
   const [collapsedBinGroups, setCollapsedBinGroups] = useState<Set<string>>(new Set());
-  const [collapsedNestedBins, setCollapsedNestedBins] = useState<Set<string>>(new Set());
 
   // Groups
   const [groups, setGroups] = useState<GroupDefinition[]>([]);
@@ -328,7 +328,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     [selectedX],
   );
   const isDiscrete = xAxisOption?.isDiscrete ?? true;
-  const hasNestedBins = selectedX === 'year_quarter';
 
   // Derive var config for Y axis
   const varConfig = useMemo((): ScatterVarConfig => {
@@ -351,7 +350,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         min: 0,
         max: 20,
         key: bloodComp.value as keyof DumbbellCase,
-        defaultTargets: { min: 0, max: 10 },
       };
     }
     return {
@@ -360,7 +358,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       min: 0,
       max: 100,
       key: selectedY as keyof DumbbellCase,
-      defaultTargets: { min: 0, max: 50 },
     };
   }, [selectedY]);
 
@@ -375,8 +372,12 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   }, [selectedX, isDiscrete]);
 
   // Targets
-  const [targets, setTargets] = useState(varConfig.defaultTargets);
-  useEffect(() => { setTargets(varConfig.defaultTargets); }, [varConfig.defaultTargets]);
+  const [targets, setTargets] = useState(varConfig.defaultTargets || { min: 0, max: 0 });
+  useEffect(() => {
+    if (varConfig.defaultTargets) {
+      setTargets(varConfig.defaultTargets);
+    }
+  }, [varConfig.defaultTargets]);
 
   // Hover state
   const [hoveredTarget, setHoveredTargetRaw] = useState<string | null>(null);
@@ -392,6 +393,17 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
   // Virtualization
   const scrollViewportRef = useRef<HTMLDivElement>(null);
+  const handleToggleBinGroupCollapse = useCallback((e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCollapsedBinGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
   const [visibleRange, setVisibleRange] = useState<[number, number]>([-1000, 2000]);
   const handleScroll = useCallback(() => {
     if (scrollViewportRef.current) {
@@ -406,19 +418,11 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     return () => ro.disconnect();
   }, [handleScroll]);
 
-  // Collapse handlers
-  const handleToggleBinGroupCollapse = useCallback((_e: React.MouseEvent, id: string) => {
-    setCollapsedBinGroups((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-  }, []);
-  const handleToggleNestedBinCollapse = useCallback((_e: React.MouseEvent, id: string) => {
-    setCollapsedNestedBins((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-  }, []);
-
   // Flatten nested series data: store format is [{name, color, data: case[]}, ...]
   const rawData = useMemo(() => {
     const storeData = store.exploreChartData[chartConfig.chartId];
     if (!storeData) return [] as DumbbellCase[];
-    // Check if data is in the old series format ({data: [...]}) or flat DumbbellCase[]
+    // Check if data is in the old series format ({data: [...]})
     if (Array.isArray(storeData) && storeData.length > 0 && 'data' in storeData[0]) {
       // Old series format: flatten the inner data arrays
       return ((storeData as unknown) as { data: DumbbellCase[] }[]).flatMap((s) => s.data);
@@ -426,26 +430,31 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     return (storeData as DumbbellCase[]) || [];
   }, [store.exploreChartData, chartConfig.chartId]);
   const processedData = useMemo(
-    () => getProcessedScatterData(rawData, selectedX, varConfig.key, sortMode, isDiscrete),
-    [rawData, selectedX, varConfig.key, sortMode, isDiscrete],
+    () => getProcessedScatterData(rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey),
+    [rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey],
   );
+  const rawIndexByCaseRef = useMemo(() => {
+    const map = new Map<DumbbellCase, number>();
+    rawData.forEach((c, idx) => map.set(c, idx));
+    return map;
+  }, [rawData]);
 
   // Layout (discrete mode)
   const layoutData = useMemo(() => {
-    if (!isDiscrete) return { binGroupLayout: new Map(), nestedBinLayout: new Map(), totalWidth: 0 };
-    return calculateScatterLayout(processedData, collapsedBinGroups, collapsedNestedBins, selectedX, (t: string) => {
+    if (!isDiscrete) return { binGroupLayout: new Map(), totalWidth: 0 };
+    return calculateScatterLayout(processedData, collapsedBinGroups, selectedX, (t: string) => {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       if (context) { context.font = `600 12px ${theme.fontFamily}`; return context.measureText(t).width; }
       return t.length * 7;
     });
-  }, [processedData, collapsedBinGroups, collapsedNestedBins, selectedX, isDiscrete, theme.fontFamily]);
+  }, [processedData, collapsedBinGroups, selectedX, isDiscrete, theme.fontFamily]);
 
   // Responsive size
   const { ref: sizeRef, height: measuredHeight, width: measuredWidth } = useElementSize();
   const height = measuredHeight || 400;
   const containerWidth = measuredWidth || 600;
-  const bottomMargin = isDiscrete ? (hasNestedBins ? 50 : 25) : 40;
+  const bottomMargin = isDiscrete ? (25) : 40;
   const innerHeight = Math.max(0, height - SCATTER_MARGIN.top - bottomMargin);
 
   // For discrete: total SVG width = layout + right margin. For continuous: container width.
@@ -490,53 +499,45 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   // Build point positions
   const pointPositions = useMemo((): PointPosition[] => {
     const points: PointPosition[] = [];
-    let globalCaseIdx = 0;
 
     if (!isDiscrete && xScale && xVarKey) {
       // Continuous mode
-      rawData.forEach((c) => {
+      rawData.forEach((c, rawIdx) => {
         const xVal = c[xVarKey] as number | null;
         const yVal = c[varConfig.key] as number | null;
         if (xVal !== null && xVal !== undefined && yVal !== null && yVal !== undefined) {
           points.push({
             x: xScale(xVal),
             y: yScale(yVal) + SCATTER_MARGIN.top,
-            caseIdx: globalCaseIdx,
+            caseIdx: rawIdx,
             binGroupIdx: 0,
-            nestedBinIdx: 0,
-            caseInBinIdx: globalCaseIdx,
           });
         }
-        globalCaseIdx += 1;
       });
     } else {
       // Discrete mode
       processedData.forEach((binGroup, bgIdx) => {
         if (collapsedBinGroups.has(binGroup.id)) return;
-        binGroup.nestedBins.forEach((nestedBin, nbIdx) => {
-          if (collapsedNestedBins.has(nestedBin.id)) return;
-          const nbLayout = layoutData.nestedBinLayout.get(nestedBin.id);
-          if (!nbLayout) return;
-          nestedBin.cases.forEach((c, cIdx) => {
-            const yVal = c[varConfig.key] as number | null;
-            if (yVal !== null && yVal !== undefined) {
-              const caseX = nbLayout.x + cIdx * SCATTER_CHAR_WIDTH_CASE + SCATTER_CHAR_WIDTH_CASE / 2;
-              points.push({
-                x: caseX,
-                y: yScale(yVal) + SCATTER_MARGIN.top,
-                caseIdx: globalCaseIdx,
-                binGroupIdx: bgIdx,
-                nestedBinIdx: nbIdx,
-                caseInBinIdx: cIdx,
-              });
-            }
-            globalCaseIdx += 1;
-          });
+        const bgLayout = layoutData.binGroupLayout.get(binGroup.id);
+        if (!bgLayout) return;
+        binGroup.cases.forEach((c, cIdx) => {
+          const rawIdx = rawIndexByCaseRef.get(c);
+          if (rawIdx === undefined) return;
+          const yVal = c[varConfig.key] as number | null;
+          if (yVal !== null && yVal !== undefined) {
+            const caseX = bgLayout.x + cIdx * SCATTER_CHAR_WIDTH_CASE + SCATTER_CHAR_WIDTH_CASE / 2;
+            points.push({
+              x: caseX,
+              y: yScale(yVal) + SCATTER_MARGIN.top,
+              caseIdx: rawIdx,
+              binGroupIdx: bgIdx,
+            });
+          }
         });
       });
     }
     return points;
-  }, [isDiscrete, xScale, xVarKey, rawData, varConfig.key, yScale, processedData, collapsedBinGroups, collapsedNestedBins, layoutData.nestedBinLayout]);
+  }, [isDiscrete, xScale, xVarKey, rawData, varConfig.key, yScale, processedData, collapsedBinGroups, layoutData.binGroupLayout, rawIndexByCaseRef]);
 
   // Precompute group color for each case index
   const caseGroupColors = useMemo(() => {
@@ -580,11 +581,10 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const w = canvas.width / dpr;
-    const h = canvas.height / dpr;
-    ctx.clearRect(0, 0, w * dpr, h * dpr);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.scale(dpr, dpr);
+    ctx.translate(-Math.max(0, visibleRange[0]), 0);
 
     const hovered = hoveredPointRef.current;
     const sel = appliedSelection;
@@ -639,7 +639,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
 
     ctx.restore();
-  }, [pointPositions, appliedSelection, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups]);
+  }, [pointPositions, appliedSelection, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange]);
 
   // Redraw canvas when dependencies change
   useEffect(() => { drawPoints(); }, [drawPoints]);
@@ -648,13 +648,15 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const vWidth = Math.min(totalWidth, visibleRange[1] - visibleRange[0]);
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = totalWidth * dpr;
+    canvas.width = vWidth * dpr;
     canvas.height = height * dpr;
-    canvas.style.width = `${totalWidth}px`;
+    canvas.style.width = `${vWidth}px`;
     canvas.style.height = `${height}px`;
+    canvas.style.left = `${Math.max(0, visibleRange[0])}px`;
     drawPoints();
-  }, [totalWidth, height, drawPoints]);
+  }, [totalWidth, height, visibleRange, drawPoints]);
 
   // Mouse handlers for brush + hover
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -711,10 +713,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         hoveredPointRef.current = nearest;
         if (nearest) {
           // Find the case data
-          const allCases = isDiscrete
-            ? processedData.flatMap((bg) => bg.nestedBins.flatMap((nb) => nb.cases))
-            : rawData;
-          const caseData = allCases[nearest.caseIdx];
+          const caseData = rawData[nearest.caseIdx];
           if (caseData) setTooltipData({ x: nearest.x, y: nearest.y, caseData });
         } else {
           setTooltipData(null);
@@ -770,7 +769,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         x1: nMinX, y1: nMinY, x2: nMaxX, y2: nMaxY,
       });
     }
-  }, [interactionMode, selection, height, resizeHandle, bottomMargin, spatialIndex, pointPositions, drawPoints, isDiscrete, processedData, rawData]);
+  }, [interactionMode, selection, height, resizeHandle, bottomMargin, spatialIndex, pointPositions, drawPoints, rawData]);
 
   const handleMouseUp = useCallback(() => {
     setInteractionMode('idle');
@@ -872,18 +871,20 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
             <Flex direction="row" align="center" gap="xs" ml={0}>
               <Text size="xs" c="dimmed" fw={500}>Show:</Text>
               <Button.Group>
-                <Tooltip label="Show/hide target range" openDelay={500}>
-                  <Button
-                    size="xs"
-                    px={8}
-                    variant={showTargets ? 'light' : 'default'}
-                    color="gray"
-                    onClick={() => setShowTargets(!showTargets)}
-                    styles={{ root: { borderColor: showTargets ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
-                  >
-                    Target
-                  </Button>
-                </Tooltip>
+                {varConfig.defaultTargets && (
+                  <Tooltip label="Show/hide target range" openDelay={500}>
+                    <Button
+                      size="xs"
+                      px={8}
+                      variant={showTargets ? 'light' : 'default'}
+                      color="gray"
+                      onClick={() => setShowTargets(!showTargets)}
+                      styles={{ root: { borderColor: showTargets ? theme.colors.gray[6] : theme.colors.gray[4], fontWeight: 400, color: theme.colors.gray[9] } }}
+                    >
+                      Target
+                    </Button>
+                  </Tooltip>
+                )}
                 <Tooltip label="Show/hide average line" openDelay={500}>
                   <Button
                     size="xs"
@@ -931,7 +932,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
             {/* Fixed Y Axis */}
             <ScatterYAxis
               height={height}
-              hasNestedBins={hasNestedBins}
               isDiscrete={isDiscrete}
               yScale={yScale}
               theme={theme}
@@ -1051,7 +1051,12 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); setBrushHoverCursor('crosshair'); requestAnimationFrame(drawPoints); }}
                 >
                   {/* SVG layer for gridlines, bins, targets, avg, brush */}
-                  <svg width={totalWidth} height={height} style={{ position: 'absolute', top: 0, left: 0 }}>
+                  <svg
+                    width={Math.min(totalWidth, visibleRange[1] - visibleRange[0])}
+                    height={height}
+                    style={{ position: 'absolute', top: 0, left: Math.max(0, visibleRange[0]) }}
+                    viewBox={`${Math.max(0, visibleRange[0])} 0 ${Math.min(totalWidth, visibleRange[1] - visibleRange[0])} ${height}`}
+                  >
                     {/* Gridlines */}
                     <g transform={`translate(0, ${SCATTER_MARGIN.top})`}>
                       {yScale.ticks(5).map((tick) => (
@@ -1097,7 +1102,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                               <Tooltip label={<Text size="xs">{binGroup.label}</Text>} openDelay={200}>
                                 <rect
                                   x={layout.x}
-                                  y={!hasNestedBins ? innerHeight : innerHeight + 25}
+                                  y={innerHeight}
                                   width={layout.width}
                                   height={25}
                                   fill={isBinGroupCollapsed ? theme.colors.gray[4] : bgColor}
@@ -1105,69 +1110,54 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                                   strokeWidth={1}
                                 />
                               </Tooltip>
-                              <text
-                                x={layout.x + layout.width / 2}
-                                y={!hasNestedBins ? innerHeight + 17 : innerHeight + 42}
-                                textAnchor="middle"
-                                fontSize={12}
-                                fontWeight={600}
-                                fill={isBinGroupCollapsed ? theme.colors.gray[6] : theme.colors.gray[9]}
+                              <foreignObject
+                                x={layout.x}
+                                y={innerHeight}
+                                width={layout.width}
+                                height={25}
                                 style={{ pointerEvents: 'none' }}
                               >
-                                {isBinGroupCollapsed ? '...' : layout.label}
-                              </text>
-                              {/* Bin group collapse toggle */}
-                              {!isBinGroupCollapsed && hasNestedBins && (
-                                <>
-                                  <rect
-                                    x={layout.x + layout.width - 15}
-                                    y={innerHeight + 25}
-                                    width={15}
-                                    height={25}
-                                    fill="transparent"
-                                    style={{ cursor: 'pointer' }}
-                                    onMouseEnter={() => setHoveredCollapse(binGroup.id)}
-                                    onMouseLeave={() => setHoveredCollapse(null)}
-                                    onClick={(e) => handleToggleBinGroupCollapse(e, binGroup.id)}
-                                  />
-                                  {hoveredCollapse === binGroup.id && (
-                                    <path
-                                      d="M 8 5 L 2 12 L 8 19"
-                                      transform={`translate(${layout.x + layout.width - 12}, ${innerHeight + 31}) scale(0.6)`}
-                                      fill="none"
-                                      stroke={theme.colors.gray[7]}
-                                      strokeWidth={2}
-                                      style={{ pointerEvents: 'none' }}
-                                    />
-                                  )}
-                                </>
+                                <div
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: isBinGroupCollapsed ? theme.colors.gray[6] : theme.colors.gray[9],
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    WebkitMaskImage: layout.isOverflowing && !isBinGroupCollapsed ? 'linear-gradient(to right, black 70%, transparent 100%)' : 'none',
+                                    maskImage: layout.isOverflowing && !isBinGroupCollapsed ? 'linear-gradient(to right, black 70%, transparent 100%)' : 'none',
+                                  }}
+                                >
+                                  {isBinGroupCollapsed ? '...' : layout.label}
+                                </div>
+                              </foreignObject>
+                              {/* Collapse handle */}
+                              <rect
+                                x={layout.x + layout.width - 15}
+                                y={innerHeight}
+                                width={15}
+                                height={25}
+                                fill="transparent"
+                                style={{ cursor: 'pointer' }}
+                                onMouseEnter={() => setHoveredCollapse(binGroup.id)}
+                                onMouseLeave={() => setHoveredCollapse(null)}
+                                onClick={(e) => handleToggleBinGroupCollapse(e, binGroup.id)}
+                              />
+                              {hoveredCollapse === binGroup.id && (
+                                <path
+                                  d={isBinGroupCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
+                                  transform={`translate(${layout.x + layout.width - 12}, ${innerHeight + 6}) scale(0.6)`}
+                                  fill="none"
+                                  stroke={theme.colors.gray[7]}
+                                  strokeWidth={2}
+                                  style={{ pointerEvents: 'none' }}
+                                />
                               )}
-                              {/* Nested bins */}
-                              {!isBinGroupCollapsed && hasNestedBins && binGroup.nestedBins.map((nb, nbIdx) => {
-                                const nbLayout = layoutData.nestedBinLayout.get(nb.id);
-                                if (!nbLayout) return null;
-                                const isNbCollapsed = collapsedNestedBins.has(nb.id);
-                                const nbColor = nbIdx % 2 === 0 ? theme.colors.gray[2] : theme.colors.gray[0];
-                                return (
-                                  <g key={nb.id}>
-                                    <rect x={nbLayout.x} y={innerHeight} width={nbLayout.width} height={25} fill={isNbCollapsed ? theme.colors.gray[4] : nbColor} stroke={theme.colors.gray[4]} strokeWidth={1} />
-                                    <text x={nbLayout.x + nbLayout.width / 2} y={innerHeight + 17} textAnchor="middle" fontSize={10} fontWeight={400} fill={theme.colors.gray[6]} style={{ pointerEvents: 'none' }}>
-                                      {isNbCollapsed ? '...' : nb.label}
-                                    </text>
-                                    <rect
-                                      x={nbLayout.x + nbLayout.width - 10}
-                                      y={innerHeight}
-                                      width={10}
-                                      height={25}
-                                      fill="transparent"
-                                      style={{ cursor: 'pointer' }}
-                                      onMouseEnter={() => setHoveredCollapse(nb.id)}
-                                      onMouseLeave={() => setHoveredCollapse(null)}
-                                      onClick={(e) => handleToggleNestedBinCollapse(e, nb.id)}
-                                    />
-                                  </g>
-                                );
-                              })}
                               {/* Average line */}
                               {showAvg && binGroup.avg !== null && (
                                 <AverageLine
@@ -1234,7 +1224,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                     )}
 
                     {/* Target overlay */}
-                    {showTargets && (
+                    {showTargets && varConfig.defaultTargets && (
                       <ScatterTargetOverlay
                         totalWidth={totalWidth}
                         yScale={yScale}
@@ -1291,7 +1281,10 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   <canvas
                     ref={canvasRef}
                     style={{
-                      position: 'absolute', top: 0, left: 0, pointerEvents: 'none',
+                      position: 'absolute',
+                      top: 0,
+                      left: Math.max(0, visibleRange[0]),
+                      pointerEvents: 'none',
                     }}
                   />
 

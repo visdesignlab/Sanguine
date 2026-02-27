@@ -281,8 +281,16 @@ class Command(BaseCommand):
                         "apr_drg_rom": fake.random_element(elements=(1, 2, 3, 4, None)),
                         "apr_drg_soi": fake.random_element(elements=(1, 2, 3, 4, None)),
                         "apr_drg_desc": fake.sentence(),
-                        "apr_drg_weight": str(fake.random_int(1, 999)).zfill(3),
-                        "ms_drg_weight": str(fake.random_int(1, 999)).zfill(3),
+                        "apr_drg_weight": (
+                            round(random.uniform(0.5, 2.5), 4) if (r := random.random()) < 0.8
+                            else round(random.uniform(2.5, 5.0), 4) if r < 0.95
+                            else round(random.uniform(5.0, 25.0), 4)
+                        ),
+                        "ms_drg_weight": (
+                            round(random.uniform(0.5, 2.5), 4) if (r := random.random()) < 0.8
+                            else round(random.uniform(2.5, 5.0), 4) if r < 0.95
+                            else round(random.uniform(5.0, 25.0), 4)
+                        ),
                         **cci,
                         "cci_score": sum(cci.values()),
                     }

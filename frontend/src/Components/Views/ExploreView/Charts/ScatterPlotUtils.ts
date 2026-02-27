@@ -1,7 +1,6 @@
 import {
   DumbbellCase,
   SCATTER_CHAR_WIDTH_CASE,
-  SCATTER_EMPTY_NESTED_BIN_WIDTH,
 } from '../../../../Types/application';
 
 // ---------- Types ----------
@@ -10,11 +9,6 @@ export interface ScatterBinGroup {
   id: string;
   label: string;
   cases: DumbbellCase[];
-  nestedBins: {
-    id: string;
-    label: string;
-    cases: DumbbellCase[];
-  }[];
   avg: number | null;
 }
 
@@ -24,7 +18,7 @@ export interface ScatterVarConfig {
   min: number;
   max: number;
   key: keyof DumbbellCase;
-  defaultTargets: { min: number; max: number };
+  defaultTargets?: { min: number; max: number };
 }
 
 export type SpatialIndex = Map<string, number[]>;
@@ -85,16 +79,24 @@ export function getProcessedScatterData(
   yKey: keyof DumbbellCase,
   sortMode: string,
   isDiscrete: boolean,
+  xVarKey?: keyof DumbbellCase | null,
 ): ScatterBinGroup[] {
+  // Filter out cases where Y is null
+  let filteredData = rawData.filter((d) => d[yKey] != null);
+
+  // If continuous, also filter out cases where X is null
+  if (!isDiscrete && xVarKey) {
+    filteredData = filteredData.filter((d) => d[xVarKey] != null);
+  }
+
   // --- Continuous mode: return all cases in a single "virtual" bin ---
   if (!isDiscrete) {
-    const sortedCases = sortCases([...rawData], yKey, sortMode);
+    const sortedCases = sortCases([...filteredData], yKey, sortMode);
     const avg = computeAvg(sortedCases, yKey);
     return [{
       id: '__continuous__',
       label: '',
       cases: sortedCases,
-      nestedBins: [{ id: '__continuous__-all', label: 'All Cases', cases: sortedCases }],
       avg,
     }];
   }
@@ -102,11 +104,20 @@ export function getProcessedScatterData(
   // --- Discrete mode: group into bins ---
   const groupedByBinGroup = new Map<string, DumbbellCase[]>();
 
-  rawData.forEach((d: DumbbellCase) => {
+  filteredData.forEach((d: DumbbellCase) => {
     let key = '';
-    if (selectedX === 'year_quarter') {
+    if (selectedX === 'surgeon') {
+      key = d.surgeon_prov_name || 'Unknown';
+    } else if (selectedX === 'anesthesiologist') {
+      key = d.anesth_prov_name || 'Unknown';
+    } else if (selectedX === 'year') {
       const yearRaw = ((d as unknown) as Record<string, unknown>).year as string;
       key = yearRaw || 'Unknown';
+    } else if (selectedX === 'quarter') {
+      const yearRaw = ((d as unknown) as Record<string, unknown>).year as string;
+      const qRaw = ((d as unknown) as Record<string, unknown>).quarter as string;
+      const subKey = qRaw ? qRaw.split('-')[1] : 'Unknown';
+      key = yearRaw && subKey !== 'Unknown' ? `${yearRaw}-${subKey}` : 'Unknown';
     } else if (selectedX === 'rbc_units') {
       const val = ((d as unknown) as Record<string, unknown>).rbc_units as number ?? 0;
       key = `${val} ${val === 1 ? 'RBC' : 'RBCs'}`;
@@ -136,8 +147,10 @@ export function getProcessedScatterData(
 
   // Sort bin group keys
   const sortedKeys = Array.from(groupedByBinGroup.keys());
-  if (['year_quarter', 'rbc_units', 'plt_units', 'cryo_units', 'ffp_units'].includes(selectedX)) {
+  if (['year', 'rbc_units', 'plt_units', 'cryo_units', 'ffp_units'].includes(selectedX)) {
     sortedKeys.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  } else if (selectedX === 'quarter') {
+    sortedKeys.sort((a, b) => a.localeCompare(b));
   } else if (selectedX === 'cell_saver_ml') {
     sortedKeys.sort((a, b) => {
       if (a === '0 mL') return -1;
@@ -152,68 +165,14 @@ export function getProcessedScatterData(
 
   sortedKeys.forEach((binGroupId) => {
     const cases = groupedByBinGroup.get(binGroupId)!;
-    const hasNestedBins = selectedX === 'year_quarter';
+    const sortedCases = sortCases([...cases], yKey, sortMode);
 
-    if (sortMode === 'time' && hasNestedBins) {
-      // Year & Quarter: create quarter nested bins
-      const groupedByNestedBin = new Map<string, DumbbellCase[]>();
-
-      cases.forEach((d) => {
-        const qRaw = ((d as unknown) as Record<string, unknown>).quarter as string;
-        const subKey = qRaw ? qRaw.split('-')[1] : 'Unknown';
-        if (!groupedByNestedBin.has(subKey)) groupedByNestedBin.set(subKey, []);
-        groupedByNestedBin.get(subKey)?.push(d);
-      });
-
-      // Ensure all 4 quarters exist
-      for (let q = 1; q <= 4; q += 1) {
-        const qKey = `Q${q}`;
-        if (!groupedByNestedBin.has(qKey)) {
-          groupedByNestedBin.set(qKey, []);
-        }
-      }
-
-      const nestedBins = Array.from(groupedByNestedBin.entries())
-        .map(([nestedBinLabel, nestedBinCases]) => {
-          const sortedCases = [...nestedBinCases];
-          // Since we don't have surgery_start_dtm, sort loosely by month string or case_id
-          sortedCases.sort((a, b) => {
-            const m1 = ((a as unknown) as Record<string, unknown>).month as string || '';
-            const m2 = ((b as unknown) as Record<string, unknown>).month as string || '';
-            if (m1 !== m2) return m1.localeCompare(m2);
-            return a.case_id.localeCompare(b.case_id);
-          });
-          return {
-            id: `${binGroupId}-${nestedBinLabel}`,
-            label: nestedBinLabel,
-            cases: sortedCases,
-          };
-        })
-        .sort((a, b) => a.label.localeCompare(b.label));
-
-      hierarchy.push({
-        id: binGroupId,
-        label: binGroupId,
-        cases,
-        nestedBins,
-        avg: computeAvg(cases, yKey),
-      });
-    } else {
-      // Flat or sorted mode: all cases in one virtual nested bin
-      const sortedCases = sortCases([...cases], yKey, sortMode);
-
-      hierarchy.push({
-        id: binGroupId,
-        label: binGroupId,
-        cases,
-        nestedBins: [{
-          id: `${binGroupId}-all`,
-          label: 'All Cases',
-          cases: sortedCases,
-        }],
-        avg: computeAvg(cases, yKey),
-      });
-    }
+    hierarchy.push({
+      id: binGroupId,
+      label: binGroupId,
+      cases: sortedCases,
+      avg: computeAvg(cases, yKey),
+    });
   });
 
   return hierarchy;
@@ -229,15 +188,21 @@ function getShortenedLabel(label: string) {
   return label;
 }
 
+function getProviderLastName(label: string) {
+  if (label.includes(',')) {
+    return label.split(',')[0].trim();
+  }
+  const parts = label.split(' ');
+  return parts[parts.length - 1];
+}
+
 export function calculateScatterLayout(
   processedData: ScatterBinGroup[],
   collapsedBinGroups: Set<string>,
-  collapsedNestedBins: Set<string>,
   selectedX: string,
   measureText: (text: string) => number,
 ) {
-  const binGroupLayout = new Map<string, { x: number, width: number, label: string }>();
-  const nestedBinLayout = new Map<string, { x: number, width: number }>();
+  const binGroupLayout = new Map<string, { x: number, width: number, label: string, isOverflowing: boolean }>();
 
   let currentX = 0;
 
@@ -248,44 +213,45 @@ export function calculateScatterLayout(
     if (collapsedBinGroups.has(binGroup.id)) {
       currentX += 50;
     } else {
-      binGroup.nestedBins.forEach((nestedBin) => {
-        const nestedBinStartX = currentX;
-        if (collapsedNestedBins.has(nestedBin.id)) {
-          currentX += 40;
-        } else if (nestedBin.cases.length === 0) {
-          currentX += SCATTER_EMPTY_NESTED_BIN_WIDTH;
-        } else {
-          currentX += nestedBin.cases.length * SCATTER_CHAR_WIDTH_CASE;
-        }
-        nestedBinLayout.set(nestedBin.id, { x: nestedBinStartX, width: currentX - nestedBinStartX });
-      });
+      currentX += binGroup.cases.length * SCATTER_CHAR_WIDTH_CASE;
     }
 
-    let binGroupWidth = currentX - binGroupStartX;
+    const binGroupWidth = currentX - binGroupStartX;
+    let isOverflowing = false;
+
+    const isProvider = selectedX === 'surgeon' || selectedX === 'anesthesiologist';
 
     // Ensure bin group labels fit
     const fullWidth = measureText(displayLabel);
     if (binGroupWidth < fullWidth + 10) {
-      const shortLabel = getShortenedLabel(displayLabel);
-      const shortWidth = measureText(shortLabel);
-
-      if (shortLabel !== displayLabel && binGroupWidth >= shortWidth + 8) {
-        displayLabel = shortLabel;
+      if (isProvider) {
+        const lastName = getProviderLastName(displayLabel);
+        const shortWidth = measureText(lastName);
+        displayLabel = lastName;
+        if (binGroupWidth < shortWidth + 10) {
+          isOverflowing = true;
+        }
       } else {
-        const targetWidth = (shortLabel !== displayLabel) ? shortWidth : fullWidth;
-        if (binGroupWidth < targetWidth + 10) {
-          const deficit = (targetWidth + 10) - binGroupWidth;
-          currentX += deficit;
-          binGroupWidth += deficit;
-          if (shortLabel !== displayLabel) displayLabel = shortLabel;
+        const shortLabel = getShortenedLabel(displayLabel);
+        const shortWidth = measureText(shortLabel);
+        if (shortLabel !== displayLabel) {
+          displayLabel = shortLabel;
+        }
+        if (binGroupWidth < shortWidth + 10) {
+          isOverflowing = true;
         }
       }
     }
 
-    binGroupLayout.set(binGroup.id, { x: binGroupStartX, width: binGroupWidth, label: displayLabel });
+    binGroupLayout.set(binGroup.id, {
+      x: binGroupStartX,
+      width: binGroupWidth,
+      label: displayLabel,
+      isOverflowing,
+    });
   });
 
-  return { binGroupLayout, nestedBinLayout, totalWidth: currentX };
+  return { binGroupLayout, totalWidth: currentX };
 }
 
 // ---------- Spatial Index ----------
@@ -295,8 +261,6 @@ interface PointPosition {
   y: number;
   caseIdx: number;
   binGroupIdx: number;
-  nestedBinIdx: number;
-  caseInBinIdx: number;
 }
 
 const CELL_SIZE = 20;

@@ -404,11 +404,11 @@ export const LAB_RESULTS = [
     metricId: 'platelet',
     metricLabel: 'Platelet Count',
     label: {
-      short: 'Pre-op Platelet', base: 'Pre-op Platelet', sum: 'Total', avg: 'Avg',
+      short: 'Pre-op Platelet Count', base: 'Pre-op Platelet Count', sum: 'Total', avg: 'Avg',
     },
     units: { sum: 'K/µL', avg: 'K/µL' },
     range: { min: 0, max: 600 },
-    target: { min: 147.5, max: 500 },
+    target: { min: 150, max: 450 },
     decimals: { sum: 0, avg: 0 },
   },
   {
@@ -416,11 +416,11 @@ export const LAB_RESULTS = [
     metricId: 'platelet',
     metricLabel: 'Platelet Count',
     label: {
-      short: 'Post-op Platelet', base: 'Post-op Platelet', sum: 'Total', avg: 'Avg',
+      short: 'Post-op Platelet Count', base: 'Post-op Platelet Count', sum: 'Total', avg: 'Avg',
     },
     units: { sum: 'K/µL', avg: 'K/µL' },
     range: { min: 0, max: 600 },
-    target: { min: 47.5, max: 97.5 },
+    target: { min: 50, max: 125 },
     decimals: { sum: 0, avg: 0 },
   },
   {
@@ -432,7 +432,7 @@ export const LAB_RESULTS = [
     },
     units: { sum: 'mg/dL', avg: 'mg/dL' },
     range: { min: 30, max: 500 },
-    target: { min: 197.5, max: 500 },
+    target: { min: 200, max: 400 },
     decimals: { sum: 0, avg: 0 },
   },
   {
@@ -444,7 +444,7 @@ export const LAB_RESULTS = [
     },
     units: { sum: 'mg/dL', avg: 'mg/dL' },
     range: { min: 30, max: 500 },
-    target: { min: 97.5, max: 147.5 },
+    target: { min: 150, max: 200 },
     decimals: { sum: 0, avg: 0 },
   },
   {
@@ -456,7 +456,7 @@ export const LAB_RESULTS = [
     },
     units: { sum: 'Ratio', avg: 'Ratio' },
     range: { min: 0, max: 6 },
-    target: { min: 0.8, max: 1.15 },
+    target: { min: 0.8, max: 1.1 },
     decimals: { sum: 1, avg: 2 },
   },
   {
@@ -468,7 +468,7 @@ export const LAB_RESULTS = [
     },
     units: { sum: 'Ratio', avg: 'Ratio' },
     range: { min: 0, max: 6 },
-    target: { min: 1.35, max: 1.55 },
+    target: { min: 0.8, max: 1.5 },
     decimals: { sum: 1, avg: 2 },
   },
 ] as const;
@@ -762,23 +762,33 @@ export interface CostBarDatum extends Record<Cost, number> {
 export type CostBarData = CostBarDatum[];
 
 // --- Dumbbell Chart ---
-export type DumbbellChartConfig = ChartConfig<
-  'provider_visit', // Fixed x-axis structure
-  'hgb', // Fixed y-axis variable for now
-  'none', // No aggregation
-  'dumbbell'
->;
-
 export const DUMBBELL_X_AXIS_OPTIONS = [
   { value: 'surgeon', label: 'Surgeon' },
   { value: 'anesthesiologist', label: 'Anesthesiologist' },
-  { value: 'year_quarter', label: 'Year & Quarter' },
+  { value: 'year', label: 'Year' },
+  { value: 'quarter', label: 'Quarter' },
   { value: 'rbc', label: 'Intraoperative RBCs Transfused' },
   { value: 'platelet', label: 'Intraoperative Platelets Transfused' },
   { value: 'cryo', label: 'Intraoperative Cryo Transfused' },
   { value: 'ffp', label: 'Intraoperative FFP Transfused' },
   { value: 'cell_salvage', label: 'Cell Salvage Volume (mL)' },
-];
+] as const;
+export type DumbbellXAxisVar = typeof DUMBBELL_X_AXIS_OPTIONS[number]['value'];
+
+export const DUMBBELL_Y_AXIS_OPTIONS = [
+  { value: 'hgb', label: 'Hemoglobin' },
+  { value: 'platelet', label: 'Platelet Count' },
+  { value: 'fibrinogen', label: 'Fibrinogen' },
+  { value: 'inr', label: 'INR' },
+] as const;
+export type DumbbellYAxisVar = typeof DUMBBELL_Y_AXIS_OPTIONS[number]['value'];
+
+export type DumbbellChartConfig = ChartConfig<
+  DumbbellXAxisVar,
+  DumbbellYAxisVar,
+  'none', // No aggregation
+  'dumbbell'
+>;
 
 export const DUMBBELL_MARGIN = {
   top: 40, right: 30, bottom: 60, left: 60,
@@ -786,7 +796,6 @@ export const DUMBBELL_MARGIN = {
 
 export const DUMBBELL_CHAR_WIDTH_CASE = 4;
 export const DUMBBELL_DOT_RADIUS = 3;
-export const DUMBBELL_EMPTY_NESTED_BIN_WIDTH = 30;
 export const DUMBBELL_DRAG_LIMIT = 1.0;
 
 export type DumbbellSortState = 'none' | 'pre' | 'post' | 'gap';
@@ -797,7 +806,6 @@ export const SCATTER_MARGIN = {
 };
 export const SCATTER_DOT_RADIUS = 3;
 export const SCATTER_CHAR_WIDTH_CASE = 4;
-export const SCATTER_EMPTY_NESTED_BIN_WIDTH = 30;
 export const SCATTER_DRAG_LIMIT = 1.0;
 
 export type ScatterSortState = 'asc' | 'desc' | 'time';
@@ -840,7 +848,10 @@ export type DumbbellData = DumbbellCase[];
 
 // --- Scatter plots ---
 export const SCATTER_X_AXIS_OPTIONS = [
-  { value: 'year_quarter' as const, label: 'Year & Quarter', isDiscrete: true },
+  { value: 'surgeon' as const, label: 'Surgeon', isDiscrete: true },
+  { value: 'anesthesiologist' as const, label: 'Anesthesiologist', isDiscrete: true },
+  { value: 'year' as const, label: 'Year', isDiscrete: true },
+  { value: 'quarter' as const, label: 'Quarter', isDiscrete: true },
   ...BLOOD_COMPONENT_OPTIONS.map((b) => ({
     value: b.value,
     label: b.label.base,
