@@ -1278,7 +1278,7 @@ export class RootStore {
     const newConfigs = [config, ...currentConfigs];
     const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 2 }));
     shifted.unshift({
-      i: config.chartId, x: 0, y: 0, w: 2, h: 2, maxH: 4,
+      i: config.chartId, x: 0, y: 0, w: 4, h: 3, maxH: 4,
     });
     const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 4) };
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Explore Chart');
