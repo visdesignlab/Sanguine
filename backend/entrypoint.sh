@@ -11,8 +11,14 @@ poetry run python manage.py migrate contenttypes
 poetry run python manage.py migrate django_cas_ng
 poetry run python manage.py migrate sessions
 
-# Start the server with 
-poetry run gunicorn api.wsgi:application --bind 0.0.0.0:8000 --timeout 60 &
+# Start the server with logs sent to container stdout/stderr.
+poetry run gunicorn api.wsgi:application \
+  --bind 0.0.0.0:8000 \
+  --timeout 60 \
+  --error-logfile - \
+  --access-logfile - \
+  --capture-output \
+  --log-level info &
 
 # Get the PID of the background process
 PID=$!

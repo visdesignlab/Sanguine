@@ -15,6 +15,7 @@ env = environ.Env(
     SENTRY_ENVIRONMENT=(str, "development"),
     SENTRY_TRACES_SAMPLE_RATE=(float, 0.0),
     SENTRY_SEND_DEFAULT_PII=(bool, False),
+    SENTRY_CAPTURE_HANDLED_HTTP_ERRORS=(bool, True),
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -24,6 +25,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DJANGO_DEBUG")
 DISABLE_LOGINS = env("DJANGO_DISABLE_LOGINS")
 SENTRY_DSN = env("SENTRY_DSN")
+SENTRY_CAPTURE_HANDLED_HTTP_ERRORS = env("SENTRY_CAPTURE_HANDLED_HTTP_ERRORS")
 
 if SENTRY_DSN:
     sentry_sdk.init(
@@ -126,7 +128,7 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "stream": sys.stdout,
+            "stream": sys.stderr,
             "formatter": "verbose",
         },
     },
