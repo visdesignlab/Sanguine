@@ -214,7 +214,8 @@ def create_materialize_proc(apps, schema_editor):
                 MAX(CASE WHEN cpt_code in ('33946', '33947', '33948', '33949', '33952', '33953', '33954', '33955', '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965', '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) AS ecmo
             FROM BillingCode
             GROUP BY visit_no
-        ) bc ON bc.visit_no = v.visit_no;
+        ) bc ON bc.visit_no = v.visit_no
+        LIMIT 10000;
     END;
     """
     conn = schema_editor.connection
