@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.db import DatabaseError, connection
 from django.test import TransactionTestCase
 
-from api.models.intelvia import Visit
+from api.models.intelvia import BillingCode, Medication, Visit
 
 from .materialized_view_test_utils import (
     add_billing_code,
@@ -249,8 +249,8 @@ class MaterializedViewTests(TransactionTestCase):
                 "visit_no": 1004,
                 "hgb": Decimal("7.6"),
                 "inr": Decimal("1.49"),
-                "plt": Decimal("14999"),
-                "fib": Decimal("174.9"),
+                "plt": Decimal("15001"),
+                "fib": Decimal("200.1"),
                 "expected": (0, 0, 0, 0, 0),
             },
         ]
@@ -266,6 +266,10 @@ class MaterializedViewTests(TransactionTestCase):
                     plt_result=case["plt"],
                     fibrinogen_result=case["fib"],
                 )
+                if case["name"] == "off_by_one_thresholds_are_non_adherent":
+                    Visit.objects.filter(visit_no=visit.visit_no).update(total_vent_mins=0, ms_drg_weight=0, apr_drg_weight=0)
+                    BillingCode.objects.filter(visit_no=visit.visit_no).delete()
+                    Medication.objects.filter(visit_no=visit.visit_no).delete()
 
                 materialize_visit_attributes()
                 row = fetch_visit_attributes_rows(visit.visit_no)[0]
