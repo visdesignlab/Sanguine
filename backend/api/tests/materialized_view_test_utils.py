@@ -66,6 +66,7 @@ def fetch_visit_attributes_rows(visit_no: int) -> list[dict]:
         )
         columns = [column[0] for column in cursor.description]
         rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        return rows
 
 
 def count_visit_attributes_rows(visit_no: int) -> int:
