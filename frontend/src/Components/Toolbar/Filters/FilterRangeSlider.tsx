@@ -1,5 +1,5 @@
 import { RangeSliderValue, RangeSlider } from '@mantine/core';
-import { useObserver } from 'mobx-react';
+import { useObserver } from 'mobx-react-lite';
 import {
   useContext, useMemo, useState, useEffect,
 } from 'react';

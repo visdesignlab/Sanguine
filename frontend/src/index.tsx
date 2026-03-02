@@ -1,4 +1,6 @@
 import '@mantine/core/styles.css';
+// eslint-disable-next-line import/no-unresolved, import/extensions
+import 'mantine-datatable/styles.css';
 import '@mantine/charts/styles.css';
 import '@mantine/dates/styles.css';
 import 'react-grid-layout/css/styles.css';

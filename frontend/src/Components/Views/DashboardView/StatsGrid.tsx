@@ -9,8 +9,7 @@ import {
   Title,
 } from '@mantine/core';
 import { useState, useContext, useCallback } from 'react';
-import clsx from 'clsx';
-import { useObserver } from 'mobx-react';
+import { useObserver } from 'mobx-react-lite';
 import { Sparkline } from '@mantine/charts';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import gridItemStyles from '../GridLayoutItem.module.css';
@@ -66,10 +65,7 @@ export function StatsGrid() {
       return (
         <Card
           key={statConfig.statId}
-          className={clsx(
-            gridItemStyles.gridItem,
-            isHovered && gridItemStyles.gridItemHovered,
-          )}
+          className={`${gridItemStyles.gridItem} ${isHovered ? gridItemStyles.gridItemHovered : ''}`.trim()}
           onMouseEnter={() => setHoveredIdx(idx)}
           onMouseLeave={() => setHoveredIdx(null)}
         >
@@ -77,10 +73,7 @@ export function StatsGrid() {
           <Group justify="space-between" align="center">
             {/** Stat Title */}
             <Text
-              className={clsx(
-                gridItemStyles.variableTitle,
-                isHovered && gridItemStyles.active,
-              )}
+              className={`${gridItemStyles.variableTitle} ${isHovered ? gridItemStyles.active : ''}`.trim()}
               style={{ flex: 1, textAlign: 'left' }}
             >
               {statConfig.title}
@@ -88,10 +81,7 @@ export function StatsGrid() {
             <Group gap={4} align="center" style={{ justifyContent: 'flex-end' }}>
               {/** Stat Icon */}
               <Icon
-                className={clsx(
-                  statsGridStyles.icon,
-                  isHovered && statsGridStyles.iconHovered,
-                )}
+                className={`${statsGridStyles.icon} ${isHovered ? statsGridStyles.iconHovered : ''}`.trim()}
                 size={cardIconSize}
                 stroke={cardIconStroke}
               />
@@ -132,10 +122,7 @@ export function StatsGrid() {
             <Text
               size="xs"
               ml={2}
-              className={clsx(
-                statsGridStyles.comparisonText,
-                isHovered && statsGridStyles.comparisonTextHovered,
-              )}
+              className={`${statsGridStyles.comparisonText} ${isHovered ? statsGridStyles.comparisonTextHovered : ''}`.trim()}
             >
               {`last 30 days vs. ${statData?.comparedTo || 'previous period'}`}
             </Text>

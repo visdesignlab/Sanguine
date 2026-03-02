@@ -18,11 +18,120 @@ export const AGGREGATION_OPTIONS = {
   avg: { label: 'Average' },
 } as const;
 
+// Blood components -----------------------------------------------
+const BLOOD_COMPONENT_DECIMALS = { sum: 0, avg: 2 };
+
+export const BLOOD_COMPONENTS = [
+  {
+    value: 'rbc_units',
+    label: {
+      short: 'RBCs',
+      base: 'RBCs Transfused',
+      sum: 'Total RBCs Transfused',
+      avg: 'Average RBCs Transfused Per Visit',
+    },
+    units: {
+      sum: 'RBC Units',
+      avg: 'RBC Units Per Visit',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: BLOOD_COMPONENT_DECIMALS,
+  },
+  {
+    value: 'ffp_units',
+    label: {
+      short: 'FFP',
+      base: 'FFP Transfused',
+      sum: 'Total FFP Transfused',
+      avg: 'Average FFP Transfused Per Visit',
+    },
+    units: {
+      sum: 'Plasma Units',
+      avg: 'Plasma Units Per Visit',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: BLOOD_COMPONENT_DECIMALS,
+  },
+  {
+    value: 'plt_units',
+    label: {
+      short: 'Platelets',
+      base: 'Platelets Transfused',
+      sum: 'Total Platelets Transfused',
+      avg: 'Average Platelets Transfused Per Visit',
+    },
+    units: {
+      sum: 'Platelet Units',
+      avg: 'Platelet Units Per Visit',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: BLOOD_COMPONENT_DECIMALS,
+  },
+  {
+    value: 'cryo_units',
+    label: {
+      short: 'Cryo',
+      base: 'Cryo Transfused',
+      sum: 'Total Cryo Transfused',
+      avg: 'Average Cryo Transfused Per Visit',
+    },
+    units: {
+      sum: 'Cryo Units',
+      avg: 'Cryo Units Per Visit',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: BLOOD_COMPONENT_DECIMALS,
+  },
+  {
+    value: 'whole_units',
+    label: {
+      short: 'Whole Blood',
+      base: 'Whole Blood Transfused',
+      sum: 'Total Whole Blood Transfused',
+      avg: 'Average Whole Blood Transfused Per Visit',
+    },
+    units: {
+      sum: 'Whole Blood Units',
+      avg: 'Whole Blood Units Per Visit',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: BLOOD_COMPONENT_DECIMALS,
+  },
+  {
+    value: 'cell_saver_ml',
+    label: {
+      short: 'Cell Salvage',
+      base: 'Cell Salvage Volume (ml) Used',
+      sum: 'Total Cell Salvage Volume (ml) Used',
+      avg: 'Average Cell Salvage Volume (ml) Used Per Visit',
+    },
+    units: {
+      sum: 'mL',
+      avg: 'mL Per Visit',
+      sumShort: 'mL',
+      avgShort: 'mL',
+    },
+    decimals: BLOOD_COMPONENT_DECIMALS,
+  },
+] as const;
+// Values of blood components
+export type BloodComponent = typeof BLOOD_COMPONENTS[number]['value'];
 // Readonly array of blood component options
 export const BLOOD_COMPONENT_OPTIONS = BLOOD_COMPONENTS as ReadonlyArray<{
   value: BloodComponent;
-  label: { base: string; sum: string; avg: string };
-  units: { sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
+  units: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
   decimals: { sum: number; avg: number };
 }>;
 
@@ -31,51 +140,62 @@ export const OUTCOMES = [
   {
     value: 'los',
     label: {
+      short: 'LOS',
       base: 'Length of Stay',
       sum: 'Total Length of Stay',
       avg: 'Average Length of Stay',
     },
-    units: { sum: 'Days', avg: 'Days' },
+    units: {
+      sum: 'Days', avg: 'Days', sumShort: 'days', avgShort: 'days',
+    },
     decimals: { sum: 0, avg: 2 },
   },
   {
     value: 'death',
     label: {
+      short: 'Death',
       base: 'Death',
       sum: 'Total Deaths',
       avg: 'Percentage of Visits with Death',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: {
+      sum: 'Visits',
+      avg: '% of Visits',
+      avgShort: '%',
+    },
     decimals: { sum: 0, avg: 1 },
   },
   {
     value: 'vent',
     label: {
+      short: 'Vent',
       base: 'Ventilator >24hr',
       sum: 'Total Ventilator >24hr',
       avg: 'Percentage of Visits with Ventilator >24hr',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
   {
     value: 'stroke',
     label: {
+      short: 'Stroke',
       base: 'Stroke',
       sum: 'Total Stroke',
       avg: 'Percentage of Visits with Stroke',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
   {
     value: 'ecmo',
     label: {
+      short: 'ECMO',
       base: 'ECMO',
       sum: 'Total ECMO',
       avg: 'Percentage of Visits with ECMO',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
 ] as const;
@@ -84,8 +204,14 @@ export type Outcome = typeof OUTCOMES[number]['value'];
 // Readonly array of outcome options
 export const OUTCOME_OPTIONS = OUTCOMES as ReadonlyArray<{
   value: Outcome;
-  label: { base: string; sum: string; avg: string };
-  units: { sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
+  units: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
   decimals: number | { sum: number; avg: number };
 }>;
 
@@ -94,31 +220,34 @@ export const PROPHYL_MEDS = [
   {
     value: 'b12',
     label: {
+      short: 'B12',
       base: 'B12 Pre-Surgery',
       sum: 'Total Visits Used B12 Pre-Surgery',
       avg: 'Percentage of Visits Used B12 Pre-Surgery',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
   {
     value: 'iron',
     label: {
+      short: 'Iron',
       base: 'Iron Pre-Surgery',
       sum: 'Total Visits Used Iron Pre-Surgery',
       avg: 'Percentage of Visits Used Iron Pre-Surgery',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
   {
     value: 'antifibrinolytic',
     label: {
+      short: 'Antifibrinolytics',
       base: 'Antifibrinolytics Used Pre-Surgery',
       sum: 'Total Visits Used Antifibrinolytics Pre-Surgery',
       avg: 'Percentage of Visits Used Antifibrinolytics Pre-Surgery',
     },
-    units: { sum: 'Visits', avg: '% of Visits' },
+    units: { sum: 'Visits', avg: '% of Visits', avgShort: '%' },
     decimals: 0,
   },
 ] as const;
@@ -127,8 +256,14 @@ export type ProphylMed = typeof PROPHYL_MEDS[number]['value'];
 // Readonly array of prophylactic medication options
 export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
   value: ProphylMed;
-  label: { base: string; sum: string; avg: string };
-  units: { sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
+  units: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
   decimals: number;
 }>;
 
@@ -137,42 +272,66 @@ export const GUIDELINE_ADHERENT = {
   rbc: {
     value: 'rbc_adherent',
     label: {
+      short: 'Adherent RBC',
       base: 'Guideline Adherent RBC Transfusions',
       sum: 'Total Guideline Adherent RBC Transfusions',
       avg: 'Percentage of Guideline Adherent RBC Transfusions',
     },
     // Adherence units & decimal truncation for display
-    units: { sum: 'Adherent RBC Transfusions', avg: '% Adherent RBC Transfusions' },
+    units: {
+      sum: 'Adherent RBC Transfusions',
+      avg: '% Adherent RBC Transfusions',
+      avgShort: '%',
+      sumShort: '',
+    },
     decimals: 0,
   },
   ffp: {
     value: 'ffp_adherent',
     label: {
+      short: 'Adherent FFP',
       base: 'Guideline Adherent FFP Transfusions',
       sum: 'Total Guideline Adherent FFP Transfusions',
       avg: 'Percentage of Guideline Adherent FFP Transfusions',
     },
-    units: { sum: 'Adherent Plasma Transfusions', avg: '% Adherent Plasma Transfusions' },
+    units: {
+      sum: 'Adherent Plasma Transfusions',
+      avg: '% Adherent Plasma Transfusions',
+      avgShort: '%',
+      sumShort: '',
+    },
     decimals: 0,
   },
   plt: {
     value: 'plt_adherent',
     label: {
+      short: 'Adherent Platelet',
       base: 'Guideline Adherent Platelet Transfusions',
       sum: 'Total Guideline Adherent Platelet Transfusions',
       avg: 'Percentage of Adherent Platelet Transfusions',
     },
-    units: { sum: 'Adherent Platelet Transfusions', avg: '% Adherent Platelet Transfusions' },
+    units: {
+      sum: 'Adherent Platelet Transfusions',
+      avg: '% Adherent Platelet Transfusions',
+      avgShort: '%',
+      sumShort: '',
+    },
     decimals: 0,
   },
   cryo: {
     value: 'cryo_adherent',
     label: {
+      short: 'Adherent Cryo',
       base: 'Guideline Adherent Cryo Transfusions',
       sum: 'Total Guideline Adherent Cryo Transfusions',
       avg: 'Percentage of Guideline Adherent Cryo Transfusions',
     },
-    units: { sum: 'Adherent Cryo Transfusions', avg: '% Adherent Cryo Transfusions' },
+    units: {
+      sum: 'Adherent Cryo Transfusions',
+      avg: '% Adherent Cryo Transfusions',
+      avgShort: '%',
+      sumShort: '',
+    },
     decimals: 0,
   },
 } as const;
@@ -181,11 +340,17 @@ export const GUIDELINE_ADHERENT = {
 export const OVERALL_GUIDELINE_ADHERENT = {
   value: 'overall_adherent',
   label: {
+    short: 'Adherent Transfusions',
     base: 'Guideline Adherent Transfusions',
     sum: 'Total Guideline Adherent Transfusions',
     avg: 'Percentage of Guideline Adherent Transfusions',
   },
-  units: { sum: 'Adherent Transfusions', avg: '% Adherent Transfusions' },
+  units: {
+    sum: 'Adherent Transfusions',
+    avg: '% Adherent Transfusions',
+    avgShort: '%',
+    sumShort: '',
+  },
   decimals: 0,
 } as const;
 
@@ -195,28 +360,128 @@ export type GuidelineAdherence = typeof GUIDELINE_ADHERENT[keyof typeof GUIDELIN
 // Guideline adherence options for dashboard
 export const GUIDELINE_ADHERENT_OPTIONS = Object.values(GUIDELINE_ADHERENT) as ReadonlyArray<{
   value: GuidelineAdherence;
-  label: { base: string; sum: string; avg: string };
-  units: { sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
+  units: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
   decimals: number;
 }>;
 
 // Lab Results ---------------------------------------------------
+// Lab Results ---------------------------------------------------
 export const LAB_RESULTS = [
   {
-    value: 'post_op_hgb',
+    value: 'pre_hgb',
+    metricId: 'hgb',
+    metricLabel: 'Hemoglobin',
     label: {
+      short: 'Pre-op Hgb',
+      base: 'Pre-Operative Hemoglobin',
+      sum: 'Total Pre-Operative Hemoglobin',
+      avg: 'Average Pre-Operative Hemoglobin',
+    },
+    units: { sum: 'g/dL', avg: 'g/dL' },
+    range: { min: 3, max: 22 },
+    target: { min: 13, max: 18 },
+    decimals: { sum: 0, avg: 2 },
+  },
+  {
+    value: 'post_hgb',
+    metricId: 'hgb',
+    metricLabel: 'Hemoglobin',
+    label: {
+      short: 'Post-op Hgb',
       base: 'Post-Operative Hemoglobin',
       sum: 'Total Post-Operative Hemoglobin',
       avg: 'Average Post-Operative Hemoglobin',
     },
+    range: { min: 3, max: 22 },
+    target: { min: 7.5, max: 9.5 },
     units: { sum: 'g/dL', avg: 'g/dL' },
     decimals: { sum: 0, avg: 2 },
+  },
+
+  {
+    value: 'pre_plt',
+    metricId: 'platelet',
+    metricLabel: 'Platelet Count',
+    label: {
+      short: 'Pre-op Platelet Count', base: 'Pre-op Platelet Count', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'K/µL', avg: 'K/µL' },
+    range: { min: 0, max: 600 },
+    target: { min: 150, max: 450 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'post_plt',
+    metricId: 'platelet',
+    metricLabel: 'Platelet Count',
+    label: {
+      short: 'Post-op Platelet Count', base: 'Post-op Platelet Count', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'K/µL', avg: 'K/µL' },
+    range: { min: 0, max: 600 },
+    target: { min: 50, max: 125 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'pre_fibrinogen',
+    metricId: 'fibrinogen',
+    metricLabel: 'Fibrinogen',
+    label: {
+      short: 'Pre-op Fibrinogen', base: 'Pre-op Fibrinogen', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'mg/dL', avg: 'mg/dL' },
+    range: { min: 30, max: 500 },
+    target: { min: 200, max: 400 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'post_fibrinogen',
+    metricId: 'fibrinogen',
+    metricLabel: 'Fibrinogen',
+    label: {
+      short: 'Post-op Fibrinogen', base: 'Post-op Fibrinogen', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'mg/dL', avg: 'mg/dL' },
+    range: { min: 30, max: 500 },
+    target: { min: 150, max: 200 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'pre_inr',
+    metricId: 'inr',
+    metricLabel: 'INR',
+    label: {
+      short: 'Pre-op INR', base: 'Pre-op INR', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'Ratio', avg: 'Ratio' },
+    range: { min: 0, max: 6 },
+    target: { min: 0.8, max: 1.1 },
+    decimals: { sum: 1, avg: 2 },
+  },
+  {
+    value: 'post_inr',
+    metricId: 'inr',
+    metricLabel: 'INR',
+    label: {
+      short: 'Post-op INR', base: 'Post-op INR', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'Ratio', avg: 'Ratio' },
+    range: { min: 0, max: 6 },
+    target: { min: 0.8, max: 1.5 },
+    decimals: { sum: 1, avg: 2 },
   },
 ] as const;
 export type LabResult = typeof LAB_RESULTS[number]['value'];
 export const LAB_RESULT_OPTIONS = LAB_RESULTS as ReadonlyArray<{
   value: LabResult;
-  label: { base: string; sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
   units: { sum: string; avg: string };
   decimals: { sum: number; avg: number };
 }>;
@@ -228,52 +493,80 @@ export const COSTS = {
   rbc_units_cost: {
     value: 'rbc_units_cost',
     label: {
+      short: 'RBC Cost',
       base: 'RBC Cost',
       sum: 'Total RBC Cost',
       avg: 'Average RBC Cost Per Visit',
     },
-    units: { sum: '$', avg: '$' },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
     decimals: { sum: 0, avg: 0 },
   },
   ffp_units_cost: {
     value: 'ffp_units_cost',
     label: {
+      short: 'FFP Cost',
       base: 'FFP Cost',
       sum: 'Total FFP Cost',
       avg: 'Average FFP Cost Per Visit',
     },
-    units: { sum: '$', avg: '$' },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
     decimals: { sum: 0, avg: 0 },
   },
   plt_units_cost: {
     value: 'plt_units_cost',
     label: {
+      short: 'Platelet Cost',
       base: 'Platelet Cost',
       sum: 'Total Platelet Cost',
       avg: 'Average Platelet Cost Per Visit',
     },
-    units: { sum: '$', avg: '$' },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
     decimals: { sum: 0, avg: 0 },
   },
   cryo_units_cost: {
     value: 'cryo_units_cost',
     label: {
+      short: 'Cryo Cost',
       base: 'Cryo Cost',
       sum: 'Total Cryo Cost',
       avg: 'Average Cryo Cost Per Visit',
     },
-    units: { sum: '$', avg: '$' },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
+    decimals: { sum: 0, avg: 0 },
+  },
+  whole_cost: {
+    value: 'whole_cost',
+    label: {
+      short: 'Whole Blood Cost',
+      base: 'Whole Blood Cost',
+      sum: 'Total Whole Blood Cost',
+      avg: 'Average Whole Blood Cost Per Visit',
+    },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
     decimals: { sum: 0, avg: 0 },
   },
   // TODO: Unit cost is wrong
   cell_saver_cost: {
     value: 'cell_saver_cost',
     label: {
+      short: 'Cell Saver Cost',
       base: 'Cell Saver Cost',
       sum: 'Total Cell Saver Cost',
       avg: 'Average Cell Saver Cost Per Visit',
     },
-    units: { sum: '$', avg: '$' },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
     decimals: { sum: 0, avg: 0 },
   },
 } as const;
@@ -283,19 +576,28 @@ export type Cost = typeof COSTS[keyof typeof COSTS]['value'];
 // Readonly array of prophylactic medication options
 export const COST_OPTIONS = Object.values(COSTS) as ReadonlyArray<{
   value: Cost;
-  label: { base: string; sum: string; avg: string };
-  units: { sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
+  units: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
   decimals: { sum: number; avg: number };
 }>;
 
 export const OVERALL_BLOOD_PRODUCT_COST = {
   value: 'total_blood_product_cost',
   label: {
+    short: 'Blood Product Costs',
     base: 'Blood Product Costs',
     sum: 'Total Blood Product Costs',
     avg: 'Average Blood Product Costs Per Visit',
   },
-  units: { sum: '$', avg: '$' },
+  units: {
+    sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+  },
   decimals: { sum: 0, avg: 0 },
 } as const;
 
@@ -304,11 +606,17 @@ export type OverallBloodProductCost = typeof OVERALL_BLOOD_PRODUCT_COST['value']
 export const VISIT_COUNT = {
   value: 'visit_count',
   label: {
+    short: 'Visits',
     base: 'Number of Visits',
     sum: 'Total Number of Visits',
     avg: 'Average Number of Visits',
   },
-  units: { sum: 'Visits', avg: 'Visits' },
+  units: {
+    sum: 'Visits',
+    avg: 'Visits',
+    sumShort: 'Cases',
+    avgShort: '', // Ensure cases column is treated correctly in table if it's percentage
+  },
   decimals: { sum: 0, avg: 0 },
 } as const;
 
@@ -317,6 +625,7 @@ export type VisitCount = typeof VISIT_COUNT['value'];
 export const CASE_MIX_INDEX = {
   value: 'case_mix_index',
   label: {
+    short: 'CMI',
     base: 'Case Mix Index',
     sum: 'Case Mix Index',
     avg: 'Case Mix Index',
@@ -331,6 +640,7 @@ export const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
   ffp_units_cost: 55,
   plt_units_cost: 650,
   cryo_units_cost: 70,
+  whole_cost: 300,
   cell_saver_cost: 500,
 };
 
@@ -349,10 +659,12 @@ export const CPT_CODES = {
 // Chart configuration type
 type ChartConfig<X, Y, A, T> = {
   chartId: string;
+  title?: string;
   xAxisVar: X;
   yAxisVar: Y;
   aggregation: A;
   chartType: T;
+  rowVar?: typeof ExploreTableRowVars[number];
 };
 
 // PBM Dashboard ---------------------------------------------------
@@ -420,6 +732,7 @@ export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
   ffp_units: '#C99700',
   plt_units: '#decfa2',
   cryo_units: '#58a2c8',
+  whole_units: '#600000',
   cell_saver_ml: '#E4572E',
   cell_saver: '#E4572E',
 };
@@ -429,7 +742,7 @@ export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
 const _AGGREGATIONS = ['surgeon_prov_id', 'anesth_prov_id', 'year', 'quarter'] as const;
 export type Aggregation = typeof _AGGREGATIONS[number];
 
-// --- Cost bar charts ---
+// --- Cost bar charts TODO: Change to Explore Table ---
 const CostAggregations: { value: Aggregation; label: string }[] = [
   { value: 'surgeon_prov_id', label: 'Surgeon ID' },
   { value: 'anesth_prov_id', label: 'Anesthesiologist ID' },
@@ -445,12 +758,6 @@ export const costYAxisVars = costYAxisOptions.map((opt) => opt.value);
 
 export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof costYAxisVars[number], 'sum' | 'avg', 'cost'>;
 
-// TODO: Update scatterPlotConfig type
-export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterPlot'>;
-
-export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig;
-export type ScatterPlotData = ScatterChartSeries[];
-
 // TOOD: Update or remove CostBarData type
 export interface CostBarDatum extends Record<Cost, number> {
   surgeon_prov_id?: string;
@@ -460,12 +767,336 @@ export interface CostBarDatum extends Record<Cost, number> {
 }
 export type CostBarData = CostBarDatum[];
 
-// TODO: Update ExploreChartData type
-export type ExploreChartData = Record<string, ScatterPlotData | CostBarData>;
+// --- Dumbbell Chart ---
+export const DUMBBELL_X_AXIS_OPTIONS = [
+  { value: 'surgeon', label: 'Surgeon' },
+  { value: 'anesthesiologist', label: 'Anesthesiologist' },
+  { value: 'year', label: 'Year' },
+  { value: 'quarter', label: 'Quarter' },
+  { value: 'rbc', label: 'Intraoperative RBCs Transfused' },
+  { value: 'platelet', label: 'Intraoperative Platelets Transfused' },
+  { value: 'cryo', label: 'Intraoperative Cryo Transfused' },
+  { value: 'ffp', label: 'Intraoperative FFP Transfused' },
+  { value: 'cell_salvage', label: 'Cell Salvage Volume (mL)' },
+] as const;
+export type DumbbellXAxisVar = typeof DUMBBELL_X_AXIS_OPTIONS[number]['value'];
+
+export const DUMBBELL_Y_AXIS_OPTIONS = [
+  { value: 'hgb', label: 'Hemoglobin' },
+  { value: 'platelet', label: 'Platelet Count' },
+  { value: 'fibrinogen', label: 'Fibrinogen' },
+  { value: 'inr', label: 'INR' },
+] as const;
+export type DumbbellYAxisVar = typeof DUMBBELL_Y_AXIS_OPTIONS[number]['value'];
+
+export type DumbbellChartConfig = ChartConfig<
+  DumbbellXAxisVar,
+  DumbbellYAxisVar,
+  'none', // No aggregation
+  'dumbbell'
+>;
+
+export const DUMBBELL_MARGIN = {
+  top: 40, right: 30, bottom: 60, left: 60,
+};
+
+export const DUMBBELL_CHAR_WIDTH_CASE = 4;
+export const DUMBBELL_DOT_RADIUS = 3;
+export const DUMBBELL_DRAG_LIMIT = 1.0;
+
+export type DumbbellSortState = 'none' | 'pre' | 'post' | 'gap';
+
+// Scatter Plot constants
+export const SCATTER_MARGIN = {
+  top: 40, right: 30, bottom: 60, left: 60,
+};
+export const SCATTER_DOT_RADIUS = 3;
+export const SCATTER_CHAR_WIDTH_CASE = 4;
+export const SCATTER_DRAG_LIMIT = 1.0;
+
+export type ScatterSortState = 'asc' | 'desc' | 'time';
+
+export interface DumbbellLabConfig {
+  label: string;
+  unit: string;
+  min: number;
+  max: number;
+  preKey: keyof DumbbellCase;
+  postKey: keyof DumbbellCase;
+  defaultTargets: { preMin: number; postMin: number; postMax: number };
+}
+
+export interface DumbbellCase {
+  case_id: string;
+  surgeon_prov_id: string;
+  surgeon_prov_name: string;
+  visit_no: string;
+  pre_hgb: number;
+  post_hgb: number;
+
+  pre_plt: number;
+  post_plt: number;
+  pre_fibrinogen: number;
+  post_fibrinogen: number;
+  pre_inr: number;
+  post_inr: number;
+  anesth_prov_id: string;
+  anesth_prov_name: string;
+  intraop_rbc_units: number;
+  intraop_plt_units: number;
+  intraop_cryo_units: number;
+  intraop_ffp_units: number;
+  intraop_cell_saver_ml: number;
+  surgery_start_dtm: number;
+}
+
+export type DumbbellData = DumbbellCase[];
+
+// --- Scatter plots ---
+export const SCATTER_X_AXIS_OPTIONS = [
+  { value: 'surgeon' as const, label: 'Surgeon', isDiscrete: true },
+  { value: 'anesthesiologist' as const, label: 'Anesthesiologist', isDiscrete: true },
+  { value: 'year' as const, label: 'Year', isDiscrete: true },
+  { value: 'quarter' as const, label: 'Quarter', isDiscrete: true },
+  ...BLOOD_COMPONENT_OPTIONS.map((b) => ({
+    value: b.value,
+    label: b.label.base,
+    isDiscrete: b.value !== 'cell_saver_ml',
+  })),
+  ...LAB_RESULT_OPTIONS.map((l) => ({
+    value: l.value,
+    label: l.label.base,
+    isDiscrete: false,
+  })),
+];
+
+export const SCATTER_Y_AXIS_OPTIONS = [
+  ...LAB_RESULT_OPTIONS.map((l) => ({ value: l.value, label: l.label.base })),
+  ...BLOOD_COMPONENT_OPTIONS.map((b) => ({ value: b.value, label: b.label.base })),
+];
+
+export type ScatterXAxisVar = typeof SCATTER_X_AXIS_OPTIONS[number]['value'];
+export type ScatterYAxisVar = typeof SCATTER_Y_AXIS_OPTIONS[number]['value'];
+
+export type ScatterPlotConfig = ChartConfig<ScatterXAxisVar, ScatterYAxisVar, keyof typeof AGGREGATION_OPTIONS | 'none', 'scatterPlot'>;
+export type ScatterPlotData = DumbbellCase[];
+
+// --- Explore Table ---
+
+// Column options
+const RBC_COUNTS = ['0', '1', '2', '3', '4', 'above_5'] as const;
+const RBC_PERCENT_OPTIONS = RBC_COUNTS.map((count) => ({
+  value: `percent_${count}_rbc`,
+  label: count === 'above_5' ? '≥5 RBC' : `${count} RBC`,
+  units: { sum: 'cases', avg: '% of cases' },
+  decimals: 1,
+}));
+
+// Column Groups
+export const ExploreTableColumnOptionsGrouped = [
+  {
+    group: 'Blood Products',
+    items: BLOOD_COMPONENT_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
+        type: opt.units.type,
+      },
+      decimals: opt.decimals,
+    })),
+  },
+  {
+    group: 'Outcomes',
+    items: OUTCOME_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
+        type: opt.units.type,
+      },
+      decimals: opt.decimals,
+    })),
+  },
+  {
+    group: 'Prophylactic Medications',
+    items: PROPHYL_MED_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
+        type: opt.units.type,
+      },
+      decimals: opt.decimals,
+    })),
+  },
+  {
+    group: 'Guideline Adherence',
+    items: GUIDELINE_ADHERENT_OPTIONS.map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
+        type: opt.units.type,
+      },
+      decimals: opt.decimals,
+    })),
+  },
+  {
+    group: 'Costs',
+    items: [
+      ...COST_OPTIONS.map((opt) => ({
+        value: opt.value,
+        label: opt.label.base,
+        units: {
+          sum: opt.units.sum,
+          avg: opt.units.avg,
+          sumShort: opt.units.sumShort,
+          avgShort: opt.units.avgShort,
+          type: opt.units.type,
+        },
+        decimals: opt.decimals,
+      })),
+      {
+        value: 'total_cost',
+        label: 'Cost',
+        units: { sum: '$', avg: '$', type: 'prefix' },
+        decimals: { sum: 0, avg: 0 },
+      },
+      {
+        value: 'salvage_savings',
+        label: 'Savings from Cell Salvage',
+        units: { sum: '$', avg: '$', type: 'prefix' },
+        decimals: { sum: 0, avg: 0 },
+      },
+    ],
+  },
+  {
+    group: 'Other',
+    items: [
+      { value: 'year', label: 'Year' },
+      { value: 'quarter', label: 'Quarter' },
+      { value: 'drg_weight', label: 'DRG Weight' },
+      ...RBC_PERCENT_OPTIONS,
+      {
+        value: 'attending_provider',
+        label: 'Provider',
+      },
+      {
+        value: 'cases',
+        label: 'Cases',
+        units: {
+          sum: 'cases', avg: '% of cases', sumShort: ' Cases', avgShort: ' Cases',
+        },
+        decimals: 0,
+      },
+    ],
+  },
+];
+
+export const ExploreTableColumnOptions: {
+  value: string;
+  label: string;
+  units?: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
+  decimals?: number | { sum: number; avg: number };
+}[] = ExploreTableColumnOptionsGrouped.flatMap((g) => g.items as {
+  value: string;
+  label: string;
+  units?: {
+    sum: string;
+    avg: string;
+    sumShort?: string;
+    avgShort?: string;
+    type?: 'prefix' | 'suffix';
+  };
+  decimals?: number | { sum: number; avg: number };
+}[]);
+
+// Row options
+export const ExploreTableRowOptions: { value: string; label: string }[] = [
+  { value: 'attending_provider', label: 'Provider' },
+  { value: 'year', label: 'Year' },
+  { value: 'quarter', label: 'Quarter' },
+];
+
+// Variables
+export const ExploreTableColumnVars = ExploreTableColumnOptions.map((opt) => opt.value);
+export const ExploreTableRowVars = ExploreTableRowOptions.map((opt) => opt.value);
+
+// Column type
+export type ExploreTableColumn = {
+  colVar: typeof ExploreTableColumnVars[number];
+  aggregation: keyof typeof AGGREGATION_OPTIONS | 'none';
+  type: 'numeric' | 'text' | 'violin' | 'heatmap' | 'stackedBar' | 'numericBar';
+  title: string;
+  numericTextVisible?: boolean;
+};
+
+// Explore Table Chart Config
+export type ExploreTableConfig = {
+  chartId: string;
+  title: string;
+  chartType: 'exploreTable';
+  rowVar: typeof ExploreTableRowVars[number];
+  columns: ExploreTableColumn[];
+  aggregation?: 'sum' | 'avg';
+  twoValsPerRow?: boolean;
+};
+
+// Explore Table Data
+export type ExploreTableRow = Record<typeof ExploreTableRowVars[number], string | number | number[] | number[][]>;
+export type ExploreTableData = ExploreTableRow[]; // E.g. [{ attending_provider: 'Dr. Smith', cases: 100}, { attending_provider: 'Dr. Johnson', cases: 200}]
+
+// --- Explore Chart ---
+export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData | DumbbellData>;
+export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig | DumbbellChartConfig;
+
+// Procedure hierarchy ---------------------------------------------------
+export type ProcedureHierarchyProcedure = {
+  id: string;
+  name: string;
+  visit_count: number;
+  cpt_codes: string[];
+};
+
+export type ProcedureHierarchyDepartment = {
+  id: string;
+  name: string;
+  visit_count: number;
+  procedures: ProcedureHierarchyProcedure[];
+};
+
+export type ProcedureHierarchyResponse = {
+  version: string;
+  source: string;
+  department_level: 'department';
+  procedure_level: 'procedure';
+  departments: ProcedureHierarchyDepartment[];
+};
 
 // Filter Counts ---------------------------------------------------
 export type FilterCountKey =
   | 'dateFiltersAppliedCount'
   | 'bloodComponentFiltersAppliedCount'
   | 'medicationsFiltersAppliedCount'
-  | 'outcomeFiltersAppliedCount';
+  | 'outcomeFiltersAppliedCount'
+  | 'procedureDepartmentsAppliedCount'
+  | 'procedureFiltersAppliedCount';

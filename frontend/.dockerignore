@@ -1,0 +1,8 @@
+.DS_Store
+.env
+node_modules/
+dist/
+a-old/
+.husky/
+coverage/
+*.log

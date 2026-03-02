@@ -5,7 +5,6 @@ import {
 import { createContext } from 'react';
 import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
 import { initProvenance, Provenance, NodeID } from '@visdesignlab/trrack';
-import LZString from 'lz-string';
 import { Layout } from 'react-grid-layout';
 // @ts-expect-error: rgl utils not typed
 import { compact } from 'react-grid-layout/build/utils';
@@ -20,6 +19,9 @@ import {
   DashboardStatData,
   ExploreChartConfig,
   ExploreChartData,
+  ExploreTableConfig,
+  ExploreTableRow,
+  ProcedureHierarchyResponse,
   TimeAggregation,
   TimePeriod,
   dashboardXAxisVars,
@@ -93,6 +95,7 @@ export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
     statId: '6', yAxisVar: 'plt_adherent', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
   },
 ];
+
 // endregion
 
 // region Types
@@ -113,6 +116,8 @@ export interface ApplicationState {
     vent: boolean | null;
     stroke: boolean | null;
     ecmo: boolean | null;
+    departmentIds: string[];
+    procedureIds: string[];
   };
   selections: {
     selectedTimePeriods: string[];
@@ -151,6 +156,8 @@ export class RootStore {
 
   duckDB: AsyncDuckDBConnection | null = null;
 
+  procedureHierarchy: ProcedureHierarchyResponse | null = null;
+
   // --- Dashboard State ---
   _baseDashboardLayouts: { [key: string]: Layout[] } | null = null;
 
@@ -165,82 +172,7 @@ export class RootStore {
 
   _transientExploreLayouts: { [key: string]: Layout[] } | null = null;
 
-  exploreDummyData: ExploreChartData = {
-    sum_post_op_hgb_cell_saver_ml: [
-      {
-        name: 'Anesth 101',
-        color: 'blue',
-        data: [
-          { cell_saver_ml: 50, post_op_hgb: 11.2 },
-          { cell_saver_ml: 120, post_op_hgb: 10.8 },
-          { cell_saver_ml: 180, post_op_hgb: 10.5 },
-          { cell_saver_ml: 240, post_op_hgb: 10.1 },
-          { cell_saver_ml: 310, post_op_hgb: 9.7 },
-          { cell_saver_ml: 400, post_op_hgb: 9.4 },
-        ],
-      },
-      {
-        name: 'Anesth 204',
-        color: 'teal',
-        data: [
-          { cell_saver_ml: 40, post_op_hgb: 12.0 },
-          { cell_saver_ml: 90, post_op_hgb: 11.6 },
-          { cell_saver_ml: 150, post_op_hgb: 11.1 },
-          { cell_saver_ml: 200, post_op_hgb: 10.9 },
-          { cell_saver_ml: 270, post_op_hgb: 10.2 },
-          { cell_saver_ml: 350, post_op_hgb: 9.9 },
-        ],
-      },
-      {
-        name: 'Anesth 317',
-        color: 'grape',
-        data: [
-          { cell_saver_ml: 30, post_op_hgb: 12.5 },
-          { cell_saver_ml: 70, post_op_hgb: 12.1 },
-          { cell_saver_ml: 110, post_op_hgb: 11.7 },
-          { cell_saver_ml: 160, post_op_hgb: 11.3 },
-          { cell_saver_ml: 220, post_op_hgb: 10.8 },
-          { cell_saver_ml: 300, post_op_hgb: 10.4 },
-        ],
-      },
-    ],
-    sum_surgeon_prov_id_cost: [
-      {
-        surgeon_prov_id: 'Dr. Smith',
-        rbc_units_cost: 600,
-        ffp_units_cost: 950,
-        plt_units_cost: 900,
-        cryo_units_cost: 850,
-        cell_saver_cost: 800,
-      },
-      {
-        surgeon_prov_id: 'Dr. Lee',
-        rbc_units_cost: 400,
-        ffp_units_cost: 800,
-        plt_units_cost: 750,
-        cryo_units_cost: 700,
-        cell_saver_cost: 650,
-      },
-      {
-        surgeon_prov_id: 'Dr. Patel',
-        rbc_units_cost: 700,
-        ffp_units_cost: 1000,
-        plt_units_cost: 950,
-        cryo_units_cost: 900,
-        cell_saver_cost: 850,
-      },
-      {
-        surgeon_prov_id: 'Dr. Jones',
-        rbc_units_cost: 300,
-        ffp_units_cost: 700,
-        plt_units_cost: 650,
-        cryo_units_cost: 600,
-        cell_saver_cost: 550,
-      },
-    ],
-  };
-
-  exploreChartData: ExploreChartData = { ...this.exploreDummyData };
+  exploreChartData: ExploreChartData = {};
 
   // --- Filters State ---
   _initialFilterValues = {
@@ -259,6 +191,8 @@ export class RootStore {
     vent: null as boolean | null,
     stroke: null as boolean | null,
     ecmo: null as boolean | null,
+    departmentIds: [] as string[],
+    procedureIds: [] as string[],
   };
 
   histogramData: Record<string, HistogramData> = {};
@@ -304,6 +238,7 @@ export class RootStore {
       uiState: computed,
       dashboardChartData: observable.ref,
       exploreChartData: observable.ref,
+      procedureHierarchy: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
     });
@@ -328,6 +263,15 @@ export class RootStore {
         },
       }), { [filterKey]: value });
     },
+    updateProcedureFilters: (filters: Pick<ApplicationState['filterValues'], 'departmentIds' | 'procedureIds'>) => {
+      this.applyAction('Update Department and Procedure Filters', (state, nextFilters) => ({
+        ...state,
+        filterValues: {
+          ...state.filterValues,
+          ...nextFilters,
+        },
+      }), filters);
+    },
     resetAllFilters: () => {
       this.applyAction('Reset All Filters', (state) => {
         const initial = this.initialFilterValues;
@@ -349,6 +293,8 @@ export class RootStore {
           vent: initial.vent,
           stroke: initial.stroke,
           ecmo: initial.ecmo,
+          departmentIds: initial.departmentIds,
+          procedureIds: initial.procedureIds,
         }));
 
         return {
@@ -439,6 +385,15 @@ export class RootStore {
         },
       }), initialFilters);
     },
+    resetProcedureFilters: (initialFilters: Pick<ApplicationState['filterValues'], 'departmentIds' | 'procedureIds'>) => {
+      this.applyAction('Reset Department and Procedure Filters', (state, filters) => ({
+        ...state,
+        filterValues: {
+          ...state.filterValues,
+          ...filters,
+        },
+      }), initialFilters);
+    },
     clearSelection: () => {
       this.applyAction('Clear Selected Visits', (state) => ({
         ...state,
@@ -478,6 +433,8 @@ export class RootStore {
         vent: this.initialFilterValues.vent,
         stroke: this.initialFilterValues.stroke,
         ecmo: this.initialFilterValues.ecmo,
+        departmentIds: [...this.initialFilterValues.departmentIds],
+        procedureIds: [...this.initialFilterValues.procedureIds],
       },
       selections: {
         selectedTimePeriods: [],
@@ -499,7 +456,7 @@ export class RootStore {
         leftToolbarOpened: true,
         activeLeftPanel: null,
         selectedVisitNo: null,
-        filterPanelExpandedItems: ['date-filters', 'blood-component-filters'],
+        filterPanelExpandedItems: ['date-filters', 'blood-component-filters', 'department-procedure-filters'],
         showFilterHistograms: false,
       },
     };
@@ -685,7 +642,8 @@ export class RootStore {
         const artifacts = provenance.getAllArtifacts(node.id);
         if (!artifacts.length) return [];
 
-        const timestamp = (node as any).createdOn || node.metadata?.createdOn || 0;
+        const nodeWithCreatedOn = node as { createdOn?: number; metadata?: { createdOn?: number } };
+        const timestamp = nodeWithCreatedOn.createdOn || nodeWithCreatedOn.metadata?.createdOn || 0;
         const screenshot = artifacts.find((a) => a.artifact.type === 'screenshot')?.artifact.value;
         const names = new Set(
           artifacts
@@ -832,31 +790,10 @@ export class RootStore {
     }
   }
 
-  getShareUrl(nodeId: NodeID): string | null {
+  getShareUrl(_nodeId: NodeID): string | null {
     if (!this.provenance) return null;
-
-    const state = this.provenance.getState(nodeId);
-
-    // Try accessing Trrack's serializer, fallback to manual LZString
-    let serializedState: string | null = null;
-    const serializer = (this.provenance.config as any)._serializer; // eslint-disable-line @typescript-eslint/no-explicit-any
-
-    if (serializer) {
-      serializedState = serializer(state);
-    } else {
-      console.warn('⚠️ [ProvenanceStore] Serializer not found on config. Using fallback LZString.');
-      try {
-        serializedState = LZString.compressToEncodedURIComponent(JSON.stringify(state));
-      } catch (e) {
-        console.error('Error serializing state:', e);
-      }
-    }
-
-    if (serializedState) {
-      const baseUrl = window.location.origin + window.location.pathname;
-      return `${baseUrl}?config=${serializedState}`;
-    }
-    return null;
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}?config=${this.provenance.exportState()}`;
   }
   // endregion
 
@@ -1019,6 +956,7 @@ export class RootStore {
             `${aggFn}(plt_units_cost) AS ${aggregation}_plt_units_cost`,
             `${aggFn}(ffp_units_cost) AS ${aggregation}_ffp_units_cost`,
             `${aggFn}(cryo_units_cost) AS ${aggregation}_cryo_units_cost`,
+            `${aggFn}(whole_cost) AS ${aggregation}_whole_cost`,
             `${aggFn}(cell_saver_cost) AS ${aggregation}_cell_saver_cost`,
           ];
         }
@@ -1065,6 +1003,7 @@ export class RootStore {
                     plt_units_cost: Number(row[`${aggType}_plt_units_cost`] || 0),
                     ffp_units_cost: Number(row[`${aggType}_ffp_units_cost`] || 0),
                     cryo_units_cost: Number(row[`${aggType}_cryo_units_cost`] || 0),
+                    whole_cost: Number(row[`${aggType}_whole_cost`] || 0),
                     cell_saver_cost: Number(row[`${aggType}_cell_saver_cost`] || 0),
                   },
                   counts_per_period: Number(row.visit_count || 0),
@@ -1092,6 +1031,7 @@ export class RootStore {
                       plt_units_cost: existing.data.plt_units_cost + curr.data.plt_units_cost,
                       ffp_units_cost: existing.data.ffp_units_cost + curr.data.ffp_units_cost,
                       cryo_units_cost: existing.data.cryo_units_cost + curr.data.cryo_units_cost,
+                      whole_cost: existing.data.whole_cost + curr.data.whole_cost,
                       cell_saver_cost: existing.data.cell_saver_cost + curr.data.cell_saver_cost,
                     };
                   } else {
@@ -1150,8 +1090,8 @@ export class RootStore {
     const latestDate = new Date(latestDateRow.latest_date as string);
     // Get the start of the current period
     const currentPeriodStart = new Date(latestDate.getTime() - (30 * 24 * 60 * 60 * 1000));
-    const currentPeriodStartMonth = currentPeriodStart.getMonth();
-    const currentPeriodStartYear = currentPeriodStart.getFullYear();
+    const currentPeriodStartMonth = currentPeriodStart.getUTCMonth();
+    const currentPeriodStartYear = currentPeriodStart.getUTCFullYear();
     // Get the start of the comparison period
     let comparisonMonth = currentPeriodStartMonth - 1;
     let comparisonYear = currentPeriodStartYear;
@@ -1159,9 +1099,9 @@ export class RootStore {
       comparisonMonth = 11;
       comparisonYear -= 1;
     }
-    const comparisonPeriodStart = new Date(comparisonYear, comparisonMonth, 1);
-    const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
-    const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
+    const comparisonPeriodStart = new Date(Date.UTC(comparisonYear, comparisonMonth, 1));
+    const comparisonPeriodEnd = new Date(Date.UTC(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999));
+    const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
     // Build the select statements for the stats data
     const statSelects = [
       // Visit counts
@@ -1182,9 +1122,9 @@ export class RootStore {
         if (yAxisVar === 'total_blood_product_cost') {
           return `
                 ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
-                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_current_${aggregation},
+                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_current_${aggregation},
                 ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
-                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
+                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
               `;
         }
         // Exception: Case mix index
@@ -1219,9 +1159,9 @@ export class RootStore {
     // Get the sparkline months from the last 6 months
     const sparklineMonths: string[] = [];
     for (let i = 5; i >= 0; i -= 1) {
-      const d = new Date(latestDate.getFullYear(), latestDate.getMonth() - i, 1);
-      const year = d.getFullYear();
-      const monthShort = d.toLocaleString('en-US', { month: 'short' });
+      const d = new Date(Date.UTC(latestDate.getUTCFullYear(), latestDate.getUTCMonth() - i, 1));
+      const year = d.getUTCFullYear();
+      const monthShort = d.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
       sparklineMonths.push(`${year}-${monthShort}`);
     }
 
@@ -1233,7 +1173,7 @@ export class RootStore {
       // Exception: Total blood product cost
       if (yAxisVar === 'total_blood_product_cost') {
         sparklineSelects.push(
-          `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
+          `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
         );
         return;
       }
@@ -1343,11 +1283,11 @@ export class RootStore {
     const currentConfigs = this.exploreChartConfigs;
     const currentLayouts = this.exploreChartLayouts;
     const newConfigs = [config, ...currentConfigs];
-    const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 1 }));
+    const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 2 }));
     shifted.unshift({
-      i: config.chartId, x: 0, y: 0, w: 2, h: 1, maxH: 2,
+      i: config.chartId, x: 0, y: 0, w: 4, h: 3, maxH: 4,
     });
-    const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 2) };
+    const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 4) };
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Explore Chart');
     this._transientExploreLayouts = null;
   }
@@ -1363,6 +1303,10 @@ export class RootStore {
     this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Explore Chart');
     this._transientExploreLayouts = null;
   }
+
+  updateExploreChartConfig(updatedConfig: ExploreChartConfig) {
+    this.exploreChartConfigs = this.exploreChartConfigs.map((cfg) => (cfg.chartId === updatedConfig.chartId ? updatedConfig : cfg));
+  }
   // endregion
 
   // region Filters
@@ -1377,10 +1321,18 @@ export class RootStore {
     if (!rawFilters || Object.keys(rawFilters).length === 0) {
       return this._initialFilterValues;
     }
-    return {
+
+    const mergedFilters = {
+      ...this._initialFilterValues,
       ...rawFilters,
-      dateFrom: new Date(rawFilters.dateFrom),
-      dateTo: new Date(rawFilters.dateTo),
+      departmentIds: Array.isArray(rawFilters.departmentIds) ? rawFilters.departmentIds : this._initialFilterValues.departmentIds,
+      procedureIds: Array.isArray(rawFilters.procedureIds) ? rawFilters.procedureIds : this._initialFilterValues.procedureIds,
+    };
+
+    return {
+      ...mergedFilters,
+      dateFrom: new Date(mergedFilters.dateFrom),
+      dateTo: new Date(mergedFilters.dateTo),
     };
   }
 
@@ -1403,6 +1355,13 @@ export class RootStore {
 
     // Update the filter value
     this.actions.updateFilter(key as keyof ApplicationState['filterValues'], val as ApplicationState['filterValues'][keyof ApplicationState['filterValues']]);
+  }
+
+  setProcedureFilters(departmentIds: string[], procedureIds: string[]) {
+    this.actions.updateProcedureFilters({
+      departmentIds: [...departmentIds],
+      procedureIds: [...procedureIds],
+    });
   }
 
   async calculateDefaultFilterValues() {
@@ -1492,10 +1451,44 @@ export class RootStore {
   }
 
   /**
+   * Returns the number of department/procedure filters that are applied
+   */
+  get procedureFiltersAppliedCount(): number {
+    let count = 0;
+    const { departmentIds, procedureIds } = this.filterValues;
+    if (departmentIds.length > 0) count += 1;
+    if (procedureIds.length > 0) count += 1;
+    return count;
+  }
+
+  /**
+   * Returns number of departments represented by current department/procedure filters.
+   */
+  get procedureDepartmentsAppliedCount(): number {
+    const { departmentIds, procedureIds } = this.filterValues;
+    const involvedDepartmentIds = new Set(departmentIds);
+
+    for (const procedureId of procedureIds) {
+      if (procedureId) {
+        const separatorIndex = procedureId.indexOf('__');
+        if (separatorIndex > 0) {
+          involvedDepartmentIds.add(procedureId.slice(0, separatorIndex));
+        }
+      }
+    }
+
+    return involvedDepartmentIds.size;
+  }
+
+  /**
    * Returns the total number of filters that are applied
    */
   get totalFiltersAppliedCount(): number {
-    return this.dateFiltersAppliedCount + this.bloodComponentFiltersAppliedCount + this.medicationsFiltersAppliedCount + this.outcomeFiltersAppliedCount;
+    return this.dateFiltersAppliedCount
+      + this.bloodComponentFiltersAppliedCount
+      + this.medicationsFiltersAppliedCount
+      + this.outcomeFiltersAppliedCount
+      + this.procedureFiltersAppliedCount;
   }
 
   resetAllFilters() {
@@ -1534,6 +1527,13 @@ export class RootStore {
       vent: this._initialFilterValues.vent,
       stroke: this._initialFilterValues.stroke,
       ecmo: this._initialFilterValues.ecmo,
+    });
+  }
+
+  resetProcedureFilters() {
+    this.actions.resetProcedureFilters({
+      departmentIds: [...this._initialFilterValues.departmentIds],
+      procedureIds: [...this._initialFilterValues.procedureIds],
     });
   }
 
@@ -1655,6 +1655,10 @@ export class RootStore {
       () => this.state.settings.unitCosts,
       async () => { await this.updateCostsTable(); },
     );
+    reaction(
+      () => this.state.explore.chartConfigs,
+      async () => { await this.computeExploreChartData(); },
+    );
   }
 
   // endregion
@@ -1669,21 +1673,45 @@ export class RootStore {
     const dateTo = filterValues.dateTo.toISOString();
 
     // Generate the filter conditions --------
-    const filterConditions = Object.entries(filterValues)
-      // Filter out date filters (handled separately)
-      .filter(([key, value]) => {
-        if (key === 'dateFrom' || key === 'dateTo') return false;
-        const initVal = this._initialFilterValues[key as keyof typeof this._initialFilterValues];
-        return JSON.stringify(value) !== JSON.stringify(initVal);
-      })
-      // Map the filter values to SQL conditions
-      .map(([key, value]) => {
-        if (Array.isArray(value)) return `${key} BETWEEN ${value[0]} AND ${value[1]}`;
-        if (typeof value === 'boolean') return `${key} = ${value ? 1 : 0}`;
-        return null;
-      })
-      // Filter out null values
-      .filter((c): c is string => !!c);
+    const filterConditions: string[] = [];
+    const sqlString = (value: string) => `'${value.replace(/'/g, "''")}'`;
+
+    const rangeFilterKeys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml', 'los'] as const;
+    rangeFilterKeys.forEach((key) => {
+      const [min, max] = filterValues[key];
+      const [initialMin, initialMax] = this._initialFilterValues[key];
+      if (min !== initialMin || max !== initialMax) {
+        filterConditions.push(`${key} BETWEEN ${min} AND ${max}`);
+      }
+    });
+
+    const booleanFilterKeys = ['b12', 'iron', 'antifibrinolytic', 'death', 'vent', 'stroke', 'ecmo'] as const;
+    booleanFilterKeys.forEach((key) => {
+      const value = filterValues[key];
+      if (typeof value === 'boolean') {
+        filterConditions.push(`${key} = ${value ? 1 : 0}`);
+      }
+    });
+
+    // Use list-native predicates to avoid UNNEST/CTE rescans on each filter update.
+    // Only allow slug-like IDs (alphanumeric, underscore, hyphen) to be interpolated into SQL.
+    const safeIdPattern = /^[A-Za-z0-9_-]+$/;
+
+    if (filterValues.departmentIds.length > 0) {
+      const safeDepartmentIds = filterValues.departmentIds.filter((id) => safeIdPattern.test(id));
+      if (safeDepartmentIds.length > 0) {
+        const departmentIdList = safeDepartmentIds.map(sqlString).join(', ');
+        filterConditions.push(`list_has_any(department_ids, [${departmentIdList}]::VARCHAR[])`);
+      }
+    }
+
+    if (filterValues.procedureIds.length > 0) {
+      const safeProcedureIds = filterValues.procedureIds.filter((id) => safeIdPattern.test(id));
+      if (safeProcedureIds.length > 0) {
+        const procedureIdList = safeProcedureIds.map(sqlString).join(', ');
+        filterConditions.push(`list_has_any(procedure_ids, [${procedureIdList}]::VARCHAR[])`);
+      }
+    }
 
     // Add date filters if applied
     if (this.dateFiltersAppliedCount > 0) {
@@ -1706,8 +1734,245 @@ export class RootStore {
     await this.updateFilteredVisitsLength();
     await this.computeDashboardChartData();
     await this.computeDashboardStatData();
+    await this.computeExploreChartData();
     await this.generateHistogramData();
     await this.updateSelectedVisits();
+  }
+
+  async computeExploreChartData(): Promise<void> {
+    const promises = this.exploreChartConfigs.map(async (config) => {
+      if (config.chartType === 'exploreTable') {
+        // Configuration of table (rowVar, columns, aggregation, etc.)
+        const tableConfig = config as ExploreTableConfig;
+
+        // Build column selection clauses based on config.columns
+        const columnClauses: string[] = [];
+
+        // Iterate over the columns and build the column selection clauses
+        tableConfig.columns.forEach((col) => {
+          const { colVar } = col;
+          let colAggregation = config.aggregation || col.aggregation;
+
+          if (colAggregation === 'none' && colVar !== tableConfig.rowVar) {
+            colAggregation = 'sum';
+          }
+
+          const aggFn = colAggregation.toUpperCase();
+
+          // If this column is the grouping variable, select it directly
+          if (colVar === tableConfig.rowVar) {
+            columnClauses.push(colVar);
+            return;
+          }
+
+          // Special case: percent_*_rbc columns
+          if (colVar.startsWith('percent_')) {
+            const match = colVar.match(/percent_(\d+|above_5)_rbc/);
+            if (match) {
+              const count = match[1];
+              const condition = count === 'above_5' ? 'rbc_units >= 5' : `rbc_units = ${count}`;
+
+              if (colAggregation === 'avg') {
+                columnClauses.push(`AVG(CAST(${condition} AS INT)) * 100.0 AS ${colVar}`);
+              } else if (colAggregation === 'sum') {
+                columnClauses.push(`SUM(CAST(${condition} AS INT)) AS ${colVar}`);
+              }
+            }
+            return;
+          }
+
+          // Special case: cases (visit count)
+          if (colVar === 'cases') {
+            columnClauses.push(`COUNT(*) AS ${colVar}`);
+            return;
+          }
+
+          // Special case: identity columns (attending_provider, year, quarter) - return strings (e.g. Dr. Provider)
+          if (['attending_provider', 'year', 'quarter'].includes(colVar)) {
+            if (colVar === tableConfig.rowVar) {
+              columnClauses.push(`${colVar}`);
+            } else {
+              columnClauses.push(`string_agg(DISTINCT CAST(${colVar} AS VARCHAR), ', ') AS ${colVar}`);
+            }
+            return;
+          }
+
+          // Special case: total_cost (stacked bar components)
+          if (colVar === 'total_cost') {
+            const comps = ['rbc_units_cost', 'ffp_units_cost', 'plt_units_cost', 'cryo_units_cost', 'whole_cost'];
+            comps.forEach((c) => {
+              columnClauses.push(`${aggFn}(${c}) AS ${c.replace('_units_cost', '_cost')}`);
+            });
+            columnClauses.push(`${aggFn}(${comps.join(' + ')}) AS total_cost`);
+            return;
+          }
+
+          // Special case: salvage_savings
+          if (colVar === 'salvage_savings') {
+            columnClauses.push(`${aggFn}(cell_saver_cost) AS salvage_savings`);
+            return;
+          }
+
+          // Standard numeric & boolean fields
+          const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
+          if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
+            if (colAggregation === 'avg') {
+              // Calculate percentage: AVG(1|0) * 100
+              columnClauses.push(`AVG(CAST(${colVar} AS INT)) * 100.0 AS ${colVar}`);
+            } else {
+              // Count occurrences: SUM(1|0)
+              columnClauses.push(`SUM(CAST(${colVar} AS INT)) AS ${colVar}`);
+            }
+          } else if (col.type === 'violin') {
+            // Special case for violin: fetch all values as a list for distribution
+            // We use apr_drg_weight specifically for drg_weight colVar
+            const dbCol = colVar === 'drg_weight' ? 'apr_drg_weight' : colVar;
+            columnClauses.push(`list(CAST(${dbCol} AS DOUBLE)) AS ${colVar}`);
+          } else {
+            // Standard numeric aggregation
+            columnClauses.push(`${aggFn}(${colVar}) AS ${colVar}`);
+          }
+        });
+
+        // Ensure the grouping variable is selected
+        if (!columnClauses.some((clause) => clause.includes(tableConfig.rowVar) && !clause.includes('STRING_AGG'))) {
+          columnClauses.unshift(tableConfig.rowVar);
+        }
+
+        // Build the query
+        const query = `
+          SELECT 
+            ${columnClauses.join(',\n            ')}
+          FROM filteredVisits
+          GROUP BY ${tableConfig.rowVar}
+          ORDER BY ${tableConfig.rowVar};
+        `;
+
+        try {
+          const queryResult = await this.duckDB!.query(query);
+          const rows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as ExploreTableRow);
+
+          if (tableConfig.twoValsPerRow) {
+            console.warn('twoValsPerRow is not yet fully implemented, using basic data');
+          }
+
+          return { id: config.chartId, data: rows };
+        } catch (error) {
+          console.error('Error executing explore table query:', error);
+          return { id: config.chartId, data: [] };
+        }
+      }
+      if (config.chartType === 'dumbbell') {
+        // TODO: Don't limit to only 10,000 surgeries.
+        const query = `
+          SELECT
+             CAST(case_id AS VARCHAR) as case_id,
+             surgeon_prov_id,
+             surgeon_prov_name,
+             CAST(visit_no AS VARCHAR) as visit_no,
+             pre_hgb,
+             post_hgb,
+
+             pre_plt,
+             post_plt,
+             pre_fibrinogen,
+             post_fibrinogen,
+             pre_inr,
+             post_inr,
+             anesth_prov_id,
+             anesth_prov_name,
+             intraop_rbc_units,
+             intraop_plt_units,
+             intraop_cryo_units,
+             intraop_ffp_units,
+             intraop_whole_units,
+             intraop_cell_saver_ml,
+             (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
+          FROM filteredSurgeryCases
+          ORDER BY surgery_start_dtm
+          LIMIT 10000
+        `;
+        try {
+          const result = await this.duckDB!.query(query);
+          const data = result.toArray().map((row) => row.toJSON());
+          return { id: config.chartId, data };
+        } catch (error) {
+          console.error('Error executing dumbbell query:', error);
+          return { id: config.chartId, data: [] };
+        }
+      }
+      if (config.chartType === 'scatterPlot') {
+        // TODO: Don't limit to only 10,000 surgeries.
+        const query = `
+           SELECT
+             CAST(case_id AS VARCHAR) as case_id,
+             surgeon_prov_id,
+             surgeon_prov_name,
+             anesth_prov_id,
+             anesth_prov_name,
+             year,
+             quarter,
+             month,
+             
+             intraop_rbc_units AS rbc_units,
+             intraop_ffp_units AS ffp_units,
+             intraop_plt_units AS plt_units,
+             intraop_cryo_units AS cryo_units,
+             intraop_whole_units AS whole_units,
+             intraop_cell_saver_ml AS cell_saver_ml,
+             
+             los,
+             death,
+             vent,
+             stroke,
+             ecmo,
+             
+             pre_hgb, post_hgb,
+             pre_plt, post_plt,
+             pre_fibrinogen, post_fibrinogen,
+             pre_inr, post_inr,
+             
+             total_cost,
+             rbc_cost
+           FROM filteredSurgeryCases
+           LIMIT 10000
+        `;
+        try {
+          const result = await this.duckDB!.query(query);
+          const data = result.toArray().map((row) => row.toJSON());
+
+          // We need to group by the 'grouping variable'.
+          const groupingVar = 'groupingVar' in config ? String((config as Record<string, unknown>).groupingVar) : 'surgeon_prov_id';
+
+          // We can do the grouping in JS.
+          const grouped: Record<string, Record<string, unknown>[]> = {};
+          data.forEach((row) => {
+            const key = String(row[groupingVar] || 'Unknown');
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(row as Record<string, unknown>);
+          });
+
+          const formattedData = Object.entries(grouped).map(([name, groupData]) => ({
+            name,
+            data: groupData,
+          }));
+
+          return { id: config.chartId, data: formattedData };
+        } catch (error) {
+          console.error('Error executing scatter query:', error);
+          return { id: config.chartId, data: [] };
+        }
+      }
+      return { id: config.chartId, data: [] };
+    });
+
+    const results = await Promise.all(promises);
+    const data: ExploreChartData = {};
+    results.forEach(({ id, data: d }) => {
+      data[id] = d;
+    });
+
+    this.exploreChartData = data;
   }
 
   async updateFilteredVisitsLength() {
@@ -1726,7 +1991,7 @@ export class RootStore {
     if (!this.duckDB) return;
     await this.duckDB.query(`
       DELETE FROM costs;
-      INSERT INTO costs VALUES (${this.unitCosts.rbc_units_cost}, ${this.unitCosts.ffp_units_cost}, ${this.unitCosts.plt_units_cost}, ${this.unitCosts.cryo_units_cost}, ${this.unitCosts.cell_saver_cost});
+      INSERT INTO costs VALUES (${this.unitCosts.rbc_units_cost}, ${this.unitCosts.ffp_units_cost}, ${this.unitCosts.plt_units_cost}, ${this.unitCosts.cryo_units_cost}, ${this.unitCosts.whole_cost}, ${this.unitCosts.cell_saver_cost});
     `);
     await this.computeDashboardStatData();
     await this.computeDashboardChartData();

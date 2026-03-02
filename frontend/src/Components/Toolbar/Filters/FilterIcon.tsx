@@ -1,6 +1,6 @@
 import { Indicator } from '@mantine/core';
 import { IconFilter } from '@tabler/icons-react';
-import { useObserver } from 'mobx-react';
+import { useObserver } from 'mobx-react-lite';
 import { useContext } from 'react';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';

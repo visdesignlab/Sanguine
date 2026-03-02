@@ -20,11 +20,12 @@ import {
   IconChartBar, IconCircle, IconCircleFilled, IconRestore,
 } from '@tabler/icons-react';
 import { useContext } from 'react';
-import { useObserver } from 'mobx-react';
+import { useObserver } from 'mobx-react-lite';
 import { DEFAULT_DATA_COLOR, useThemeConstants } from '../../../Theme/mantineTheme';
 import { FilterRangeSlider } from './FilterRangeSlider';
 import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
+import { DepartmentProcedureFilter } from './DepartmentProcedureFilter';
 import classes from '../../../Shell/Shell.module.css';
 import { FilterComponent } from './FilterComponent';
 import {
@@ -98,6 +99,7 @@ export function FilterPanel() {
           multiple
           value={store.state.ui.filterPanelExpandedItems}
           onChange={(value) => store.actions.setUiState({ filterPanelExpandedItems: value })}
+          pb="xl"
         >
           {/* Date Filters */}
           <Accordion.Item value="date-filters" key="date-filters">
@@ -554,6 +556,19 @@ export function FilterPanel() {
                   <FilterRangeSlider varName="los" />
                 </Input.Wrapper>
               </Stack>
+            </Accordion.Panel>
+          </Accordion.Item>
+
+          {/* Department & Procedure Filters */}
+          <Accordion.Item value="department-procedure-filters" key="department-procedure-filters">
+            <FilterHeader
+              countName="procedureDepartmentsAppliedCount"
+              title="Department & Procedure"
+              tooltipLabel="Number of involved departments"
+              resetFunc={() => store.resetProcedureFilters()}
+            />
+            <Accordion.Panel styles={{ content: { paddingLeft: 8, paddingRight: 8 } }}>
+              <DepartmentProcedureFilter />
             </Accordion.Panel>
           </Accordion.Item>
         </Accordion>

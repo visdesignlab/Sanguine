@@ -38,7 +38,6 @@ import { captureScreenshot } from '../../Utils/screenshotUtils';
 import { useThemeConstants } from '../../Theme/mantineTheme';
 import { formatStateDetailName, formatStateDetailValue } from '../../Utils/humanReadableColsVals';
 import { formatTimestamp } from '../../Utils/dates';
-import classes from '../../Shell/Shell.module.css';
 import { Store, ApplicationState } from '../../Store/Store';
 import {
   AGGREGATION_OPTIONS,
@@ -90,9 +89,13 @@ function StateDetails({ state }: { state: ApplicationState }) {
     const items: string[] = [];
     if (explore?.chartConfigs) {
       explore.chartConfigs.forEach((config: ExploreChartConfig) => {
-        const xLabel = formatStateDetailName(config.xAxisVar);
-        const yLabel = formatStateDetailName(config.yAxisVar);
-        items.push(`Chart: ${yLabel} vs ${xLabel}`);
+        if (config.chartType === 'exploreTable') {
+          items.push('Table: Explore Data');
+        } else {
+          const xLabel = formatStateDetailName(config.xAxisVar as string);
+          const yLabel = formatStateDetailName(config.yAxisVar as string);
+          items.push(`Chart: ${yLabel} vs ${xLabel}`);
+        }
       });
     }
     return items;

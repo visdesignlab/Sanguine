@@ -26,6 +26,7 @@ export function BloodProductCostSettings() {
       plt_units_cost: Number(plt),
       ffp_units_cost: Number(ffp),
       cryo_units_cost: Number(cryo),
+      whole_cost: store.unitCosts.whole_cost,
       cell_saver_cost: Number(cellSaver),
     };
     setLoading(false);
@@ -106,9 +107,9 @@ export function BloodProductCostSettings() {
             isAllowed={(value) => value.value.length < 12}
           />
           {dirty && (
-          <Flex direction="row" justify="flex-end">
-            <Button mt="md" onClick={() => { saveCosts(rbcCost, pltCost, ffpCost, cryoCost, cellSaverCost); }} variant="filled" color="blue">Apply</Button>
-          </Flex>
+            <Flex direction="row" justify="flex-end">
+              <Button mt="md" onClick={() => { saveCosts(rbcCost, pltCost, ffpCost, cryoCost, cellSaverCost); }} variant="filled" color="blue">Apply</Button>
+            </Flex>
           )}
         </Box>
       </Accordion.Panel>

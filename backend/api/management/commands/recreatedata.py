@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 import subprocess
 
+
 class Command(BaseCommand):
     help = "Recreate all data: migrate, destroy, mock, and generate parquets"
 

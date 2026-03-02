@@ -281,8 +281,16 @@ class Command(BaseCommand):
                         "apr_drg_rom": fake.random_element(elements=(1, 2, 3, 4, None)),
                         "apr_drg_soi": fake.random_element(elements=(1, 2, 3, 4, None)),
                         "apr_drg_desc": fake.sentence(),
-                        "apr_drg_weight": str(fake.random_int(1, 999)).zfill(3),
-                        "ms_drg_weight": str(fake.random_int(1, 999)).zfill(3),
+                        "apr_drg_weight": (
+                            round(random.uniform(0.5, 2.5), 4) if (r := random.random()) < 0.8
+                            else round(random.uniform(2.5, 5.0), 4) if r < 0.95
+                            else round(random.uniform(5.0, 25.0), 4)
+                        ),
+                        "ms_drg_weight": (
+                            round(random.uniform(0.5, 2.5), 4) if (r := random.random()) < 0.8
+                            else round(random.uniform(2.5, 5.0), 4) if r < 0.95
+                            else round(random.uniform(5.0, 25.0), 4)
+                        ),
                         **cci,
                         "cci_score": sum(cci.values()),
                     }
@@ -759,7 +767,12 @@ class Command(BaseCommand):
                             cryo_units = fake.random_int(min=0, max=1)
                     cryo = cryo_units
 
-                    whole = 0
+                    # Whole Blood if HGB < 7
+                    whole_units = 0
+                    if lab["result_desc"] in ["HGB", "Hemoglobin"]:
+                        if lab["result_value"] < 7:
+                            whole_units = fake.random_int(min=0, max=2)
+                    whole = whole_units
                     type = fake.random_element(elements=("unit", "vol"))
 
                     total_transfused = sum((x if x is not None else 0) for x in (rbcs, cell_saver, ffp, plt, cryo, whole))
