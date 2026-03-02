@@ -1,9 +1,9 @@
 import {
   useCallback, useContext, useMemo, useRef,
 } from 'react';
-import { useObserver } from 'mobx-react';
 import { range, scaleBand, scaleLinear } from 'd3';
 import { Flex, Input, Tooltip } from '@mantine/core';
+import { useObserver } from 'mobx-react-lite';
 import { Store } from '../../../Store/Store';
 import { HistogramData } from '../../../Types/database';
 import { BLOOD_PRODUCT_COLOR_THEME } from '../../../Types/application';
