@@ -25,7 +25,7 @@ export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: { varN
   const clampedMax = useMemo(
     // () => Math.min(ProductMaximums[varName] ?? MANUAL_INFINITY, initialFilterMax),
     () => Math.min(MANUAL_INFINITY, initialFilterMax),
-    [varName, initialFilterMax],
+    [initialFilterMax],
   );
 
   // Local state for smooth sliding

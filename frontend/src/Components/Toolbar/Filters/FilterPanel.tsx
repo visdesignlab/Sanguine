@@ -28,9 +28,7 @@ import { FilterHeader } from './FilterHeader';
 import { DepartmentProcedureFilter } from './DepartmentProcedureFilter';
 import classes from '../../../Shell/Shell.module.css';
 import { FilterComponent } from './FilterComponent';
-import {
-  BLOOD_COMPONENTS, BLOOD_PRODUCTS_ARRAY, BloodComponent, RBC_UNITS,
-} from '../../../Types/bloodProducts';
+import { BLOOD_PRODUCTS_ARRAY, BloodComponent } from '../../../Types/bloodProducts';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
 

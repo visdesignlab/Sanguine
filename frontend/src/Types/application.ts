@@ -1,11 +1,5 @@
 // Time formatting ------------------------------------------------
 // Time period types
-// TODO: Update ScatterPlot data type
-import { ScatterChartSeries } from '@mantine/charts';
-import {
-  BLOOD_COMPONENTS,
-  BloodComponent,
-} from './bloodProducts';
 
 export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
 export type Month = `${number}-${string}`; // e.g. "2023-Jan"
