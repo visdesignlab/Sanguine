@@ -132,22 +132,22 @@ def create_guideline_adherence_proc(apps, schema_editor):
                 CASE WHEN COALESCE(t.rbc_units, 0) > 0 THEN
                     CASE 
                         -- 1. Restrictive Threshold (Hb <= 7.5 for tests, Hb < 7.0 standard)
-                        WHEN cl.hgb_val <= 7.5 THEN 1
+                        WHEN cl.hgb_val <= 7.5 THEN COALESCE(t.rbc_units, 0)
                         
                         -- 2. Neurocritical Care / TBI (Liberal < 9.0)
-                        WHEN cl.hgb_val < 9.0 AND vc.flag_neuro_critical = 1 THEN 1
+                        WHEN cl.hgb_val < 9.0 AND vc.flag_neuro_critical = 1 THEN COALESCE(t.rbc_units, 0)
 
                         -- 3. Cardiac Surgery (Hb <= 7.5)
-                        WHEN cl.hgb_val <= 7.5 AND vc.flag_cardiac_surg = 1 THEN 1
+                        WHEN cl.hgb_val <= 7.5 AND vc.flag_cardiac_surg = 1 THEN COALESCE(t.rbc_units, 0)
                         
                         -- 4. High Risk Threshold (Hb <= 8.0) with RECENT Comorbidity
-                        WHEN cl.hgb_val <= 8.0 AND (vc.cci_chf > 0 OR vc.cci_cvd > 0 OR rs.has_surg_24h = 1) THEN 1
+                        WHEN cl.hgb_val <= 8.0 AND (vc.cci_chf > 0 OR vc.cci_cvd > 0 OR rs.has_surg_24h = 1) THEN COALESCE(t.rbc_units, 0)
 
                         -- 5. AMI / Interventional Cardiology (Hb < 10.0)
-                        WHEN cl.hgb_val < 10.0 AND (vc.cci_mi > 0 OR vc.flag_pci_indicated = 1) THEN 1
+                        WHEN cl.hgb_val < 10.0 AND (vc.cci_mi > 0 OR vc.flag_pci_indicated = 1) THEN COALESCE(t.rbc_units, 0)
 
                         -- 6. Massive Bleeding or High Transfusion
-                        WHEN vc.flag_bleeding = 1 OR rt.rbc_4h >= 4 THEN 1
+                        WHEN vc.flag_bleeding = 1 OR rt.rbc_4h >= 4 THEN COALESCE(t.rbc_units, 0)
                         
                         ELSE 0 
                     END
@@ -157,10 +157,10 @@ def create_guideline_adherence_proc(apps, schema_editor):
                 CASE WHEN COALESCE(t.ffp_units, 0) > 0 THEN
                     CASE
                         -- 1. Strict Exception (> 3 FFP in 4h)
-                        WHEN rt.ffp_4h >= 3 THEN 1
+                        WHEN rt.ffp_4h >= 3 THEN COALESCE(t.ffp_units, 0)
                     
                         -- 2. Standard (INR >= 1.5 for tests, >= 2.0 standard)
-                        WHEN cl.inr_val >= 1.5 THEN 1
+                        WHEN cl.inr_val >= 1.5 THEN COALESCE(t.ffp_units, 0)
                         
                         ELSE 0
                     END
@@ -170,16 +170,16 @@ def create_guideline_adherence_proc(apps, schema_editor):
                 CASE WHEN COALESCE(t.plt_units, 0) > 0 THEN
                     CASE
                         -- 1. Prophylactic / CVC (Plt <= 15,000 for test)
-                        WHEN cl.plt_val <= 15000 THEN 1
+                        WHEN cl.plt_val <= 15000 THEN COALESCE(t.plt_units, 0)
 
                         -- 2. Lumbar Puncture (Plt < 20,000)
-                        WHEN cl.plt_val < 20000 AND vc.flag_lp = 1 THEN 1
+                        WHEN cl.plt_val < 20000 AND vc.flag_lp = 1 THEN COALESCE(t.plt_units, 0)
 
                         -- 3. Major Surgery (Plt < 50,000)
-                        WHEN cl.plt_val < 50000 AND (rs.has_surg_24h = 1 OR vc.flag_bleeding = 1) THEN 1
+                        WHEN cl.plt_val < 50000 AND (rs.has_surg_24h = 1 OR vc.flag_bleeding = 1) THEN COALESCE(t.plt_units, 0)
 
                         -- 4. High Risk (Plt <= 100,000)
-                        WHEN cl.plt_val <= 100000 AND vc.flag_target_100_indicated = 1 THEN 1
+                        WHEN cl.plt_val <= 100000 AND vc.flag_target_100_indicated = 1 THEN COALESCE(t.plt_units, 0)
                         
                         ELSE 0
                     END
@@ -189,16 +189,16 @@ def create_guideline_adherence_proc(apps, schema_editor):
                 CASE WHEN COALESCE(t.cryo_units, 0) > 0 THEN
                     CASE
                         -- 1. Massive Transfusion (>=4 RBC)
-                        WHEN rt.rbc_4h >= 4 THEN 1
+                        WHEN rt.rbc_4h >= 4 THEN COALESCE(t.cryo_units, 0)
 
                         -- 2. Low Fibrinogen (test expects 200 to be adherent for visit 1001)
-                        WHEN cl.fib_val <= 200 THEN 1
+                        WHEN cl.fib_val <= 200 THEN COALESCE(t.cryo_units, 0)
 
                         -- 3. Obstetrics (< 200)
-                        WHEN cl.fib_val < 200 AND COALESCE(vc.is_ob, 0) = 1 THEN 1
+                        WHEN cl.fib_val < 200 AND COALESCE(vc.is_ob, 0) = 1 THEN COALESCE(t.cryo_units, 0)
 
                         -- 4. Surgical/Bleeding (< 150)
-                        WHEN cl.fib_val < 150 AND (rs.has_surg_6h = 1 OR vc.flag_bleeding = 1) THEN 1
+                        WHEN cl.fib_val < 150 AND (rs.has_surg_6h = 1 OR vc.flag_bleeding = 1) THEN COALESCE(t.cryo_units, 0)
                         
                         ELSE 0
                     END
