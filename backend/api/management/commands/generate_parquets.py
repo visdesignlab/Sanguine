@@ -274,6 +274,8 @@ class Command(BaseCommand):
         with connection.cursor() as cursor:
             visits = []
             if should_generate_visit_attributes or should_generate_procedure_hierarchy:
+                cursor.execute("CALL materializeGuidelineAdherence()")
+                self.stdout.write(self.style.SUCCESS("Successfully materialized GuidelineAdherence."))
                 cursor.execute("CALL materializeVisitAttributes()")
                 self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
 

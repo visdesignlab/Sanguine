@@ -49,6 +49,7 @@ def truncate_intelvia_tables() -> None:
 
 def materialize_visit_attributes() -> None:
     with connection.cursor() as cursor:
+        cursor.execute("CALL materializeGuidelineAdherence()")
         cursor.execute("CALL materializeVisitAttributes()")
 
 
@@ -64,7 +65,7 @@ def fetch_visit_attributes_rows(visit_no: int) -> list[dict]:
             [visit_no],
         )
         columns = [column[0] for column in cursor.description]
-        return [dict(zip(columns, row)) for row in cursor.fetchall()]
+        rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
 
 def count_visit_attributes_rows(visit_no: int) -> int:

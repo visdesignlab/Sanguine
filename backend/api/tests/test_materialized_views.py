@@ -54,8 +54,29 @@ class MaterializedViewTests(TransactionTestCase):
             )
             materialize_proc_count = cursor.fetchone()[0]
 
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_schema = DATABASE()
+                  AND table_name = 'GuidelineAdherence'
+                """
+            )
+            guideline_adherence_table_count = cursor.fetchone()[0]
+
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM information_schema.routines
+                WHERE routine_schema = DATABASE()
+                  AND routine_type = 'PROCEDURE'
+                  AND routine_name = 'materializeGuidelineAdherence'
+                """
+            )
+            guideline_adherence_proc_count = cursor.fetchone()[0]
+
         self.assertEqual(visit_attributes_table_count, 1)
         self.assertEqual(materialize_proc_count, 1)
+        self.assertEqual(guideline_adherence_table_count, 1)
+        self.assertEqual(guideline_adherence_proc_count, 1)
 
     def test_materialize_visit_attributes_full_row_golden_for_each_provider(self):
         visit = create_visit_fixture(
@@ -104,11 +125,11 @@ class MaterializedViewTests(TransactionTestCase):
                 "b12": 1,
                 "iron": 1,
                 "antifibrinolytic": 1,
-                "rbc_adherent": 1,
-                "ffp_adherent": 1,
-                "plt_adherent": 1,
-                "cryo_adherent": 1,
-                "overall_adherent": 4,
+                "rbc_units_adherent": 1,
+                "ffp_units_adherent": 1,
+                "plt_units_adherent": 1,
+                "cryo_units_adherent": 1,
+                "overall_units_adherent": 4,
                 "rbc_units_cost": Decimal("400.00"),
                 "ffp_units_cost": Decimal("50.00"),
                 "plt_units_cost": Decimal("500.00"),
@@ -151,11 +172,11 @@ class MaterializedViewTests(TransactionTestCase):
                 "b12": 0,
                 "iron": 0,
                 "antifibrinolytic": 0,
-                "rbc_adherent": 0,
-                "ffp_adherent": 0,
-                "plt_adherent": 0,
-                "cryo_adherent": 0,
-                "overall_adherent": 0,
+                "rbc_units_adherent": 0,
+                "ffp_units_adherent": 0,
+                "plt_units_adherent": 0,
+                "cryo_units_adherent": 0,
+                "overall_units_adherent": 0,
                 "rbc_units_cost": Decimal("0.00"),
                 "ffp_units_cost": Decimal("0.00"),
                 "plt_units_cost": Decimal("0.00"),
@@ -204,12 +225,12 @@ class MaterializedViewTests(TransactionTestCase):
 
         self.assertEqual(first["attending_provider_id"], "PROV-1")
         self.assertEqual(first["rbc_units"], 1)
-        self.assertEqual(first["rbc_adherent"], 1)
+        self.assertEqual(first["rbc_units_adherent"], 1)
         self.assertEqual(first["iron"], 1)
 
         self.assertEqual(second["attending_provider_id"], "PROV-2")
         self.assertEqual(second["rbc_units"], 0)
-        self.assertEqual(second["rbc_adherent"], 0)
+        self.assertEqual(second["rbc_units_adherent"], 0)
         self.assertEqual(second["iron"], 0)
 
     def test_materialize_visit_attributes_enforces_adherence_threshold_boundaries(self):
@@ -250,11 +271,11 @@ class MaterializedViewTests(TransactionTestCase):
                 row = fetch_visit_attributes_rows(visit.visit_no)[0]
                 self.assertEqual(
                     (
-                        row["rbc_adherent"],
-                        row["ffp_adherent"],
-                        row["plt_adherent"],
-                        row["cryo_adherent"],
-                        row["overall_adherent"],
+                        row["rbc_units_adherent"],
+                        row["ffp_units_adherent"],
+                        row["plt_units_adherent"],
+                        row["cryo_units_adherent"],
+                        row["overall_units_adherent"],
                     ),
                     case["expected"],
                 )
@@ -307,7 +328,7 @@ class MaterializedViewTests(TransactionTestCase):
         row = fetch_visit_attributes_rows(visit.visit_no)[0]
 
         self.assertEqual(row["rbc_units"], 1)
-        self.assertEqual(row["rbc_adherent"], 0)
+        self.assertEqual(row["rbc_units_adherent"], 0)
 
     def test_materialize_visit_attributes_treats_null_lab_results_as_non_adherent(self):
         visit = create_empty_visit_fixture(
@@ -335,7 +356,7 @@ class MaterializedViewTests(TransactionTestCase):
 
         materialize_visit_attributes()
         row = fetch_visit_attributes_rows(visit.visit_no)[0]
-        self.assertEqual(row["rbc_adherent"], 0)
+        self.assertEqual(row["rbc_units_adherent"], 0)
 
     def test_materialize_visit_attributes_coalesces_nullable_transfusion_fields(self):
         visit = create_empty_visit_fixture(
