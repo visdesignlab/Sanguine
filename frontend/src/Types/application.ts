@@ -1,7 +1,5 @@
 // Time formatting ------------------------------------------------
 // Time period types
-// TODO: Update ScatterPlot data type
-import { ScatterChartSeries } from '@mantine/charts';
 
 export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
 export type Month = `${number}-${string}`; // e.g. "2023-Jan"
@@ -77,6 +75,22 @@ export const BLOOD_COMPONENTS = [
     units: {
       sum: 'Cryo Units',
       avg: 'Cryo Units Per Visit',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: BLOOD_COMPONENT_DECIMALS,
+  },
+  {
+    value: 'whole_units',
+    label: {
+      short: 'Whole Blood',
+      base: 'Whole Blood Transfused',
+      sum: 'Total Whole Blood Transfused',
+      avg: 'Average Whole Blood Transfused Per Visit',
+    },
+    units: {
+      sum: 'Whole Blood Units',
+      avg: 'Whole Blood Units Per Visit',
       sumShort: 'Units',
       avgShort: 'Units',
     },
@@ -352,17 +366,110 @@ export const GUIDELINE_ADHERENT_OPTIONS = Object.values(GUIDELINE_ADHERENT) as R
 }>;
 
 // Lab Results ---------------------------------------------------
+// Lab Results ---------------------------------------------------
 export const LAB_RESULTS = [
   {
-    value: 'post_op_hgb',
+    value: 'pre_hgb',
+    metricId: 'hgb',
+    metricLabel: 'Hemoglobin',
+    label: {
+      short: 'Pre-op Hgb',
+      base: 'Pre-Operative Hemoglobin',
+      sum: 'Total Pre-Operative Hemoglobin',
+      avg: 'Average Pre-Operative Hemoglobin',
+    },
+    units: { sum: 'g/dL', avg: 'g/dL' },
+    range: { min: 3, max: 22 },
+    target: { min: 13, max: 18 },
+    decimals: { sum: 0, avg: 2 },
+  },
+  {
+    value: 'post_hgb',
+    metricId: 'hgb',
+    metricLabel: 'Hemoglobin',
     label: {
       short: 'Post-op Hgb',
       base: 'Post-Operative Hemoglobin',
       sum: 'Total Post-Operative Hemoglobin',
       avg: 'Average Post-Operative Hemoglobin',
     },
+    range: { min: 3, max: 22 },
+    target: { min: 7.5, max: 9.5 },
     units: { sum: 'g/dL', avg: 'g/dL' },
     decimals: { sum: 0, avg: 2 },
+  },
+
+  {
+    value: 'pre_plt',
+    metricId: 'platelet',
+    metricLabel: 'Platelet Count',
+    label: {
+      short: 'Pre-op Platelet Count', base: 'Pre-op Platelet Count', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'K/µL', avg: 'K/µL' },
+    range: { min: 0, max: 600 },
+    target: { min: 150, max: 450 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'post_plt',
+    metricId: 'platelet',
+    metricLabel: 'Platelet Count',
+    label: {
+      short: 'Post-op Platelet Count', base: 'Post-op Platelet Count', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'K/µL', avg: 'K/µL' },
+    range: { min: 0, max: 600 },
+    target: { min: 50, max: 125 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'pre_fibrinogen',
+    metricId: 'fibrinogen',
+    metricLabel: 'Fibrinogen',
+    label: {
+      short: 'Pre-op Fibrinogen', base: 'Pre-op Fibrinogen', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'mg/dL', avg: 'mg/dL' },
+    range: { min: 30, max: 500 },
+    target: { min: 200, max: 400 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'post_fibrinogen',
+    metricId: 'fibrinogen',
+    metricLabel: 'Fibrinogen',
+    label: {
+      short: 'Post-op Fibrinogen', base: 'Post-op Fibrinogen', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'mg/dL', avg: 'mg/dL' },
+    range: { min: 30, max: 500 },
+    target: { min: 150, max: 200 },
+    decimals: { sum: 0, avg: 0 },
+  },
+  {
+    value: 'pre_inr',
+    metricId: 'inr',
+    metricLabel: 'INR',
+    label: {
+      short: 'Pre-op INR', base: 'Pre-op INR', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'Ratio', avg: 'Ratio' },
+    range: { min: 0, max: 6 },
+    target: { min: 0.8, max: 1.1 },
+    decimals: { sum: 1, avg: 2 },
+  },
+  {
+    value: 'post_inr',
+    metricId: 'inr',
+    metricLabel: 'INR',
+    label: {
+      short: 'Post-op INR', base: 'Post-op INR', sum: 'Total', avg: 'Avg',
+    },
+    units: { sum: 'Ratio', avg: 'Ratio' },
+    range: { min: 0, max: 6 },
+    target: { min: 0.8, max: 1.5 },
+    decimals: { sum: 1, avg: 2 },
   },
 ] as const;
 export type LabResult = typeof LAB_RESULTS[number]['value'];
@@ -423,6 +530,19 @@ export const COSTS = {
       base: 'Cryo Cost',
       sum: 'Total Cryo Cost',
       avg: 'Average Cryo Cost Per Visit',
+    },
+    units: {
+      sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
+    },
+    decimals: { sum: 0, avg: 0 },
+  },
+  whole_cost: {
+    value: 'whole_cost',
+    label: {
+      short: 'Whole Blood Cost',
+      base: 'Whole Blood Cost',
+      sum: 'Total Whole Blood Cost',
+      avg: 'Average Whole Blood Cost Per Visit',
     },
     units: {
       sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',
@@ -514,6 +634,7 @@ export const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
   ffp_units_cost: 55,
   plt_units_cost: 650,
   cryo_units_cost: 70,
+  whole_cost: 300,
   cell_saver_cost: 500,
 };
 
@@ -532,10 +653,12 @@ export const CPT_CODES = {
 // Chart configuration type
 type ChartConfig<X, Y, A, T> = {
   chartId: string;
+  title?: string;
   xAxisVar: X;
   yAxisVar: Y;
   aggregation: A;
   chartType: T;
+  rowVar?: typeof ExploreTableRowVars[number];
 };
 
 // PBM Dashboard ---------------------------------------------------
@@ -603,6 +726,7 @@ export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
   ffp_units: '#C99700',
   plt_units: '#decfa2',
   cryo_units: '#58a2c8',
+  whole_units: '#600000',
   cell_saver_ml: '#E4572E',
   cell_saver: '#E4572E',
 };
@@ -637,10 +761,119 @@ export interface CostBarDatum extends Record<Cost, number> {
 }
 export type CostBarData = CostBarDatum[];
 
+// --- Dumbbell Chart ---
+export const DUMBBELL_X_AXIS_OPTIONS = [
+  { value: 'surgeon', label: 'Surgeon' },
+  { value: 'anesthesiologist', label: 'Anesthesiologist' },
+  { value: 'year', label: 'Year' },
+  { value: 'quarter', label: 'Quarter' },
+  { value: 'rbc', label: 'Intraoperative RBCs Transfused' },
+  { value: 'platelet', label: 'Intraoperative Platelets Transfused' },
+  { value: 'cryo', label: 'Intraoperative Cryo Transfused' },
+  { value: 'ffp', label: 'Intraoperative FFP Transfused' },
+  { value: 'cell_salvage', label: 'Cell Salvage Volume (mL)' },
+] as const;
+export type DumbbellXAxisVar = typeof DUMBBELL_X_AXIS_OPTIONS[number]['value'];
+
+export const DUMBBELL_Y_AXIS_OPTIONS = [
+  { value: 'hgb', label: 'Hemoglobin' },
+  { value: 'platelet', label: 'Platelet Count' },
+  { value: 'fibrinogen', label: 'Fibrinogen' },
+  { value: 'inr', label: 'INR' },
+] as const;
+export type DumbbellYAxisVar = typeof DUMBBELL_Y_AXIS_OPTIONS[number]['value'];
+
+export type DumbbellChartConfig = ChartConfig<
+  DumbbellXAxisVar,
+  DumbbellYAxisVar,
+  'none', // No aggregation
+  'dumbbell'
+>;
+
+export const DUMBBELL_MARGIN = {
+  top: 40, right: 30, bottom: 60, left: 60,
+};
+
+export const DUMBBELL_CHAR_WIDTH_CASE = 4;
+export const DUMBBELL_DOT_RADIUS = 3;
+export const DUMBBELL_DRAG_LIMIT = 1.0;
+
+export type DumbbellSortState = 'none' | 'pre' | 'post' | 'gap';
+
+// Scatter Plot constants
+export const SCATTER_MARGIN = {
+  top: 40, right: 30, bottom: 60, left: 60,
+};
+export const SCATTER_DOT_RADIUS = 3;
+export const SCATTER_CHAR_WIDTH_CASE = 4;
+export const SCATTER_DRAG_LIMIT = 1.0;
+
+export type ScatterSortState = 'asc' | 'desc' | 'time';
+
+export interface DumbbellLabConfig {
+  label: string;
+  unit: string;
+  min: number;
+  max: number;
+  preKey: keyof DumbbellCase;
+  postKey: keyof DumbbellCase;
+  defaultTargets: { preMin: number; postMin: number; postMax: number };
+}
+
+export interface DumbbellCase {
+  case_id: string;
+  surgeon_prov_id: string;
+  surgeon_prov_name: string;
+  visit_no: string;
+  pre_hgb: number;
+  post_hgb: number;
+
+  pre_plt: number;
+  post_plt: number;
+  pre_fibrinogen: number;
+  post_fibrinogen: number;
+  pre_inr: number;
+  post_inr: number;
+  anesth_prov_id: string;
+  anesth_prov_name: string;
+  intraop_rbc_units: number;
+  intraop_plt_units: number;
+  intraop_cryo_units: number;
+  intraop_ffp_units: number;
+  intraop_cell_saver_ml: number;
+  surgery_start_dtm: number;
+}
+
+export type DumbbellData = DumbbellCase[];
+
 // --- Scatter plots ---
-// TODO: Update scatterPlotConfig type
-export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterPlot'>;
-export type ScatterPlotData = ScatterChartSeries[];
+export const SCATTER_X_AXIS_OPTIONS = [
+  { value: 'surgeon' as const, label: 'Surgeon', isDiscrete: true },
+  { value: 'anesthesiologist' as const, label: 'Anesthesiologist', isDiscrete: true },
+  { value: 'year' as const, label: 'Year', isDiscrete: true },
+  { value: 'quarter' as const, label: 'Quarter', isDiscrete: true },
+  ...BLOOD_COMPONENT_OPTIONS.map((b) => ({
+    value: b.value,
+    label: b.label.base,
+    isDiscrete: b.value !== 'cell_saver_ml',
+  })),
+  ...LAB_RESULT_OPTIONS.map((l) => ({
+    value: l.value,
+    label: l.label.base,
+    isDiscrete: false,
+  })),
+];
+
+export const SCATTER_Y_AXIS_OPTIONS = [
+  ...LAB_RESULT_OPTIONS.map((l) => ({ value: l.value, label: l.label.base })),
+  ...BLOOD_COMPONENT_OPTIONS.map((b) => ({ value: b.value, label: b.label.base })),
+];
+
+export type ScatterXAxisVar = typeof SCATTER_X_AXIS_OPTIONS[number]['value'];
+export type ScatterYAxisVar = typeof SCATTER_Y_AXIS_OPTIONS[number]['value'];
+
+export type ScatterPlotConfig = ChartConfig<ScatterXAxisVar, ScatterYAxisVar, keyof typeof AGGREGATION_OPTIONS | 'none', 'scatterPlot'>;
+export type ScatterPlotData = DumbbellCase[];
 
 // --- Explore Table ---
 
@@ -717,24 +950,39 @@ export const ExploreTableColumnOptionsGrouped = [
   },
   {
     group: 'Costs',
-    items: COST_OPTIONS.map((opt) => ({
-      value: opt.value,
-      label: opt.label.base,
-      units: {
-        sum: opt.units.sum,
-        avg: opt.units.avg,
-        sumShort: opt.units.sumShort,
-        avgShort: opt.units.avgShort,
-        type: opt.units.type,
+    items: [
+      ...COST_OPTIONS.map((opt) => ({
+        value: opt.value,
+        label: opt.label.base,
+        units: {
+          sum: opt.units.sum,
+          avg: opt.units.avg,
+          sumShort: opt.units.sumShort,
+          avgShort: opt.units.avgShort,
+          type: opt.units.type,
+        },
+        decimals: opt.decimals,
+      })),
+      {
+        value: 'total_cost',
+        label: 'Cost',
+        units: { sum: '$', avg: '$', type: 'prefix' },
+        decimals: { sum: 0, avg: 0 },
       },
-      decimals: opt.decimals,
-    })),
+      {
+        value: 'salvage_savings',
+        label: 'Savings from Cell Salvage',
+        units: { sum: '$', avg: '$', type: 'prefix' },
+        decimals: { sum: 0, avg: 0 },
+      },
+    ],
   },
   {
     group: 'Other',
     items: [
       { value: 'year', label: 'Year' },
       { value: 'quarter', label: 'Quarter' },
+      { value: 'drg_weight', label: 'DRG Weight' },
       ...RBC_PERCENT_OPTIONS,
       {
         value: 'attending_provider',
@@ -791,7 +1039,7 @@ export const ExploreTableRowVars = ExploreTableRowOptions.map((opt) => opt.value
 export type ExploreTableColumn = {
   colVar: typeof ExploreTableColumnVars[number];
   aggregation: keyof typeof AGGREGATION_OPTIONS | 'none';
-  type: 'numeric' | 'text' | 'violin' | 'heatmap';
+  type: 'numeric' | 'text' | 'violin' | 'heatmap' | 'stackedBar' | 'numericBar';
   title: string;
   numericTextVisible?: boolean;
 };
@@ -812,8 +1060,8 @@ export type ExploreTableRow = Record<typeof ExploreTableRowVars[number], string 
 export type ExploreTableData = ExploreTableRow[]; // E.g. [{ attending_provider: 'Dr. Smith', cases: 100}, { attending_provider: 'Dr. Johnson', cases: 200}]
 
 // --- Explore Chart ---
-export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData>;
-export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig;
+export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData | DumbbellData>;
+export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig | DumbbellChartConfig;
 
 // Procedure hierarchy ---------------------------------------------------
 export type ProcedureHierarchyProcedure = {

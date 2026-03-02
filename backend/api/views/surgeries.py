@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 
 from django.conf import settings
@@ -8,6 +9,8 @@ from django.views.decorators.cache import never_cache
 
 from .decorators.conditional_login_required import conditional_login_required
 from .utils.utils import log_request
+
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])
@@ -131,6 +134,15 @@ def get_visit_attributes(request):
         return HttpResponse("Parquet file not found. Please generate it first.", status=404)
     return FileResponse(open(file_path, 'rb'), content_type='application/vnd.apache.arrow.file')
 
+@never_cache
+@require_http_methods(["HEAD", "GET"])
+@conditional_login_required
+def get_surgery_case_attributes(request):
+    log_request(request)
+    file_path = Path(settings.BASE_DIR) / "parquet_cache" / "surgery_case_attributes.parquet"
+    if not file_path.exists():
+        return HttpResponse("Parquet file not found. Please generate it first.", status=404)
+    return FileResponse(open(file_path, 'rb'), content_type='application/vnd.apache.arrow.file')
 
 @never_cache
 @require_http_methods(["GET"])
@@ -147,8 +159,9 @@ def get_procedure_hierarchy(request):
     try:
         with file_path.open("r", encoding="utf-8") as cache_file:
             return JsonResponse(json.load(cache_file))
-    except Exception as exc:
+    except Exception:
+        logger.exception("Failed to read procedure hierarchy cache")
         return HttpResponse(
-            f"Procedure hierarchy cache could not be read. Error: {exc}",
+            "Procedure hierarchy cache could not be read.",
             status=503,
         )

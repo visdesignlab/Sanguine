@@ -30,6 +30,7 @@ The Intelvia project is a platform for understanding PBM (Patient Blood Manageme
 
 Data, database, and data sources
 The data used in the Intelvia project is sourced from electronic health records (EHRs) and other healthcare databases, typically EPIC Clarity. The data includes patient demographics, medical history, laboratory results, medication records, and transfusion records. The data is cold stored in a MariaDB database, which allows for efficient querying and analysis of large datasets. The database is designed to handle data on the order of 1,000,000 patients, ensuring that the platform can scale to meet the needs of healthcare professionals working with large patient populations. The database schema is most clearly defined in the Django models, which are used to create the database tables and manage the data.
+When handling date or datetime values sourced from EPIC, normalize and treat them as UTC throughout backend processing, parquet generation, and frontend display/query logic.
 
 On top of the data we're provided with, we also generate additional features and metrics that are relevant to PBM. For example, we may calculate transfusion rates, anemia management practices, and blood conservation techniques based on the raw data. These additional features are stored in materialized views in the database, allowing for fast access and efficient querying when generating visualizations and reports.
 

@@ -90,11 +90,12 @@ function StateDetails({ state }: { state: ApplicationState }) {
     if (explore?.chartConfigs) {
       explore.chartConfigs.forEach((config: ExploreChartConfig) => {
         if (config.chartType === 'exploreTable') {
-          return;
+          items.push('Table: Explore Data');
+        } else {
+          const xLabel = formatStateDetailName(config.xAxisVar as string);
+          const yLabel = formatStateDetailName(config.yAxisVar as string);
+          items.push(`Chart: ${yLabel} vs ${xLabel}`);
         }
-        const xLabel = formatStateDetailName(config.xAxisVar);
-        const yLabel = formatStateDetailName(config.yAxisVar);
-        items.push(`Chart: ${yLabel} vs ${xLabel}`);
       });
     }
     return items;

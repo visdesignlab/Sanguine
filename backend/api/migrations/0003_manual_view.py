@@ -284,7 +284,8 @@ class Migration(migrations.Migration):
                 ffp_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (ffp_units * 50.00) VIRTUAL,
                 plt_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (plt_units * 500.00) VIRTUAL,
                 cryo_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (cryo_units * 30.00) VIRTUAL,
-                overall_cost DECIMAL(8,2) GENERATED ALWAYS AS ((rbc_units * 200.00) + (ffp_units * 50.00) + (plt_units * 500.00) + (cryo_units * 30.00)) VIRTUAL,
+                whole_units_cost DECIMAL(6,2) GENERATED ALWAYS AS (whole_units * 300.00) VIRTUAL,
+                overall_cost DECIMAL(8,2) GENERATED ALWAYS AS ((rbc_units * 200.00) + (ffp_units * 50.00) + (plt_units * 500.00) + (cryo_units * 30.00) + (whole_units * 300.00)) VIRTUAL,
 
                 attending_provider varchar(100),
                 attending_provider_id varchar(25),

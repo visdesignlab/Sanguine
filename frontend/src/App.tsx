@@ -75,6 +75,12 @@ function App() {
         }
         await db.registerFileBuffer('visit_attributes.parquet', new Uint8Array(await res.arrayBuffer()));
 
+        const resSurgery = await fetch(apiPath('get_surgery_case_attributes'));
+        if (!resSurgery.ok) {
+          throw new Error(`Failed to fetch surgery cases. Status: ${resSurgery.status}`);
+        }
+        await db.registerFileBuffer('surgery_case_attributes.parquet', new Uint8Array(await resSurgery.arrayBuffer()));
+
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
           SELECT * REPLACE (
@@ -83,11 +89,15 @@ function App() {
           )
           FROM read_parquet('visit_attributes.parquet');
 
+          CREATE TABLE IF NOT EXISTS surgery_cases AS
+          SELECT * FROM read_parquet('surgery_case_attributes.parquet');
+
           CREATE TABLE IF NOT EXISTS costs (
             rbc_units_cost DOUBLE,
             ffp_units_cost DOUBLE,
             plt_units_cost DOUBLE,
             cryo_units_cost DOUBLE,
+            whole_cost DOUBLE,
             cell_saver_cost DOUBLE
           );
           INSERT INTO costs VALUES (
@@ -95,6 +105,7 @@ function App() {
             ${store.unitCosts.ffp_units_cost},
             ${store.unitCosts.plt_units_cost},
             ${store.unitCosts.cryo_units_cost},
+            ${store.unitCosts.whole_cost},
             ${store.unitCosts.cell_saver_cost}
           );
           
@@ -108,10 +119,17 @@ function App() {
             v.ffp_units * c.ffp_units_cost AS ffp_units_cost,
             v.plt_units * c.plt_units_cost AS plt_units_cost,
             v.cryo_units * c.cryo_units_cost AS cryo_units_cost,
+            v.whole_units * c.whole_cost AS whole_cost,
             CASE WHEN COALESCE(v.cell_saver_ml, 0) > 0 THEN c.cell_saver_cost ELSE 0 END AS cell_saver_cost
           FROM visits v
           INNER JOIN filteredVisitIds fvi ON v.visit_no = fvi.visit_no
           CROSS JOIN costs c;
+
+          CREATE VIEW IF NOT EXISTS filteredSurgeryCases AS
+          SELECT 
+            sc.*
+          FROM surgery_cases sc
+          INNER JOIN filteredVisitIds fvi ON sc.visit_no = fvi.visit_no;
 
           CREATE VIEW IF NOT EXISTS aggregatedVisits AS
           SELECT
@@ -126,13 +144,14 @@ function App() {
             SUM(ffp_units) as ffp_units,
             SUM(plt_units) as plt_units,
             SUM(cryo_units) as cryo_units,
-            -- SUM(whole_units) as whole_units,
+            SUM(whole_units) as whole_units,
             SUM(cell_saver_ml) as cell_saver_ml,
 
             SUM(rbc_units_cost) as rbc_units_cost,
             SUM(ffp_units_cost) as ffp_units_cost,
             SUM(plt_units_cost) as plt_units_cost,
             SUM(cryo_units_cost) as cryo_units_cost,
+            SUM(whole_cost) as whole_cost,
             SUM(cell_saver_cost) as cell_saver_cost,
             
             SUM(rbc_adherent) as rbc_adherent,
