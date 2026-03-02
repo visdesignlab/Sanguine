@@ -86,10 +86,10 @@ export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
     statId: '4', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', title: 'Total Blood Product Costs',
   },
   {
-    statId: '5', yAxisVar: 'rbc_units_adherent', aggregation: 'avg', title: 'Total Guideline Adherent RBC Units Transfused',
+    statId: '5', yAxisVar: 'rbc_units_adherent', aggregation: 'avg', title: '% of Guideline Adherent RBC Units Transfused',
   },
   {
-    statId: '6', yAxisVar: 'plt_units_adherent', aggregation: 'avg', title: 'Total Guideline Adherent Platelet Units Transfused',
+    statId: '6', yAxisVar: 'plt_units_adherent', aggregation: 'avg', title: '% of Guideline Adherent Platelet Units Transfused',
   },
 ];
 
