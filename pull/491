@@ -1,22 +1,3 @@
-## File Changes Summary
+# Revert commit 28241906850f0ae9ae3020de32c9a5ddf017582b
 
-### Backend: GuidelineAdherence materialization
-- **backend/api/migrations/0003_manual_view.py**: Implemented changes to create a manual view for adherence metrics to facilitate reporting needs for stakeholders. 
-
-### Backend: schema/column renames
-- **backend/api/migrations/0002_guidelineadherence_visitattributes.py**: Modified column names in tables to enhance clarity and consistency with naming conventions.
-- **backend/api/models/intelvia.py**: Renamed schema elements to align with updated project specifications and improve integration with other components.
-
-### Frontend: new adherence metrics and percent-of-units averaging
-- **frontend/src/App.tsx**: Integrated new adherence metrics display into the main application component to provide users with real-time insights.
-- **frontend/src/Components/Views/SettingsView/GuidelineAdherenceSettings.tsx**: Updated settings view to allow users to adjust adherence metrics preferences and visualize data effectively.
-- **frontend/src/Store/Store.ts**: Enhanced state management to accommodate new adherence data for better reactive programming.
-- **frontend/src/Types/application.ts**: Added types for new adherence metrics to ensure type safety throughout the application.
-- **frontend/src/Utils/humanReadableColsVals.ts**: Updated utility functions to process new adherence column formats effectively, ensuring seamless data presentation.
-
-### Tests/fixtures updates
-- **backend/api/tests/materialized_view_test_utils.py**: Added new test utilities to support testing of materialized views created for adherence metrics.
-- **backend/api/tests/test_generate_parquets.py**: Updated tests to cover new logic implemented in the parquet generation command for adherence.
-- **backend/api/tests/test_materialized_views.py**: Enhanced existing tests to validate the functionality of the new materialized views introduced in recent migrations.
-- **backend/api/management/commands/mock50million.py**: Adjusted mock data generation logic to provide test cases with updated adherence metrics.
-
+This commit reverts the changes made in the commit identified by the SHA 28241906850f0ae9ae3020de32c9a5ddf017582b, specifically removing the accidentally added file pull/491.
