@@ -72,16 +72,39 @@ def get_visit_attributes_schema() -> pa.Schema:
 def build_visit_attributes_table(rows: list[dict]) -> pa.Table:
     schema = get_visit_attributes_schema()
 
+    normalized_rows: list[dict] = []
     for row_index, row in enumerate(rows):
+        normalized_row = dict(row)
+        # Defensive normalization: database DATE values must be upgraded to UTC datetimes.
+        for field_name in ("adm_dtm", "dsch_dtm"):
+            normalized_row[field_name] = coerce_temporal_value_to_utc(normalized_row.get(field_name))
+
         for field in schema:
             if field.nullable:
                 continue
-            if row.get(field.name) is None:
+            if normalized_row.get(field.name) is None:
                 raise ValueError(
                     f"Row {row_index} has null for non-nullable field '{field.name}'",
                 )
+        normalized_rows.append(normalized_row)
 
-    return pa.Table.from_pylist(rows, schema=schema)
+    try:
+        return pa.Table.from_pylist(normalized_rows, schema=schema)
+    except (pa.ArrowInvalid, getattr(pa, "ArrowTypeError", TypeError), TypeError, ValueError) as exc:
+        # Surface the first offending field/value to make production debugging practical.
+        for row_index, row in enumerate(normalized_rows):
+            for field in schema:
+                value = row.get(field.name)
+                try:
+                    pa.array([value], type=field.type)
+                except Exception as field_exc:  # noqa: BLE001 - include exact value/type context.
+                    raise ValueError(
+                        "Failed to coerce VisitAttributes value for parquet: "
+                        f"row={row_index}, field='{field.name}', "
+                        f"value={value!r}, value_type={type(value).__name__}, "
+                        f"expected_arrow_type={field.type}",
+                    ) from field_exc
+        raise
 
 
 def get_surgery_case_attributes_schema() -> pa.Schema:
