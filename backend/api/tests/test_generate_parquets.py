@@ -412,6 +412,16 @@ class GenerateParquetsTests(TransactionTestCase):
 
         self.assertIsNone(coerce_temporal_value_to_utc(None))
 
+    def test_build_visit_attributes_table_coerces_date_fields_to_utc_timestamps(self):
+        row = valid_visit_attributes_row()
+        row["adm_dtm"] = date(2024, 1, 1)
+        row["dsch_dtm"] = date(2024, 1, 5)
+
+        table = build_visit_attributes_table([row])
+        actual = table.to_pylist()[0]
+        self.assertEqual(actual["adm_dtm"], datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc))
+        self.assertEqual(actual["dsch_dtm"], datetime(2024, 1, 5, 0, 0, tzinfo=timezone.utc))
+
     def test_generate_parquets_failure_does_not_overwrite_existing_artifact(self):
         create_visit_fixture(
             visit_no=2003,
