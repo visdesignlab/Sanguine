@@ -49,7 +49,7 @@ jobs:
       - name: Run migration and materialized view tests in backend container
         run: >
           docker compose -f docker-compose.devcontainer.yml -f docker-compose.ci.override.yml run --rm --no-deps backend
-          poetry run python manage.py test api.tests --verbosity 2
+          poetry run python manage.py test api.tests --verbosity 2 --parallel 2
 
       - name: Tear down containers
         if: always()
