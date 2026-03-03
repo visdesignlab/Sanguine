@@ -145,7 +145,7 @@ Run all backend tests from a shell where `.env` is loaded and MariaDB is availab
 
 ```bash
 docker-compose exec -it backend bash
-poetry run python manage.py test api.tests --verbosity 2
+poetry run python manage.py test api.tests --verbosity 2 --parallel 4
 ```
 
 #### Setting up the vscode extensions to connect to the databases
