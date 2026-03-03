@@ -269,7 +269,7 @@ export const GUIDELINE_ADHERENT = {
       short: 'Adherent RBC',
       base: 'Guideline Adherent RBC Units Transfused',
       sum: 'Total Guideline Adherent RBC Units Transfused',
-      avg: 'RBC Guideline Adherence Percentage per Visit',
+      avg: 'Percentage of RBC Units Transfused According to Guidelines',
     },
     // Adherence units & decimal truncation for display
     units: {
@@ -286,7 +286,7 @@ export const GUIDELINE_ADHERENT = {
       short: 'Adherent FFP',
       base: 'Guideline Adherent FFP Units Transfused',
       sum: 'Total Guideline Adherent FFP Units Transfused',
-      avg: 'FFP Guideline Adherence Percentage per Visit',
+      avg: 'Percentage of Plasma Units Transfused According to Guidelines',
     },
     units: {
       sum: 'Adherent Plasma Units',
@@ -302,7 +302,7 @@ export const GUIDELINE_ADHERENT = {
       short: 'Adherent Platelet',
       base: 'Guideline Adherent Platelet Units Transfused',
       sum: 'Total Guideline Adherent Platelet Units Transfused',
-      avg: 'Platelet Guideline Adherence Percentage per Visit',
+      avg: 'Percentage of Platelet Units Transfused According to Guidelines',
     },
     units: {
       sum: 'Adherent Platelet Units',
@@ -318,7 +318,7 @@ export const GUIDELINE_ADHERENT = {
       short: 'Adherent Cryo',
       base: 'Guideline Adherent Cryo Units Transfused',
       sum: 'Total Guideline Adherent Cryo Units Transfused',
-      avg: 'Cryo Guideline Adherence Percentage per Visit',
+      avg: 'Percentage of Cryo Units Transfused According to Guidelines',
     },
     units: {
       sum: 'Adherent Cryo Units',
@@ -337,7 +337,7 @@ export const OVERALL_GUIDELINE_ADHERENT = {
     short: 'Adherent Transfusions',
     base: 'Guideline Adherent Units Transfused',
     sum: 'Total Guideline Adherent Units Transfused',
-    avg: 'Overall Guideline Adherence Percentage per Visit',
+    avg: 'Percentage of Units Transfused According to Guidelines',
   },
   units: {
     sum: 'Adherent Units',
