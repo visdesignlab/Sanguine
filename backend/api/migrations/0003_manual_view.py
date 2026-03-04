@@ -52,7 +52,8 @@ def create_guideline_adherence_proc(apps, schema_editor):
                 MAX(CASE WHEN (bc.cpt_code BETWEEN '61000' AND '63999' AND bc.cpt_code NOT LIKE '%F') THEN 1 ELSE 0 END) as flag_neuro_critical,
                 MAX(CASE WHEN (bc.cpt_code LIKE '33%' AND bc.cpt_code NOT LIKE '%F') THEN 1 ELSE 0 END) as flag_cardiac_surg,
                 MAX(CASE WHEN (bc.cpt_code BETWEEN '92920' AND '92944' AND bc.cpt_code NOT LIKE '%F') THEN 1 ELSE 0 END) as flag_pci_indicated,
-                MAX(CASE WHEN ((bc.cpt_code LIKE '33%' AND bc.cpt_code NOT LIKE '%F') OR (bc.cpt_code BETWEEN '61000' AND '63999' AND bc.cpt_code NOT LIKE '%F') OR (bc.cpt_code BETWEEN '65000' AND '68899' AND bc.cpt_code NOT LIKE '%F') OR (bc.cpt_code BETWEEN '62263' AND '62329' AND bc.cpt_code NOT LIKE '%F') OR (bc.cpt_code BETWEEN '33860' AND '33999' AND bc.cpt_code NOT LIKE '%F') OR (bc.cpt_code BETWEEN '34000' AND '34999' AND bc.cpt_code NOT LIKE '%F')) THEN 1 ELSE 0 END) as flag_target_100_indicated
+                MAX(CASE WHEN bc.cpt_code IN ('36555', '36556', '36568', '36569', '36580', '36584') THEN 1 ELSE 0 END) as flag_cvc,
+                MAX(CASE WHEN bc.cpt_code BETWEEN '62263' AND '62329' AND bc.cpt_code NOT LIKE '%F' THEN 1 ELSE 0 END) as flag_neuraxial
             FROM Visit v
             JOIN (SELECT DISTINCT visit_no FROM UniqueProviderTransfusions) u ON u.visit_no = v.visit_no
             LEFT JOIN BillingCode bc ON v.visit_no = bc.visit_no
@@ -67,7 +68,7 @@ def create_guideline_adherence_proc(apps, schema_editor):
             FROM UniqueProviderTransfusions t1
             JOIN Transfusion t2 
                 ON t1.visit_no = t2.visit_no 
-               AND t2.trnsfsn_dtm BETWEEN t1.trnsfsn_dtm - INTERVAL 4 HOUR AND t1.trnsfsn_dtm + INTERVAL 4 HOUR
+               AND t2.trnsfsn_dtm BETWEEN t1.trnsfsn_dtm - INTERVAL 2 HOUR AND t1.trnsfsn_dtm + INTERVAL 2 HOUR
             GROUP BY t1.transfusion_id
         ),
         /* Checks if the patient had a surgery within 6 or 24 hours of the transfusion ==================*/
@@ -105,7 +106,7 @@ def create_guideline_adherence_proc(apps, schema_editor):
                 ) as rn_lab
             FROM UniqueProviderTransfusions t
             JOIN Lab l ON t.visit_no = l.visit_no
-            WHERE l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm + INTERVAL 24 HOUR
+            WHERE l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
               AND (
                   UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN', 'INR', 'PLT', 'PLATELET COUNT') 
                   OR UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
@@ -132,22 +133,22 @@ def create_guideline_adherence_proc(apps, schema_editor):
                 /* RBC ADHERENCE LOGIC ============================*/
                 CASE WHEN COALESCE(t.rbc_units, 0) > 0 THEN
                     CASE 
-                        -- 1. Restrictive Threshold (Hb <= 7.5 for tests, Hb < 7.0 standard)
-                        WHEN cl.hgb_val <= 7.5 THEN COALESCE(t.rbc_units, 0)
+                        -- Scenario: Restrictive Threshold (HGB < 7.0 within 24h prior)
+                        WHEN cl.hgb_val < 7.0 THEN COALESCE(t.rbc_units, 0)
                         
-                        -- 2. Neurocritical Care / TBI (Liberal < 9.0)
-                        WHEN cl.hgb_val < 9.0 AND vc.flag_neuro_critical = 1 THEN COALESCE(t.rbc_units, 0)
-
-                        -- 3. Cardiac Surgery (Hb <= 7.5)
+                        -- Scenario: Cardiac Surgery (HGB <= 7.5 AND CPT starting with 33)
                         WHEN cl.hgb_val <= 7.5 AND vc.flag_cardiac_surg = 1 THEN COALESCE(t.rbc_units, 0)
+
+                        -- Scenario: Neurocritical Care / TBI (New) (HGB < 9.0 AND TBI/SAH/ICH)
+                        WHEN cl.hgb_val < 9.0 AND vc.flag_neuro_critical = 1 THEN COALESCE(t.rbc_units, 0)
                         
-                        -- 4. High Risk Threshold (Hb <= 8.0) with RECENT Comorbidity
-                        WHEN cl.hgb_val <= 8.0 AND (vc.cci_chf > 0 OR vc.cci_cvd > 0 OR rs.has_surg_24h = 1) THEN COALESCE(t.rbc_units, 0)
+                        -- Scenario: Symptomatic Anemia / High Risk (HGB <= 8.0 AND History of MI >30 days)
+                        WHEN cl.hgb_val <= 8.0 AND (vc.cci_mi > 0 AND vc.flag_pci_indicated = 0) THEN COALESCE(t.rbc_units, 0)
 
-                        -- 5. AMI / Interventional Cardiology (Hb < 10.0)
-                        WHEN cl.hgb_val < 10.0 AND (vc.cci_mi > 0 OR vc.flag_pci_indicated = 1) THEN COALESCE(t.rbc_units, 0)
+                        -- Scenario: Acute Myocardial Infarction (HGB < 10.0 AND Acute MI within 30 days)
+                        WHEN cl.hgb_val < 10.0 AND vc.flag_pci_indicated = 1 THEN COALESCE(t.rbc_units, 0)
 
-                        -- 6. Massive Bleeding or High Transfusion
+                        -- Scenario: Active Bleeding / Massive Transfusion (Bleeding code OR >= 4 units RBC in 4h window)
                         WHEN vc.flag_bleeding = 1 OR rt.rbc_4h >= 4 THEN COALESCE(t.rbc_units, 0)
                         
                         ELSE 0 
@@ -157,11 +158,11 @@ def create_guideline_adherence_proc(apps, schema_editor):
                 /* FFP ADHERENCE LOGIC ============================*/
                 CASE WHEN COALESCE(t.ffp_units, 0) > 0 THEN
                     CASE
-                        -- 1. Strict Exception (> 3 FFP in 4h)
+                        -- Scenario: Massive Transfusion or Plasma Exchange Exception (>= 3 FFP in 4h)
                         WHEN rt.ffp_4h >= 3 THEN COALESCE(t.ffp_units, 0)
                     
-                        -- 2. Standard (INR >= 1.5 for tests, >= 2.0 standard)
-                        WHEN cl.inr_val >= 1.5 THEN COALESCE(t.ffp_units, 0)
+                        -- Scenario: Non-Bleeding / Threshold-Based (INR >= 2.0 within 24h prior AND NOT massive bleeding)
+                        WHEN cl.inr_val >= 2.0 AND vc.flag_bleeding = 0 AND rt.rbc_4h < 4 THEN COALESCE(t.ffp_units, 0)
                         
                         ELSE 0
                     END
@@ -170,17 +171,17 @@ def create_guideline_adherence_proc(apps, schema_editor):
                 /* PLT ADHERENCE LOGIC ============================*/
                 CASE WHEN COALESCE(t.plt_units, 0) > 0 THEN
                     CASE
-                        -- 1. Prophylactic / CVC (Plt <= 15,000 for test)
-                        WHEN cl.plt_val <= 15000 THEN COALESCE(t.plt_units, 0)
+                        -- Scenario: Prophylactic / CVC Threshold (PLT < 10,000 within 24h prior OR CVC placement)
+                        WHEN cl.plt_val < 10000 OR vc.flag_cvc = 1 THEN COALESCE(t.plt_units, 0)
 
-                        -- 2. Lumbar Puncture (Plt < 20,000)
+                        -- Scenario: Lumbar Puncture, Interventional Radiology Threshold (PLT < 20,000 AND LP CPT)
                         WHEN cl.plt_val < 20000 AND vc.flag_lp = 1 THEN COALESCE(t.plt_units, 0)
 
-                        -- 3. Major Surgery (Plt < 50,000)
-                        WHEN cl.plt_val < 50000 AND (rs.has_surg_24h = 1 OR vc.flag_bleeding = 1) THEN COALESCE(t.plt_units, 0)
+                        -- Scenario: Major Surgery / Bleeding Threshold (PLT < 50,000 AND (Surgery in 24h OR Bleeding code) AND NOT Neuraxial)
+                        WHEN cl.plt_val < 50000 AND (rs.has_surg_24h = 1 OR vc.flag_bleeding = 1) AND vc.flag_neuraxial = 0 THEN COALESCE(t.plt_units, 0)
 
-                        -- 4. High Risk (Plt <= 100,000)
-                        WHEN cl.plt_val <= 100000 AND vc.flag_target_100_indicated = 1 THEN COALESCE(t.plt_units, 0)
+                        -- Scenario: High-Risk Specialty (Neuro) (PLT < 100,000 AND Neuro surgery CPT)
+                        WHEN cl.plt_val < 100000 AND vc.flag_neuro_critical = 1 THEN COALESCE(t.plt_units, 0)
                         
                         ELSE 0
                     END
@@ -189,17 +190,17 @@ def create_guideline_adherence_proc(apps, schema_editor):
                 /* CRYO ADHERENCE LOGIC ============================*/
                 CASE WHEN COALESCE(t.cryo_units, 0) > 0 THEN
                     CASE
-                        -- 1. Massive Transfusion (>=4 RBC)
+                        -- Scenario: Massive Hemorrhage Situations (>= 4 units RBC in 4h)
                         WHEN rt.rbc_4h >= 4 THEN COALESCE(t.cryo_units, 0)
 
-                        -- 2. Low Fibrinogen (test expects 200 to be adherent for visit 1001)
-                        WHEN cl.fib_val <= 200 THEN COALESCE(t.cryo_units, 0)
+                        -- Scenario: Standard Hypofibrinogenemia (non-bleeding) (Fibrinogen < 100 within 24h prior)
+                        WHEN cl.fib_val < 100 THEN COALESCE(t.cryo_units, 0)
 
-                        -- 3. Obstetrics (< 200)
-                        WHEN cl.fib_val < 200 AND COALESCE(vc.is_ob, 0) = 1 THEN COALESCE(t.cryo_units, 0)
-
-                        -- 4. Surgical/Bleeding (< 150)
+                        -- Scenario: Surgical / Bleeding Threshold (Fibrinogen < 150 AND (Surgery in 6h OR Bleeding code))
                         WHEN cl.fib_val < 150 AND (rs.has_surg_6h = 1 OR vc.flag_bleeding = 1) THEN COALESCE(t.cryo_units, 0)
+
+                        -- Scenario: Obstetrics Threshold (Fibrinogen < 200 AND Obstetrics CPT)
+                        WHEN cl.fib_val < 200 AND COALESCE(vc.is_ob, 0) = 1 THEN COALESCE(t.cryo_units, 0)
                         
                         ELSE 0
                     END
