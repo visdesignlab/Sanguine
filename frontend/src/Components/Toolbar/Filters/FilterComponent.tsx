@@ -24,16 +24,12 @@ export function FilterComponent({ data, unitName }: { unitName: BloodComponent |
     return cur[0] !== init[0] || cur[1] !== init[1];
   }
 
-  const maxUnit = useMemo(() => {
-    const unitBins = data ? data.map((d) => parseInt(d.units, 10)) : [];
-    return Math.max(...unitBins);
-  }, [data]);
-
   const bandScale = useCallback(() => {
+    const maxUnit = store.initialFilterValues[unitName][1];
     const dataBins = range(0, maxUnit + 1, unitName === CELL_SAVER_ML ? 50 : 1).map(String);
     const svgWidth = svgRef.current ? svgRef.current.clientWidth : 0;
     return scaleBand(dataBins, [0, svgWidth]);
-  }, [maxUnit, unitName]);
+  }, [store.initialFilterValues, unitName]);
 
   const maxCountExcludeZeroUnit = useMemo(() => (data ? Math.max(...data.map((d) => (d.units === '0' ? 0 : d.count))) : 0), [data]);
 
@@ -83,7 +79,7 @@ export function FilterComponent({ data, unitName }: { unitName: BloodComponent |
             paddingRight={
             store.uiState.showFilterHistograms
               ? ((svgRef.current ? svgRef.current.clientWidth : 0)
-              - ((bandScale()(String(maxUnit)) ?? 0)
+                  - ((bandScale()(String(store.initialFilterValues[unitName][1])) ?? 0)
                + bandScale().bandwidth() * 0.5)) : 0
 }
             varName={unitName}

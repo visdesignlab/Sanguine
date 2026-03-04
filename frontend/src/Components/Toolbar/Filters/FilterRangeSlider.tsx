@@ -23,7 +23,6 @@ export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: { varN
   // TODO redo the clamping logic
   // Clamp slider max value to prevent outliers
   const clampedMax = useMemo(
-    // () => Math.min(ProductMaximums[varName] ?? MANUAL_INFINITY, initialFilterMax),
     () => Math.min(MANUAL_INFINITY, initialFilterMax),
     [initialFilterMax],
   );
