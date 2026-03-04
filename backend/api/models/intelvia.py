@@ -137,6 +137,9 @@ class SurgeryCase(models.Model):
 
     class Meta:
         db_table = "SurgeryCase"
+        indexes = [
+            models.Index(fields=["visit_no", "surgery_end_dtm"], name="idx_surgcase_visit_end"),
+        ]
 
 
 class BillingCode(models.Model):
@@ -152,6 +155,7 @@ class BillingCode(models.Model):
         db_table = "BillingCode"
         indexes = [
             models.Index(fields=["cpt_code", "visit_no"], name="billingcode_cpt_visit_idx"),
+            models.Index(fields=["visit_no", "cpt_code"], name="idx_billingcode_visit_cpt"),
         ]
 
 
@@ -192,6 +196,9 @@ class Lab(models.Model):
 
     class Meta:
         db_table = "Lab"
+        indexes = [
+            models.Index(fields=["visit_no", "lab_draw_dtm", "result_desc", "result_value"], name="idx_lab_visit_draw_desc_val"),
+        ]
 
 
 class Transfusion(models.Model):
@@ -213,6 +220,9 @@ class Transfusion(models.Model):
 
     class Meta:
         db_table = "Transfusion"
+        indexes = [
+            models.Index(fields=["visit_no", "trnsfsn_dtm"], name="idx_transfusion_visit_dtm"),
+        ]
 
 
 class AttendingProvider(models.Model):
@@ -225,6 +235,9 @@ class AttendingProvider(models.Model):
 
     class Meta:
         db_table = "AttendingProvider"
+        indexes = [
+            models.Index(fields=["visit_no", "attend_start_dtm", "attend_end_dtm", "prov_id", "attend_prov_line"], name="idx_attprov_visit_dtm_range"),
+        ]
 
 
 class RoomTrace(models.Model):
