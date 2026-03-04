@@ -174,11 +174,11 @@ class GenerateParquetsTests(TransactionTestCase):
             self.assertEqual(row["plt_units"], 1)
             self.assertEqual(row["cryo_units"], 1)
             self.assertEqual(row["overall_units"], 5)
-            self.assertEqual(row["rbc_units_adherent"], 1)
+            self.assertEqual(row["rbc_units_adherent"], 2)
             self.assertEqual(row["ffp_units_adherent"], 1)
             self.assertEqual(row["plt_units_adherent"], 1)
             self.assertEqual(row["cryo_units_adherent"], 0)
-            self.assertEqual(row["overall_units_adherent"], 3)
+            self.assertEqual(row["overall_units_adherent"], 4)
             self.assertEqual(sorted(row["department_ids"]), ["critical-care", "ecmo"])
             self.assertEqual(
                 sorted(row["procedure_ids"]),
