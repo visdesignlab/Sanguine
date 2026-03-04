@@ -86,10 +86,10 @@ export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
     statId: '4', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', title: 'Total Blood Product Costs',
   },
   {
-    statId: '5', yAxisVar: 'rbc_adherent', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
+    statId: '5', yAxisVar: 'rbc_units_adherent', aggregation: 'avg', title: 'Percentage of RBC Units Transfused According to Guidelines',
   },
   {
-    statId: '6', yAxisVar: 'plt_adherent', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
+    statId: '6', yAxisVar: 'plt_units_adherent', aggregation: 'avg', title: 'Percentage of Platelet Units Transfused According to Guidelines',
   },
 ];
 
@@ -956,6 +956,22 @@ export class RootStore {
         if (yAxisVar === 'case_mix_index') {
           return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`;
         }
+        // Special case: Overall adherence – return raw numerator & denominator sums
+        if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
+          const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
+          return [
+            `SUM(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
+            `SUM(${baseSum}) AS ${aggregation}_${yAxisVar}_den`,
+          ];
+        }
+        // Average adherence – return raw numerator & denominator sums
+        if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
+          const baseUnit = yAxisVar.replace('_adherent', '');
+          return [
+            `SUM(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
+            `SUM(${baseUnit}) AS ${aggregation}_${yAxisVar}_den`,
+          ];
+        }
         return `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
       })
     ));
@@ -1002,6 +1018,15 @@ export class RootStore {
                   counts_per_period: Number(row.visit_count || 0),
                 };
               }
+              // Adherence avg: pass through raw numerator + denominator for correct aggregation
+              if (yAxisVar.endsWith('_adherent') && aggType === 'avg') {
+                return {
+                  timePeriod: row[timeAggregation] as TimePeriod,
+                  data: Number(row[aggVar] || 0),
+                  counts_per_period: Number(row.visit_count || 0),
+                  _adherence_den: Number(row[`${aggVar}_den`] || 0),
+                };
+              }
               // Otherwise, return the data for this chart
               return {
                 timePeriod: row[timeAggregation] as TimePeriod,
@@ -1032,22 +1057,28 @@ export class RootStore {
                   }
                   // AVG: Track raw data to re-calculate weighted average
                 } else if (aggType === 'avg') {
-                  existing.counts_per_period!.push(curr.counts_per_period || 0);
-                  existing.data_per_period!.push(curr.data);
-                  const totalCount = existing.counts_per_period!.reduce((a, b) => a + b, 0);
-
-                  if (typeof existing.data === 'object' && typeof curr.data === 'object') {
-                    const costKeys = Object.keys(existing.data) as (keyof typeof existing.data)[];
-                    const avgObj: Record<string, number> = {};
-                    for (const key of costKeys) {
-                      const values = existing.data_per_period!.map((d) => (typeof d === 'object' ? d[key] : 0));
-                      const weighted = existing.counts_per_period!.map((count, idx) => (count * (values[idx] || 0)) / (totalCount || 1));
-                      avgObj[key] = weighted.reduce((a, b) => a + b, 0);
-                    }
-                    existing.data = avgObj;
+                  // Adherence avg: accumulate raw numerator & denominator sums
+                  if (curr._adherence_den !== undefined) {
+                    (existing.data as number) += curr.data as number;
+                    existing._adherence_den = (existing._adherence_den || 0) + curr._adherence_den;
                   } else {
-                    const terms = existing.counts_per_period!.map((count, idx) => (count * (existing.data_per_period ? (existing.data_per_period[idx] as number) : 0)) / (totalCount || 1));
-                    existing.data = terms.reduce((a, b) => a + b, 0);
+                    existing.counts_per_period!.push(curr.counts_per_period || 0);
+                    existing.data_per_period!.push(curr.data);
+                    const totalCount = existing.counts_per_period!.reduce((a, b) => a + b, 0);
+
+                    if (typeof existing.data === 'object' && typeof curr.data === 'object') {
+                      const costKeys = Object.keys(existing.data) as (keyof typeof existing.data)[];
+                      const avgObj: Record<string, number> = {};
+                      for (const key of costKeys) {
+                        const values = existing.data_per_period!.map((d) => (typeof d === 'object' ? d[key] : 0));
+                        const weighted = existing.counts_per_period!.map((count, idx) => (count * (values[idx] || 0)) / (totalCount || 1));
+                        avgObj[key] = weighted.reduce((a, b) => a + b, 0);
+                      }
+                      existing.data = avgObj;
+                    } else {
+                      const terms = existing.counts_per_period!.map((count, idx) => (count * (existing.data_per_period ? (existing.data_per_period[idx] as number) : 0)) / (totalCount || 1));
+                      existing.data = terms.reduce((a, b) => a + b, 0);
+                    }
                   }
                 }
               } else {
@@ -1055,11 +1086,16 @@ export class RootStore {
                 acc.push({ ...curr, counts_per_period: curr.counts_per_period ? [curr.counts_per_period] : [], data_per_period: [curr.data] });
               }
               return acc;
-            }, [] as { timePeriod: TimePeriod; data: number | Record<Cost, number>, counts_per_period?: number[], data_per_period?: (number | Record<Cost, number>)[] }[])
-            // Remove counts_per_period and data_per_period to return the final chart data
+            }, [] as { timePeriod: TimePeriod; data: number | Record<Cost, number>, counts_per_period?: number[], data_per_period?: (number | Record<Cost, number>)[], _adherence_den?: number }[])
+            // Compute final values and clean up tracking fields
             .map((entry) => {
+              // Adherence avg: compute the ratio from accumulated numerator / denominator
+              if (entry._adherence_den !== undefined) {
+                entry.data = entry._adherence_den > 0 ? (entry.data as number) / entry._adherence_den : 0;
+              }
               delete entry.counts_per_period;
               delete entry.data_per_period;
+              delete entry._adherence_den;
               return entry as { timePeriod: TimePeriod; data: number | Record<Cost, number> };
             })
             // Sort the data by time period
@@ -1129,6 +1165,34 @@ export class RootStore {
                   THEN ms_drg_weight ELSE NULL END) / visit_count_comparison_sum AS case_mix_index_comparison_${aggregation}
               `;
         }
+        // Special case: Overall adherence (avg. adherent units as percentage of total units)
+        if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
+          const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
+          return `
+                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN (${baseSum}) ELSE 0 END) > 0 
+                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) / 
+                       SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN (${baseSum}) ELSE 0 END) 
+                  ELSE NULL END AS ${yAxisVar}_current_${aggregation},
+                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN (${baseSum}) ELSE 0 END) > 0 
+                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) / 
+                       SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN (${baseSum}) ELSE 0 END) 
+                  ELSE NULL END AS ${yAxisVar}_comparison_${aggregation}
+              `;
+        }
+        // Avg. adherent units as percentage of total units
+        if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
+          const baseUnit = yAxisVar.replace('_adherent', '');
+          return `
+                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${baseUnit} ELSE 0 END) > 0 
+                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) / 
+                       SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${baseUnit} ELSE 0 END) 
+                  ELSE NULL END AS ${yAxisVar}_current_${aggregation},
+                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${baseUnit} ELSE 0 END) > 0 
+                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) / 
+                       SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${baseUnit} ELSE 0 END) 
+                  ELSE NULL END AS ${yAxisVar}_comparison_${aggregation}
+              `;
+        }
         // Default: Other stats
         return `
               ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
@@ -1181,6 +1245,22 @@ export class RootStore {
       if (yAxisVar === 'case_mix_index') {
         sparklineSelects.push(
           `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`,
+        );
+        return;
+      }
+      // Special case: Overall Adherence (Avg. adherent units as percentage of total units)
+      if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
+        const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
+        sparklineSelects.push(
+          `CASE WHEN SUM(${baseSum}) > 0 THEN CAST(SUM(${yAxisVar}) AS DOUBLE) / SUM(${baseSum}) ELSE NULL END AS ${aggregation}_${yAxisVar}`,
+        );
+        return;
+      }
+      // Avg. adherent units as percentage of total units
+      if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
+        const baseUnit = yAxisVar.replace('_adherent', '');
+        sparklineSelects.push(
+          `CASE WHEN SUM(${baseUnit}) > 0 THEN CAST(SUM(${yAxisVar}) AS DOUBLE) / SUM(${baseUnit}) ELSE NULL END AS ${aggregation}_${yAxisVar}`,
         );
         return;
       }
