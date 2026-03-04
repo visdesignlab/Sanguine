@@ -274,7 +274,7 @@ export const GUIDELINE_ADHERENT = {
     // Adherence units & decimal truncation for display
     units: {
       sum: 'Adherent RBC Units',
-      avg: '%',
+      avg: '% of RBC Units Guideline Adherent',
       avgShort: '%',
       sumShort: '',
     },
@@ -290,7 +290,7 @@ export const GUIDELINE_ADHERENT = {
     },
     units: {
       sum: 'Adherent Plasma Units',
-      avg: '%',
+      avg: '% of Plasma Units Guideline Adherent',
       avgShort: '%',
       sumShort: '',
     },
@@ -306,7 +306,7 @@ export const GUIDELINE_ADHERENT = {
     },
     units: {
       sum: 'Adherent Platelet Units',
-      avg: '%',
+      avg: '% of Platelet Units Guideline Adherent',
       avgShort: '%',
       sumShort: '',
     },
@@ -322,7 +322,7 @@ export const GUIDELINE_ADHERENT = {
     },
     units: {
       sum: 'Adherent Cryo Units',
-      avg: '%',
+      avg: '% of Cryo Units Guideline Adherent',
       avgShort: '%',
       sumShort: '',
     },
@@ -341,7 +341,7 @@ export const OVERALL_GUIDELINE_ADHERENT = {
   },
   units: {
     sum: 'Adherent Units',
-    avg: '%',
+    avg: '% of Units Guideline Adherent',
     avgShort: '%',
     sumShort: '',
   },
