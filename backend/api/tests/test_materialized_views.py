@@ -247,10 +247,10 @@ class MaterializedViewTests(TransactionTestCase):
             {
                 "name": "off_by_one_thresholds_are_non_adherent",
                 "visit_no": 1004,
-                "hgb": Decimal("7.0"),
-                "inr": Decimal("1.99"),
-                "plt": Decimal("10000"),
-                "fib": Decimal("100"),
+                "hgb": Decimal("7.6"),
+                "inr": Decimal("1.49"),
+                "plt": Decimal("15001"),
+                "fib": Decimal("201"),
                 "expected": (0, 0, 0, 0, 0),
             },
         ]
