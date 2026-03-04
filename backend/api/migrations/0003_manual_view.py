@@ -8,15 +8,6 @@ def create_guideline_adherence_proc(apps, schema_editor):
         TRUNCATE TABLE GuidelineAdherence;
 
         /* This procedure calculates the number of guideline adherent units per provider per visit ================*/
-        INSERT INTO GuidelineAdherence (
-            visit_no,
-            prov_id,
-            attend_prov_line, -- Attending provider line number for this visit
-            rbc_units_adherent, -- Number of RBC units transfused that meet guideline adherence criteria
-            ffp_units_adherent, -- Number of FFP units transfused that meet guideline adherence criteria
-            plt_units_adherent, -- Number of PLT units transfused that meet guideline adherence criteria
-            cryo_units_adherent -- Number of CRYO units transfused that meet guideline adherence criteria
-        )
         /* Matches every transfusion event to the specific attending provider who was "on the clock" for the patient at that exact moment ===== */
         WITH RankedTransfusions AS (
             SELECT
@@ -211,6 +202,15 @@ def create_guideline_adherence_proc(apps, schema_editor):
             LEFT JOIN ClosestLabs cl ON t.transfusion_id = cl.transfusion_id
         )
         /* Returns the number of guideline adherent units per provider per visit ==================*/
+        INSERT INTO GuidelineAdherence (
+            visit_no,
+            prov_id,
+            attend_prov_line,
+            rbc_units_adherent,
+            ffp_units_adherent,
+            plt_units_adherent,
+            cryo_units_adherent
+        )
         SELECT
             visit_no,
             prov_id,
