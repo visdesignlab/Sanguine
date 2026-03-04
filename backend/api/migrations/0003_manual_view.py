@@ -46,14 +46,14 @@ def create_guideline_adherence_proc(apps, schema_editor):
         VisitContext AS (
             SELECT 
                 v.visit_no, v.cci_chf, v.cci_cvd, v.cci_mi,
-                MAX(CASE WHEN bc.cpt_code BETWEEN '59000' AND '59899' AND bc.cpt_code NOT LIKE '%F' THEN 1 ELSE 0 END) as is_ob,
-                MAX(CASE WHEN (bc.cpt_code BETWEEN '10000' AND '69999' AND bc.cpt_code NOT LIKE '%F') AND (bc.cpt_code_desc LIKE '%BLEEDING%' OR bc.cpt_code_desc LIKE '%HEMORRHAGE%' OR bc.cpt_code_desc LIKE '%HEMRRG%') THEN 1 ELSE 0 END) as flag_bleeding,
+                MAX(CASE WHEN bc.cpt_code BETWEEN '59000' AND '59899' THEN 1 ELSE 0 END) as is_ob,
+                MAX(CASE WHEN (bc.cpt_code BETWEEN '10000' AND '69999') AND (UPPER(bc.cpt_code_desc) REGEXP 'BLEEDING|HEMORRHAGE|HEMRRG') THEN 1 ELSE 0 END) as flag_bleeding,
                 MAX(CASE WHEN bc.cpt_code IN ('62270', '62272') THEN 1 ELSE 0 END) as flag_lp,
-                MAX(CASE WHEN (bc.cpt_code BETWEEN '61000' AND '63999' AND bc.cpt_code NOT LIKE '%F') THEN 1 ELSE 0 END) as flag_neuro_critical,
-                MAX(CASE WHEN (bc.cpt_code LIKE '33%' AND bc.cpt_code NOT LIKE '%F') THEN 1 ELSE 0 END) as flag_cardiac_surg,
-                MAX(CASE WHEN (bc.cpt_code BETWEEN '92920' AND '92944' AND bc.cpt_code NOT LIKE '%F') THEN 1 ELSE 0 END) as flag_pci_indicated,
+                MAX(CASE WHEN (bc.cpt_code BETWEEN '61000' AND '63999') THEN 1 ELSE 0 END) as flag_neuro_critical,
+                MAX(CASE WHEN (bc.cpt_code REGEXP '^33') THEN 1 ELSE 0 END) as flag_cardiac_surg,
+                MAX(CASE WHEN (bc.cpt_code BETWEEN '92920' AND '92944') THEN 1 ELSE 0 END) as flag_pci_indicated,
                 MAX(CASE WHEN bc.cpt_code IN ('36555', '36556', '36568', '36569', '36580', '36584') THEN 1 ELSE 0 END) as flag_cvc,
-                MAX(CASE WHEN bc.cpt_code BETWEEN '62263' AND '62329' AND bc.cpt_code NOT LIKE '%F' THEN 1 ELSE 0 END) as flag_neuraxial
+                MAX(CASE WHEN bc.cpt_code BETWEEN '62263' AND '62329' THEN 1 ELSE 0 END) as flag_neuraxial
             FROM Visit v
             JOIN (SELECT DISTINCT visit_no FROM UniqueProviderTransfusions) u ON u.visit_no = v.visit_no
             LEFT JOIN BillingCode bc ON v.visit_no = bc.visit_no
@@ -91,7 +91,7 @@ def create_guideline_adherence_proc(apps, schema_editor):
                     WHEN UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN') THEN 'HGB'
                     WHEN UPPER(l.result_desc) = 'INR' THEN 'INR'
                     WHEN UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT') THEN 'PLT'
-                    WHEN UPPER(l.result_desc) LIKE '%FIBRINOGEN%' THEN 'FIB'
+                    WHEN UPPER(l.result_desc) REGEXP 'FIBRINOGEN' THEN 'FIB'
                 END as lab_group,
                 ROW_NUMBER() OVER (
                     PARTITION BY 
@@ -100,7 +100,7 @@ def create_guideline_adherence_proc(apps, schema_editor):
                             WHEN UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN') THEN 'HGB'
                             WHEN UPPER(l.result_desc) = 'INR' THEN 'INR'
                             WHEN UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT') THEN 'PLT'
-                            WHEN UPPER(l.result_desc) LIKE '%FIBRINOGEN%' THEN 'FIB'
+                            WHEN UPPER(l.result_desc) REGEXP 'FIBRINOGEN' THEN 'FIB'
                         END
                     ORDER BY ABS(TIMESTAMPDIFF(SECOND, l.lab_draw_dtm, t.trnsfsn_dtm)) ASC
                 ) as rn_lab
@@ -109,7 +109,7 @@ def create_guideline_adherence_proc(apps, schema_editor):
             WHERE l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
               AND (
                   UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN', 'INR', 'PLT', 'PLATELET COUNT') 
-                  OR UPPER(l.result_desc) LIKE '%FIBRINOGEN%'
+                  OR UPPER(l.result_desc) REGEXP 'FIBRINOGEN'
               )
         ),
         ClosestLabs AS (
@@ -380,9 +380,9 @@ def create_materialize_proc(apps, schema_editor):
             SELECT 
                 ranked_med.visit_no,
                 ranked_med.prov_id,
-                MAX(CASE WHEN ranked_med.medication_name LIKE '%B12%' OR ranked_med.medication_name LIKE '%COBALAMIN%' THEN 1 ELSE 0 END) AS has_b12,
-                MAX(CASE WHEN ranked_med.medication_name LIKE '%IRON%' OR ranked_med.medication_name LIKE '%FERROUS%' OR ranked_med.medication_name LIKE '%FERRIC%' THEN 1 ELSE 0 END) AS has_iron,
-                MAX(CASE WHEN ranked_med.medication_name LIKE '%TRANEXAMIC%' OR ranked_med.medication_name LIKE '%AMICAR%' THEN 1 ELSE 0 END) AS has_antifibrinolytic
+                MAX(CASE WHEN UPPER(ranked_med.medication_name) REGEXP 'B12|COBALAMIN' THEN 1 ELSE 0 END) AS has_b12,
+                MAX(CASE WHEN UPPER(ranked_med.medication_name) REGEXP 'IRON|FERROUS|FERRIC' THEN 1 ELSE 0 END) AS has_iron,
+                MAX(CASE WHEN UPPER(ranked_med.medication_name) REGEXP 'TRANEXAMIC|AMICAR' THEN 1 ELSE 0 END) AS has_antifibrinolytic
             FROM (
                 SELECT 
                     ap_int.visit_no,
