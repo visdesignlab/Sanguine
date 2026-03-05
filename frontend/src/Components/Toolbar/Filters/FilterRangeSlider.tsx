@@ -4,25 +4,27 @@ import {
   useContext, useMemo, useState, useEffect,
 } from 'react';
 import {
-  Store, ProductMaximums, MANUAL_INFINITY, ApplicationState,
+  Store, MANUAL_INFINITY, ApplicationState,
 } from '../../../Store/Store';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
+import { CELL_SAVER_ML } from '../../../Types/bloodProducts';
 
 type NumberArrayKeys<T> = {
   [K in keyof T]: T[K] extends number[] ? K : never
 }[keyof T];
 
-export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<ApplicationState['filterValues']>; }) {
+export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: { varName: NumberArrayKeys<ApplicationState['filterValues']>; paddingLeft?: number; paddingRight?: number }) {
   const store = useContext(Store);
 
   // Initial filter range & store filter range
   const [initialFilterMin, initialFilterMax] = store.initialFilterValues[varName];
   const [currentFilterMin, currentFilterMax] = store.filterValues[varName];
 
+  // TODO redo the clamping logic
   // Clamp slider max value to prevent outliers
   const clampedMax = useMemo(
-    () => Math.min(ProductMaximums[varName] ?? MANUAL_INFINITY, initialFilterMax),
-    [varName, initialFilterMax],
+    () => Math.min(MANUAL_INFINITY, initialFilterMax),
+    [initialFilterMax],
   );
 
   // Local state for smooth sliding
@@ -53,15 +55,19 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Applic
       onChangeEnd={(v) => setStoreFilterValue(v)}
       min={initialFilterMin}
       max={clampedMax}
-      step={varName === 'cell_saver_ml' ? 50 : 1}
+      step={varName === CELL_SAVER_ML ? 50 : 1}
       color={isFilterActive ? 'blue.6' : DEFAULT_DATA_COLOR}
       marks={[
         { value: initialFilterMin, label: `${initialFilterMin}` },
-        { value: clampedMax, label: `${clampedMax}${initialFilterMax > ProductMaximums[varName] ? '+' : ''}` },
+        { value: clampedMax, label: `${clampedMax}` },
       ]}
       minRange={0}
       mb="xl"
       styles={{
+        root: {
+          paddingLeft,
+          paddingRight,
+        },
         label: {
           backgroundColor: 'white',
           color: isFilterActive ? 'var(--mantine-color-blue-6)' : DEFAULT_DATA_COLOR,

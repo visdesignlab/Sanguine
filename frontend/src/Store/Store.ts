@@ -31,20 +31,23 @@ import {
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
 import { expandTimePeriod } from '../Utils/expandTimePeriod';
+import { HistogramData } from '../Types/database';
+import {
+  BLOOD_PRODUCTS_ARRAY,
+  BloodComponent,
+  CELL_SAVER_ML, PLT_UNITS, RBC_UNITS,
+} from '../Types/bloodProducts';
 
-// endregion
-
-// region Constants
 export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
-export const ProductMaximums = {
-  rbc_units: 10,
-  ffp_units: 10,
-  plt_units: 10,
-  cryo_units: 50,
-  cell_saver_ml: 10000,
-  los: 30,
-};
+// export const ProductMaximums = {
+//   rbc_units: 10,
+//   ffp_units: 10,
+//   plt_units: 10,
+//   cryo_units: 50,
+//   cell_saver_ml: 10000,
+//   los: 30,
+// };
 
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
@@ -62,7 +65,7 @@ export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
 
 export const DEFAULT_CHART_CONFIGS: DashboardChartConfig[] = [
   {
-    chartId: '0', xAxisVar: 'month', yAxisVar: 'rbc_units', aggregation: 'sum', chartType: 'line',
+    chartId: '0', xAxisVar: 'month', yAxisVar: RBC_UNITS, aggregation: 'sum', chartType: 'line',
   },
   {
     chartId: '1', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
@@ -74,13 +77,13 @@ export const DEFAULT_CHART_CONFIGS: DashboardChartConfig[] = [
 
 export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
   {
-    statId: '1', yAxisVar: 'rbc_units', aggregation: 'avg', title: 'Average RBCs Transfused Per Visit',
+    statId: '1', yAxisVar: RBC_UNITS, aggregation: 'avg', title: 'Average RBCs Transfused Per Visit',
   },
   {
-    statId: '2', yAxisVar: 'plt_units', aggregation: 'avg', title: 'Average Platelets Transfused Per Visit',
+    statId: '2', yAxisVar: PLT_UNITS, aggregation: 'avg', title: 'Average Platelets Transfused Per Visit',
   },
   {
-    statId: '3', yAxisVar: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
+    statId: '3', yAxisVar: CELL_SAVER_ML, aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
   },
   {
     statId: '4', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', title: 'Total Blood Product Costs',
@@ -192,7 +195,11 @@ export class RootStore {
     procedureIds: [] as string[],
   };
 
-  histogramData: Record<string, { units: string, count: number }[] | undefined> = {};
+  histogramData: Record<string, HistogramData> = {};
+
+  getHistogramData(bloodProduct: BloodComponent) {
+    return this.histogramData[bloodProduct];
+  }
 
   get rbc_unitsHistogramData() { return this.histogramData.rbc_units; }
 
@@ -351,7 +358,7 @@ export class RootStore {
         },
       }), initialDates);
     },
-    resetBloodComponentFilters: (initialFilters: Pick<ApplicationState['filterValues'], 'rbc_units' | 'ffp_units' | 'plt_units' | 'cryo_units' | 'cell_saver_ml'>) => {
+    resetBloodComponentFilters: (initialFilters: Pick<ApplicationState['filterValues'], BloodComponent>) => {
       this.applyAction('Reset Blood Component Filters', (state, filters) => ({
         ...state,
         filterValues: {
@@ -962,7 +969,7 @@ export class RootStore {
 
     // Get the data from each chart, grouped by month, quarter, and year
     const query = `
-      SELECT 
+      SELECT
         month,
         quarter,
         year,
@@ -1359,17 +1366,38 @@ export class RootStore {
 
   async calculateDefaultFilterValues() {
     if (!this.duckDB) return;
-    // Default filter values based on min and max values
+    // Default filter values based on visit-level min and max values
     const result = await this.duckDB.query(`
+      WITH visit_rollups AS (
+        SELECT
+          visit_no,
+          MIN(adm_dtm) AS min_adm_dtm,
+          MAX(dsch_dtm) AS max_dsch_dtm,
+          SUM(COALESCE(rbc_units, 0)) AS rbc_units,
+          SUM(COALESCE(ffp_units, 0)) AS ffp_units,
+          SUM(COALESCE(plt_units, 0)) AS plt_units,
+          SUM(COALESCE(cryo_units, 0)) AS cryo_units,
+          SUM(COALESCE(cell_saver_ml, 0)) AS cell_saver_ml,
+          MAX(COALESCE(los, 0)) AS los
+        FROM visits
+        GROUP BY visit_no
+      )
       SELECT
-        MIN(adm_dtm) AS min_adm, MAX(dsch_dtm) AS max_dsch,
-        MIN(rbc_units) AS min_rbc, MAX(rbc_units) AS max_rbc,
-        MIN(ffp_units) AS min_ffp, MAX(ffp_units) AS max_ffp,
-        MIN(plt_units) AS min_plt, MAX(plt_units) AS max_plt,
-        MIN(cryo_units) AS min_cryo, MAX(cryo_units) AS max_cryo,
-        MIN(cell_saver_ml) AS min_cell_saver, MAX(cell_saver_ml) AS max_cell_saver,
-        MIN(los) AS min_los, MAX(los) AS max_los
-      FROM visits;
+        MIN(min_adm_dtm) AS min_adm,
+        MAX(max_dsch_dtm) AS max_dsch,
+        MIN(rbc_units) AS min_rbc,
+        MAX(rbc_units) AS max_rbc,
+        MIN(ffp_units) AS min_ffp,
+        MAX(ffp_units) AS max_ffp,
+        MIN(plt_units) AS min_plt,
+        MAX(plt_units) AS max_plt,
+        MIN(cryo_units) AS min_cryo,
+        MAX(cryo_units) AS max_cryo,
+        MIN(cell_saver_ml) AS min_cell_saver,
+        MAX(cell_saver_ml) AS max_cell_saver,
+        MIN(los) AS min_los,
+        MAX(los) AS max_los
+      FROM visit_rollups;
     `);
     const row = result.toArray()[0].toJSON();
 
@@ -1434,7 +1462,7 @@ export class RootStore {
   get bloodComponentFiltersAppliedCount(): number {
     let count = 0;
     const filters = this.filterValues;
-    const keys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
+    const keys = BLOOD_PRODUCTS_ARRAY;
     keys.forEach((key) => {
       const [min, max] = filters[key] as [number, number];
       const [initMin, initMax] = this._initialFilterValues[key] as [number, number];
@@ -1535,30 +1563,54 @@ export class RootStore {
    */
   async generateHistogramData() {
     if (!this.duckDB) return;
-    const components = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml', 'los'];
+    const components = [...BLOOD_PRODUCTS_ARRAY, 'los'];
     const histogramData: Record<string, { units: string, count: number }[]> = {};
-    const filters = this.filterValues;
     // For each component, generate histogram data
     await Promise.all(components.map(async (component) => {
-      // Get the min and max values for the component, and the number of bins
-      const [minRange, maxRange] = filters[component as keyof typeof filters] as [number, number];
-      const numBins = Math.min(20, Math.max(1, maxRange - minRange));
-      // Cap the max range to the product maximum
-      const productMaximum = ProductMaximums[component as keyof typeof ProductMaximums] || maxRange;
-      // Query to get the counts for each bin
+      const visitValueExpression = component === 'los'
+        ? 'MAX(COALESCE(los, 0))'
+        : `SUM(COALESCE(${component}, 0))`;
+
       const result = await this.duckDB!.query(`
-        WITH bins AS (
-          SELECT equi_width_bins(min(${component}), LEAST(${productMaximum}, max(${component})), ${numBins}, false) AS bin
+        WITH visit_values AS (
+          SELECT
+            visit_no,
+            ${visitValueExpression} AS visit_value
           FROM filteredVisits
+          GROUP BY visit_no
+        ),
+        binned AS (
+          SELECT
+            CASE
+              WHEN '${component}' = 'cell_saver_ml' THEN
+                CASE
+                  WHEN visit_value = 0 THEN 0
+                  ELSE CEIL(visit_value / 50.0) * 50
+                END
+              ELSE
+                visit_value
+            END AS bin_value
+          FROM visit_values
+          WHERE visit_value IS NOT NULL
         )
-        SELECT HISTOGRAM(${component}, bins.bin) AS histogram
-        FROM filteredVisits, bins;
-      `);
+        SELECT
+          bin_value,
+          COUNT(*) AS count
+        FROM binned
+        GROUP BY bin_value
+        ORDER BY bin_value;`);
       // Map the result to the histogram data
-      histogramData[component] = result.toArray().flatMap((row) => {
-        const { histogram } = row.toJSON();
-        return Object.entries(histogram.toJSON()).map(([units, count]) => ({ units, count: Number(count) }));
-      });
+      histogramData[component] = result
+        .toArray()
+        .map((row) => {
+          // eslint-disable-next-line camelcase
+          const { bin_value, count } = row.toJSON();
+
+          return {
+            units: String(bin_value),
+            count: Number(count),
+          };
+        });
     }));
     this.histogramData = histogramData;
   }
@@ -1648,24 +1700,30 @@ export class RootStore {
     const dateFrom = filterValues.dateFrom.toISOString();
     const dateTo = filterValues.dateTo.toISOString();
 
-    // Generate the filter conditions --------
-    const filterConditions: string[] = [];
+    // Generate the visit-level HAVING conditions --------
+    const visitFilterConditions: string[] = [];
     const sqlString = (value: string) => `'${value.replace(/'/g, "''")}'`;
 
-    const rangeFilterKeys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml', 'los'] as const;
-    rangeFilterKeys.forEach((key) => {
+    const sumRangeFilterKeys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
+    sumRangeFilterKeys.forEach((key) => {
       const [min, max] = filterValues[key];
       const [initialMin, initialMax] = this._initialFilterValues[key];
       if (min !== initialMin || max !== initialMax) {
-        filterConditions.push(`${key} BETWEEN ${min} AND ${max}`);
+        visitFilterConditions.push(`SUM(COALESCE(${key}, 0)) BETWEEN ${min} AND ${max}`);
       }
     });
+
+    const [losMin, losMax] = filterValues.los;
+    const [initialLosMin, initialLosMax] = this._initialFilterValues.los;
+    if (losMin !== initialLosMin || losMax !== initialLosMax) {
+      visitFilterConditions.push(`MAX(COALESCE(los, 0)) BETWEEN ${losMin} AND ${losMax}`);
+    }
 
     const booleanFilterKeys = ['b12', 'iron', 'antifibrinolytic', 'death', 'vent', 'stroke', 'ecmo'] as const;
     booleanFilterKeys.forEach((key) => {
       const value = filterValues[key];
       if (typeof value === 'boolean') {
-        filterConditions.push(`${key} = ${value ? 1 : 0}`);
+        visitFilterConditions.push(`BOOL_OR(CAST(COALESCE(${key}, 0) AS INTEGER) = ${value ? 1 : 0})`);
       }
     });
 
@@ -1677,7 +1735,7 @@ export class RootStore {
       const safeDepartmentIds = filterValues.departmentIds.filter((id) => safeIdPattern.test(id));
       if (safeDepartmentIds.length > 0) {
         const departmentIdList = safeDepartmentIds.map(sqlString).join(', ');
-        filterConditions.push(`list_has_any(department_ids, [${departmentIdList}]::VARCHAR[])`);
+        visitFilterConditions.push(`BOOL_OR(list_has_any(department_ids, [${departmentIdList}]::VARCHAR[]))`);
       }
     }
 
@@ -1685,27 +1743,29 @@ export class RootStore {
       const safeProcedureIds = filterValues.procedureIds.filter((id) => safeIdPattern.test(id));
       if (safeProcedureIds.length > 0) {
         const procedureIdList = safeProcedureIds.map(sqlString).join(', ');
-        filterConditions.push(`list_has_any(procedure_ids, [${procedureIdList}]::VARCHAR[])`);
+        visitFilterConditions.push(`BOOL_OR(list_has_any(procedure_ids, [${procedureIdList}]::VARCHAR[]))`);
       }
     }
 
     // Add date filters if applied
     if (this.dateFiltersAppliedCount > 0) {
-      filterConditions.push(`adm_dtm BETWEEN '${dateFrom}' AND '${dateTo}'`);
+      visitFilterConditions.push(`BOOL_OR(adm_dtm BETWEEN '${dateFrom}' AND '${dateTo}')`);
     }
 
-    // Join the filter conditions with AND
-    const filtersToApply = filterConditions.join(' AND ');
+    // Join the visit-level filter conditions with AND
+    const visitFiltersToApply = visitFilterConditions.join(' AND ');
 
-    // Query to filter the filteredVisitIds table based on the filter conditions --------
+    // Query to filter the filteredVisitIds table at visit level --------
     await this.duckDB.query(`
       TRUNCATE TABLE filteredVisitIds;
       INSERT INTO filteredVisitIds
-        SELECT DISTINCT visit_no
+        SELECT visit_no
         FROM visits
-        ${filtersToApply ? `WHERE ${filtersToApply}` : ''}
+        GROUP BY visit_no
+        ${visitFiltersToApply ? `HAVING ${visitFiltersToApply}` : ''}
         ;
     `);
+
     // Update all the data retrievers
     await this.updateFilteredVisitsLength();
     await this.computeDashboardChartData();

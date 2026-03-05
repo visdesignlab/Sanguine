@@ -127,10 +127,11 @@ poetry run python manage.py mock50million
 poetry run python manage.py generate_parquets
 ```
 
-To generate only one artifact:
+To generate only one artifact run one of the following (NOTE: procedure_hierarchy also generates visit_attributes as a dependency):
 
 ```bash
 poetry run python manage.py generate_parquets --generate visit_attributes
+poetry run python manage.py generate_parquets --generate surgery_cases
 poetry run python manage.py generate_parquets --generate procedure_hierarchy
 ```
 
