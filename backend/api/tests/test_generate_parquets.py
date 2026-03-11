@@ -62,11 +62,11 @@ def valid_visit_attributes_row() -> dict:
         "b12": True,
         "iron": True,
         "antifibrinolytic": False,
-        "rbc_adherent": 1,
-        "ffp_adherent": 1,
-        "plt_adherent": 1,
-        "cryo_adherent": 0,
-        "overall_adherent": 3,
+        "rbc_units_adherent": 1,
+        "ffp_units_adherent": 1,
+        "plt_units_adherent": 1,
+        "cryo_units_adherent": 0,
+        "overall_units_adherent": 3,
         "attending_provider": "Provider A",
         "attending_provider_id": "PROV-A",
         "attending_provider_line": 1,
@@ -174,11 +174,11 @@ class GenerateParquetsTests(TransactionTestCase):
             self.assertEqual(row["plt_units"], 1)
             self.assertEqual(row["cryo_units"], 1)
             self.assertEqual(row["overall_units"], 5)
-            self.assertEqual(row["rbc_adherent"], 1)
-            self.assertEqual(row["ffp_adherent"], 1)
-            self.assertEqual(row["plt_adherent"], 1)
-            self.assertEqual(row["cryo_adherent"], 1)
-            self.assertEqual(row["overall_adherent"], 4)
+            self.assertEqual(row["rbc_units_adherent"], 2)
+            self.assertEqual(row["ffp_units_adherent"], 0)
+            self.assertEqual(row["plt_units_adherent"], 0)
+            self.assertEqual(row["cryo_units_adherent"], 0)
+            self.assertEqual(row["overall_units_adherent"], 2)
             self.assertEqual(sorted(row["department_ids"]), ["critical-care", "ecmo"])
             self.assertEqual(
                 sorted(row["procedure_ids"]),
@@ -374,11 +374,11 @@ class GenerateParquetsTests(TransactionTestCase):
             "b12": {"bad": "bool"},
             "iron": {"bad": "bool"},
             "antifibrinolytic": {"bad": "bool"},
-            "rbc_adherent": {"bad": "uint16"},
-            "ffp_adherent": {"bad": "uint16"},
-            "plt_adherent": {"bad": "uint16"},
-            "cryo_adherent": {"bad": "uint16"},
-            "overall_adherent": {"bad": "uint16"},
+            "rbc_units_adherent": {"bad": "uint16"},
+            "ffp_units_adherent": {"bad": "uint16"},
+            "plt_units_adherent": {"bad": "uint16"},
+            "cryo_units_adherent": {"bad": "uint16"},
+            "overall_units_adherent": {"bad": "uint16"},
             "attending_provider": {"bad": "string"},
             "attending_provider_id": {"bad": "string"},
             "attending_provider_line": {"bad": "uint16"},
@@ -600,6 +600,7 @@ class GenerateParquetsTests(TransactionTestCase):
                         call_command("generate_parquets", generate=case["mode"], stdout=out)
                         output = out.getvalue()
 
+                self.assertIn("Successfully materialized GuidelineAdherence.", output)
                 self.assertIn("Successfully materialized VisitAttributes.", output)
 
                 if case["expect_visit_msg"]:

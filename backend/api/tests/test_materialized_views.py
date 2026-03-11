@@ -4,9 +4,10 @@ from decimal import Decimal
 from django.db import DatabaseError, connection
 from django.test import TransactionTestCase
 
-from api.models.intelvia import Visit
+from api.models.intelvia import BillingCode, Medication, Visit
 
 from .materialized_view_test_utils import (
+    add_attending_provider,
     add_billing_code,
     add_lab,
     add_medication,
@@ -14,6 +15,7 @@ from .materialized_view_test_utils import (
     count_visit_attributes_rows,
     create_empty_visit_fixture,
     create_visit_fixture,
+    fetch_guideline_adherence_rows,
     fetch_visit_attributes_rows,
     materialize_visit_attributes,
     truncate_intelvia_tables,
@@ -54,8 +56,29 @@ class MaterializedViewTests(TransactionTestCase):
             )
             materialize_proc_count = cursor.fetchone()[0]
 
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_schema = DATABASE()
+                  AND table_name = 'GuidelineAdherence'
+                """
+            )
+            guideline_adherence_table_count = cursor.fetchone()[0]
+
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM information_schema.routines
+                WHERE routine_schema = DATABASE()
+                  AND routine_type = 'PROCEDURE'
+                  AND routine_name = 'materializeGuidelineAdherence'
+                """
+            )
+            guideline_adherence_proc_count = cursor.fetchone()[0]
+
         self.assertEqual(visit_attributes_table_count, 1)
         self.assertEqual(materialize_proc_count, 1)
+        self.assertEqual(guideline_adherence_table_count, 1)
+        self.assertEqual(guideline_adherence_proc_count, 1)
 
     def test_materialize_visit_attributes_full_row_golden_for_each_provider(self):
         visit = create_visit_fixture(
@@ -104,11 +127,11 @@ class MaterializedViewTests(TransactionTestCase):
                 "b12": 1,
                 "iron": 1,
                 "antifibrinolytic": 1,
-                "rbc_adherent": 1,
-                "ffp_adherent": 1,
-                "plt_adherent": 1,
-                "cryo_adherent": 1,
-                "overall_adherent": 4,
+                "rbc_units_adherent": 2,
+                "ffp_units_adherent": 0,
+                "plt_units_adherent": 0,
+                "cryo_units_adherent": 0,
+                "overall_units_adherent": 2,
                 "rbc_units_cost": Decimal("400.00"),
                 "ffp_units_cost": Decimal("50.00"),
                 "plt_units_cost": Decimal("500.00"),
@@ -151,11 +174,11 @@ class MaterializedViewTests(TransactionTestCase):
                 "b12": 0,
                 "iron": 0,
                 "antifibrinolytic": 0,
-                "rbc_adherent": 0,
-                "ffp_adherent": 0,
-                "plt_adherent": 0,
-                "cryo_adherent": 0,
-                "overall_adherent": 0,
+                "rbc_units_adherent": 0,
+                "ffp_units_adherent": 0,
+                "plt_units_adherent": 0,
+                "cryo_units_adherent": 0,
+                "overall_units_adherent": 0,
                 "rbc_units_cost": Decimal("0.00"),
                 "ffp_units_cost": Decimal("0.00"),
                 "plt_units_cost": Decimal("0.00"),
@@ -204,32 +227,120 @@ class MaterializedViewTests(TransactionTestCase):
 
         self.assertEqual(first["attending_provider_id"], "PROV-1")
         self.assertEqual(first["rbc_units"], 1)
-        self.assertEqual(first["rbc_adherent"], 1)
+        self.assertEqual(first["rbc_units_adherent"], 0)
         self.assertEqual(first["iron"], 1)
 
         self.assertEqual(second["attending_provider_id"], "PROV-2")
         self.assertEqual(second["rbc_units"], 0)
-        self.assertEqual(second["rbc_adherent"], 0)
+        self.assertEqual(second["rbc_units_adherent"], 0)
         self.assertEqual(second["iron"], 0)
+
+    def test_materialize_visit_attributes_collapses_null_attending_segments_into_single_bucket(self):
+        visit = create_empty_visit_fixture(
+            visit_no=1010,
+            mrn="MRN-1010",
+            provider_ids=(),
+            total_vent_mins=0,
+        )
+
+        add_attending_provider(
+            visit=visit,
+            provider_id="PROV-NULL-1",
+            provider_line=None,
+            start=utc_dt(2024, 1, 2, 9, 0),
+            end=utc_dt(2024, 1, 2, 10, 59),
+            provider_name="Null Provider 1",
+        )
+        add_attending_provider(
+            visit=visit,
+            provider_id="PROV-NULL-2",
+            provider_line=None,
+            start=utc_dt(2024, 1, 2, 11, 0),
+            end=utc_dt(2024, 1, 2, 12, 59),
+            provider_name="Null Provider 2",
+        )
+
+        add_transfusion(
+            visit=visit,
+            transfusion_rank=1,
+            when=utc_dt(2024, 1, 2, 10, 0),
+            blood_unit_number="NULL-RBC-1",
+            rbc_units=1,
+        )
+        add_transfusion(
+            visit=visit,
+            transfusion_rank=2,
+            when=utc_dt(2024, 1, 2, 11, 30),
+            blood_unit_number="NULL-RBC-2",
+            rbc_units=2,
+        )
+        add_lab(
+            visit=visit,
+            lab_id=10101,
+            draw_dtm=utc_dt(2024, 1, 2, 9, 30),
+            result_desc="HGB",
+            result_value=Decimal("6.8"),
+            result_code="HGB",
+            result_loinc="718-7",
+            uom_code="g/dL",
+        )
+        add_medication(
+            visit=visit,
+            order_med_id=Decimal("101001"),
+            medication_name="Vitamin B12 Injection",
+            admin_dtm=utc_dt(2024, 1, 2, 10, 15),
+        )
+        add_medication(
+            visit=visit,
+            order_med_id=Decimal("101002"),
+            medication_name="Ferrous Sulfate",
+            admin_dtm=utc_dt(2024, 1, 2, 11, 15),
+        )
+
+        materialize_visit_attributes()
+
+        guideline_rows = fetch_guideline_adherence_rows(visit.visit_no)
+        self.assertEqual(len(guideline_rows), 1)
+        self.assertIsNone(guideline_rows[0]["prov_id"])
+        self.assertEqual(guideline_rows[0]["attend_prov_line"], 0)
+        self.assertEqual(guideline_rows[0]["rbc_units_adherent"], 3)
+
+        self.assertEqual(count_visit_attributes_rows(visit.visit_no), 1)
+        row = fetch_visit_attributes_rows(visit.visit_no)[0]
+
+        self.assertEqual(row["id"], "1010-0")
+        self.assertEqual(row["attending_provider_line"], 0)
+        self.assertIsNone(row["attending_provider"])
+        self.assertIsNone(row["attending_provider_id"])
+        self.assertEqual(row["is_admitting_attending"], 0)
+        self.assertEqual(row["rbc_units"], 3)
+        self.assertEqual(row["overall_units"], 3)
+        self.assertEqual(row["rbc_units_adherent"], 3)
+        self.assertEqual(row["overall_units_adherent"], 3)
+        self.assertEqual(row["b12"], 1)
+        self.assertEqual(row["iron"], 1)
+        self.assertIsNone(row["los"])
+        self.assertIsNone(row["death"])
+        self.assertIsNone(row["vent"])
 
     def test_materialize_visit_attributes_enforces_adherence_threshold_boundaries(self):
         cases = [
             {
                 "name": "exact_thresholds_are_adherent",
                 "visit_no": 1003,
-                "hgb": Decimal("7.5"),
-                "inr": Decimal("1.5"),
-                "plt": Decimal("15000"),
-                "fib": Decimal("175"),
-                "expected": (1, 1, 1, 1, 4),
+                "hgb": Decimal("6.9"),
+                "inr": Decimal("2.0"),
+                "plt": Decimal("9999"),
+                "fib": Decimal("99"),
+                "expected": (2, 1, 1, 1, 5),
             },
             {
                 "name": "off_by_one_thresholds_are_non_adherent",
                 "visit_no": 1004,
                 "hgb": Decimal("7.6"),
                 "inr": Decimal("1.49"),
-                "plt": Decimal("14999"),
-                "fib": Decimal("174.9"),
+                "plt": Decimal("15001"),
+                "fib": Decimal("201"),
                 "expected": (0, 0, 0, 0, 0),
             },
         ]
@@ -245,16 +356,20 @@ class MaterializedViewTests(TransactionTestCase):
                     plt_result=case["plt"],
                     fibrinogen_result=case["fib"],
                 )
+                if case["name"] == "off_by_one_thresholds_are_non_adherent":
+                    Visit.objects.filter(visit_no=visit.visit_no).update(total_vent_mins=0, ms_drg_weight=0, apr_drg_weight=0)
+                    BillingCode.objects.filter(visit_no=visit.visit_no).delete()
+                    Medication.objects.filter(visit_no=visit.visit_no).delete()
 
                 materialize_visit_attributes()
                 row = fetch_visit_attributes_rows(visit.visit_no)[0]
                 self.assertEqual(
                     (
-                        row["rbc_adherent"],
-                        row["ffp_adherent"],
-                        row["plt_adherent"],
-                        row["cryo_adherent"],
-                        row["overall_adherent"],
+                        row["rbc_units_adherent"],
+                        row["ffp_units_adherent"],
+                        row["plt_units_adherent"],
+                        row["cryo_units_adherent"],
+                        row["overall_units_adherent"],
                     ),
                     case["expected"],
                 )
@@ -307,7 +422,7 @@ class MaterializedViewTests(TransactionTestCase):
         row = fetch_visit_attributes_rows(visit.visit_no)[0]
 
         self.assertEqual(row["rbc_units"], 1)
-        self.assertEqual(row["rbc_adherent"], 0)
+        self.assertEqual(row["rbc_units_adherent"], 0)
 
     def test_materialize_visit_attributes_treats_null_lab_results_as_non_adherent(self):
         visit = create_empty_visit_fixture(
@@ -335,7 +450,7 @@ class MaterializedViewTests(TransactionTestCase):
 
         materialize_visit_attributes()
         row = fetch_visit_attributes_rows(visit.visit_no)[0]
-        self.assertEqual(row["rbc_adherent"], 0)
+        self.assertEqual(row["rbc_units_adherent"], 0)
 
     def test_materialize_visit_attributes_coalesces_nullable_transfusion_fields(self):
         visit = create_empty_visit_fixture(

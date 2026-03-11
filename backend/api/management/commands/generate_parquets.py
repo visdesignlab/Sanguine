@@ -55,11 +55,11 @@ def get_visit_attributes_schema() -> pa.Schema:
         pa.field("b12", pa.bool_(), nullable=True),
         pa.field("iron", pa.bool_(), nullable=True),
         pa.field("antifibrinolytic", pa.bool_(), nullable=True),
-        pa.field("rbc_adherent", pa.uint16(), nullable=False),
-        pa.field("ffp_adherent", pa.uint16(), nullable=False),
-        pa.field("plt_adherent", pa.uint16(), nullable=False),
-        pa.field("cryo_adherent", pa.uint16(), nullable=False),
-        pa.field("overall_adherent", pa.uint16(), nullable=False),
+        pa.field("rbc_units_adherent", pa.uint16(), nullable=False),
+        pa.field("ffp_units_adherent", pa.uint16(), nullable=False),
+        pa.field("plt_units_adherent", pa.uint16(), nullable=False),
+        pa.field("cryo_units_adherent", pa.uint16(), nullable=False),
+        pa.field("overall_units_adherent", pa.uint16(), nullable=False),
         pa.field("attending_provider", pa.string(), nullable=True),
         pa.field("attending_provider_id", pa.string(), nullable=True),
         pa.field("attending_provider_line", pa.uint16(), nullable=False),
@@ -297,6 +297,8 @@ class Command(BaseCommand):
         with connection.cursor() as cursor:
             visits = []
             if should_generate_visit_attributes or should_generate_procedure_hierarchy:
+                cursor.execute("CALL materializeGuidelineAdherence()")
+                self.stdout.write(self.style.SUCCESS("Successfully materialized GuidelineAdherence."))
                 cursor.execute("CALL materializeVisitAttributes()")
                 self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
 
