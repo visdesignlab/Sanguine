@@ -3,13 +3,15 @@ import subprocess
 
 
 class Command(BaseCommand):
-    help = "Recreate all data: migrate, destroy, mock, and generate parquets"
+    help = "Recreate all data: migrate, rebuild derived tables, mock, refresh, and generate parquets"
 
     def handle(self, *args, **options):
         commands = [
-            ["python", "manage.py", "migrate", "api"],
+            ["python", "manage.py", "migrate"],
             ["python", "manage.py", "destroydata"],
+            ["python", "manage.py", "migrate_derived_tables"],
             ["python", "manage.py", "mock50million"],
+            ["python", "manage.py", "refresh_derived_tables"],
             ["python", "manage.py", "generate_parquets"],
         ]
         for cmd in commands:

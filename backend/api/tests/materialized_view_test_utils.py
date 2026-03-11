@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.db import connection
 
+from api.models_derived import refresh_derived_tables
 from api.models.intelvia import (
     AttendingProvider,
     BillingCode,
@@ -18,6 +19,7 @@ from api.models.intelvia import (
 TABLES_TO_TRUNCATE = [
     "VisitAttributes",
     "GuidelineAdherence",
+    "DerivedArtifactRefresh",
     "BillingCode",
     "Medication",
     "Lab",
@@ -49,9 +51,7 @@ def truncate_intelvia_tables() -> None:
 
 
 def materialize_visit_attributes() -> None:
-    with connection.cursor() as cursor:
-        cursor.execute("CALL materializeGuidelineAdherence()")
-        cursor.execute("CALL materializeVisitAttributes()")
+    refresh_derived_tables(target="visit_attributes")
 
 
 def fetch_guideline_adherence_rows(visit_no: int) -> list[dict]:

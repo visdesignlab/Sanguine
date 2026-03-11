@@ -6,11 +6,11 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    working_dir: /app/backend
+    working_dir: /app
     ports:
       - "8000:8000"
     volumes:
-      - .:/app:Z
+      - ./backend:/app:Z
     entrypoint: []
     command:
       - /bin/sh
@@ -26,21 +26,6 @@ services:
       - mariadb_data:/var/lib/mysql
       - ./mariadb/conf.d:/etc/mysql/conf.d:z
       - ./mariadb/initdb:/docker-entrypoint-initdb.d:z
-
-  frontend:
-    profiles: ["devcontainer"]
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: build  # Grab the build stage from the Dockerfile
-    working_dir: /app/frontend
-    volumes:
-      - .:/app:Z
-    env_file:
-      - .env
-    environment:
-      VITE_DEV_PROXY_TARGET: http://backend:8000
-    command: sh -c "while true; do sleep 1000; done"
 
 volumes:
   mariadb_data:

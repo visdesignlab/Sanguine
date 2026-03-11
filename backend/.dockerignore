@@ -6,8 +6,4 @@ __pycache__/
 *.pyd
 
 parquet_cache/
-sanguine.log
 ERD.png
-database.mwb
-data_dictionary.csv
-utah-schema/
