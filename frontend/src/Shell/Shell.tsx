@@ -355,14 +355,7 @@ export const Shell = observer(() => {
       <AppShell.Main>
         <Container fluid mt="xs">
           {/** Display content of active tab */}
-          {TABS.map((tab) => (
-            <Box
-              key={tab.key}
-              style={{ display: store.state.ui.activeTab === tab.key ? 'block' : 'none' }}
-            >
-              {tab.content}
-            </Box>
-          ))}
+          {TABS.find((tab) => tab.key === store.state.ui.activeTab)?.content}
         </Container>
       </AppShell.Main>
 
