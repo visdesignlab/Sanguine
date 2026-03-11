@@ -75,7 +75,7 @@ export function FilterHistogramWithSliderComponent({
           <Flex
             justify="center"
             style={{
-              display: store.state.ui.showFilterHistograms ? 'flex' : 'none',
+              display: store.uiState.showFilterHistograms ? 'flex' : 'none',
             }}
           >
             <svg
