@@ -12,6 +12,7 @@ import pyarrow.parquet as pq
 from django.core.management import call_command
 from django.test import TransactionTestCase, override_settings
 
+from api.models_derived import refresh_derived_tables
 from api.management.commands.generate_parquets import (
     attach_cpt_dimensions,
     build_visit_attributes_table,
@@ -236,6 +237,30 @@ class GenerateParquetsTests(TransactionTestCase):
             procedure_hierarchy_path = Path(base_dir) / "parquet_cache" / "procedure_hierarchy.json"
             self.assertTrue(parquet_path.exists())
             self.assertFalse(procedure_hierarchy_path.exists())
+
+    def test_generate_parquets_refreshes_derived_tables_via_shared_runner(self):
+        create_visit_fixture(
+            visit_no=2113,
+            mrn="MRN-2113",
+            provider_ids=("PROV-2113",),
+            hgb_result=Decimal("7.1"),
+            inr_result=Decimal("1.8"),
+            plt_result=Decimal("20000"),
+            fibrinogen_result=Decimal("220"),
+        )
+
+        with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
+            with patch(
+                "api.management.commands.generate_parquets.get_cpt_hierarchy",
+                return_value=mock_hierarchy(code_map={}),
+            ):
+                with patch(
+                    "api.management.commands.generate_parquets.refresh_derived_tables",
+                    wraps=refresh_derived_tables,
+                ) as refresh_mock:
+                    call_command("generate_parquets", generate="visit_attributes")
+
+        refresh_mock.assert_called_once_with(target="visit_attributes")
 
     def test_generate_parquets_can_generate_only_procedure_hierarchy(self):
         create_visit_fixture(

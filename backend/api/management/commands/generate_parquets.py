@@ -9,6 +9,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import connection
 
+from api.models_derived import refresh_derived_tables
 from api.views.utils.cpt_hierarchy import get_cpt_hierarchy, normalize_cpt_code
 
 
@@ -294,14 +295,20 @@ class Command(BaseCommand):
         surgery_file_path = cache_dir / "surgery_case_attributes.parquet"
         temp_surgery_file_path = cache_dir / "surgery_case_attributes.parquet.tmp"
 
+        refresh_target = None
+        if should_generate_visit_attributes or should_generate_procedure_hierarchy:
+            refresh_target = "visit_attributes"
+        if should_generate_surgery_cases:
+            refresh_target = "all" if refresh_target else "surgery_case_attributes"
+
+        if refresh_target:
+            refresh_results = refresh_derived_tables(target=refresh_target)
+            for result in refresh_results:
+                self.stdout.write(self.style.SUCCESS(f"Successfully materialized {result.table_name}."))
+
         with connection.cursor() as cursor:
             visits = []
             if should_generate_visit_attributes or should_generate_procedure_hierarchy:
-                cursor.execute("CALL materializeGuidelineAdherence()")
-                self.stdout.write(self.style.SUCCESS("Successfully materialized GuidelineAdherence."))
-                cursor.execute("CALL materializeVisitAttributes()")
-                self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
-
                 cursor.execute("SELECT * FROM VisitAttributes")
                 columns = [col[0] for col in cursor.description]
                 rows = cursor.fetchall()
@@ -320,9 +327,6 @@ class Command(BaseCommand):
             # Materialize SurgeryCaseAttributes
             cases = []
             if should_generate_surgery_cases:
-                cursor.execute("CALL materializeSurgeryCaseAttributes()")
-                self.stdout.write(self.style.SUCCESS("Successfully materialized SurgeryCaseAttributes."))
-
                 cursor.execute("SELECT * FROM SurgeryCaseAttributes")
                 columns_cases = [col[0] for col in cursor.description]
                 rows_cases = cursor.fetchall()

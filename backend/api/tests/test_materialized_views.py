@@ -58,6 +58,15 @@ class MaterializedViewTests(TransactionTestCase):
 
             cursor.execute(
                 """
+                SELECT COUNT(*) FROM information_schema.events
+                WHERE event_schema = DATABASE()
+                  AND event_name = 'updateVisitAttributesEvent'
+                """
+            )
+            visit_attributes_event_count = cursor.fetchone()[0]
+
+            cursor.execute(
+                """
                 SELECT COUNT(*) FROM information_schema.tables
                 WHERE table_schema = DATABASE()
                   AND table_name = 'GuidelineAdherence'
@@ -75,10 +84,21 @@ class MaterializedViewTests(TransactionTestCase):
             )
             guideline_adherence_proc_count = cursor.fetchone()[0]
 
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM information_schema.events
+                WHERE event_schema = DATABASE()
+                  AND event_name = 'updateGuidelineAdherenceEvent'
+                """
+            )
+            guideline_adherence_event_count = cursor.fetchone()[0]
+
         self.assertEqual(visit_attributes_table_count, 1)
-        self.assertEqual(materialize_proc_count, 1)
+        self.assertEqual(materialize_proc_count, 0)
+        self.assertEqual(visit_attributes_event_count, 0)
         self.assertEqual(guideline_adherence_table_count, 1)
-        self.assertEqual(guideline_adherence_proc_count, 1)
+        self.assertEqual(guideline_adherence_proc_count, 0)
+        self.assertEqual(guideline_adherence_event_count, 0)
 
     def test_materialize_visit_attributes_full_row_golden_for_each_provider(self):
         visit = create_visit_fixture(
