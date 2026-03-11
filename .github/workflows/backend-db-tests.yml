@@ -44,13 +44,13 @@ jobs:
           EOF
 
       - name: Start MariaDB
-        run: docker compose -f docker-compose.devcontainer.yml -f docker-compose.ci.override.yml up -d --wait mariadb
+        run: docker compose -f docker-compose.dev.yml -f docker-compose.ci.override.yml up -d --wait mariadb
 
       - name: Run migration and materialized view tests in backend container
         run: >
-          docker compose -f docker-compose.devcontainer.yml -f docker-compose.ci.override.yml run --rm --no-deps backend
-          poetry run python manage.py test api.tests --verbosity 2
+          docker compose -f docker-compose.dev.yml -f docker-compose.ci.override.yml run --rm --no-deps backend
+          poetry run python manage.py test api.tests --verbosity 2 --parallel 2
 
       - name: Tear down containers
         if: always()
-        run: docker compose -f docker-compose.devcontainer.yml -f docker-compose.ci.override.yml down -v
+        run: docker compose -f docker-compose.dev.yml -f docker-compose.ci.override.yml down -v

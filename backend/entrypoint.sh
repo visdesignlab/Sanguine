@@ -4,12 +4,9 @@
 trap 'kill -SIGINT $PID' SIGINT
 trap 'kill -SIGTERM $PID' SIGTERM
 
-# Run the migrations to configure django / administrator
-poetry run python manage.py migrate admin
-poetry run python manage.py migrate auth
-poetry run python manage.py migrate contenttypes
-poetry run python manage.py migrate django_cas_ng
-poetry run python manage.py migrate sessions
+# Apply Django-managed schema and install SQL-managed derived tables.
+poetry run python manage.py migrate --noinput
+poetry run python manage.py migrate_derived_tables
 
 # Start the server with logs sent to container stdout/stderr.
 poetry run gunicorn api.wsgi:application \

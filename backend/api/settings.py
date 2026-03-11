@@ -103,6 +103,7 @@ DATABASES = {
     }
 }
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+TEST_RUNNER = "api.tests.runner.DerivedArtifactsDiscoverRunner"
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',

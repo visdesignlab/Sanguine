@@ -12,6 +12,7 @@ import pyarrow.parquet as pq
 from django.core.management import call_command
 from django.test import TransactionTestCase, override_settings
 
+from api.models_derived import refresh_derived_tables
 from api.management.commands.generate_parquets import (
     attach_cpt_dimensions,
     build_visit_attributes_table,
@@ -62,11 +63,11 @@ def valid_visit_attributes_row() -> dict:
         "b12": True,
         "iron": True,
         "antifibrinolytic": False,
-        "rbc_adherent": 1,
-        "ffp_adherent": 1,
-        "plt_adherent": 1,
-        "cryo_adherent": 0,
-        "overall_adherent": 3,
+        "rbc_units_adherent": 1,
+        "ffp_units_adherent": 1,
+        "plt_units_adherent": 1,
+        "cryo_units_adherent": 0,
+        "overall_units_adherent": 3,
         "attending_provider": "Provider A",
         "attending_provider_id": "PROV-A",
         "attending_provider_line": 1,
@@ -174,11 +175,11 @@ class GenerateParquetsTests(TransactionTestCase):
             self.assertEqual(row["plt_units"], 1)
             self.assertEqual(row["cryo_units"], 1)
             self.assertEqual(row["overall_units"], 5)
-            self.assertEqual(row["rbc_adherent"], 1)
-            self.assertEqual(row["ffp_adherent"], 1)
-            self.assertEqual(row["plt_adherent"], 1)
-            self.assertEqual(row["cryo_adherent"], 1)
-            self.assertEqual(row["overall_adherent"], 4)
+            self.assertEqual(row["rbc_units_adherent"], 2)
+            self.assertEqual(row["ffp_units_adherent"], 0)
+            self.assertEqual(row["plt_units_adherent"], 0)
+            self.assertEqual(row["cryo_units_adherent"], 0)
+            self.assertEqual(row["overall_units_adherent"], 2)
             self.assertEqual(sorted(row["department_ids"]), ["critical-care", "ecmo"])
             self.assertEqual(
                 sorted(row["procedure_ids"]),
@@ -236,6 +237,30 @@ class GenerateParquetsTests(TransactionTestCase):
             procedure_hierarchy_path = Path(base_dir) / "parquet_cache" / "procedure_hierarchy.json"
             self.assertTrue(parquet_path.exists())
             self.assertFalse(procedure_hierarchy_path.exists())
+
+    def test_generate_parquets_refreshes_derived_tables_via_shared_runner(self):
+        create_visit_fixture(
+            visit_no=2113,
+            mrn="MRN-2113",
+            provider_ids=("PROV-2113",),
+            hgb_result=Decimal("7.1"),
+            inr_result=Decimal("1.8"),
+            plt_result=Decimal("20000"),
+            fibrinogen_result=Decimal("220"),
+        )
+
+        with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
+            with patch(
+                "api.management.commands.generate_parquets.get_cpt_hierarchy",
+                return_value=mock_hierarchy(code_map={}),
+            ):
+                with patch(
+                    "api.management.commands.generate_parquets.refresh_derived_tables",
+                    wraps=refresh_derived_tables,
+                ) as refresh_mock:
+                    call_command("generate_parquets", generate="visit_attributes")
+
+        refresh_mock.assert_called_once_with(target="visit_attributes")
 
     def test_generate_parquets_can_generate_only_procedure_hierarchy(self):
         create_visit_fixture(
@@ -381,11 +406,11 @@ class GenerateParquetsTests(TransactionTestCase):
             "b12": {"bad": "bool"},
             "iron": {"bad": "bool"},
             "antifibrinolytic": {"bad": "bool"},
-            "rbc_adherent": {"bad": "uint16"},
-            "ffp_adherent": {"bad": "uint16"},
-            "plt_adherent": {"bad": "uint16"},
-            "cryo_adherent": {"bad": "uint16"},
-            "overall_adherent": {"bad": "uint16"},
+            "rbc_units_adherent": {"bad": "uint16"},
+            "ffp_units_adherent": {"bad": "uint16"},
+            "plt_units_adherent": {"bad": "uint16"},
+            "cryo_units_adherent": {"bad": "uint16"},
+            "overall_units_adherent": {"bad": "uint16"},
             "attending_provider": {"bad": "string"},
             "attending_provider_id": {"bad": "string"},
             "attending_provider_line": {"bad": "uint16"},
@@ -418,6 +443,16 @@ class GenerateParquetsTests(TransactionTestCase):
         self.assertEqual(converted_date, datetime(2024, 7, 4, 0, 0, tzinfo=timezone.utc))
 
         self.assertIsNone(coerce_temporal_value_to_utc(None))
+
+    def test_build_visit_attributes_table_coerces_date_fields_to_utc_timestamps(self):
+        row = valid_visit_attributes_row()
+        row["adm_dtm"] = date(2024, 1, 1)
+        row["dsch_dtm"] = date(2024, 1, 5)
+
+        table = build_visit_attributes_table([row])
+        actual = table.to_pylist()[0]
+        self.assertEqual(actual["adm_dtm"], datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc))
+        self.assertEqual(actual["dsch_dtm"], datetime(2024, 1, 5, 0, 0, tzinfo=timezone.utc))
 
     def test_generate_parquets_failure_does_not_overwrite_existing_artifact(self):
         create_visit_fixture(
@@ -597,6 +632,7 @@ class GenerateParquetsTests(TransactionTestCase):
                         call_command("generate_parquets", generate=case["mode"], stdout=out)
                         output = out.getvalue()
 
+                self.assertIn("Successfully materialized GuidelineAdherence.", output)
                 self.assertIn("Successfully materialized VisitAttributes.", output)
 
                 if case["expect_visit_msg"]:

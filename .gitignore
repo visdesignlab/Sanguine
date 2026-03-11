@@ -1,57 +1,24 @@
-/references
 .vscode
-.DS_Store
-
-api.service
-frontend.service
-
-.venv/
-DW_LOOKUPS
-
-backend/api/db.sqlite3
-credential.json
-data.json
-api/db.sqlite3
-api/static
 *.DS_Store
-*.coverage
+
+# Local environment
 .env
-.env.prod
-api/api/tests.py
-sanguine.log*
-*.bak
 
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# Frontend dependencies
 node_modules
-/.pnp
-.pnp.js
 
-# testing
-coverage
+# Test and cache artifacts
+__pycache__/
+backend/.pytest_cache/
 
-# production
+# Build artifacts
 frontend/dist
-
-# misc
-.DS_Store
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-docker-images/
-mariadb_data/
+backend/parquet_cache
 *.zip
 
-__pycache__/
+# Logs
+*.log
 
+# Local/generated project files
 clarity-queries
-
-backend/parquet_cache
+frontend/.husky/_/

@@ -1,6 +1,7 @@
+import { BLOOD_COMPONENTS } from './bloodProducts';
+
 // Time formatting ------------------------------------------------
 // Time period types
-
 export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
 export type Month = `${number}-${string}`; // e.g. "2023-Jan"
 export type Year = `${number}`; // e.g. "2023"
@@ -12,107 +13,6 @@ export const AGGREGATION_OPTIONS = {
   avg: { label: 'Average' },
 } as const;
 
-// Blood components -----------------------------------------------
-const BLOOD_COMPONENT_DECIMALS = { sum: 0, avg: 2 };
-
-export const BLOOD_COMPONENTS = [
-  {
-    value: 'rbc_units',
-    label: {
-      short: 'RBCs',
-      base: 'RBCs Transfused',
-      sum: 'Total RBCs Transfused',
-      avg: 'Average RBCs Transfused Per Visit',
-    },
-    units: {
-      sum: 'RBC Units',
-      avg: 'RBC Units Per Visit',
-      sumShort: 'Units',
-      avgShort: 'Units',
-    },
-    decimals: BLOOD_COMPONENT_DECIMALS,
-  },
-  {
-    value: 'ffp_units',
-    label: {
-      short: 'FFP',
-      base: 'FFP Transfused',
-      sum: 'Total FFP Transfused',
-      avg: 'Average FFP Transfused Per Visit',
-    },
-    units: {
-      sum: 'Plasma Units',
-      avg: 'Plasma Units Per Visit',
-      sumShort: 'Units',
-      avgShort: 'Units',
-    },
-    decimals: BLOOD_COMPONENT_DECIMALS,
-  },
-  {
-    value: 'plt_units',
-    label: {
-      short: 'Platelets',
-      base: 'Platelets Transfused',
-      sum: 'Total Platelets Transfused',
-      avg: 'Average Platelets Transfused Per Visit',
-    },
-    units: {
-      sum: 'Platelet Units',
-      avg: 'Platelet Units Per Visit',
-      sumShort: 'Units',
-      avgShort: 'Units',
-    },
-    decimals: BLOOD_COMPONENT_DECIMALS,
-  },
-  {
-    value: 'cryo_units',
-    label: {
-      short: 'Cryo',
-      base: 'Cryo Transfused',
-      sum: 'Total Cryo Transfused',
-      avg: 'Average Cryo Transfused Per Visit',
-    },
-    units: {
-      sum: 'Cryo Units',
-      avg: 'Cryo Units Per Visit',
-      sumShort: 'Units',
-      avgShort: 'Units',
-    },
-    decimals: BLOOD_COMPONENT_DECIMALS,
-  },
-  {
-    value: 'whole_units',
-    label: {
-      short: 'Whole Blood',
-      base: 'Whole Blood Transfused',
-      sum: 'Total Whole Blood Transfused',
-      avg: 'Average Whole Blood Transfused Per Visit',
-    },
-    units: {
-      sum: 'Whole Blood Units',
-      avg: 'Whole Blood Units Per Visit',
-      sumShort: 'Units',
-      avgShort: 'Units',
-    },
-    decimals: BLOOD_COMPONENT_DECIMALS,
-  },
-  {
-    value: 'cell_saver_ml',
-    label: {
-      short: 'Cell Salvage',
-      base: 'Cell Salvage Volume (ml) Used',
-      sum: 'Total Cell Salvage Volume (ml) Used',
-      avg: 'Average Cell Salvage Volume (ml) Used Per Visit',
-    },
-    units: {
-      sum: 'mL',
-      avg: 'mL Per Visit',
-      sumShort: 'mL',
-      avgShort: 'mL',
-    },
-    decimals: BLOOD_COMPONENT_DECIMALS,
-  },
-] as const;
 // Values of blood components
 export type BloodComponent = typeof BLOOD_COMPONENTS[number]['value'];
 // Readonly array of blood component options
@@ -264,65 +164,65 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
 // Guideline adherence ---------------------------------------------
 export const GUIDELINE_ADHERENT = {
   rbc: {
-    value: 'rbc_adherent',
+    value: 'rbc_units_adherent',
     label: {
       short: 'Adherent RBC',
-      base: 'Guideline Adherent RBC Transfusions',
-      sum: 'Total Guideline Adherent RBC Transfusions',
-      avg: 'Percentage of Guideline Adherent RBC Transfusions',
+      base: 'Guideline Adherent RBC Units Transfused',
+      sum: 'Total Guideline Adherent RBC Units Transfused',
+      avg: 'Percentage of RBC Units Transfused According to Guidelines',
     },
     // Adherence units & decimal truncation for display
     units: {
-      sum: 'Adherent RBC Transfusions',
-      avg: '% Adherent RBC Transfusions',
+      sum: 'Adherent RBC Units',
+      avg: '% of RBC Units Guideline Adherent',
       avgShort: '%',
       sumShort: '',
     },
     decimals: 0,
   },
   ffp: {
-    value: 'ffp_adherent',
+    value: 'ffp_units_adherent',
     label: {
       short: 'Adherent FFP',
-      base: 'Guideline Adherent FFP Transfusions',
-      sum: 'Total Guideline Adherent FFP Transfusions',
-      avg: 'Percentage of Guideline Adherent FFP Transfusions',
+      base: 'Guideline Adherent FFP Units Transfused',
+      sum: 'Total Guideline Adherent FFP Units Transfused',
+      avg: 'Percentage of Plasma Units Transfused According to Guidelines',
     },
     units: {
-      sum: 'Adherent Plasma Transfusions',
-      avg: '% Adherent Plasma Transfusions',
+      sum: 'Adherent Plasma Units',
+      avg: '% of Plasma Units Guideline Adherent',
       avgShort: '%',
       sumShort: '',
     },
     decimals: 0,
   },
   plt: {
-    value: 'plt_adherent',
+    value: 'plt_units_adherent',
     label: {
       short: 'Adherent Platelet',
-      base: 'Guideline Adherent Platelet Transfusions',
-      sum: 'Total Guideline Adherent Platelet Transfusions',
-      avg: 'Percentage of Adherent Platelet Transfusions',
+      base: 'Guideline Adherent Platelet Units Transfused',
+      sum: 'Total Guideline Adherent Platelet Units Transfused',
+      avg: 'Percentage of Platelet Units Transfused According to Guidelines',
     },
     units: {
-      sum: 'Adherent Platelet Transfusions',
-      avg: '% Adherent Platelet Transfusions',
+      sum: 'Adherent Platelet Units',
+      avg: '% of Platelet Units Guideline Adherent',
       avgShort: '%',
       sumShort: '',
     },
     decimals: 0,
   },
   cryo: {
-    value: 'cryo_adherent',
+    value: 'cryo_units_adherent',
     label: {
       short: 'Adherent Cryo',
-      base: 'Guideline Adherent Cryo Transfusions',
-      sum: 'Total Guideline Adherent Cryo Transfusions',
-      avg: 'Percentage of Guideline Adherent Cryo Transfusions',
+      base: 'Guideline Adherent Cryo Units Transfused',
+      sum: 'Total Guideline Adherent Cryo Units Transfused',
+      avg: 'Percentage of Cryo Units Transfused According to Guidelines',
     },
     units: {
-      sum: 'Adherent Cryo Transfusions',
-      avg: '% Adherent Cryo Transfusions',
+      sum: 'Adherent Cryo Units',
+      avg: '% of Cryo Units Guideline Adherent',
       avgShort: '%',
       sumShort: '',
     },
@@ -332,16 +232,16 @@ export const GUIDELINE_ADHERENT = {
 
 // Total guideline adherence (Across all blood products)
 export const OVERALL_GUIDELINE_ADHERENT = {
-  value: 'overall_adherent',
+  value: 'overall_units_adherent',
   label: {
     short: 'Adherent Transfusions',
-    base: 'Guideline Adherent Transfusions',
-    sum: 'Total Guideline Adherent Transfusions',
-    avg: 'Percentage of Guideline Adherent Transfusions',
+    base: 'Guideline Adherent Units Transfused',
+    sum: 'Total Guideline Adherent Units Transfused',
+    avg: 'Percentage of Units Transfused According to Guidelines',
   },
   units: {
-    sum: 'Adherent Transfusions',
-    avg: '% Adherent Transfusions',
+    sum: 'Adherent Units',
+    avg: '% of Units Guideline Adherent',
     avgShort: '%',
     sumShort: '',
   },

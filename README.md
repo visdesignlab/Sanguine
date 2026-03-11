@@ -1,79 +1,148 @@
 # Sanguine Blood Usage Visualization
 
-Sanguine is a web-based visualization tool built by the VDL and ARUP that visualizes hospital blood usage and associated patient/surgery attributes. It is designed to be used by clinicians, researchers, and administrators to understand blood usage patterns, identify opportunities to improve patient outcomes, and reduce transfusion expenditures. Sanguine is built using modern web technologies including React, D3, and Django.
+Sanguine is a web-based platform for exploring hospital blood usage, patient blood management metrics, and surgery-level outcomes. It is intended for clinicians, researchers, and administrators who need to understand transfusion patterns, identify opportunities to improve care, and reduce blood product cost.
 
 ![Interface image](https://vdl.sci.utah.edu/assets/images/publications/2021_ivi_sanguine/2021_ivi_sanguine_interface.png)
 
+For deployment or partnership inquiries, contact `contact@intelvia.io`.
 
 ## Table of Contents
 
-1. [Current and Future Deployments](#current-and-future-deployments)
+1. [Overview](#overview)
 1. [Architecture](#architecture)
-1. [Security](#security)
-1. [Deployment Steps](#deployment-steps)
-1. [Developer Documentation](#developer-documentation)
+1. [Development Setup](#development-setup)
+1. [Common Development Tasks](#common-development-tasks)
+1. [Testing](#testing)
+1. [Deployment](#deployment)
+1. [Derived Data Pipeline](#derived-data-pipeline)
+1. [Security and Monitoring](#security-and-monitoring)
 
+## Overview
 
-## Current and Future Deployments
+Sanguine combines a React frontend, a Django backend, a MariaDB source database, and cached parquet artifacts to make large-scale PBM exploration practical in the browser. The backend prepares derived datasets and parquet caches, and the frontend uses DuckDB WASM to query those parquet files client-side for interactive analysis.
 
-We currently support multiple deployments of Sanguine, 2 at the University of Utah, and others at partner institutions.
-
-If you're interested in deploying Sanguine at your hospital, please contact us at contact@intelvia.io.
+We currently support multiple deployments, including University of Utah and partner institutions.
 
 ## Architecture
 
-The Sanguine application is split into two main components: the frontend and the backend. The frontend is a React application that uses D3 for data visualization. The backend is a Django application that provides the API for the frontend to interact with the database.
+```mermaid
+flowchart TD
+    User[Clinician / Researcher / Admin]
+    Nginx[VM Nginx: HTTPS terminator]
+    Backend[Backend Container: Django]
+    Frontend[Frontend Container: Nginx serving React app]
+    Cache[(Backend parquet_cache)]
+    Schema[(Intelvia schema source + derived tables)]
+    Epic[(Client EPIC-derived data)]
 
-We use container technology to deploy the application. The frontend and backend are deployed as separate containers. The frontend container is a Nginx application that serves the statically built React application. The backend container is a Django application that serves the API. We use nginx on the VM as a reverse proxy to route requests to the correct container and to terminate SSL.
+    User --> Nginx
+    Nginx --> Backend
+    Nginx --> Frontend
+    Backend --> Cache
+    Cache --> Schema
+    Schema --> Epic
+```
 
+## Development Setup
 
-## Security
+For local development, run backend and MariaDB in Docker and run the frontend on your host for fast HMR.
 
-Security is a top priority for the Sanguine application. We use a variety of techniques to ensure that the data is secure and that only authorized users can access it. Some of the techniques we use include:
+1. Copy `.env.default` to `.env` in the project root.
+1. Start backend and MariaDB:
 
-- Limited firewall access: Using modern VPN technology, we limit access to the application to only authorized users.
-- Authentication: Once users are connected to the VPN, they must authenticate using their SSO credentials to access the application. The list of authorized users is maintained by hospital IT, and only users on this list can access the application.
-- Role based access control: We use role based access control to limit access to certain features of the application. For example, only users on the cardio-thoracic surgery team can access the cardiac surgery data. This is done using Django's built in permissions system.
-- Service accounts: The backend uses a service account to connect to the database. This account has limited permissions and is only used to retrieve the data that the frontend needs to display as defined by the Sanguine schema.
-- VM security: VMs are provided and maintained by hospital IT. They are kept up to date with the latest security patches and are monitored for any suspicious activity. Upgrades are performed at the hospital's discretion, in accordance with their security policies.
-- Logging: We log all requests to the application and monitor for any unusual activity at backend/sanguine.log.
-- Data encryption: All data is encrypted in transit using SSL.
+```bash
+docker compose -f docker-compose.dev.yml up
+```
 
-### Sentry Monitoring Setup (Backend)
+1. In another terminal, start the frontend:
 
-The backend now supports Sentry for error monitoring and usage visibility across deployments.
+```bash
+cd frontend
+yarn install
+yarn serve
+```
 
-1. Create a Django project in [sentry.io](https://sentry.io/) and copy the DSN.
-2. Set the following environment variables for the backend service:
-   - `SENTRY_DSN` (**secret**): Sentry DSN for your hospital deployment
-   - `SENTRY_ENVIRONMENT`: Environment label (for example `university-of-utah` or `st-marys`) to keep Sentry alerts separated by deployment
-   - `SENTRY_TRACES_SAMPLE_RATE`: Decimal sample rate for performance traces (for example `0.1`)
-   - `SENTRY_SEND_DEFAULT_PII`: `True` or `False` (recommend `False` unless your compliance team approves otherwise)
-   - `SENTRY_CAPTURE_HANDLED_HTTP_ERRORS`: `True` or `False` (captures handled `4xx/5xx` responses as Sentry events, default `True`)
-3. Restart the backend container/process after updating environment variables.
+1. Open `http://localhost:8080`.
 
-When `SENTRY_DSN` is not set, Sentry is disabled.
+Notes:
 
-Production API errors are intentionally generic to avoid exposing internal details. In local development (`DJANGO_DEBUG=True`), full exception behavior/logs are preserved for debugging.
+- The frontend uses relative `/api/...` paths and Vite proxies them to `http://localhost:8000`.
+- The backend test runner automatically creates the derived artifact tables after the test database is created.
 
-Unhandled backend exceptions are both:
-- sent to Sentry (when `SENTRY_DSN` is configured), and
-- written to container logs (via Django/Gunicorn stdout/stderr), viewable with `docker-compose logs -f backend`.
+## Common Development Tasks
 
-Handled `4xx/5xx` responses returned by Django views are also sent to Sentry as handled error events when `SENTRY_CAPTURE_HANDLED_HTTP_ERRORS=True`.
+### Rebuild Mock Data End-to-End
 
-#### Secrets to keep private
+```bash
+docker compose -f docker-compose.dev.yml exec -it backend bash
+poetry run python manage.py recreatedata
+```
 
-At minimum, do **not** expose these values in git, logs, or screenshots:
+### Rebuild Step-by-Step
 
-- `DJANGO_SECRET_KEY`
-- `MARIADB_PASSWORD`
-- `MARIADB_ROOT_PASSWORD`
-- `SENTRY_DSN`
+```bash
+docker compose -f docker-compose.dev.yml exec -it backend bash
+poetry run python manage.py destroydata
+poetry run python manage.py migrate
+poetry run python manage.py migrate_derived_tables
+poetry run python manage.py mock50million
+poetry run python manage.py refresh_derived_tables
+poetry run python manage.py generate_parquets
+```
 
-#### Deployment Steps
+### Regenerate Parquets Only
 
-To run the application in production, use either of the following commands:
+```bash
+poetry run python manage.py generate_parquets
+```
+
+### Refresh Derived Tables Only
+
+```bash
+poetry run python manage.py refresh_derived_tables
+```
+
+### Generate a Single Artifact
+
+```bash
+poetry run python manage.py generate_parquets --generate visit_attributes
+poetry run python manage.py generate_parquets --generate procedure_hierarchy
+poetry run python manage.py generate_parquets --generate surgery_cases
+```
+
+## Testing
+
+### Backend Tests
+
+Run the backend suite from the backend container:
+
+```bash
+docker compose -f docker-compose.dev.yml exec -it backend bash
+poetry run python manage.py test api.tests --verbosity 2 --parallel 8
+```
+
+The custom Django test runner at `backend/api/tests/runner.py` runs `migrate_derived_tables` after the test database is created, so `GuidelineAdherence`, `VisitAttributes`, and `SurgeryCaseAttributes` exist before fixtures are populated and refreshed.
+
+### Frontend Checks
+
+The frontend currently exposes lint, typecheck, and build validation:
+
+```bash
+cd frontend
+yarn lint
+yarn typecheck
+yarn build
+```
+
+## Deployment
+
+The production deployment uses separate frontend and backend containers:
+
+- Frontend container: Nginx serving the built React application
+- Backend container: Django served by Gunicorn
+- External VM nginx: SSL termination and routing to the containers
+
+Start the production stack with:
 
 ```bash
 docker-compose up
@@ -81,96 +150,67 @@ docker-compose up
 podman-compose up
 ```
 
-Running the above command will start the application in production mode. The backend django application will be running using gunicorn, and the frontend will build statically and be served by nginx in the frontend container.
+Deployment expectations:
 
-The VM will need to be configured with nginx to route requests to the docker containers and to terminate SSL. We provide a sample nginx configuration file at the root of the project, server-nginx.conf. You can use this file as a starting point to configure nginx for your deployment.
+- The VM-level nginx handles SSL termination.
+- Requests are routed to the frontend container, which proxies API traffic to the backend container.
+- Required environment variables must be present for Django, MariaDB, CAS auth, and any deployment-specific settings. These can be set in a `.env` file or injected through the deployment pipeline.
+- After deploy, the backend should run `migrate`, `migrate_derived_tables`, and `generate_parquets` as part of the environment bootstrap.
 
-## Developer Documentation
+## Derived Data Pipeline
 
-We provide 2 docker-compose files to run the application, docker-compose.yml and docker-compose.devcontainer.yml. The first one is for production and the second one is for development. Our development docker-compose file overrides some of the container specifications to make it easier to develop the application, but uses a similar setup to the production compose file.
+The backend manages three SQL-owned derived artifacts:
 
-#### Development Steps
+- `GuidelineAdherence`
+- `VisitAttributes`
+- `SurgeryCaseAttributes`
 
-For local development, run backend and MariaDB in Docker and run the frontend directly on your host for fast HMR.
+Their schema and refresh SQL live in `backend/api/models_derived/`.
 
-1. Copy `.env.default` to `.env` in the project root.
-1. Start backend + MariaDB:
-
-    ```bash
-    docker compose -f docker-compose.devcontainer.yml up
-    ```
-
-1. In another terminal, start the frontend locally:
-
-    ```bash
-    cd frontend
-    yarn install
-    yarn serve
-    ```
-
-1. Open `http://localhost:8080`. API calls from the frontend use relative `/api/...` paths and are proxied by Vite to the backend at `http://localhost:8000`.
-1. If you run `yarn serve` inside the `frontend` devcontainer service, Vite uses `VITE_DEV_PROXY_TARGET=http://backend:8000` automatically (Docker network target). For host-based frontend dev, leave it unset and it defaults to `http://localhost:8000`.
-1. To populate the database with mock data, run:
+Key commands:
 
 ```bash
-docker-compose exec -it backend bash
-poetry run python manage.py recreatedata
-```
-
-To step through each step of the process instead, run these:
-
-```bash
-docker-compose exec -it backend bash
-poetry run python manage.py destroydata
-poetry run python manage.py migrate api
-poetry run python manage.py mock50million
+poetry run python manage.py migrate_derived_tables
+poetry run python manage.py refresh_derived_tables
 poetry run python manage.py generate_parquets
 ```
 
-To generate only one artifact:
+Responsibilities:
 
-```bash
-poetry run python manage.py generate_parquets --generate visit_attributes
-poetry run python manage.py generate_parquets --generate procedure_hierarchy
-```
+- `migrate_derived_tables`
+  Creates or replaces the physical derived tables from `*_schema.sql`.
 
-If `VisitAttributes` is already fresh and you only need to rebuild cache files, you can skip re-materializing it:
+- `refresh_derived_tables`
+  Truncates and repopulates the derived tables from the source MariaDB tables using `*_refresh.sql`.
 
-```bash
-poetry run python manage.py generate_parquets --skip-materialize
-poetry run python manage.py generate_parquets --generate procedure_hierarchy --skip-materialize
-```
+- `generate_parquets`
+  Refreshes the required derived tables, reads them, normalizes values, and writes the parquet cache artifacts used by the frontend.
 
-    
-1. The database should now be populated with mock data and you should be able to see it in the frontend by adding a chart to the dashboard.
+The derived artifacts are intentionally not represented as Django models. They are treated as SQL-managed cache tables whose correctness is validated by integration tests and parquet generation tests.
 
-#### Backend tests
+## Security and Monitoring
 
-The backend test suite covers Django app behavior end-to-end, including API logic, auth-related behavior, migrations, materialized-view generation, and parquet generation paths.
+Security controls in Sanguine include:
 
-Run all backend tests from a shell where `.env` is loaded and MariaDB is available:
+- Limited firewall and VPN access
+- CAS / SSO authentication
+- Role-based access control in Django
+- Service accounts with limited DB permissions
+- VM patching and monitoring handled by hospital IT
+- Encryption in transit with SSL
 
-```bash
-docker-compose exec -it backend bash
-poetry run python manage.py test api.tests --verbosity 2
-```
+### Sentry Monitoring Setup
 
-#### Setting up the vscode extensions to connect to the databases
+The backend supports Sentry for deployment-specific error monitoring.
 
-The devcontainer specification contains the necessary extensions to connect to the databases, MariaDB/MySQL. 
+Set these backend environment variables:
 
-To connect to the MariaDB/MySQL database, open the database menu, click create connection connection and use the following settings:
+- `SENTRY_DSN`
+- `SENTRY_ENVIRONMENT`
+- `SENTRY_TRACES_SAMPLE_RATE`
+- `SENTRY_SEND_DEFAULT_PII`
+- `SENTRY_CAPTURE_HANDLED_HTTP_ERRORS`
 
-- Connection name: Development MariaDB
-- Server type: MariaDB
-- Hostname: mariadb
-- Port: 3306
-- Username: intelvia
-- Password: test
-- Database: intelvia
+When `SENTRY_DSN` is not set, Sentry is disabled.
 
-To query the database and test it's working, open the database and then intelvia. Then next to query, click the book icon and run the following query:
-
-```sql
-SELECT * FROM django_migrations;
-```
+Unhandled backend exceptions are sent to Sentry when configured and are also written to container logs. Handled `4xx/5xx` responses can also be reported when `SENTRY_CAPTURE_HANDLED_HTTP_ERRORS=True`.

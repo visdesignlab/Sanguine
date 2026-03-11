@@ -18,23 +18,23 @@ class Patient(models.Model):
 class Visit(models.Model):
     visit_no = models.BigIntegerField(primary_key=True)
     mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
-    epic_pat_id = models.CharField(max_length=80)
-    hsp_account_id = models.CharField(max_length=80)
-    adm_dtm = models.DateField()
-    dsch_dtm = models.DateField()
+    epic_pat_id = models.CharField(max_length=80, null=True)
+    hsp_account_id = models.CharField(max_length=80, null=True)
+    adm_dtm = models.DateField(null=True)
+    dsch_dtm = models.DateField(null=True)
     clinical_los = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    age_at_adm = models.FloatField()
-    pat_class_desc = models.CharField(max_length=2000)
+    age_at_adm = models.FloatField(null=True)
+    pat_class_desc = models.CharField(max_length=2000, null=True)
     pat_expired_f = models.CharField(max_length=1, null=True)
     invasive_vent_f = models.CharField(max_length=1, null=True)
-    total_vent_mins = models.FloatField()
-    total_vent_days = models.FloatField()
-    apr_drg_code = models.CharField(max_length=254)
+    total_vent_mins = models.FloatField(null=True)
+    total_vent_days = models.FloatField(null=True)
+    apr_drg_code = models.CharField(max_length=254, null=True)
     apr_drg_rom = models.CharField(max_length=80, null=True)
     apr_drg_soi = models.CharField(max_length=80, null=True)
-    apr_drg_desc = models.CharField(max_length=2000)
-    apr_drg_weight = models.FloatField()
-    ms_drg_weight = models.FloatField()
+    apr_drg_desc = models.CharField(max_length=2000, null=True)
+    apr_drg_weight = models.FloatField(null=True)
+    ms_drg_weight = models.FloatField(null=True)
     cci_mi = models.FloatField(null=True)
     cci_chf = models.FloatField(null=True)
     cci_pvd = models.FloatField(null=True)
@@ -58,95 +58,39 @@ class Visit(models.Model):
         db_table = "Visit"
 
 
-class VisitAttributes(models.Model):
-    # all visit attributes
-    # The primary key is a composite string: "{visit_no}-{prov_id}"
-    id = models.CharField(max_length=50, primary_key=True)
-    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no", related_name="attributes")
-    mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
-    adm_dtm = models.DateField()
-    dsch_dtm = models.DateField()
-    age_at_adm = models.IntegerField()
-    pat_class_desc = models.CharField(max_length=100)
-    apr_drg_weight = models.FloatField()
-    ms_drg_weight = models.FloatField()
-
-    month = models.CharField(max_length=8)  # YYYY-mmm
-    quarter = models.CharField(max_length=7)  # YYYY-Qn
-    year = models.CharField(max_length=4)  # YYYY
-
-    rbc_units = models.IntegerField()
-    ffp_units = models.IntegerField()
-    plt_units = models.IntegerField()
-    cryo_units = models.IntegerField()
-    whole_units = models.IntegerField()
-
-    los = models.DecimalField(max_digits=6, decimal_places=2, null=True)
-    death = models.BooleanField(null=True)
-    vent = models.BooleanField(null=True)
-    stroke = models.BooleanField(null=True)
-    ecmo = models.BooleanField(null=True)
-
-    b12 = models.BooleanField()
-    iron = models.BooleanField()
-    antifibrinolytic = models.BooleanField()
-
-    rbc_adherent = models.IntegerField()
-    ffp_adherent = models.IntegerField()
-    plt_adherent = models.IntegerField()
-    cryo_adherent = models.IntegerField()
-    overall_adherent = models.IntegerField()
-
-    rbc_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    ffp_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    plt_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    cryo_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    overall_cost = models.DecimalField(max_digits=6, decimal_places=2)
-
-    attending_provider = models.CharField(max_length=100)
-    attending_provider_id = models.CharField(max_length=25)
-    # 0 if admitting, >0 if consulting/transfer
-    attending_provider_line = models.IntegerField()
-    
-    # helper to identify if this row holds the outcomes
-    is_admitting_attending = models.BooleanField()
-
-
-    class Meta:
-        db_table = "VisitAttributes"
-        managed = False
-
-
 class SurgeryCase(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
     case_id = models.BigIntegerField(primary_key=True)
-    case_date = models.DateField()
-    surgery_start_dtm = models.DateTimeField()
-    surgery_end_dtm = models.DateTimeField()
-    surgery_elap = models.FloatField()
-    surgery_type_desc = models.CharField(max_length=2000)
-    surgeon_prov_id = models.CharField(max_length=25)
-    surgeon_prov_name = models.CharField(max_length=100)
-    anesth_prov_id = models.CharField(max_length=25)
-    anesth_prov_name = models.CharField(max_length=100)
-    prim_proc_desc = models.CharField(max_length=2000)
+    case_date = models.DateField(null=True)
+    surgery_start_dtm = models.DateTimeField(null=True)
+    surgery_end_dtm = models.DateTimeField(null=True)
+    surgery_elap = models.FloatField(null=True)
+    surgery_type_desc = models.CharField(max_length=2000, null=True)
+    surgeon_prov_id = models.CharField(max_length=25, null=True)
+    surgeon_prov_name = models.CharField(max_length=100, null=True)
+    anesth_prov_id = models.CharField(max_length=25, null=True)
+    anesth_prov_name = models.CharField(max_length=100, null=True)
+    prim_proc_desc = models.CharField(max_length=2000, null=True)
     postop_icu_los = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    sched_site_desc = models.CharField(max_length=2000)
-    asa_code = models.CharField(max_length=80)
+    sched_site_desc = models.CharField(max_length=2000, null=True)
+    asa_code = models.CharField(max_length=80, null=True)
 
     class Meta:
         db_table = "SurgeryCase"
+        indexes = [
+            models.Index(fields=["visit_no", "surgery_end_dtm"], name="idx_surgcase_visit_end"),
+        ]
 
 
 class BillingCode(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
-    cpt_code = models.CharField(max_length=80)
-    cpt_code_desc = models.CharField(max_length=2000)
-    proc_dtm = models.DateTimeField()
-    prov_id = models.CharField(max_length=25)
-    prov_name = models.CharField(max_length=100)
-    code_rank = models.FloatField()
+    cpt_code = models.CharField(max_length=80, null=True)
+    cpt_code_desc = models.CharField(max_length=2000, null=True)
+    proc_dtm = models.DateTimeField(null=True)
+    prov_id = models.CharField(max_length=25, null=True)
+    prov_name = models.CharField(max_length=100, null=True)
+    code_rank = models.FloatField(null=True)
 
     class Meta:
         db_table = "BillingCode"
@@ -158,18 +102,18 @@ class BillingCode(models.Model):
 
 class Medication(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
-    order_med_id = models.DecimalField(max_digits=18, decimal_places=0)
-    order_dtm = models.DateTimeField()
-    medication_id = models.DecimalField(max_digits=18, decimal_places=0)
-    medication_name = models.CharField(max_length=510)
-    med_admin_line = models.DecimalField(max_digits=38, decimal_places=0)
-    admin_dtm = models.DateTimeField()
-    admin_dose = models.CharField(max_length=184)
-    med_form = models.CharField(max_length=50)
-    admin_route_desc = models.CharField(max_length=254)
-    dose_unit_desc = models.CharField(max_length=254)
-    med_start_dtm = models.DateTimeField()
-    med_end_dtm = models.DateTimeField()
+    order_med_id = models.DecimalField(max_digits=18, decimal_places=0, null=True)
+    order_dtm = models.DateTimeField(null=True)
+    medication_id = models.DecimalField(max_digits=18, decimal_places=0, null=True)
+    medication_name = models.CharField(max_length=510, null=True)
+    med_admin_line = models.DecimalField(max_digits=38, decimal_places=0, null=True)
+    admin_dtm = models.DateTimeField(null=True)
+    admin_dose = models.CharField(max_length=184, null=True)
+    med_form = models.CharField(max_length=50, null=True)
+    admin_route_desc = models.CharField(max_length=254, null=True)
+    dose_unit_desc = models.CharField(max_length=254, null=True)
+    med_start_dtm = models.DateTimeField(null=True)
+    med_end_dtm = models.DateTimeField(null=True)
  
     class Meta:
         db_table = "Medication"
@@ -181,31 +125,31 @@ class Medication(models.Model):
 class Lab(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
-    lab_id = models.BigIntegerField()
-    lab_draw_dtm = models.DateTimeField()
-    lab_panel_code = models.CharField(max_length=30)
-    lab_panel_desc = models.CharField(max_length=256)
-    result_dtm = models.DateTimeField()
-    result_code = models.CharField(max_length=30)
-    result_loinc = models.CharField(max_length=30)
-    result_desc = models.CharField(max_length=256)
+    lab_id = models.BigIntegerField(null=True)
+    lab_draw_dtm = models.DateTimeField(null=True)
+    lab_panel_code = models.CharField(max_length=30, null=True)
+    lab_panel_desc = models.CharField(max_length=256, null=True)
+    result_dtm = models.DateTimeField(null=True)
+    result_code = models.CharField(max_length=30, null=True)
+    result_loinc = models.CharField(max_length=30, null=True)
+    result_desc = models.CharField(max_length=256, null=True)
     result_value = models.DecimalField(max_digits=20, decimal_places=4, null=True)
-    uom_code = models.CharField(max_length=30)
+    uom_code = models.CharField(max_length=30, null=True)
     lower_limit = models.DecimalField(max_digits=20, decimal_places=4, null=True)
     upper_limit = models.DecimalField(max_digits=20, decimal_places=4, null=True)
 
     class Meta:
         db_table = "Lab"
         indexes = [
-            models.Index(fields=["visit_no", "lab_draw_dtm"], name="lab_visit_draw_idx"),
+            models.Index(fields=["visit_no", "lab_draw_dtm", "result_desc", "result_value"], name="idx_lab_visit_draw_desc_val"),
         ]
 
 
 class Transfusion(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
-    trnsfsn_dtm = models.DateTimeField()
-    transfusion_rank = models.FloatField()
-    blood_unit_number = models.CharField(max_length=600)
+    trnsfsn_dtm = models.DateTimeField(null=True)
+    transfusion_rank = models.FloatField(null=True)
+    blood_unit_number = models.CharField(max_length=600, null=True)
     rbc_units = models.FloatField(null=True)
     ffp_units = models.FloatField(null=True)
     plt_units = models.FloatField(null=True)
@@ -227,11 +171,11 @@ class Transfusion(models.Model):
 
 class AttendingProvider(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
-    prov_id = models.CharField(max_length=25)
-    prov_name = models.CharField(max_length=100)
-    attend_start_dtm = models.DateTimeField()
-    attend_end_dtm = models.DateTimeField()
-    attend_prov_line = models.DecimalField(max_digits=38, decimal_places=0)
+    prov_id = models.CharField(max_length=25, null=True)
+    prov_name = models.CharField(max_length=100, null=True)
+    attend_start_dtm = models.DateTimeField(null=True)
+    attend_end_dtm = models.DateTimeField(null=True)
+    attend_prov_line = models.DecimalField(max_digits=38, decimal_places=0, null=True)
 
     class Meta:
         db_table = "AttendingProvider"
@@ -260,53 +204,3 @@ class RoomTrace(models.Model):
     class Meta:
         db_table = "RoomTrace"
 
-
-class SurgeryCaseAttributes(models.Model):
-    case_id = models.BigIntegerField(primary_key=True)
-    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
-    mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
-    surgeon_prov_id = models.CharField(max_length=25)
-    surgeon_prov_name = models.CharField(max_length=100)
-    anesth_prov_id = models.CharField(max_length=25)
-    anesth_prov_name = models.CharField(max_length=100)
-    surgery_start_dtm = models.DateTimeField()
-    surgery_end_dtm = models.DateTimeField()
-    case_date = models.DateField()
-    month = models.CharField(max_length=8)
-    quarter = models.CharField(max_length=7)
-    year = models.CharField(max_length=4)
-
-    pre_hgb = models.DecimalField(max_digits=10, decimal_places=4, null=True)
-    pre_plt = models.DecimalField(max_digits=10, decimal_places=4, null=True)
-    pre_fibrinogen = models.DecimalField(max_digits=10, decimal_places=4, null=True)
-    pre_inr = models.DecimalField(max_digits=10, decimal_places=4, null=True)
-
-    post_hgb = models.DecimalField(max_digits=10, decimal_places=4, null=True)
-    post_plt = models.DecimalField(max_digits=10, decimal_places=4, null=True)
-    post_fibrinogen = models.DecimalField(max_digits=10, decimal_places=4, null=True)
-    post_inr = models.DecimalField(max_digits=10, decimal_places=4, null=True)
-
-    intraop_rbc_units = models.PositiveSmallIntegerField(default=0)
-    intraop_ffp_units = models.PositiveSmallIntegerField(default=0)
-    intraop_plt_units = models.PositiveSmallIntegerField(default=0)
-    intraop_cryo_units = models.PositiveSmallIntegerField(default=0)
-    intraop_whole_units = models.PositiveSmallIntegerField(default=0)
-    intraop_cell_saver_ml = models.PositiveIntegerField(default=0)
-
-    los = models.FloatField(null=True)
-    death = models.BooleanField(null=True)
-    vent = models.BooleanField(null=True)
-    stroke = models.BooleanField(null=True)
-    ecmo = models.BooleanField(null=True)
-
-    rbc_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
-    ffp_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
-    plt_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
-    cryo_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
-    whole_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
-    cell_saver_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True)
-    total_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-
-    class Meta:
-        db_table = "SurgeryCaseAttributes"
-        managed = False
