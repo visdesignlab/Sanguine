@@ -96,7 +96,7 @@ class BillingCode(models.Model):
         db_table = "BillingCode"
         indexes = [
             models.Index(fields=["cpt_code", "visit_no"], name="billingcode_cpt_visit_idx"),
-            models.Index(fields=["visit_no", "cpt_code"], name="idx_billingcode_visit_cpt"),
+            models.Index(fields=["visit_no", "cpt_code"], name="billingcode_visit_cpt_idx"),
         ]
 
 
@@ -117,6 +117,9 @@ class Medication(models.Model):
  
     class Meta:
         db_table = "Medication"
+        indexes = [
+            models.Index(fields=["visit_no", "admin_dtm"], name="medication_visit_admin_idx"),
+        ]
 
 
 class Lab(models.Model):
@@ -162,7 +165,7 @@ class Transfusion(models.Model):
     class Meta:
         db_table = "Transfusion"
         indexes = [
-            models.Index(fields=["visit_no", "trnsfsn_dtm"], name="idx_transfusion_visit_dtm"),
+            models.Index(fields=["visit_no", "trnsfsn_dtm"], name="transfusion_visit_time_idx"),
         ]
 
 
@@ -177,7 +180,11 @@ class AttendingProvider(models.Model):
     class Meta:
         db_table = "AttendingProvider"
         indexes = [
-            models.Index(fields=["visit_no", "attend_start_dtm", "attend_end_dtm", "prov_id", "attend_prov_line"], name="idx_attprov_visit_dtm_range"),
+            models.Index(fields=["visit_no", "prov_id"], name="attprov_visit_prov_idx"),
+            models.Index(
+                fields=["visit_no", "attend_start_dtm", "attend_end_dtm", "attend_prov_line"],
+                name="attprov_visit_window_idx",
+            ),
         ]
 
 
