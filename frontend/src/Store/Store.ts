@@ -40,15 +40,6 @@ import {
 
 export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
-// export const ProductMaximums = {
-//   rbc_units: 10,
-//   ffp_units: 10,
-//   plt_units: 10,
-//   cryo_units: 50,
-//   cell_saver_ml: 10000,
-//   los: 30,
-// };
-
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
     {
@@ -1571,7 +1562,7 @@ export class RootStore {
         ? 'MAX(COALESCE(los, 0))'
         : `SUM(COALESCE(${component}, 0))`;
 
-      const result = await this.duckDB!.query(`
+      const histogramDataQueryResult = await this.duckDB!.query(`
         WITH visit_values AS (
           SELECT
             visit_no,
@@ -1579,7 +1570,7 @@ export class RootStore {
           FROM filteredVisits
           GROUP BY visit_no
         ),
-        binned AS (
+        histogram_bins AS (
           SELECT
             CASE
               WHEN '${component}' = 'cell_saver_ml' THEN
@@ -1595,20 +1586,20 @@ export class RootStore {
         )
         SELECT
           bin_value,
-          COUNT(*) AS count
-        FROM binned
+          COUNT(*) AS visit_count
+        FROM histogram_bins
         GROUP BY bin_value
         ORDER BY bin_value;`);
       // Map the result to the histogram data
-      histogramData[component] = result
+      histogramData[component] = histogramDataQueryResult
         .toArray()
         .map((row) => {
           // eslint-disable-next-line camelcase
-          const { bin_value, count } = row.toJSON();
+          const { bin_value, visit_count } = row.toJSON();
 
           return {
             units: String(bin_value),
-            count: Number(count),
+            count: Number(visit_count),
           };
         });
     }));
@@ -1877,7 +1868,7 @@ export class RootStore {
 
         // Build the query
         const query = `
-          SELECT 
+          SELECT
             ${columnClauses.join(',\n            ')}
           FROM filteredVisits
           GROUP BY ${tableConfig.rowVar}
@@ -1949,25 +1940,25 @@ export class RootStore {
              year,
              quarter,
              month,
-             
+
              intraop_rbc_units AS rbc_units,
              intraop_ffp_units AS ffp_units,
              intraop_plt_units AS plt_units,
              intraop_cryo_units AS cryo_units,
              intraop_whole_units AS whole_units,
              intraop_cell_saver_ml AS cell_saver_ml,
-             
+
              los,
              death,
              vent,
              stroke,
              ecmo,
-             
+
              pre_hgb, post_hgb,
              pre_plt, post_plt,
              pre_fibrinogen, post_fibrinogen,
              pre_inr, post_inr,
-             
+
              total_cost,
              rbc_cost
            FROM filteredSurgeryCases

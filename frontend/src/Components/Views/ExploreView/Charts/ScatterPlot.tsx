@@ -12,8 +12,9 @@ import {
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { useObserver } from 'mobx-react-lite';
 import { Store } from '../../../../Store/Store';
+
 import {
-  DumbbellCase, LAB_RESULTS, BLOOD_COMPONENTS,
+  DumbbellCase, LAB_RESULTS,
   SCATTER_X_AXIS_OPTIONS, SCATTER_Y_AXIS_OPTIONS,
   SCATTER_MARGIN, SCATTER_DOT_RADIUS, SCATTER_CHAR_WIDTH_CASE,
   SCATTER_DRAG_LIMIT, ScatterPlotConfig, chartColors,
@@ -27,6 +28,7 @@ import {
   buildSpatialIndex, findNearestPoint,
   ScatterVarConfig, PointPosition,
 } from './ScatterPlotUtils';
+import { BLOOD_COMPONENTS } from '../../../../Types/bloodProducts';
 
 // #region Y-Axis
 const ScatterYAxis = memo(({

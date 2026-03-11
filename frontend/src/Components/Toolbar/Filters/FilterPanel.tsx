@@ -27,7 +27,7 @@ import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
 import { DepartmentProcedureFilter } from './DepartmentProcedureFilter';
 import classes from '../../../Shell/Shell.module.css';
-import { FilterComponent } from './FilterComponent';
+import { FilterHistogramWithSliderComponent } from './FilterHistogramWithSliderComponent';
 import { BLOOD_PRODUCTS_ARRAY, BloodComponent } from '../../../Types/bloodProducts';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
@@ -144,7 +144,7 @@ export function FilterPanel() {
             <Accordion.Panel style={{ display: 'flex', flexDirection: 'column' }}>
 
               {BLOOD_PRODUCTS_ARRAY.map((bloodComponent) => (
-                <FilterComponent key={`filter-${bloodComponent}`} data={store.getHistogramData(bloodComponent) || []} unitName={bloodComponent} />
+                <FilterHistogramWithSliderComponent key={`filter-${bloodComponent}`} data={store.getHistogramData(bloodComponent) || []} unitName={bloodComponent} />
               ))}
             </Accordion.Panel>
           </Accordion.Item>

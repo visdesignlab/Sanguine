@@ -19,7 +19,7 @@ export interface TransfusionEvent {
 }
 
 export type HistogramData=
-   { units: string, count: number; } [] | undefined;
+   { units: string, count: number; } [];
 
 export interface Surgery {
   case_id: string; // BigIntegerField, primary key
