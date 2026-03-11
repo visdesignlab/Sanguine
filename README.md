@@ -85,7 +85,7 @@ For local development, run backend and MariaDB in Docker and run the frontend on
 1. Start backend and MariaDB:
 
 ```bash
-docker compose -f docker-compose.devcontainer.yml up
+docker compose -f docker-compose.dev.yml up
 ```
 
 1. In another terminal, start the frontend:
@@ -101,7 +101,6 @@ yarn serve
 Notes:
 
 - The frontend uses relative `/api/...` paths and Vite proxies them to `http://localhost:8000`.
-- If you run the frontend inside the Docker network, set `VITE_DEV_PROXY_TARGET=http://backend:8000`.
 - The backend test runner automatically creates the derived artifact tables after the test database is created.
 
 ## Common Development Tasks
@@ -109,14 +108,14 @@ Notes:
 ### Rebuild Mock Data End-to-End
 
 ```bash
-docker compose -f docker-compose.devcontainer.yml exec -it backend bash
+docker compose -f docker-compose.dev.yml exec -it backend bash
 poetry run python manage.py recreatedata
 ```
 
 ### Rebuild Step-by-Step
 
 ```bash
-docker compose -f docker-compose.devcontainer.yml exec -it backend bash
+docker compose -f docker-compose.dev.yml exec -it backend bash
 poetry run python manage.py destroydata
 poetry run python manage.py migrate
 poetry run python manage.py migrate_derived_tables
@@ -152,7 +151,7 @@ poetry run python manage.py generate_parquets --generate surgery_cases
 Run the backend suite from the backend container:
 
 ```bash
-docker compose -f docker-compose.devcontainer.yml exec -it backend bash
+docker compose -f docker-compose.dev.yml exec -it backend bash
 poetry run python manage.py test api.tests --verbosity 2 --parallel 8
 ```
 
@@ -250,4 +249,3 @@ Set these backend environment variables:
 When `SENTRY_DSN` is not set, Sentry is disabled.
 
 Unhandled backend exceptions are sent to Sentry when configured and are also written to container logs. Handled `4xx/5xx` responses can also be reported when `SENTRY_CAPTURE_HANDLED_HTTP_ERRORS=True`.
-

@@ -3,8 +3,6 @@ services:
     image: docker.io/intelvia/intelvia-backend:v1.0.0-alpha.5
     env_file:
       - .env
-    expose:
-      - "8000"
     depends_on:
       mariadb:
         condition: service_healthy
@@ -13,12 +11,11 @@ services:
 
   mariadb:
     image: docker.io/mariadb:11
-    env_file:
-      - .env
     environment:
-      MARIADB_HOST: localhost
-    ports:
-      - "3306:3306"
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./mariadb/conf.d:/etc/mysql/conf.d:z
