@@ -197,7 +197,6 @@ Security controls in Sanguine include:
 - Role-based access control in Django
 - Service accounts with limited DB permissions
 - VM patching and monitoring handled by hospital IT
-- Logging to `backend/sanguine.log`
 - Encryption in transit with SSL
 
 ### Sentry Monitoring Setup
