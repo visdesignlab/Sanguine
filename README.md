@@ -25,56 +25,22 @@ We currently support multiple deployments, including University of Utah and part
 
 ## Architecture
 
-### High-Level Architecture
-
-```mermaid
-flowchart LR
-    User[Clinician / Researcher / Admin]
-    Browser[Frontend\nReact + Vite + DuckDB WASM]
-    FrontendNginx[Frontend Container\nNginx]
-    Backend[Backend Container\nDjango + DRF]
-    DB[(MariaDB)]
-    Cache[(Parquet Cache)]
-
-    User --> Browser
-    Browser --> FrontendNginx
-    FrontendNginx --> Backend
-    Backend --> DB
-    Backend --> Cache
-    Browser --> Cache
-```
-
-### Data Preparation Flow
-
 ```mermaid
 flowchart TD
-    Source[Client Source Tables\nEPIC-derived MariaDB tables]
-    Derived[Derived SQL Artifacts\nGuidelineAdherence\nVisitAttributes\nSurgeryCaseAttributes]
-    Parquet[Parquet Cache Files]
-    Frontend[Frontend DuckDB Queries]
+    User[Clinician / Researcher / Admin]
+    Nginx[VM Nginx: HTTPS terminator]
+    Backend[Backend Container: Django]
+    Frontend[Frontend Container: Nginx serving React app]
+    Cache[(Backend parquet_cache)]
+    Schema[(Intelvia schema source + derived tables)]
+    Epic[(Client EPIC-derived data)]
 
-    Source --> Derived
-    Derived --> Parquet
-    Parquet --> Frontend
-```
-
-### Runtime Request Flow
-
-```mermaid
-sequenceDiagram
-    participant U as User Browser
-    participant F as Frontend
-    participant N as Frontend Nginx
-    participant B as Django Backend
-    participant C as Parquet Cache
-
-    U->>F: Open app / change filters
-    F->>N: Request app shell and API
-    N->>B: Proxy /api requests
-    B-->>F: Auth/config/API responses
-    F->>C: Load parquet artifacts
-    F->>F: Query parquet with DuckDB WASM
-    F-->>U: Render charts and tables
+    User --> Nginx
+    Nginx --> Backend
+    Nginx --> Frontend
+    Backend --> Cache
+    Cache --> Schema
+    Schema --> Epic
 ```
 
 ## Development Setup
