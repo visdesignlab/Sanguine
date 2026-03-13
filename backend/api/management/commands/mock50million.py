@@ -8,15 +8,15 @@ from django.utils.timezone import make_aware
 from faker import Faker
 from faker.providers import date_time
 import random
-import tempfile
 import string
+import tempfile
 
 from api.views.utils.utils import get_all_cpt_code_filters
 
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Scale mock counts to match real-data percentages.
-MOCK_TOTAL = 40 * 10**6  # Change to scale
+MOCK_TOTAL = 40 * 10**5  # Change to scale
 REAL_COUNTS = {
     "Patients": 303_000,
     "Visits": 704_000,
@@ -95,6 +95,31 @@ class Command(BaseCommand):
 
         os.remove(tmpfile_path)
 
+    def _report_counts(self):
+        """Compare target counts vs actual table row counts and print % difference."""
+        table_targets = OrderedDict([
+            ("Patient", target_patients_count),
+            ("Visit", target_visits_count),
+            ("SurgeryCase", target_surgeries_count),
+            ("BillingCode", target_billings_count),
+            ("Lab", target_labs_count),
+            ("Medication", target_meds_count),
+            ("Transfusion", target_transfusions_count),
+            ("AttendingProvider", target_attending_provs_count),
+            ("RoomTrace", target_roomtraces_count),
+        ])
+        self.stdout.write(self.style.MIGRATE_HEADING("Row count summary"))
+        with connection.cursor() as cursor:
+            for table, target in table_targets.items():
+                cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                actual = cursor.fetchone()[0] or 0
+                diff = actual - (target or 0)
+                diff_pct = (diff / target * 100.0) if target else 0.0
+                self.stdout.write(
+                    f"- {table}: target={target:,}  actual={actual:,}  "
+                    f"diff={diff:+,} ({diff_pct:.2f}%)"
+                )
+                
     def handle(self, *args, **options):
         # Initialize the Faker object
         Faker.seed(42)
@@ -149,31 +174,41 @@ class Command(BaseCommand):
                 "Unknown/Information Not Available",
                 "Not Hispanic/Latino",
             ]
+            # Realistic demographic weights
+            race_weights = [0.13, 0.60, 0.01, 0.06, 0.03, 0.05, 0.01, 0.11]
+            eth_weights  = [0.19, 0.02, 0.04, 0.75]
+            sex_weights  = [0.51, 0.48, 0.004, 0.003, 0.003]
+            sex_codes    = ("F", "M", "NB", "U", "X")
+            # Age buckets: (start_year, end_year) with weights favoring 50-80
+            age_buckets  = [(1935, 1950), (1950, 1965), (1965, 1980), (1980, 1995), (1995, 2010)]
+            age_weights  = [0.10, 0.25, 0.30, 0.25, 0.10]
+
             for _ in range(int(target_patients_count)):
-                race_idx = random.randint(0, 7)
-                eth_idx = random.randint(0, 3)
+                race_idx = random.choices(range(8), weights=race_weights, k=1)[0]
+                eth_idx = random.choices(range(4), weights=eth_weights, k=1)[0]
+                bucket = random.choices(age_buckets, weights=age_weights, k=1)[0]
                 birthdate = fake.date_time_between(
-                    start_date=datetime(1950, 1, 1),
-                    end_date=datetime(1960, 1, 1),
+                    start_date=datetime(bucket[0], 1, 1),
+                    end_date=datetime(bucket[1], 1, 1),
                 )
-                death_date = make_aware(
-                    fake.date_time_between(
-                        start_date=datetime(2024, 11, 1),
-                        end_date=datetime(2025, 5, 1),
+                # ~3% mortality rate (realistic in-hospital)
+                if random.random() < 0.03:
+                    death_date = make_aware(
+                        fake.date_time_between(
+                            start_date=datetime(2024, 11, 1),
+                            end_date=datetime(2025, 5, 1),
+                        )
                     )
-                )
-                death_date = (
-                    death_date if fake.random_element(elements=(True, False)) else None
-                )
-                # bad_pat = fake.random_element(elements=(True, True, False)) if death_date is not None else fake.random_element(False, False, True)
-                bad_pat = fake.random_element(elements=OrderedDict([(True, 0.7), (False, 0.3)]))
+                else:
+                    death_date = None
+                bad_pat = fake.random_element(elements=OrderedDict([(True, 0.67), (False, 0.33)]))
 
                 patient = {
                     "mrn": fake.unique.random_number(digits=10),
                     "last_name": fake.last_name(),
                     "first_name": fake.first_name(),
                     "birth_date": birthdate,
-                    "sex_code": fake.random_element(elements=("F", "M", "NB", "U", "X")),
+                    "sex_code": random.choices(sex_codes, weights=sex_weights, k=1)[0],
                     "race_desc": race_descs[race_idx],
                     "ethnicity_desc": eth_descs[eth_idx],
                     "death_date": death_date,
@@ -224,6 +259,38 @@ class Command(BaseCommand):
         ]
 
         def gen_visits():
+            # Realistic APR-DRG codes relevant to blood management / surgical cohort
+            drg_catalog = [
+                ("001", "Liver Transplant and/or Intestinal Transplant"),
+                ("002", "Heart and/or Lung Transplant"),
+                ("040", "Major Joint Replacement"),
+                ("163", "Coronary Bypass w/ Cardiac Catheterization"),
+                ("165", "Coronary Bypass w/o Cardiac Catheterization"),
+                ("166", "Coronary Stent Insertion"),
+                ("170", "Permanent Cardiac Pacemaker Implant"),
+                ("220", "Major Stomach, Esophageal & Duodenal Procedures"),
+                ("221", "Major Small & Large Bowel Procedures"),
+                ("260", "Major Biliary Tract Procedures"),
+                ("302", "Kidney Transplant"),
+                ("360", "Vaginal Delivery"),
+                ("370", "Cesarean Delivery"),
+                ("403", "Hip Joint Replacement"),
+                ("404", "Knee Joint Replacement"),
+                ("440", "Kidney & Urinary Tract Procedures"),
+                ("482", "Extensive Burns w/ Skin Graft"),
+                ("560", "Red Blood Cell Disorders"),
+                ("661", "Major Hematologic/Immunologic Diagnoses"),
+                ("710", "Craniotomy for Multiple Significant Trauma"),
+            ]
+            drg_weights_list = [
+                0.02, 0.02, 0.10, 0.06, 0.06, 0.05, 0.03,
+                0.04, 0.08, 0.03, 0.02, 0.06, 0.08,
+                0.08, 0.08, 0.04, 0.01, 0.05, 0.04, 0.05,
+            ]
+            # Patient class distribution
+            pat_class_choices = ["Inpatient", "Observation", "Outpatient Surgery", "Emergency"]
+            pat_class_weights = [0.60, 0.20, 0.15, 0.05]
+
             visit_no = 0
             for pat, bad_pat in pats:
                 num_visits = 3 if bad_pat else 1
@@ -235,33 +302,57 @@ class Command(BaseCommand):
                             end_date=datetime(year + 1, 1, 1).date()
                         )
                     )
-                    discharge_date = admit_date + timedelta(days=fake.random_int(min=5, max=10))
-                    clinical_los = (
-                        discharge_date.date() - admit_date.date()
-                    ).days
+                    # Right-skewed LOS: median ~3-4 days, tail to 45
+                    los_r = random.random()
+                    if los_r < 0.30:
+                        los_days = random.randint(1, 2)
+                    elif los_r < 0.60:
+                        los_days = random.randint(3, 5)
+                    elif los_r < 0.85:
+                        los_days = random.randint(6, 10)
+                    elif los_r < 0.95:
+                        los_days = random.randint(11, 20)
+                    else:
+                        los_days = random.randint(21, 45)
+                    discharge_date = admit_date + timedelta(days=los_days)
+                    clinical_los = los_days
                     age_at_adm = (admit_date.date() - pat["birth_date"].date()).days // 365
-                    cci = {
-                        "cci_mi": fake.random_int(min=0, max=1),
-                        "cci_chf": fake.random_int(min=0, max=1),
-                        "cci_pvd": fake.random_int(min=0, max=1),
-                        "cci_cvd": fake.random_int(min=0, max=1),
-                        "cci_dementia": fake.random_int(min=0, max=1),
-                        "cci_copd": fake.random_int(min=0, max=1),
-                        "cci_rheum_dz": fake.random_int(min=0, max=1),
-                        "cci_pud": fake.random_int(min=0, max=1),
-                        "cci_liver_dz_mild": fake.random_int(min=0, max=1),
-                        "cci_dm_wo_compl": fake.random_int(min=0, max=1),
-                        "cci_dm_w_compl": fake.random_int(min=0, max=2),
-                        "cci_paraplegia": fake.random_int(min=0, max=2),
-                        "cci_renal_dz": fake.random_int(min=0, max=2),
-                        "cci_malign_wo_mets": fake.random_int(min=0, max=2),
-                        "cci_liver_dz_severe": fake.random_int(min=0, max=3),
-                        "cci_malign_w_mets": fake.random_int(min=0, max=6),
-                        "cci_hiv_aids": fake.random_int(min=0, max=6),
-                    }
+                    # CCI with realistic prevalences and correct Charlson weights
+                    # Each component: (probability_present, CCI_weight)
+                    cci_specs = [
+                        ("cci_mi",              0.08, 1),
+                        ("cci_chf",             0.12, 1),
+                        ("cci_pvd",             0.06, 1),
+                        ("cci_cvd",             0.07, 1),
+                        ("cci_dementia",        0.03, 1),
+                        ("cci_copd",            0.15, 1),
+                        ("cci_rheum_dz",        0.03, 1),
+                        ("cci_pud",             0.02, 1),
+                        ("cci_liver_dz_mild",   0.05, 1),
+                        ("cci_dm_wo_compl",     0.20, 1),
+                        ("cci_dm_w_compl",      0.08, 2),
+                        ("cci_paraplegia",      0.02, 2),
+                        ("cci_renal_dz",        0.10, 2),
+                        ("cci_malign_wo_mets",  0.07, 2),
+                        ("cci_liver_dz_severe", 0.02, 3),
+                        ("cci_malign_w_mets",   0.04, 6),
+                        ("cci_hiv_aids",        0.005, 6),
+                    ]
+                    # Bad patients are sicker — double the prevalence
+                    cci = {}
+                    cci_score = 0
+                    for name, prob, weight in cci_specs:
+                        effective_prob = min(prob * 2, 0.6) if bad_pat else prob
+                        present = 1 if random.random() < effective_prob else 0
+                        cci[name] = present * weight
+                        cci_score += present * weight
+
                     vent = fake.random_element(elements=(True, True, False)) if bad_pat else fake.random_element(elements=(True, False, False, False, False))
                     vent_mins = fake.random_int(min=30, max=10000) if vent else 0
                     vent_days = max(1, vent_mins // 1440) if vent else 0 
+
+                    # Pick a DRG
+                    drg_code, drg_desc = random.choices(drg_catalog, weights=drg_weights_list, k=1)[0]
                     
                     visit = {
                         "visit_no": visit_no,
@@ -272,15 +363,15 @@ class Command(BaseCommand):
                         "dsch_dtm": discharge_date.strftime(DATE_FORMAT),
                         "clinical_los": clinical_los,
                         "age_at_adm": age_at_adm,
-                        "pat_class_desc": "Inpatient",
-                        "pat_expired_f": fake.random_element(elements=tuple(["Y"] + [None] * 9)),
+                        "pat_class_desc": random.choices(pat_class_choices, weights=pat_class_weights, k=1)[0],
+                        "pat_expired_f": "Y" if (pat["death_date"] is not None and random.random() < 0.5) else None,
                         "invasive_vent_f": "Y" if vent else None,
                         "total_vent_mins": vent_mins,
                         "total_vent_days": vent_days,
-                        "apr_drg_code": fake.random_element(elements=("001", "002", "003")),
+                        "apr_drg_code": drg_code,
                         "apr_drg_rom": fake.random_element(elements=(1, 2, 3, 4, None)),
                         "apr_drg_soi": fake.random_element(elements=(1, 2, 3, 4, None)),
-                        "apr_drg_desc": fake.sentence(),
+                        "apr_drg_desc": drg_desc,
                         "apr_drg_weight": (
                             round(random.uniform(0.5, 2.5), 4) if (r := random.random()) < 0.8
                             else round(random.uniform(2.5, 5.0), 4) if r < 0.95
@@ -292,7 +383,7 @@ class Command(BaseCommand):
                             else round(random.uniform(5.0, 25.0), 4)
                         ),
                         **cci,
-                        "cci_score": sum(cci.values()),
+                        "cci_score": cci_score,
                     }
                     visits.append((pat, bad_pat, visit))
                     visit_no += 1
@@ -320,6 +411,83 @@ class Command(BaseCommand):
         ]
 
         def gen_surgery_cases():
+            # Realistic procedure names for blood-management surgical cohort
+            proc_descs = [
+                "Coronary Artery Bypass Graft (CABG)",
+                "Aortic Valve Replacement",
+                "Mitral Valve Repair",
+                "Total Hip Arthroplasty",
+                "Total Knee Arthroplasty",
+                "Revision Total Hip Arthroplasty",
+                "Cesarean Section",
+                "Hysterectomy, Abdominal",
+                "Liver Resection, Partial Hepatectomy",
+                "Liver Transplant, Orthotopic",
+                "Kidney Transplant, Cadaveric Donor",
+                "Splenectomy, Open",
+                "Exploratory Laparotomy",
+                "Small Bowel Resection",
+                "Colectomy, Right Hemicolectomy",
+                "Repair of Abdominal Aortic Aneurysm",
+                "Craniotomy for Tumor Excision",
+                "Craniotomy for Subdural Hematoma Evacuation",
+                "Thoracotomy with Lung Resection",
+                "Open Reduction Internal Fixation, Femur",
+                "Spine Fusion, Posterior Lumbar",
+                "Spine Fusion, Anterior Cervical",
+                "Radical Prostatectomy",
+                "Radical Nephrectomy",
+                "Whipple Procedure (Pancreaticoduodenectomy)",
+                "Gastrectomy, Partial",
+                "Debridement of Open Fracture",
+                "Skin Graft, Full Thickness",
+                "Vascular Bypass, Femoral-Popliteal",
+                "Appendectomy, Laparoscopic",
+            ]
+            # Realistic facility/OR site names
+            site_descs = [
+                "Main OR - Building A",
+                "Cardiac OR Suite",
+                "Ambulatory Surgery Center",
+                "Trauma OR - Level 1",
+                "Neuro OR Suite",
+                "Orthopedic OR Suite",
+                "OB/GYN OR Suite",
+                "Transplant OR Suite",
+            ]
+            # Weighted ASA codes: ASA 2-3 dominate, ASA 6 very rare
+            asa_codes   = ["1", "2", "3", "4", "5", "6"]
+            asa_weights = [0.05, 0.30, 0.35, 0.20, 0.09, 0.01]
+            # Weighted surgery types: mostly elective
+            surg_types   = ["Elective", "Emergent", "Trauma Emergent", "Trauma Urgent", "Urgent"]
+            surg_weights = [0.65, 0.10, 0.05, 0.05, 0.15]
+
+            def _random_duration_hours():
+                """Lognormal-like surgical duration: median ~2.5h, tail to 10h+"""
+                r = random.random()
+                if r < 0.20:
+                    return random.uniform(0.5, 1.5)
+                elif r < 0.55:
+                    return random.uniform(1.5, 3.0)
+                elif r < 0.80:
+                    return random.uniform(3.0, 5.0)
+                elif r < 0.95:
+                    return random.uniform(5.0, 8.0)
+                else:
+                    return random.uniform(8.0, 12.0)
+
+            def _random_icu_los():
+                """Realistic postop ICU LOS: most patients 0, skewed tail"""
+                r = random.random()
+                if r < 0.70:
+                    return 0
+                elif r < 0.85:
+                    return random.randint(1, 2)
+                elif r < 0.95:
+                    return random.randint(3, 5)
+                else:
+                    return random.randint(6, 14)
+
             # Seed one surgery per surgeon so every provider has surgery_count >= 1
             if visits:
                 for prov_id, prov_name in surgeons:
@@ -331,7 +499,8 @@ class Command(BaseCommand):
                             end_date=datetime.strptime(visit["dsch_dtm"], DATE_FORMAT),
                         )
                     )
-                    end_time = start_time + timedelta(hours=3)
+                    dur_hours = _random_duration_hours()
+                    end_time = start_time + timedelta(hours=dur_hours)
                     anesth = fake.random_element(elements=anests)
                     surgery = {
                         "case_id": fake.unique.random_number(digits=10),
@@ -341,15 +510,15 @@ class Command(BaseCommand):
                         "surgery_start_dtm": start_time.strftime(DATE_FORMAT),
                         "surgery_end_dtm": end_time.strftime(DATE_FORMAT),
                         "surgery_elap": (end_time - start_time).total_seconds() / 60,
-                        "surgery_type_desc": fake.random_element(elements=("Elective","Emergent","Urgent")),
+                        "surgery_type_desc": random.choices(surg_types, weights=surg_weights, k=1)[0],
                         "surgeon_prov_id": prov_id,
                         "surgeon_prov_name": prov_name,
                         "anesth_prov_id": anesth[0],
                         "anesth_prov_name": anesth[1],
-                        "prim_proc_desc": fake.sentence(),
-                        "postop_icu_los": fake.random_int(min=0, max=10),
-                        "sched_site_desc": fake.sentence(),
-                        "asa_code": fake.random_element(elements=("1","2","3","4","5","6")),
+                        "prim_proc_desc": random.choice(proc_descs),
+                        "postop_icu_los": _random_icu_los(),
+                        "sched_site_desc": random.choice(site_descs),
+                        "asa_code": random.choices(asa_codes, weights=asa_weights, k=1)[0],
                     }
                     surgeries.append((pat, bad_pat, visit, surgery))
                     yield surgery
@@ -370,16 +539,17 @@ class Command(BaseCommand):
                     start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(days=3),
                     end_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(days=4),
                 ))
-                # Bad cases: 50% 2 surgeries, 50% 1 surgery
+                # Bad cases: 35% 2 surgeries, 65% 1 surgery
                 # Good cases: always 1 surgery
-                if bad_pat and random.random() < 0.5:
+                if bad_pat and random.random() < 0.65:
                     surg_starts = [surg1_start]
                 else:
                     surg_starts = [surg1_start, surg2_start] if bad_pat else [surg1_start]
 
                 # Create surgery cases
                 for start_time in surg_starts:
-                    surg_end = start_time + timedelta(hours=5)
+                    dur_hours = _random_duration_hours()
+                    surg_end = start_time + timedelta(hours=dur_hours)
 
                     surgeon = fake.random_element(elements=surgeons)
                     anesth = fake.random_element(elements=anests)
@@ -392,25 +562,15 @@ class Command(BaseCommand):
                         "surgery_start_dtm": start_time.strftime(DATE_FORMAT),
                         "surgery_end_dtm": surg_end.strftime(DATE_FORMAT),
                         "surgery_elap": (surg_end - start_time).total_seconds() / 60,
-                        "surgery_type_desc": fake.random_element(
-                            elements=(
-                                "Elective",
-                                "Emergent",
-                                "Trauma Emergent",
-                                "Trauma Urgent",
-                                "Urgent",
-                            )
-                        ),
+                        "surgery_type_desc": random.choices(surg_types, weights=surg_weights, k=1)[0],
                         "surgeon_prov_id": surgeon[0],
                         "surgeon_prov_name": surgeon[1],
                         "anesth_prov_id": anesth[0],
                         "anesth_prov_name": anesth[1],
-                        "prim_proc_desc": fake.sentence(),
-                        "postop_icu_los": fake.random_int(min=0, max=10),
-                        "sched_site_desc": fake.sentence(),
-                        "asa_code": fake.random_element(
-                            elements=("1", "2", "3", "4", "5", "6")
-                        ),
+                        "prim_proc_desc": random.choice(proc_descs),
+                        "postop_icu_los": _random_icu_los(),
+                        "sched_site_desc": random.choice(site_descs),
+                        "asa_code": random.choices(asa_codes, weights=asa_weights, k=1)[0],
                     }
                     surgeries.append((pat, bad_pat, visit, surgery))
                     yield surgery
@@ -430,7 +590,17 @@ class Command(BaseCommand):
         def gen_billing_codes():
             codes, _, _ = get_all_cpt_code_filters()
             for _, bad_pat, _, surg in surgeries:
-                for rank in range(random.randint(1, 40)):
+                # Right-skewed billing code count: median ~5-8, tail to 40
+                bc_r = random.random()
+                if bc_r < 0.50:
+                    num_codes = random.randint(3, 8)
+                elif bc_r < 0.80:
+                    num_codes = random.randint(9, 15)
+                elif bc_r < 0.95:
+                    num_codes = random.randint(16, 25)
+                else:
+                    num_codes = random.randint(26, 40)
+                for rank in range(num_codes):
                     yield {
                         "visit_no": surg["visit_no"],
                         "cpt_code": fake.random_element(elements=codes),
@@ -479,7 +649,10 @@ class Command(BaseCommand):
         def make_lab_row(fake, pat, visit, lab_draw_dtm, last_lab, test_type):
             if test_type == ["HGB", "Hemoglobin"]:
                 if last_lab is None:
-                    result_value = fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=6, max_value=16)
+                    if random.random() < 0.4:  # 40% chance low
+                        result_value = fake.pydecimal(left_digits=1, right_digits=1, positive=True, min_value=6, max_value=9)
+                    else:
+                        result_value = fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=10, max_value=16)
                 else:
                     if last_lab["result_value"] < 6:
                         result_value = last_lab["result_value"] + 2
@@ -498,7 +671,7 @@ class Command(BaseCommand):
                 uom = "g/dL"
             elif test_type == ["INR"]:
                 if last_lab is None:
-                    result_value = fake.pydecimal(left_digits=2, right_digits=2, positive=True, min_value=0.5, max_value=5.0)
+                    result_value = fake.pydecimal(left_digits=1, right_digits=2, positive=True, min_value=0.5, max_value=5.0)
                 else:
                     if last_lab["result_value"] > 4.0:
                         result_value = last_lab["result_value"] - 1.5
@@ -516,27 +689,36 @@ class Command(BaseCommand):
                 upper_limit = 1.2
                 uom = "unitless"
             elif test_type == ["PLT", "Platelet Count"]:
+                CRITICAL_LOW_MAX = 30000
                 if last_lab is None:
-                    result_value = fake.pydecimal(left_digits=5, right_digits=0, positive=True, min_value=5000, max_value=100000)
-                else:
-                    if last_lab["result_value"] < 10000:
-                        result_value = last_lab["result_value"] + 5000
-                    elif last_lab["result_value"] < 20000:
-                        result_value = last_lab["result_value"] + 2000
+                    # Normal adult range ~150k–450k per µL
+                    if random.random() < 0.25:
+                        # 25% of labs are critically low (5,000 to 30,000)
+                        result_value = fake.pydecimal(left_digits=5, right_digits=0, positive=True, min_value=5000, max_value=CRITICAL_LOW_MAX)
                     else:
-                        result_value = fake.pydecimal(
-                            left_digits=5,
-                            right_digits=0,
-                            positive=True,
-                            min_value=max(last_lab["result_value"] - 10000, 2000),
-                            max_value=min(last_lab["result_value"] + 10000, 100000),
-                        )
-                lower_limit = 15000
-                upper_limit = 45000
+                        # The normal range
+                        result_value = fake.pydecimal(left_digits=6, right_digits=0, positive=True, min_value=150000, max_value=450000)
+                else:
+                    # If the last lab was very low, it might rise, or it might stay low.
+                    if last_lab["result_value"] < CRITICAL_LOW_MAX or random.random() < 0.1:
+                        # A small chance (10%) of an *incident* of critical low
+                        delta = fake.random_int(min=-30000, max=30000)
+                    else:
+                        # Smaller change when already high/normal
+                        delta = fake.random_int(min=-15000, max=15000)
+                    
+                    # Ensure result_value is between 5000 and 700000
+                    result_value = max(5000, min(700000, int(last_lab["result_value"]) + delta))
+
+                lower_limit = 150000
+                upper_limit = 450000
                 uom = "cells/uL"
             elif test_type == ["Fibrinogen"]:
                 if last_lab is None:
-                    result_value = fake.pydecimal(left_digits=3, right_digits=1, positive=True, min_value=80, max_value=300)
+                    if random.random() < 0.35:  # 35% chance low
+                        result_value = fake.pydecimal(left_digits=3, right_digits=1, positive=True, min_value=80, max_value=150)
+                    else:
+                        result_value = fake.pydecimal(left_digits=3, right_digits=1, positive=True, min_value=151, max_value=300)
                 else:
                     if last_lab["result_value"] < 150:
                         result_value = last_lab["result_value"] + 100
@@ -613,9 +795,9 @@ class Command(BaseCommand):
                     labs.append((surgery, lab_row))
                     lab = lab_row
 
-                    # Intra-op: 0-2 tests
-                    for i in range(random.randint(0, 3)):
-                        draw_dtm = make_aware(    # <-- ensure timezone-aware
+                    # Intra-op: 0-5 tests
+                    for i in range(random.randint(0, 5)):
+                        draw_dtm = make_aware(
                             fake.date_time_between(
                                 start_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i),
                                 end_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i + 1),
@@ -626,8 +808,8 @@ class Command(BaseCommand):
                         labs.append((surgery, lab_row))    # <-- append intra-op lab
                         lab = lab_row
 
-                    # Post-op: 0-1 tests
-                    for i in range(random.randint(0, 2)):
+                    # Post-op: 0-4 tests
+                    for i in range(random.randint(0, 4)):
                         draw_dtm = make_aware(
                             fake.date_time_between(
                                 start_date=datetime.strptime(surgery["surgery_end_dtm"], DATE_FORMAT) + timedelta(hours=i),
@@ -658,16 +840,21 @@ class Command(BaseCommand):
         ]
 
         def gen_medications():
-            med_types = [
-                "TXA",
-                "B12",
-                "AMICAR",
-                "tranexamic acid",
-                "vitamin B12",
-                "aminocaproic acid",
-                "iron",
-                "ferrous sulfate",
-                "ferric carboxymaltose",
+            # Drug-specific mappings: (name, route, form, dose, unit)
+            med_profiles = [
+                ("tranexamic acid",      "intravenous",  "injection", 1000, "mg"),
+                ("TXA",                 "intravenous",  "injection", 1000, "mg"),
+                ("tranexamic acid",      "oral",         "tablet",    650,  "mg"),
+                ("aminocaproic acid",    "intravenous",  "injection", 5000, "mg"),
+                ("AMICAR",              "intravenous",  "injection", 5000, "mg"),
+                ("aminocaproic acid",    "oral",         "tablet",    1000, "mg"),
+                ("vitamin B12",          "intramuscular","injection", 1000, "mcg"),
+                ("B12",                 "intramuscular","injection", 1000, "mcg"),
+                ("vitamin B12",          "oral",         "tablet",    1000, "mcg"),
+                ("ferrous sulfate",      "oral",         "tablet",    325,  "mg"),
+                ("iron sucrose",         "intravenous",  "injection", 200,  "mg"),
+                ("ferric carboxymaltose","intravenous",  "injection", 750,  "mg"),
+                ("iron dextran",         "intravenous",  "injection", 100,  "mg"),
             ]
             for _, _, visit, surg in surgeries:
                 order_dtm = make_aware(
@@ -677,36 +864,33 @@ class Command(BaseCommand):
                     )
                 )
                 admin_dtm = order_dtm + timedelta(minutes=fake.random_int(min=1, max=120))
-                for _ in range(random.randint(1, 70)):
+                # Realistic count: 1-5 typical, up to 15 for sicker patients
+                med_r = random.random()
+                if med_r < 0.50:
+                    num_meds = random.randint(1, 3)
+                elif med_r < 0.80:
+                    num_meds = random.randint(4, 7)
+                elif med_r < 0.95:
+                    num_meds = random.randint(8, 12)
+                else:
+                    num_meds = random.randint(13, 20)
+                for _ in range(num_meds):
+                    profile = random.choice(med_profiles)
+                    med_name, route, form, base_dose, unit = profile
+                    # Add ±20% dose variation
+                    dose = round(base_dose * random.uniform(0.8, 1.2), 1)
                     yield {
                         "visit_no": surg["visit_no"],
                         "order_med_id": fake.unique.random_number(digits=10),
                         "order_dtm": order_dtm,
                         "medication_id": fake.unique.random_number(digits=10),
-                        "medication_name": fake.random_element(elements=med_types),
+                        "medication_name": med_name,
                         "med_admin_line": fake.random_int(min=1, max=4),
                         "admin_dtm": admin_dtm,
-                        "admin_dose": fake.pydecimal(
-                            left_digits=2,
-                            right_digits=1,
-                            positive=True,
-                            min_value=0.1,
-                            max_value=10,
-                        ),
-                        "med_form": fake.random_element(
-                            elements=("tablet", "capsule", "injection", "syrup")
-                        ),
-                        "admin_route_desc": fake.random_element(
-                            elements=(
-                                "oral",
-                                "intravenous",
-                                "intramuscular",
-                                "subcutaneous",
-                            )
-                        ),
-                        "dose_unit_desc": fake.random_element(
-                            elements=("mg", "g", "mL", "unit")
-                        ),
+                        "admin_dose": dose,
+                        "med_form": form,
+                        "admin_route_desc": route,
+                        "dose_unit_desc": unit,
                         "med_start_dtm": admin_dtm,
                         "med_end_dtm": admin_dtm + timedelta(hours=fake.random_int(min=1, max=12)),
                     }
@@ -785,7 +969,7 @@ class Command(BaseCommand):
                         if lab["result_value"] < 7:
                             whole_units = fake.random_int(min=0, max=2)
                     whole = whole_units
-                    type = fake.random_element(elements=("unit", "vol"))
+                    mode = fake.random_element(elements=("unit", "vol"))
 
                     total_transfused = sum((x if x is not None else 0) for x in (rbcs, cell_saver, ffp, plt, cryo, whole))
                     if total_transfused > 0:
@@ -800,16 +984,16 @@ class Command(BaseCommand):
                             ).strftime(DATE_FORMAT),
                             "transfusion_rank": rank,
                             "blood_unit_number": fake.unique.random_number(digits=10),
-                            "rbc_units": rbcs if type == "unit" else None,
-                            "ffp_units": ffp if type == "unit" else None,
-                            "plt_units": plt if type == "unit" else None,
-                            "cryo_units": cryo if type == "unit" else None,
-                            "whole_units": whole if type == "unit" else None,
-                            "rbc_vol": rbcs * 250 if type == "vol" else None,
-                            "ffp_vol": ffp * 220 if type == "vol" else None,
-                            "plt_vol": plt * 300 if type == "vol" else None,
-                            "cryo_vol": cryo * 75 if type == "vol" else None,
-                            "whole_vol": whole * 450 if type == "vol" else None,
+                            "rbc_units": rbcs if mode == "unit" else None,
+                            "ffp_units": ffp if mode == "unit" else None,
+                            "plt_units": plt if mode == "unit" else None,
+                            "cryo_units": cryo if mode == "unit" else None,
+                            "whole_units": whole if mode == "unit" else None,
+                            "rbc_vol": rbcs * 250 if mode == "vol" else None,
+                            "ffp_vol": ffp * 220 if mode == "vol" else None,
+                            "plt_vol": plt * 300 if mode == "vol" else None,
+                            "cryo_vol": cryo * 75 if mode == "vol" else None,
+                            "whole_vol": whole * 450 if mode == "vol" else None,
                             "cell_saver_ml": cell_saver
                         }
                         transfusion_id_counter += 1
@@ -931,19 +1115,68 @@ class Command(BaseCommand):
             "bed_room_dept_line",
         ]
 
+        # Expanded department list with realistic weights for blood-management cohort
+        dept_choices = [
+            # (name, weight, dept_id, service_code, service_desc)
+            ("Emergency Department",       0.08, "DEPT101", "ED",   "Emergency Medicine"),
+            ("Radiology",                  0.05, "DEPT102", "RAD",  "Diagnostic Radiology"),
+            ("Hematology/Oncology",        0.06, "DEPT103", "HON",  "Hematology/Oncology"),
+            ("Cardiology",                 0.10, "DEPT104", "CAR",  "Cardiology"),
+            ("Orthopedics",                0.08, "DEPT105", "ORT",  "Orthopedic Surgery"),
+            ("Surgical ICU (SICU)",        0.10, "DEPT106", "SIC",  "Surgical Critical Care"),
+            ("Medical ICU (MICU)",         0.06, "DEPT107", "MIC",  "Medical Critical Care"),
+            ("Operating Room",             0.12, "DEPT108", "OR",   "Surgery"),
+            ("PACU",                       0.08, "DEPT109", "PAC",  "Post-Anesthesia Care"),
+            ("General Surgery Floor",      0.10, "DEPT110", "SUR",  "General Surgery"),
+            ("Labor & Delivery",           0.07, "DEPT111", "OBG",  "Obstetrics/Gynecology"),
+            ("Medical/Surgical Floor",     0.10, "DEPT112", "MED",  "General Medicine"),
+        ]
+        dept_names = [d[0] for d in dept_choices]
+        dept_weights = [d[1] for d in dept_choices]
+        dept_info = {d[0]: {"id": d[2], "svc_code": d[3], "svc_desc": d[4]} for d in dept_choices}
+
+        # Build a lookup from visit_no -> (adm_dtm, dsch_dtm) for RoomTrace timestamps
+        visit_dates = {}
+        for _, _, v in visits:
+            visit_dates[v["visit_no"]] = (
+                datetime.strptime(v["adm_dtm"], DATE_FORMAT),
+                datetime.strptime(v["dsch_dtm"], DATE_FORMAT),
+            )
+
         def gen_room_traces():
             for i in range(int(target_roomtraces_count)):
+                dept_name = random.choices(dept_names, weights=dept_weights, k=1)[0]
+                info = dept_info[dept_name]
+                v_no = i % int(target_visits_count + 1)
+                if v_no in visit_dates:
+                    adm, dsch = visit_dates[v_no]
+                    los_hours = max(1, (dsch - adm).total_seconds() / 3600)
+                    # Place the room trace somewhere within the visit
+                    offset_hours = random.uniform(0, max(0, los_hours - 1))
+                    in_dtm = adm + timedelta(hours=offset_hours)
+                    duration = random.uniform(0.25, min(3.0, (dsch - in_dtm).total_seconds() / 86400))
+                    out_dtm = in_dtm + timedelta(days=duration)
+                    if out_dtm > dsch:
+                        out_dtm = dsch
+                    duration_days = (out_dtm - in_dtm).total_seconds() / 86400
+                else:
+                    # Fallback for visit_no that wasn't generated
+                    in_dtm = datetime(2020, 1, 1, 9, 0, 0)
+                    out_dtm = datetime(2020, 1, 2, 9, 0, 0)
+                    duration_days = 1.0
                 yield {
-                    "visit_no": (i % int(target_visits_count + 1)),
-                    "department_id": f"DEPT{100 + (i % 10)}",
-                    "department_name": f"Department {i % 10}",
+                    "visit_no": v_no,
+                    "department_id": info["id"],
+                    "department_name": dept_name,
                     "room_id": f"ROOM{200 + (i % 20)}",
                     "bed_id": f"BED{300 + (i % 30)}",
-                    "service_in_c": "A",
-                    "service_in_desc": "General Medicine",
-                    "in_dtm": "2020-01-01 09:00:00",
-                    "out_dtm": "2020-01-02 09:00:00",
-                    "duration_days": 1.0,
+                    "service_in_c": info["svc_code"],
+                    "service_in_desc": info["svc_desc"],
+                    "in_dtm": make_aware(in_dtm).strftime(DATE_FORMAT),
+                    "out_dtm": make_aware(out_dtm).strftime(DATE_FORMAT),
+                    "duration_days": round(duration_days, 2),
                     "bed_room_dept_line": float(i),
                 }
         self.send_csv_to_db(gen_room_traces(), fieldnames=room_trace_fieldnames, table_name="RoomTrace")
+
+        self._report_counts()
