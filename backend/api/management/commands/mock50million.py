@@ -173,22 +173,33 @@ class Command(BaseCommand):
                 "Unknown/Information Not Available",
                 "Not Hispanic/Latino",
             ]
+            # Realistic demographic weights
+            race_weights = [0.13, 0.60, 0.01, 0.06, 0.03, 0.05, 0.01, 0.11]
+            eth_weights  = [0.19, 0.02, 0.04, 0.75]
+            sex_weights  = [0.51, 0.48, 0.004, 0.003, 0.003]
+            sex_codes    = ("F", "M", "NB", "U", "X")
+            # Age buckets: (start_year, end_year) with weights favoring 50-80
+            age_buckets  = [(1935, 1950), (1950, 1965), (1965, 1980), (1980, 1995), (1995, 2010)]
+            age_weights  = [0.10, 0.25, 0.30, 0.25, 0.10]
+
             for _ in range(int(target_patients_count)):
-                race_idx = random.randint(0, 7)
-                eth_idx = random.randint(0, 3)
+                race_idx = random.choices(range(8), weights=race_weights, k=1)[0]
+                eth_idx = random.choices(range(4), weights=eth_weights, k=1)[0]
+                bucket = random.choices(age_buckets, weights=age_weights, k=1)[0]
                 birthdate = fake.date_time_between(
-                    start_date=datetime(1950, 1, 1),
-                    end_date=datetime(1960, 1, 1),
+                    start_date=datetime(bucket[0], 1, 1),
+                    end_date=datetime(bucket[1], 1, 1),
                 )
-                death_date = make_aware(
-                    fake.date_time_between(
-                        start_date=datetime(2024, 11, 1),
-                        end_date=datetime(2025, 5, 1),
+                # ~3% mortality rate (realistic in-hospital)
+                if random.random() < 0.03:
+                    death_date = make_aware(
+                        fake.date_time_between(
+                            start_date=datetime(2024, 11, 1),
+                            end_date=datetime(2025, 5, 1),
+                        )
                     )
-                )
-                death_date = (
-                    death_date if fake.random_element(elements=(True, False)) else None
-                )
+                else:
+                    death_date = None
                 bad_pat = fake.random_element(elements=OrderedDict([(True, 0.67), (False, 0.33)]))
 
                 patient = {
@@ -196,7 +207,7 @@ class Command(BaseCommand):
                     "last_name": fake.last_name(),
                     "first_name": fake.first_name(),
                     "birth_date": birthdate,
-                    "sex_code": fake.random_element(elements=("F", "M", "NB", "U", "X")),
+                    "sex_code": random.choices(sex_codes, weights=sex_weights, k=1)[0],
                     "race_desc": race_descs[race_idx],
                     "ethnicity_desc": eth_descs[eth_idx],
                     "death_date": death_date,
