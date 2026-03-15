@@ -589,27 +589,35 @@ class Command(BaseCommand):
 
         def gen_billing_codes():
             codes, _, _ = get_all_cpt_code_filters()
-            for _, bad_pat, _, surg in surgeries:
-                # Right-skewed billing code count: median ~5-8, tail to 40
+            
+            # Base visit codes
+            for pat, bad_pat, visit in visits:
                 bc_r = random.random()
-                if bc_r < 0.50:
+                if bc_r < 0.45:
                     num_codes = random.randint(3, 8)
-                elif bc_r < 0.80:
-                    num_codes = random.randint(9, 15)
-                elif bc_r < 0.95:
-                    num_codes = random.randint(16, 25)
+                elif bc_r < 0.75:
+                    num_codes = random.randint(9, 14)
+                elif bc_r < 0.90:
+                    num_codes = random.randint(15, 22)
                 else:
-                    num_codes = random.randint(26, 40)
+                    num_codes = random.randint(23, 33)
+                    
+                prov = fake.random_element(elements=surgeons)
+                proc_dtm = visit["adm_dtm"]
+                
                 for rank in range(num_codes):
                     yield {
-                        "visit_no": surg["visit_no"],
+                        "visit_no": visit["visit_no"],
                         "cpt_code": fake.random_element(elements=codes),
                         "cpt_code_desc": fake.sentence(),
-                        "proc_dtm": surg["surgery_start_dtm"],
-                        "prov_id": surg["surgeon_prov_id"],
-                        "prov_name": surg["surgeon_prov_name"],
+                        "proc_dtm": proc_dtm,
+                        "prov_id": prov[0],
+                        "prov_name": prov[1],
                         "code_rank": rank,
                     }
+
+            # Surgery specific codes
+            for _, bad_pat, _, surg in surgeries:
                 # Add ecmo codes
                 if bad_pat and random.random() < 0.2:
                     yield {
@@ -619,7 +627,7 @@ class Command(BaseCommand):
                         "proc_dtm": surg["surgery_start_dtm"],
                         "prov_id": surg["anesth_prov_id"],
                         "prov_name": surg["anesth_prov_name"],
-                        "code_rank": rank + 1,
+                        "code_rank": 101,
                     }
                 # Add stroke codes
                 if bad_pat and random.random() < 0.05:
@@ -630,7 +638,7 @@ class Command(BaseCommand):
                         "proc_dtm": surg["surgery_start_dtm"],
                         "prov_id": surg["anesth_prov_id"],
                         "prov_name": surg["anesth_prov_name"],
-                        "code_rank": rank + 2,
+                        "code_rank": 102,
                     }
                 # Add bleeding/hemorrhage codes
                 if bad_pat and random.random() < 0.4:
@@ -641,7 +649,7 @@ class Command(BaseCommand):
                         "proc_dtm": surg["surgery_start_dtm"],
                         "prov_id": surg["surgeon_prov_id"],
                         "prov_name": surg["surgeon_prov_name"],
-                        "code_rank": rank + 3,
+                        "code_rank": 103,
                     }
         self.send_csv_to_db(gen_billing_codes(), fieldnames=billing_code_fieldnames, table_name="BillingCode")
 
@@ -820,6 +828,19 @@ class Command(BaseCommand):
                         labs.append((surgery, lab_row))
                         yield lab_row
                         lab = lab_row
+
+            # Add admission labs for non-surgical visits
+            surg_visit_nos = {s["visit_no"] for _, _, _, s in surgeries}
+            for pat, bad_pat, visit in visits:
+                if visit["visit_no"] not in surg_visit_nos:
+                    if random.random() < 0.5:
+                        draw_dtm = make_aware(
+                            datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(minutes=random.randint(15, 120))
+                        )
+                        tests = [["HGB", "Hemoglobin"], ["PLT", "Platelet Count"]]
+                        for result_desc_option in tests:
+                            lab_row = make_lab_row(fake, pat, visit, draw_dtm, None, result_desc_option)
+                            yield lab_row
         self.send_csv_to_db(gen_labs(), fieldnames=lab_fieldnames, table_name="Lab")
 
         # Generate Medications
@@ -856,7 +877,7 @@ class Command(BaseCommand):
                 ("ferric carboxymaltose","intravenous",  "injection", 750,  "mg"),
                 ("iron dextran",         "intravenous",  "injection", 100,  "mg"),
             ]
-            for _, _, visit, surg in surgeries:
+            for pat, bad_pat, visit in visits:
                 order_dtm = make_aware(
                     fake.date_time_between(
                         start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT),
@@ -864,23 +885,23 @@ class Command(BaseCommand):
                     )
                 )
                 admin_dtm = order_dtm + timedelta(minutes=fake.random_int(min=1, max=120))
-                # Realistic count: 1-5 typical, up to 15 for sicker patients
+                # Target average ~14.5 across visits
                 med_r = random.random()
-                if med_r < 0.50:
-                    num_meds = random.randint(1, 3)
-                elif med_r < 0.80:
-                    num_meds = random.randint(4, 7)
-                elif med_r < 0.95:
-                    num_meds = random.randint(8, 12)
-                else:
+                if med_r < 0.15:
+                    num_meds = random.randint(1, 5)
+                elif med_r < 0.40:
+                    num_meds = random.randint(6, 12)
+                elif med_r < 0.75:
                     num_meds = random.randint(13, 20)
+                else:
+                    num_meds = random.randint(21, 35)
                 for _ in range(num_meds):
                     profile = random.choice(med_profiles)
                     med_name, route, form, base_dose, unit = profile
                     # Add ±20% dose variation
                     dose = round(base_dose * random.uniform(0.8, 1.2), 1)
                     yield {
-                        "visit_no": surg["visit_no"],
+                        "visit_no": visit["visit_no"],
                         "order_med_id": fake.unique.random_number(digits=10),
                         "order_dtm": order_dtm,
                         "medication_id": fake.unique.random_number(digits=10),
@@ -919,7 +940,7 @@ class Command(BaseCommand):
         def gen_transfusions():
             transfusion_id_counter = 1
             for rank, (surg, lab) in enumerate(labs):
-                num_transfusions = random.choices([0, 1, 2, 3, 4], weights=[0.2, 0.1, 0.05, 0.02, 0.01])[0]
+                num_transfusions = random.choices([0, 1, 2, 3, 4], weights=[0.94, 0.03, 0.015, 0.01, 0.005])[0]
                 for t in range(num_transfusions):
                     rcb_units = 0
                     cell_saver_ml = 0
@@ -940,7 +961,7 @@ class Command(BaseCommand):
                     if lab["result_desc"] == "INR":
                         if lab["result_value"] > 4:
                             ffp_units = fake.random_int(min=3, max=7)
-                        elif lab["result_value"] > 1.2:
+                        elif lab["result_value"] > 1.5:
                             ffp_units = fake.random_int(min=2, max=4)
                     ffp = ffp_units
 
@@ -1023,9 +1044,9 @@ class Command(BaseCommand):
                     num_provider_lines = random.randint(5, 60)
                 else:
                     r = random.random()
-                    if r < 0.80:
+                    if r < 0.70:
                         num_provider_lines = 1
-                    elif r < 0.95:
+                    elif r < 0.90:
                         num_provider_lines = 2
                     else:
                         num_provider_lines = 3
