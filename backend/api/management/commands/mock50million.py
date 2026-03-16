@@ -347,7 +347,7 @@ class Command(BaseCommand):
                         cci[name] = present * weight
                         cci_score += present * weight
 
-                    vent = fake.random_element(elements=(True, True, False)) if bad_pat else fake.random_element(elements=(True, False, False, False, False))
+                    vent = fake.random_element(elements=(True, False, False, False)) if bad_pat else fake.random_element(elements=(True,) + (False,) * 19)
                     vent_mins = fake.random_int(min=30, max=10000) if vent else 0
                     vent_days = max(1, vent_mins // 1440) if vent else 0 
 
@@ -644,8 +644,8 @@ class Command(BaseCommand):
                 if bad_pat and random.random() < 0.4:
                     yield {
                         "visit_no": surg["visit_no"],
-                        "cpt_code": "11000", # In range 10000-69999
-                        "cpt_code_desc": "CONTROL OF HEMORRHAGE",
+                        "cpt_code": "35840", # In range 10000-69999
+                        "cpt_code_desc": "EXPLORATION FOR POSTOPERATIVE HEMORRHAGE, ABDOMEN",
                         "proc_dtm": surg["surgery_start_dtm"],
                         "prov_id": surg["surgeon_prov_id"],
                         "prov_name": surg["surgeon_prov_name"],
@@ -726,7 +726,7 @@ class Command(BaseCommand):
                     if random.random() < 0.35:  # 35% chance low
                         result_value = fake.pydecimal(left_digits=3, right_digits=1, positive=True, min_value=80, max_value=150)
                     else:
-                        result_value = fake.pydecimal(left_digits=3, right_digits=1, positive=True, min_value=151, max_value=300)
+                        result_value = fake.pydecimal(left_digits=3, right_digits=1, positive=True, min_value=151, max_value=400)
                 else:
                     if last_lab["result_value"] < 150:
                         result_value = last_lab["result_value"] + 100
@@ -963,6 +963,13 @@ class Command(BaseCommand):
                             ffp_units = fake.random_int(min=3, max=7)
                         elif lab["result_value"] > 1.5:
                             ffp_units = fake.random_int(min=2, max=4)
+                    
+                    # Simulating a massive transfusion protocol for hemorrhaging patients
+                    if lab["result_desc"] in ["HGB", "Hemoglobin"] and lab["result_value"] < 7:
+                        if surg.get("surgery_type_desc") in ["Trauma Emergent", "Emergent", "Trauma Urgent"]:
+                            if random.random() < 0.2:
+                                ffp_units += fake.random_int(min=2, max=4)
+                                
                     ffp = ffp_units
 
                     # PLT if PLT count below 10,000
@@ -973,6 +980,13 @@ class Command(BaseCommand):
                             plt_units = fake.random_int(min=1, max=2)
                         elif lab["result_value"] < 20000:
                             plt_units = fake.random_int(min=0, max=1)
+                    
+                    # Add to MTP
+                    if lab["result_desc"] in ["HGB", "Hemoglobin"] and lab["result_value"] < 7:
+                        if surg.get("surgery_type_desc") in ["Trauma Emergent", "Emergent", "Trauma Urgent"]:
+                            if ffp_units > 0:
+                                plt_units += 1
+                                
                     plt = plt_units
 
                     # CRYO if Fibrinogen < 150 mg/dL in bleeding patient
@@ -984,10 +998,10 @@ class Command(BaseCommand):
                             cryo_units = fake.random_int(min=0, max=1)
                     cryo = cryo_units
 
-                    # Whole Blood if HGB < 7
+                    # Whole Blood if HGB < 7 strictly for trauma cases
                     whole_units = 0
-                    if lab["result_desc"] in ["HGB", "Hemoglobin"]:
-                        if lab["result_value"] < 7:
+                    if lab["result_desc"] in ["HGB", "Hemoglobin"] and lab["result_value"] < 7:
+                        if surg.get("surgery_type_desc") in ["Trauma Emergent", "Trauma Urgent"]:
                             whole_units = fake.random_int(min=0, max=2)
                     whole = whole_units
                     mode = fake.random_element(elements=("unit", "vol"))
