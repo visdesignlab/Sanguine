@@ -24,6 +24,8 @@ import {
   IconFilter,
   IconSubtask,
   IconInfoSquareRounded,
+  IconEyeglass,
+  IconEyeglassOff,
 } from '@tabler/icons-react';
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
@@ -241,6 +243,15 @@ export const Shell = observer(() => {
 
               <Menu.Dropdown>
                 <Menu.Label>Actions</Menu.Label>
+
+                <Menu.Item
+                  leftSection={store.uiState.isInPrivateMode ? <IconEyeglassOff size={14} /> : <IconEyeglass size={14} />}
+                  onClick={() => {
+                    store.togglePrivateMode();
+                  }}
+                >
+                  {store.uiState.isInPrivateMode ? 'Turn off Private Mode' : 'Turn on Private Mode'}
+                </Menu.Item>
                 <Menu.Item
                   leftSection={<IconFilter size={14} />}
                   onClick={() => {

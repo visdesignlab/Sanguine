@@ -132,6 +132,7 @@ export interface ApplicationState {
     selectedVisitNo: number | null;
     filterPanelExpandedItems: string[];
     showFilterHistograms: boolean;
+    isInPrivateMode:boolean;
   };
 }
 
@@ -245,6 +246,16 @@ export class RootStore {
 
   // region Actions ---
   actions = {
+
+    togglePrivateMode: () => {
+      this.applyAction('Toggle Private Mode', (state) => ({
+        ...state,
+        ui: {
+          ...state.ui,
+          isInPrivateMode: !state.ui.isInPrivateMode,
+        },
+      }), null);
+    },
     updateFilter: (filterKey: keyof ApplicationState['filterValues'], value: ApplicationState['filterValues'][typeof filterKey]) => {
       this.applyAction(`Update Filter: ${filterKey}`, (state, val) => ({
         ...state,
@@ -449,6 +460,7 @@ export class RootStore {
         selectedVisitNo: null,
         filterPanelExpandedItems: ['date-filters', 'blood-component-filters', 'department-procedure-filters'],
         showFilterHistograms: false,
+        isInPrivateMode: false,
       },
     };
 
@@ -752,6 +764,7 @@ export class RootStore {
           selectedVisitNo: null,
           filterPanelExpandedItems: [],
           showFilterHistograms: false,
+          isInPrivateMode: false,
         },
       } as unknown as ApplicationState;
     }
@@ -1167,13 +1180,13 @@ export class RootStore {
         if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
           const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
           return `
-                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN (${baseSum}) ELSE 0 END) > 0 
-                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) / 
-                       SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN (${baseSum}) ELSE 0 END) 
+                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN (${baseSum}) ELSE 0 END) > 0
+                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) /
+                       SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN (${baseSum}) ELSE 0 END)
                   ELSE NULL END AS ${yAxisVar}_current_${aggregation},
-                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN (${baseSum}) ELSE 0 END) > 0 
-                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) / 
-                       SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN (${baseSum}) ELSE 0 END) 
+                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN (${baseSum}) ELSE 0 END) > 0
+                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) /
+                       SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN (${baseSum}) ELSE 0 END)
                   ELSE NULL END AS ${yAxisVar}_comparison_${aggregation}
               `;
         }
@@ -1181,13 +1194,13 @@ export class RootStore {
         if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
           const baseUnit = yAxisVar.replace('_adherent', '');
           return `
-                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${baseUnit} ELSE 0 END) > 0 
-                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) / 
-                       SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${baseUnit} ELSE 0 END) 
+                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${baseUnit} ELSE 0 END) > 0
+                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) /
+                       SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${baseUnit} ELSE 0 END)
                   ELSE NULL END AS ${yAxisVar}_current_${aggregation},
-                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${baseUnit} ELSE 0 END) > 0 
-                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) / 
-                       SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${baseUnit} ELSE 0 END) 
+                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${baseUnit} ELSE 0 END) > 0
+                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) /
+                       SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${baseUnit} ELSE 0 END)
                   ELSE NULL END AS ${yAxisVar}_comparison_${aggregation}
               `;
         }
@@ -1707,6 +1720,11 @@ export class RootStore {
     this.actions.clearSelection();
   }
 
+  async togglePrivateMode() {
+    this.actions.togglePrivateMode();
+    await this.computeExploreChartData();
+  }
+
   async getVisitInfo(visitNo: number) {
     if (!this.duckDB) return null;
     const result = await this.duckDB.query(`SELECT * FROM filteredVisits WHERE visit_no = ${visitNo}`);
@@ -1868,6 +1886,12 @@ export class RootStore {
 
           // If this column is the grouping variable, select it directly
           if (colVar === tableConfig.rowVar) {
+            if (colVar === 'attending_provider') {
+              if (this.uiState.isInPrivateMode) {
+                columnClauses.push(`'Provider ' || ROW_NUMBER() OVER (ORDER BY ${colVar}) AS ${colVar}`);
+                return;
+              }
+            }
             columnClauses.push(colVar);
             return;
           }
@@ -1895,7 +1919,19 @@ export class RootStore {
           }
 
           // Special case: identity columns (attending_provider, year, quarter) - return strings (e.g. Dr. Provider)
-          if (['attending_provider', 'year', 'quarter'].includes(colVar)) {
+          if (colVar === 'attending_provider') {
+            if (this.uiState.isInPrivateMode) {
+              columnClauses.push(`'Provider ' || ROW_NUMBER() OVER (ORDER BY ${colVar}) AS ${colVar}`);
+            } else if (colVar === tableConfig.rowVar) {
+              columnClauses.push(`${colVar}`);
+            } else {
+              columnClauses.push(`string_agg(DISTINCT CAST(${colVar} AS VARCHAR), ', ') AS ${colVar}`);
+            }
+
+            return;
+          }
+
+          if (['year', 'quarter'].includes(colVar)) {
             if (colVar === tableConfig.rowVar) {
               columnClauses.push(`${colVar}`);
             } else {
