@@ -28,8 +28,8 @@ REAL_COUNTS = {
     "AttendingProvider": 1_100_000,
     "DeptServ": 1_500_000,
 }
-REAL_TOTAL = sum(REAL_COUNTS.values())
-REAL_PCTS = {k: v / REAL_TOTAL for k, v in REAL_COUNTS.items()}
+REAL_VISITS = REAL_COUNTS["Visits"]
+SCALES_RELATIVE_TO_VISITS = {k: v / REAL_VISITS for k, v in REAL_COUNTS.items()}
 
 
 class Command(BaseCommand):
@@ -126,7 +126,8 @@ class Command(BaseCommand):
         else:
             self.mock_total = 10**6
 
-        target_counts = {k: max(1, int(self.mock_total * REAL_PCTS[k])) for k in REAL_COUNTS}
+
+        target_counts = {k: max(1, int(self.mock_total * SCALES_RELATIVE_TO_VISITS[k])) for k in REAL_COUNTS}
 
         # Target row counts
         self.target_patients_count = target_counts["Patients"]
