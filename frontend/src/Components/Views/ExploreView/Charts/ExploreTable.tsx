@@ -605,7 +605,6 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     if (!chartData || !Array.isArray(chartData)) {
       return [];
     }
-
     // Filter ---
     const filteredData = chartData.filter((row) => {
       // Text Filters
