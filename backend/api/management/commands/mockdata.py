@@ -10,6 +10,7 @@ from faker.providers import date_time
 import random
 import string
 import tempfile
+import time
 
 from api.views.utils.utils import get_all_cpt_code_filters
 
@@ -139,6 +140,7 @@ class Command(BaseCommand):
         self.target_roomtraces_count = target_counts["DeptServ"]
 
         # Initialize the Faker object
+        self.generation_start_time = time.time()
         Faker.seed(42)
         fake = Faker()
         fake.add_provider(date_time)
@@ -401,6 +403,8 @@ class Command(BaseCommand):
                         ),
                         **cci,
                         "cci_score": cci_score,
+                        "_adm_dtm": admit_date,
+                        "_dsch_dtm": discharge_date,
                     }
                     visits.append((pat, bad_pat, visit))
                     visit_no += 1
@@ -510,11 +514,9 @@ class Command(BaseCommand):
                 for prov_id, prov_name in surgeons:
                     pat, bad_pat, visit = random.choice(visits)
                     # schedule somewhere during the stay
-                    start_time = make_aware(
-                        fake.date_time_between(
-                            start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT),
-                            end_date=datetime.strptime(visit["dsch_dtm"], DATE_FORMAT),
-                        )
+                    start_time = fake.date_time_between(
+                        start_date=visit["_adm_dtm"],
+                        end_date=visit["_dsch_dtm"],
                     )
                     dur_hours = _random_duration_hours()
                     end_time = start_time + timedelta(hours=dur_hours)
@@ -536,6 +538,8 @@ class Command(BaseCommand):
                         "postop_icu_los": _random_icu_los(),
                         "sched_site_desc": random.choice(site_descs),
                         "asa_code": random.choices(asa_codes, weights=asa_weights, k=1)[0],
+                        "_start_dtm": start_time,
+                        "_end_dtm": end_time,
                     }
                     surgeries.append((pat, bad_pat, visit, surgery))
                     yield surgery
@@ -548,14 +552,14 @@ class Command(BaseCommand):
                     continue
 
                 # Possible surgery start times
-                surg1_start = make_aware(fake.date_time_between(
-                    start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT),
-                    end_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(days=1),
-                ))
-                surg2_start = make_aware(fake.date_time_between(
-                    start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(days=3),
-                    end_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(days=4),
-                ))
+                surg1_start = fake.date_time_between(
+                    start_date=visit["_adm_dtm"],
+                    end_date=visit["_adm_dtm"] + timedelta(days=1),
+                )
+                surg2_start = fake.date_time_between(
+                    start_date=visit["_adm_dtm"] + timedelta(days=3),
+                    end_date=visit["_adm_dtm"] + timedelta(days=4),
+                )
                 # Bad cases: 35% 2 surgeries, 65% 1 surgery
                 # Good cases: always 1 surgery
                 if bad_pat and random.random() < 0.65:
@@ -588,6 +592,8 @@ class Command(BaseCommand):
                         "postop_icu_los": _random_icu_los(),
                         "sched_site_desc": random.choice(site_descs),
                         "asa_code": random.choices(asa_codes, weights=asa_weights, k=1)[0],
+                        "_start_dtm": start_time,
+                        "_end_dtm": surg_end,
                     }
                     surgeries.append((pat, bad_pat, visit, surgery))
                     yield surgery
@@ -809,11 +815,9 @@ class Command(BaseCommand):
                 for result_desc_option in tests:
                     lab = None
                     # Pre-op
-                    draw_dtm = make_aware(
-                        fake.date_time_between(
-                            start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT),
-                            end_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) - timedelta(minutes=30)
-                        )
+                    draw_dtm = fake.date_time_between(
+                        start_date=visit["_adm_dtm"],
+                        end_date=surgery["_start_dtm"] - timedelta(minutes=30)
                     )
                     lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
                     yield lab_row
@@ -822,11 +826,9 @@ class Command(BaseCommand):
 
                     # Intra-op: 0-5 tests
                     for i in range(random.randint(0, 5)):
-                        draw_dtm = make_aware(
-                            fake.date_time_between(
-                                start_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i),
-                                end_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i + 1),
-                            )
+                        draw_dtm = fake.date_time_between(
+                            start_date=surgery["_start_dtm"] + timedelta(hours=i),
+                            end_date=surgery["_start_dtm"] + timedelta(hours=i + 1),
                         )
                         lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
                         yield lab_row
@@ -835,11 +837,9 @@ class Command(BaseCommand):
 
                     # Post-op: 0-4 tests
                     for i in range(random.randint(0, 4)):
-                        draw_dtm = make_aware(
-                            fake.date_time_between(
-                                start_date=datetime.strptime(surgery["surgery_end_dtm"], DATE_FORMAT) + timedelta(hours=i),
-                                end_date=datetime.strptime(surgery["surgery_end_dtm"], DATE_FORMAT) + timedelta(hours=i + 1),
-                            )
+                        draw_dtm = fake.date_time_between(
+                            start_date=surgery["_end_dtm"] + timedelta(hours=i),
+                            end_date=surgery["_end_dtm"] + timedelta(hours=i + 1),
                         )
                         lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
                         labs.append((surgery, lab_row))
@@ -851,9 +851,7 @@ class Command(BaseCommand):
             for pat, bad_pat, visit in visits:
                 if visit["visit_no"] not in surg_visit_nos:
                     if random.random() < 0.5:
-                        draw_dtm = make_aware(
-                            datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(minutes=random.randint(15, 120))
-                        )
+                        draw_dtm = visit["_adm_dtm"] + timedelta(minutes=random.randint(15, 120))
                         tests = [["HGB", "Hemoglobin"], ["PLT", "Platelet Count"]]
                         for result_desc_option in tests:
                             lab_row = make_lab_row(fake, pat, visit, draw_dtm, None, result_desc_option)
@@ -895,11 +893,9 @@ class Command(BaseCommand):
                 ("iron dextran",         "intravenous",  "injection", 100,  "mg"),
             ]
             for pat, bad_pat, visit in visits:
-                order_dtm = make_aware(
-                    fake.date_time_between(
-                        start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT),
-                        end_date=datetime.strptime(visit["dsch_dtm"], DATE_FORMAT),
-                    )
+                order_dtm = fake.date_time_between(
+                    start_date=visit["_adm_dtm"],
+                    end_date=visit["_dsch_dtm"],
                 )
                 admin_dtm = order_dtm + timedelta(minutes=fake.random_int(min=1, max=120))
                 # Target average ~14.5 across visits
@@ -1028,11 +1024,9 @@ class Command(BaseCommand):
                         yield {
                             "id": transfusion_id_counter,
                             "visit_no": surg["visit_no"],
-                            "trnsfsn_dtm": make_aware(
-                                fake.date_time_between(
-                                    start_date=datetime.strptime(surg["surgery_start_dtm"], DATE_FORMAT),
-                                    end_date=datetime.strptime(surg["surgery_end_dtm"], DATE_FORMAT),
-                                )
+                            "trnsfsn_dtm": fake.date_time_between(
+                                start_date=surg["_start_dtm"],
+                                end_date=surg["_end_dtm"],
                             ).strftime(DATE_FORMAT),
                             "transfusion_rank": rank,
                             "blood_unit_number": fake.unique.random_number(digits=10),
@@ -1065,8 +1059,8 @@ class Command(BaseCommand):
             provider_pool = surgeons + anests
             for pat, bad_pat, visit in visits:
                 # Parse base dates
-                adm_time = datetime.strptime(visit["adm_dtm"], DATE_FORMAT)
-                dsch_time = datetime.strptime(visit["dsch_dtm"], DATE_FORMAT)
+                adm_time = visit["_adm_dtm"]
+                dsch_time = visit["_dsch_dtm"]
                 visit_duration = (dsch_time - adm_time).total_seconds()
                 
                 # Determine number of provider lines (provider attending instances during visit)
@@ -1191,8 +1185,8 @@ class Command(BaseCommand):
         visit_dates = {}
         for _, _, v in visits:
             visit_dates[v["visit_no"]] = (
-                datetime.strptime(v["adm_dtm"], DATE_FORMAT),
-                datetime.strptime(v["dsch_dtm"], DATE_FORMAT),
+                v["_adm_dtm"],
+                v["_dsch_dtm"],
             )
 
         def gen_room_traces():
@@ -1224,11 +1218,14 @@ class Command(BaseCommand):
                     "bed_id": f"BED{300 + (i % 30)}",
                     "service_in_c": info["svc_code"],
                     "service_in_desc": info["svc_desc"],
-                    "in_dtm": make_aware(in_dtm).strftime(DATE_FORMAT),
-                    "out_dtm": make_aware(out_dtm).strftime(DATE_FORMAT),
+                    "in_dtm": in_dtm.strftime(DATE_FORMAT),
+                    "out_dtm": out_dtm.strftime(DATE_FORMAT),
                     "duration_days": round(duration_days, 2),
                     "bed_room_dept_line": float(i),
                 }
         self.send_csv_to_db(gen_room_traces(), fieldnames=room_trace_fieldnames, table_name="RoomTrace")
 
         self._report_counts()
+
+        generation_end_time = time.time()
+        self.stdout.write(f"\nmock data generation time: {generation_end_time - self.generation_start_time:.2f} seconds.")

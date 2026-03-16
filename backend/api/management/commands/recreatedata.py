@@ -10,7 +10,7 @@ class Command(BaseCommand):
             ["python", "manage.py", "migrate"],
             ["python", "manage.py", "destroydata"],
             ["python", "manage.py", "migrate_derived_tables"],
-            ["python", "manage.py", "mock50million"],
+            ["python", "manage.py", "mockdata"],
             ["python", "manage.py", "refresh_derived_tables"],
             ["python", "manage.py", "generate_parquets"],
         ]
