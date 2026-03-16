@@ -514,12 +514,13 @@ class Command(BaseCommand):
                 for prov_id, prov_name in surgeons:
                     pat, bad_pat, visit = random.choice(visits)
                     # schedule somewhere during the stay
-                    start_time = fake.date_time_between(
+                    start_time = make_aware(fake.date_time_between(
                         start_date=visit["_adm_dtm"],
                         end_date=visit["_dsch_dtm"],
-                    )
+                    ))
                     dur_hours = _random_duration_hours()
-                    end_time = start_time + timedelta(hours=dur_hours)
+                    raw_end_time = start_time + timedelta(hours=dur_hours)
+                    end_time = min(raw_end_time, visit["_dsch_dtm"])
                     anesth = fake.random_element(elements=anests)
                     surgery = {
                         "case_id": fake.unique.random_number(digits=10),
@@ -552,14 +553,20 @@ class Command(BaseCommand):
                     continue
 
                 # Possible surgery start times
-                surg1_start = fake.date_time_between(
+                s1_max = min(visit["_adm_dtm"] + timedelta(days=1), visit["_dsch_dtm"])
+                surg1_start = make_aware(fake.date_time_between(
                     start_date=visit["_adm_dtm"],
-                    end_date=visit["_adm_dtm"] + timedelta(days=1),
-                )
-                surg2_start = fake.date_time_between(
-                    start_date=visit["_adm_dtm"] + timedelta(days=3),
-                    end_date=visit["_adm_dtm"] + timedelta(days=4),
-                )
+                    end_date=s1_max,
+                ))
+                s2_min = min(visit["_adm_dtm"] + timedelta(days=3), visit["_dsch_dtm"])
+                s2_max = min(visit["_adm_dtm"] + timedelta(days=4), visit["_dsch_dtm"])
+                if s2_min == s2_max:
+                    surg2_start = s2_min
+                else:
+                    surg2_start = make_aware(fake.date_time_between(
+                        start_date=s2_min,
+                        end_date=s2_max,
+                    ))
                 # Bad cases: 35% 2 surgeries, 65% 1 surgery
                 # Good cases: always 1 surgery
                 if bad_pat and random.random() < 0.65:
@@ -570,7 +577,8 @@ class Command(BaseCommand):
                 # Create surgery cases
                 for start_time in surg_starts:
                     dur_hours = _random_duration_hours()
-                    surg_end = start_time + timedelta(hours=dur_hours)
+                    raw_surg_end = start_time + timedelta(hours=dur_hours)
+                    surg_end = min(raw_surg_end, visit["_dsch_dtm"])
 
                     surgeon = fake.random_element(elements=surgeons)
                     anesth = fake.random_element(elements=anests)
@@ -815,10 +823,10 @@ class Command(BaseCommand):
                 for result_desc_option in tests:
                     lab = None
                     # Pre-op
-                    draw_dtm = fake.date_time_between(
+                    draw_dtm = make_aware(fake.date_time_between(
                         start_date=visit["_adm_dtm"],
                         end_date=surgery["_start_dtm"] - timedelta(minutes=30)
-                    )
+                    ))
                     lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
                     yield lab_row
                     labs.append((surgery, lab_row))
@@ -826,10 +834,10 @@ class Command(BaseCommand):
 
                     # Intra-op: 0-5 tests
                     for i in range(random.randint(0, 5)):
-                        draw_dtm = fake.date_time_between(
+                        draw_dtm = make_aware(fake.date_time_between(
                             start_date=surgery["_start_dtm"] + timedelta(hours=i),
                             end_date=surgery["_start_dtm"] + timedelta(hours=i + 1),
-                        )
+                        ))
                         lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
                         yield lab_row
                         labs.append((surgery, lab_row))    # <-- append intra-op lab
@@ -837,10 +845,10 @@ class Command(BaseCommand):
 
                     # Post-op: 0-4 tests
                     for i in range(random.randint(0, 4)):
-                        draw_dtm = fake.date_time_between(
+                        draw_dtm = make_aware(fake.date_time_between(
                             start_date=surgery["_end_dtm"] + timedelta(hours=i),
                             end_date=surgery["_end_dtm"] + timedelta(hours=i + 1),
-                        )
+                        ))
                         lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
                         labs.append((surgery, lab_row))
                         yield lab_row
@@ -893,10 +901,10 @@ class Command(BaseCommand):
                 ("iron dextran",         "intravenous",  "injection", 100,  "mg"),
             ]
             for pat, bad_pat, visit in visits:
-                order_dtm = fake.date_time_between(
+                order_dtm = make_aware(fake.date_time_between(
                     start_date=visit["_adm_dtm"],
                     end_date=visit["_dsch_dtm"],
-                )
+                ))
                 admin_dtm = order_dtm + timedelta(minutes=fake.random_int(min=1, max=120))
                 # Target average ~14.5 across visits
                 med_r = random.random()
@@ -1024,10 +1032,10 @@ class Command(BaseCommand):
                         yield {
                             "id": transfusion_id_counter,
                             "visit_no": surg["visit_no"],
-                            "trnsfsn_dtm": fake.date_time_between(
+                            "trnsfsn_dtm": make_aware(fake.date_time_between(
                                 start_date=surg["_start_dtm"],
                                 end_date=surg["_end_dtm"],
-                            ).strftime(DATE_FORMAT),
+                            )).strftime(DATE_FORMAT),
                             "transfusion_rank": rank,
                             "blood_unit_number": fake.unique.random_number(digits=10),
                             "rbc_units": rbcs if mode == "unit" else None,
