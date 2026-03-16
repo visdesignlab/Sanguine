@@ -85,7 +85,7 @@ docker compose -f docker-compose.dev.yml exec -it backend bash
 poetry run python manage.py destroydata
 poetry run python manage.py migrate
 poetry run python manage.py migrate_derived_tables
-poetry run python manage.py mock50million
+poetry run python manage.py mockdata
 poetry run python manage.py refresh_derived_tables
 poetry run python manage.py generate_parquets
 ```
