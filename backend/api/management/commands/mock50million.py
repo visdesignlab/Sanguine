@@ -39,8 +39,8 @@ class Command(BaseCommand):
             '--size',
             type=str,
             choices=['sm', 'md', 'lg'],
-            default='md',
-            help='Size of the mock data to generate (sm: 10^3, md: 10^5, lg: 10^6)'
+            default='lg',
+            help='Size of the mock data to generate (sm: 10^3, md: 10^5, lg: 10^6, default: lg)'
         )
 
     def send_csv_to_db(self, row_gen, fieldnames, table_name, batch_size=100000):
@@ -117,13 +117,13 @@ class Command(BaseCommand):
                 )
                 
     def handle(self, *args, **options):
-        size_arg = options.get('size', 'md')
+        size_arg = options.get('size', 'lg')
         if size_arg == 'sm':
             self.mock_total = 10**3
-        elif size_arg == 'lg':
-            self.mock_total = 10**6
-        else:
+        elif size_arg == 'md':
             self.mock_total = 10**5
+        else:
+            self.mock_total = 10**6
 
         target_counts = {k: max(1, int(self.mock_total * REAL_PCTS[k])) for k in REAL_COUNTS}
 
