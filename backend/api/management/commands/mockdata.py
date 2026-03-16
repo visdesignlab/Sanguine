@@ -1208,7 +1208,8 @@ class Command(BaseCommand):
                     # Place the room trace somewhere within the visit
                     offset_hours = random.uniform(0, max(0, los_hours - 1))
                     in_dtm = adm + timedelta(hours=offset_hours)
-                    duration = random.uniform(0.25, min(3.0, (dsch - in_dtm).total_seconds() / 86400))
+                    max_dur = min(3.0, (dsch - in_dtm).total_seconds() / 86400)
+                    duration = random.uniform(0.25, max(0.25, max_dur))
                     out_dtm = in_dtm + timedelta(days=duration)
                     if out_dtm > dsch:
                         out_dtm = dsch
