@@ -16,7 +16,6 @@ from api.views.utils.utils import get_all_cpt_code_filters
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Scale mock counts to match real-data percentages.
-MOCK_TOTAL = 40 * 10**5  # Change to scale
 REAL_COUNTS = {
     "Patients": 303_000,
     "Visits": 704_000,
@@ -30,22 +29,19 @@ REAL_COUNTS = {
 }
 REAL_TOTAL = sum(REAL_COUNTS.values())
 REAL_PCTS = {k: v / REAL_TOTAL for k, v in REAL_COUNTS.items()}
-target_counts = {k: max(1, int(MOCK_TOTAL * REAL_PCTS[k])) for k in REAL_COUNTS}
-
-# Target row counts
-target_patients_count = target_counts["Patients"]
-target_visits_count = target_counts["Visits"]
-target_surgeries_count = target_counts["Surgeries"]
-target_billings_count = target_counts["BillingCodes"]
-target_meds_count = target_counts["Medications"]
-target_labs_count = target_counts["Labs"]
-target_transfusions_count = target_counts["Transfusions"]
-target_attending_provs_count = target_counts["AttendingProvider"]
-target_roomtraces_count = target_counts["DeptServ"]
 
 
 class Command(BaseCommand):
     help = "Generate mock data CSV files"
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--size',
+            type=str,
+            choices=['sm', 'md', 'lg'],
+            default='md',
+            help='Size of the mock data to generate (sm: 10^3, md: 10^5, lg: 10^6)'
+        )
 
     def send_csv_to_db(self, row_gen, fieldnames, table_name, batch_size=100000):
         """
@@ -98,15 +94,15 @@ class Command(BaseCommand):
     def _report_counts(self):
         """Compare target counts vs actual table row counts and print % difference."""
         table_targets = OrderedDict([
-            ("Patient", target_patients_count),
-            ("Visit", target_visits_count),
-            ("SurgeryCase", target_surgeries_count),
-            ("BillingCode", target_billings_count),
-            ("Lab", target_labs_count),
-            ("Medication", target_meds_count),
-            ("Transfusion", target_transfusions_count),
-            ("AttendingProvider", target_attending_provs_count),
-            ("RoomTrace", target_roomtraces_count),
+            ("Patient", self.target_patients_count),
+            ("Visit", self.target_visits_count),
+            ("SurgeryCase", self.target_surgeries_count),
+            ("BillingCode", self.target_billings_count),
+            ("Lab", self.target_labs_count),
+            ("Medication", self.target_meds_count),
+            ("Transfusion", self.target_transfusions_count),
+            ("AttendingProvider", self.target_attending_provs_count),
+            ("RoomTrace", self.target_roomtraces_count),
         ])
         self.stdout.write(self.style.MIGRATE_HEADING("Row count summary"))
         with connection.cursor() as cursor:
@@ -121,6 +117,27 @@ class Command(BaseCommand):
                 )
                 
     def handle(self, *args, **options):
+        size_arg = options.get('size', 'md')
+        if size_arg == 'sm':
+            self.mock_total = 10**3
+        elif size_arg == 'lg':
+            self.mock_total = 10**6
+        else:
+            self.mock_total = 10**5
+
+        target_counts = {k: max(1, int(self.mock_total * REAL_PCTS[k])) for k in REAL_COUNTS}
+
+        # Target row counts
+        self.target_patients_count = target_counts["Patients"]
+        self.target_visits_count = target_counts["Visits"]
+        self.target_surgeries_count = target_counts["Surgeries"]
+        self.target_billings_count = target_counts["BillingCodes"]
+        self.target_meds_count = target_counts["Medications"]
+        self.target_labs_count = target_counts["Labs"]
+        self.target_transfusions_count = target_counts["Transfusions"]
+        self.target_attending_provs_count = target_counts["AttendingProvider"]
+        self.target_roomtraces_count = target_counts["DeptServ"]
+
         # Initialize the Faker object
         Faker.seed(42)
         fake = Faker()
@@ -183,7 +200,7 @@ class Command(BaseCommand):
             age_buckets  = [(1935, 1950), (1950, 1965), (1965, 1980), (1980, 1995), (1995, 2010)]
             age_weights  = [0.10, 0.25, 0.30, 0.25, 0.10]
 
-            for _ in range(int(target_patients_count)):
+            for _ in range(int(self.target_patients_count)):
                 race_idx = random.choices(range(8), weights=race_weights, k=1)[0]
                 eth_idx = random.choices(range(4), weights=eth_weights, k=1)[0]
                 bucket = random.choices(age_buckets, weights=age_weights, k=1)[0]
@@ -1179,10 +1196,10 @@ class Command(BaseCommand):
             )
 
         def gen_room_traces():
-            for i in range(int(target_roomtraces_count)):
+            for i in range(int(self.target_roomtraces_count)):
                 dept_name = random.choices(dept_names, weights=dept_weights, k=1)[0]
                 info = dept_info[dept_name]
-                v_no = i % int(target_visits_count + 1)
+                v_no = i % int(self.target_visits_count + 1)
                 if v_no in visit_dates:
                     adm, dsch = visit_dates[v_no]
                     los_hours = max(1, (dsch - adm).total_seconds() / 3600)
