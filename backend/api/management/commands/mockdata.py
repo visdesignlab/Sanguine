@@ -569,10 +569,10 @@ class Command(BaseCommand):
                     ))
                 # Bad cases: 35% 2 surgeries, 65% 1 surgery
                 # Good cases: always 1 surgery
-                if bad_pat and random.random() < 0.65:
-                    surg_starts = [surg1_start]
-                else:
-                    surg_starts = [surg1_start, surg2_start] if bad_pat else [surg1_start]
+                surg_starts = [surg1_start]
+                if bad_pat and random.random() > 0.65:
+                    if s2_min < s2_max:
+                        surg_starts.append(surg2_start)
 
                 # Create surgery cases
                 for start_time in surg_starts:
