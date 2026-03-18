@@ -48,23 +48,19 @@ export const Shell = observer(() => {
   // View tabs -----------------
   const TABS = [
     {
-      key: 'Dashboard',
-      label: 'Hospital',
+      key: 'Hospital',
       content: <DashboardView />,
     },
     {
-      key: 'Explore',
-      label: 'Department',
+      key: 'Department',
       content: <ExploreView />,
     },
     {
-      key: 'Providers',
-      label: 'Provider',
+      key: 'Provider',
       content: <ProvidersView />,
     },
     {
       key: 'Settings',
-      label: 'Settings',
       content: <SettingsView />,
     },
   ];
@@ -197,7 +193,7 @@ export const Shell = observer(() => {
               {/** Render each tab in tabs list */}
               <Tabs.List h={toolbarWidth} style={{ paddingTop: 10 }}>
                 {Object.values(TABS).map((tab) => (
-                  <Tabs.Tab key={tab.key} value={tab.key}>{tab.label}</Tabs.Tab>
+                  <Tabs.Tab key={tab.key} value={tab.key}>{tab.key}</Tabs.Tab>
                 ))}
               </Tabs.List>
             </Tabs>
