@@ -1197,29 +1197,26 @@ class Command(BaseCommand):
                 v["_adm_dtm"],
                 v["_dsch_dtm"],
             )
+        visit_nos = list(visit_dates.keys())
 
         def gen_room_traces():
+            if not visit_nos:
+                return
             for i in range(int(self.target_roomtraces_count)):
                 dept_name = random.choices(dept_names, weights=dept_weights, k=1)[0]
                 info = dept_info[dept_name]
-                v_no = i % int(self.target_visits_count + 1)
-                if v_no in visit_dates:
-                    adm, dsch = visit_dates[v_no]
-                    los_hours = max(1, (dsch - adm).total_seconds() / 3600)
-                    # Place the room trace somewhere within the visit
-                    offset_hours = random.uniform(0, max(0, los_hours - 1))
-                    in_dtm = adm + timedelta(hours=offset_hours)
-                    max_dur = min(3.0, (dsch - in_dtm).total_seconds() / 86400)
-                    duration = random.uniform(0.25, max(0.25, max_dur))
-                    out_dtm = in_dtm + timedelta(days=duration)
-                    if out_dtm > dsch:
-                        out_dtm = dsch
-                    duration_days = (out_dtm - in_dtm).total_seconds() / 86400
-                else:
-                    # Fallback for visit_no that wasn't generated
-                    in_dtm = datetime(2020, 1, 1, 9, 0, 0)
-                    out_dtm = datetime(2020, 1, 2, 9, 0, 0)
-                    duration_days = 1.0
+                v_no = visit_nos[i % len(visit_nos)]
+                adm, dsch = visit_dates[v_no]
+                los_hours = max(1, (dsch - adm).total_seconds() / 3600)
+                # Place the room trace somewhere within the visit
+                offset_hours = random.uniform(0, max(0, los_hours - 1))
+                in_dtm = adm + timedelta(hours=offset_hours)
+                max_dur = min(3.0, (dsch - in_dtm).total_seconds() / 86400)
+                duration = random.uniform(0.25, max(0.25, max_dur))
+                out_dtm = in_dtm + timedelta(days=duration)
+                if out_dtm > dsch:
+                    out_dtm = dsch
+                duration_days = (out_dtm - in_dtm).total_seconds() / 86400
                 yield {
                     "visit_no": v_no,
                     "department_id": info["id"],
