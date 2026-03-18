@@ -528,6 +528,18 @@ export const CASE_MIX_INDEX = {
   decimals: { sum: 2, avg: 2 },
 };
 
+export const PROVIDERS = {
+  value: 'attending_provider',
+  label: {
+    short: 'Provider',
+    base: 'Provider',
+    sum: 'Providers',
+    avg: 'Providers',
+  },
+  units: { sum: '', avg: '' },
+  decimals: 0,
+};
+
 // Costs -----------------------------------------------------------
 export const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
   rbc_units_cost: 200,
@@ -611,6 +623,48 @@ export type DashboardStatConfig = {
 };
 
 export type DashboardStatData = Record<DashboardAggYAxisVar, { value: string, diff: number, comparedTo?: string, sparklineData: number[] }>;
+
+// Provider View ----------------------------------------------------
+export type ProviderChart = {
+  group?: string;
+  title: string;
+  data: Array<Record<string, string | number | boolean | null | undefined>>;
+  dataKey: string;
+  recommendedMark?: number;
+  providerMark?: number;
+  providerName?: string | null;
+  orientation: 'horizontal' | 'vertical';
+};
+
+export const providerXAxisOptions = [
+  ...dashboardYAxisOptions.filter(
+    (opt) => opt.value !== 'stroke' && opt.value !== 'death' && opt.value !== 'ecmo',
+  ),
+  PROVIDERS,
+];
+export const providerXAxisVars = providerXAxisOptions.map((opt) => opt.value);
+export const providerChartGroups = ['Anemia Management', 'Outcomes', 'Costs'] as const;
+
+export type ProviderChartData = Record<string, ProviderChart>;
+
+export type ProviderChartConfig = ChartConfig<
+  typeof providerXAxisVars[number] | typeof dashboardXAxisVars[number] | 'attending_provider',
+  typeof dashboardXAxisVars[number] | 'attending_provider' | typeof providerXAxisVars[number],
+  keyof typeof AGGREGATION_OPTIONS,
+  'time-series-line' | 'population-histogram'
+> & { group?: (typeof providerChartGroups)[number] };
+
+/**
+ * Props for the ProviderChartTooltip component.
+ */
+export interface ProviderChartTooltipProps {
+  active?: boolean;
+  payload?: unknown[];
+  label?: string | number;
+  xAxisVar: string;
+  yAxisVar: string;
+  aggregation: string;
+}
 
 // Chart colors (for up to 5 lines/bars)
 export const chartColors = [
