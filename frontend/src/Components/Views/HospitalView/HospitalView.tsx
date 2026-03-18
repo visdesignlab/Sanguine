@@ -39,9 +39,9 @@ import {
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
 /**
- * @returns Patient Blood Management Dashboard - Stats and Charts
+ * @returns Patient Blood Management Hospital view - Stats and Charts
  */
-export function DashboardView() {
+export function HospitalView() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive) as any, []);
 
@@ -114,8 +114,8 @@ export function DashboardView() {
     return (
       <Stack mb="xl" gap="lg">
         <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-          {/** Dashboard Title */}
-          <Title order={3}>Dashboard</Title>
+          {/** View Title */}
+          <Title order={3}>Hospital</Title>
           <Flex direction="row" align="center" gap="md">
             <Tooltip label="Visible visits after filters" position="bottom">
               <Title order={5} c="dimmed">

@@ -24,7 +24,7 @@ import {
   buildScreenshotFilename,
 } from '../../../Utils/screenshotUtils';
 
-export function ProvidersView() {
+export function ProviderView() {
   const store = useContext(Store);
 
   // keep export menu open while native share sheet is active (same pattern as Shell)
@@ -46,9 +46,9 @@ export function ProvidersView() {
         },
       );
       // Download Screenshot
-      downloadDataUrl(dataUrl, buildScreenshotFilename('providers'));
+      downloadDataUrl(dataUrl, buildScreenshotFilename('provider'));
     } catch (err) {
-      console.error('ProvidersView: Download View failed', err);
+      console.error('ProviderView: Download View failed', err);
     } finally {
       // Close export menu after download
       setExportMenuOpened(false);
@@ -73,10 +73,10 @@ export function ProvidersView() {
       );
 
       // Share files
-      const file = await dataUrlToFile(dataUrl, buildScreenshotFilename('providers'));
+      const file = await dataUrlToFile(dataUrl, buildScreenshotFilename('provider'));
       await shareFiles([file], 'Screenshot from Intelvia - Patient Blood Management Analytics\n\n');
     } catch (err) {
-      console.error('ProvidersView: Share View failed', err);
+      console.error('ProviderView: Share View failed', err);
     } finally {
       setSharingInProgress(false);
       setExportMenuOpened(false);
@@ -195,8 +195,8 @@ export function ProvidersView() {
   return (
     <Stack mb="xl" gap="lg">
       <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-        {/* Dashboard Title */}
-        <Title order={3}>Providers</Title>
+        {/* View Title */}
+        <Title order={3}>Provider</Title>
         <Flex direction="row" align="center" gap="md" ml="auto">
           {/** Visits Count */}
           <Tooltip label="Visible visits after filters" position="bottom">

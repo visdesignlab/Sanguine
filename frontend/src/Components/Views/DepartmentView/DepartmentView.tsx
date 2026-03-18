@@ -30,7 +30,7 @@ import { DumbbellChart } from './Charts/DumbbellChart';
 import ExploreTable from './Charts/ExploreTable';
 import { ScatterPlot } from './Charts/ScatterPlot';
 
-export function ExploreView() {
+export function DepartmentView() {
   const store = useContext(Store);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -232,7 +232,7 @@ export function ExploreView() {
     <Stack>
       {/* Title, Add Chart Button */}
       <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-        <Title order={3}>Explore</Title>
+        <Title order={3}>Department</Title>
 
         <Flex direction="row" align="center" gap="md">
           <Tooltip label="Visible visits after filters" position="bottom">
