@@ -139,16 +139,6 @@ export interface ApplicationState {
   };
 }
 
-// Legacy tab names are still normalized when reading provenance state
-// so older saved URLs/states continue to open the correct renamed tabs.
-const ACTIVE_TAB_ALIASES: Record<string, string> = {
-  Dashboard: 'Hospital',
-  Explore: 'Department',
-  Providers: 'Provider',
-};
-
-const normalizeActiveTab = (activeTab: string) => ACTIVE_TAB_ALIASES[activeTab] || activeTab;
-
 // endregion
 
 /**
@@ -1446,14 +1436,7 @@ export class RootStore {
         },
       } as unknown as ApplicationState;
     }
-    const state = this.provenance.getState(this.provenance.current);
-    return {
-      ...state,
-      ui: {
-        ...state.ui,
-        activeTab: normalizeActiveTab(state.ui.activeTab),
-      },
-    };
+    return this.provenance.getState(this.provenance.current);
   }
 
   get uiState() {

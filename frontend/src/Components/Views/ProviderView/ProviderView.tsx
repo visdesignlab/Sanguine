@@ -74,7 +74,7 @@ const datePresets: DatePickerPreset<'range'>[] = [
   { label: 'All time', value: [dayjs('2020-01-01').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
 ];
 
-export function ProvidersView() {
+export function ProviderView() {
   const store = useContext(Store);
   const {
     buttonIconSize, cardIconStroke, toolbarWidth, iconStroke,
@@ -88,10 +88,20 @@ export function ProvidersView() {
 
   const handleDownloadView = useCallback(async () => {
     try {
-      const dataUrl = await captureScreenshot(screenshotRef.current, { hideSelector: '[data-screenshot-hidden]' });
-      downloadDataUrl(dataUrl, buildScreenshotFilename('providers'));
+      // Capture Screenshot
+      const dataUrl = await captureScreenshot(
+        screenshotRef.current ?? document.documentElement,
+        {
+          pixelRatio: 2,
+          paddingPx: 16,
+          backgroundColor: '#ffffff',
+          hideSelector: '[data-screenshot-hidden]',
+        },
+      );
+      // Download Screenshot
+      downloadDataUrl(dataUrl, buildScreenshotFilename('provider'));
     } catch (err) {
-      console.error('ProvidersView: Download View failed', err);
+      console.error('ProviderView: Download View failed', err);
     } finally {
       setExportMenuOpened(false);
     }
@@ -103,12 +113,22 @@ export function ProvidersView() {
       setSharingInProgress(true);
       setExportMenuOpened(true);
 
-      const dataUrl = await captureScreenshot(screenshotRef.current, { hideSelector: '[data-screenshot-hidden]' });
-      const filename = buildScreenshotFilename('providers');
-      const file = await dataUrlToFile(dataUrl, filename);
+      // Capture Screenshot
+      const dataUrl = await captureScreenshot(
+        screenshotRef.current ?? document.documentElement,
+        {
+          pixelRatio: 2,
+          paddingPx: 16,
+          backgroundColor: '#ffffff',
+          hideSelector: '[data-screenshot-hidden]',
+        },
+      );
+
+      // Share files
+      const file = await dataUrlToFile(dataUrl, buildScreenshotFilename('provider'));
       await shareFiles([file], 'Screenshot from Intelvia - Patient Blood Management Analytics\n\n');
     } catch (err) {
-      console.error('ProvidersView: Share View failed', err);
+      console.error('ProviderView: Share View failed', err);
     } finally {
       setSharingInProgress(false);
       setExportMenuOpened(prevExportMenuOpen.current);
@@ -121,9 +141,10 @@ export function ProvidersView() {
   }, [store.providersStore]);
 
   // --- Date Range ---
-  const [dateRange, setDateRange] = useState<[string | null, string | null]>(
-    [dayjs('2020-01-01').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)],
-  );
+  const [dateRange, setDateRange] = useState<[string | null, string | null]>([
+    dayjs('2020-01-01').format(DATE_FORMAT),
+    dayjs().format(DATE_FORMAT),
+  ]);
 
   const onDateRangeChange = useCallback((val: [string | null, string | null]) => {
     setDateRange(val);
