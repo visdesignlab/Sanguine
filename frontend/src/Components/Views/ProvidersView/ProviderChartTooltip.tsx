@@ -28,7 +28,7 @@ export function ProviderChartTooltip({
           {formatValueForDisplay(xAxisVar as never, Number(label), aggregation as keyof typeof AGGREGATION_OPTIONS)}
         </Text>
       </Box>
-      {payload.map((item: any) => {
+      {payload.map((item: unknown) => {
         const castItem = item as { name: string; value: number; color: string };
         return (
           <Box key={castItem.name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
