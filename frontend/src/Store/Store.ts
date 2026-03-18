@@ -132,7 +132,7 @@ export interface ApplicationState {
     selectedVisitNo: number | null;
     filterPanelExpandedItems: string[];
     showFilterHistograms: boolean;
-    isInPrivateMode:boolean;
+    isInPrivateMode: boolean;
   };
 }
 
@@ -1866,6 +1866,14 @@ export class RootStore {
 
   async computeExploreChartData(): Promise<void> {
     const promises = this.exploreChartConfigs.map(async (config) => {
+      const surgeonNameExpr = this.uiState.isInPrivateMode
+        ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY surgeon_prov_name)'
+        : 'surgeon_prov_name';
+
+      const anesthNameExpr = this.uiState.isInPrivateMode
+        ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY anesth_prov_name)'
+        : 'anesth_prov_name';
+
       if (config.chartType === 'exploreTable') {
         // Configuration of table (rowVar, columns, aggregation, etc.)
         const tableConfig = config as ExploreTableConfig;
@@ -1920,14 +1928,19 @@ export class RootStore {
 
           // Special case: identity columns (attending_provider, year, quarter) - return strings (e.g. Dr. Provider)
           if (colVar === 'attending_provider') {
-            if (this.uiState.isInPrivateMode) {
-              columnClauses.push(`'Provider ' || ROW_NUMBER() OVER (ORDER BY ${colVar}) AS ${colVar}`);
-            } else if (colVar === tableConfig.rowVar) {
-              columnClauses.push(`${colVar}`);
-            } else {
-              columnClauses.push(`string_agg(DISTINCT CAST(${colVar} AS VARCHAR), ', ') AS ${colVar}`);
-            }
+            const isRowVar = colVar === tableConfig.rowVar;
 
+            if (isRowVar) {
+              const expr = this.uiState.isInPrivateMode
+                ? `'Provider ' || ROW_NUMBER() OVER (ORDER BY ${colVar})`
+                : colVar;
+              columnClauses.push(`${expr} AS ${colVar}`);
+            } else {
+              const expr = this.uiState.isInPrivateMode
+                ? 'string_agg(DISTINCT \'Provider\', \', \')'
+                : `string_agg(DISTINCT CAST(${colVar} AS VARCHAR), ', ')`;
+              columnClauses.push(`${expr} AS ${colVar}`);
+            }
             return;
           }
 
@@ -2006,12 +2019,12 @@ export class RootStore {
         }
       }
       if (config.chartType === 'dumbbell') {
-        // TODO: Don't limit to only 10,000 surgeries.
+      // TODO: Don't limit to only 10,000 surgeries.
         const query = `
           SELECT
              CAST(case_id AS VARCHAR) as case_id,
              surgeon_prov_id,
-             surgeon_prov_name,
+             ${surgeonNameExpr} AS surgeon_prov_name,
              CAST(visit_no AS VARCHAR) as visit_no,
              pre_hgb,
              post_hgb,
@@ -2023,7 +2036,7 @@ export class RootStore {
              pre_inr,
              post_inr,
              anesth_prov_id,
-             anesth_prov_name,
+             ${anesthNameExpr} AS anesth_prov_name,
              intraop_rbc_units,
              intraop_plt_units,
              intraop_cryo_units,
@@ -2050,9 +2063,9 @@ export class RootStore {
            SELECT
              CAST(case_id AS VARCHAR) as case_id,
              surgeon_prov_id,
-             surgeon_prov_name,
+             ${surgeonNameExpr} AS surgeon_prov_name,
              anesth_prov_id,
-             anesth_prov_name,
+             ${anesthNameExpr} AS anesth_prov_name,
              year,
              quarter,
              month,
