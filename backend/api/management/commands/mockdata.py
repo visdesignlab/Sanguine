@@ -319,7 +319,7 @@ class Command(BaseCommand):
                     admit_date = make_aware(
                         fake.date_time_between(
                             start_date=datetime(year, 1, 1),
-                            end_date=datetime(year + 1, 1, 1).date()
+                            end_date=datetime(year , 12, 31).date()
                         )
                     )
                     # Right-skewed LOS: median ~3-4 days, tail to 45
