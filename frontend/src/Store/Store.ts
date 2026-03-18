@@ -135,6 +135,16 @@ export interface ApplicationState {
   };
 }
 
+// Legacy tab names are still normalized when reading provenance state
+// so older saved URLs/states continue to open the correct renamed tabs.
+const ACTIVE_TAB_ALIASES: Record<string, string> = {
+  Dashboard: 'Hospital',
+  Explore: 'Department',
+  Providers: 'Provider',
+};
+
+const normalizeActiveTab = (activeTab: string) => ACTIVE_TAB_ALIASES[activeTab] || activeTab;
+
 // endregion
 
 export class RootStore {
@@ -443,7 +453,7 @@ export class RootStore {
         unitCosts: { ...DEFAULT_UNIT_COSTS },
       },
       ui: {
-        activeTab: 'Dashboard',
+        activeTab: 'Hospital',
         leftToolbarOpened: true,
         activeLeftPanel: null,
         selectedVisitNo: null,
@@ -746,7 +756,7 @@ export class RootStore {
         explore: {},
         settings: {},
         ui: {
-          activeTab: 'Dashboard',
+          activeTab: 'Hospital',
           leftToolbarOpened: true,
           activeLeftPanel: null,
           selectedVisitNo: null,
@@ -755,7 +765,14 @@ export class RootStore {
         },
       } as unknown as ApplicationState;
     }
-    return this.provenance.getState(this.provenance.current);
+    const state = this.provenance.getState(this.provenance.current);
+    return {
+      ...state,
+      ui: {
+        ...state.ui,
+        activeTab: normalizeActiveTab(state.ui.activeTab),
+      },
+    };
   }
 
   get uiState() {
@@ -814,7 +831,7 @@ export class RootStore {
   }
 
   set dashboardChartLayouts(input: { [key: string]: Layout[] }) {
-    if (this.state.ui.activeTab !== 'Dashboard') return;
+    if (this.state.ui.activeTab !== 'Hospital') return;
     this._baseDashboardLayouts = input;
   }
 
@@ -1327,7 +1344,7 @@ export class RootStore {
   }
 
   set exploreChartLayouts(input: { [key: string]: Layout[] }) {
-    if (this.state.ui.activeTab !== 'Explore') return;
+    if (this.state.ui.activeTab !== 'Department') return;
     this._transientExploreLayouts = input;
   }
 
