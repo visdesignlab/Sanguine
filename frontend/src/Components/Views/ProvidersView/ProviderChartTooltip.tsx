@@ -7,14 +7,27 @@ import {
 } from '../../../Types/application';
 
 /**
+ * Format the tooltip header value. Histogram bin centers are raw aggregated
+ * numbers and must NOT be run through formatValueForDisplay (which multiplies
+ * percentage-unit fields by 100). Time-series labels are strings and displayed
+ * as-is.
+ */
+function formatTooltipLabel(label: string | number | undefined): string {
+  if (label === undefined || label === null) return '';
+  if (typeof label === 'string') return label;
+  if (!Number.isFinite(label)) return '';
+  return label % 1 === 0 ? String(label) : label.toFixed(2);
+}
+
+/**
  * Custom tooltip component for ProviderView charts.
  */
 export function ProviderChartTooltip({
   active, payload, label, xAxisVar, yAxisVar, aggregation,
 }: ProviderChartTooltipProps) {
-  if (!active || !payload) return null;
+  if (!active || !payload?.length) return null;
 
-  // Find the label for the x-axis variable
+  // Resolve the human-readable name for the x-axis variable
   const xVarOption = [...dashboardYAxisOptions, ...providerXAxisOptions].find((opt) => opt.value === xAxisVar);
   const xVarLabel = xVarOption?.label?.[aggregation as keyof typeof AGGREGATION_OPTIONS] || xAxisVar;
 
@@ -25,7 +38,7 @@ export function ProviderChartTooltip({
           {xVarLabel}
           :
           {' '}
-          {formatValueForDisplay(xAxisVar as never, Number(label), aggregation as keyof typeof AGGREGATION_OPTIONS)}
+          {formatTooltipLabel(label)}
         </Text>
       </Box>
       {payload.map((item: unknown) => {
