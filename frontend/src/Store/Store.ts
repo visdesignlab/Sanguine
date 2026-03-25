@@ -398,16 +398,8 @@ export class RootStore {
   // endregion
 
   // region Provenance
-  /**
-   * Initialize the provenance store with current store values.
-   * This should be called after data is loaded and default filter values are calculated.
-   */
-  init() {
-    if (this.provenance) {
-      console.warn('ProvenanceStore already initialized');
-      return;
-    }
-    const rawInitialState: ApplicationState = {
+  getBaseInitialState(): ApplicationState {
+    return {
       filterValues: {
         dateFrom: this.initialFilterValues.dateFrom.toISOString(),
         dateTo: this.initialFilterValues.dateTo.toISOString(),
@@ -451,6 +443,18 @@ export class RootStore {
         showFilterHistograms: false,
       },
     };
+  }
+
+  /**
+   * Initialize the provenance store with current store values.
+   * This should be called after data is loaded and default filter values are calculated.
+   */
+  init() {
+    if (this.provenance) {
+      console.warn('ProvenanceStore already initialized');
+      return;
+    }
+    const rawInitialState = this.getBaseInitialState();
 
     const initialState = JSON.parse(JSON.stringify(rawInitialState));
 
@@ -737,23 +741,7 @@ export class RootStore {
 
     if (!this.provenance) {
       // Return default/empty state if not initialized
-      return {
-        filterValues: {},
-        selections: {
-          selectedTimePeriods: [],
-        },
-        dashboard: {},
-        explore: {},
-        settings: {},
-        ui: {
-          activeTab: 'Hospital',
-          leftToolbarOpened: true,
-          activeLeftPanel: null,
-          selectedVisitNo: null,
-          filterPanelExpandedItems: [],
-          showFilterHistograms: false,
-        },
-      } as unknown as ApplicationState;
+      return this.getBaseInitialState();
     }
     return this.provenance.getState(this.provenance.current);
   }
@@ -937,6 +925,15 @@ export class RootStore {
     if (!this.duckDB) return;
     const result = {} as DashboardChartData;
 
+    const selectedDeptIds = this.state.filterValues.departmentIds || [];
+    const multiDept = selectedDeptIds.length > 1;
+    const deptMap = new Map<string, string>();
+    if (multiDept && this.procedureHierarchy) {
+      this.procedureHierarchy.departments.forEach((d) => {
+        deptMap.set(d.id, d.name);
+      });
+    }
+
     // For each chart, build the 'select' clauses
     const selectClauses = this.dashboardChartConfigs.flatMap(({ yAxisVar }) => (
       Object.keys(AGGREGATION_OPTIONS).flatMap((aggregation) => {
@@ -949,6 +946,7 @@ export class RootStore {
             `${aggFn}(cryo_units_cost) AS ${aggregation}_cryo_units_cost`,
             `${aggFn}(whole_cost) AS ${aggregation}_whole_cost`,
             `${aggFn}(cell_saver_cost) AS ${aggregation}_cell_saver_cost`,
+            `${aggFn}(COALESCE(rbc_units_cost, 0) + COALESCE(plt_units_cost, 0) + COALESCE(ffp_units_cost, 0) + COALESCE(cryo_units_cost, 0) + COALESCE(whole_cost, 0) + COALESCE(cell_saver_cost, 0)) AS ${aggregation}_total_blood_product_cost`,
           ];
         }
         if (yAxisVar === 'case_mix_index') {
@@ -975,11 +973,30 @@ export class RootStore {
     ));
 
     // Get the data from each chart, grouped by month, quarter, and year
-    const query = `
+    const query = multiDept
+      ? `
+      WITH unnested AS (
+        SELECT v.*, unnest(v.department_ids) as dept_id
+        FROM filteredVisits v
+      )
       SELECT
         month,
         quarter,
         year,
+        dept_id,
+        COUNT(visit_no) AS visit_count,
+        ${selectClauses.join(',\n')}
+      FROM unnested
+      WHERE dept_id IN (${selectedDeptIds.map((id) => `'${id}'`).join(', ')})
+      GROUP BY month, quarter, year, dept_id
+      ORDER BY year, quarter, month;
+    `
+      : `
+      SELECT
+        month,
+        quarter,
+        year,
+        NULL as dept_id,
         COUNT(visit_no) AS visit_count,
         ${selectClauses.join(',\n')}
       FROM aggregatedVisits
@@ -1001,8 +1018,19 @@ export class RootStore {
           // Get the data for this chart
           const chartDatum = rows
             .map((row) => {
+              const deptId = row.dept_id as string | null;
+              const deptName = deptId ? deptMap.get(deptId) || deptId : undefined;
+
               // Special case for total blood product cost
               if (yAxisVar === 'total_blood_product_cost') {
+                if (multiDept) {
+                  return {
+                    timePeriod: row[timeAggregation] as TimePeriod,
+                    deptName,
+                    data: Number(row[aggVar] || 0),
+                    counts_per_period: Number(row.visit_count || 0),
+                  };
+                }
                 return {
                   timePeriod: row[timeAggregation] as TimePeriod,
                   data: {
@@ -1012,43 +1040,66 @@ export class RootStore {
                     cryo_units_cost: Number(row[`${aggType}_cryo_units_cost`] || 0),
                     whole_cost: Number(row[`${aggType}_whole_cost`] || 0),
                     cell_saver_cost: Number(row[`${aggType}_cell_saver_cost`] || 0),
-                  },
+                  } as Record<string, number>,
                   counts_per_period: Number(row.visit_count || 0),
                 };
               }
               // Adherence avg: pass through raw numerator + denominator for correct aggregation
               if (yAxisVar.endsWith('_adherent') && aggType === 'avg') {
+                const num = Number(row[aggVar] || 0);
+                const den = Number(row[`${aggVar}_den`] || 0);
+                if (multiDept) {
+                  return {
+                    timePeriod: row[timeAggregation] as TimePeriod,
+                    deptName,
+                    data: den > 0 ? num / den : 0,
+                    counts_per_period: Number(row.visit_count || 0),
+                  };
+                }
                 return {
                   timePeriod: row[timeAggregation] as TimePeriod,
-                  data: Number(row[aggVar] || 0),
+                  deptName,
+                  data: num,
                   counts_per_period: Number(row.visit_count || 0),
-                  _adherence_den: Number(row[`${aggVar}_den`] || 0),
+                  _adherence_den: den,
                 };
               }
               // Otherwise, return the data for this chart
               return {
                 timePeriod: row[timeAggregation] as TimePeriod,
+                deptName,
                 data: Number(row[aggVar] || 0),
                 counts_per_period: Number(row.visit_count || 0),
               };
             })
             // Filter out null and undefined time periods
-            .filter((entry) => entry.timePeriod !== null && entry.timePeriod !== undefined && !Number.isNaN(entry.data))
+            .filter((entry) => entry.timePeriod !== null && entry.timePeriod !== undefined && !Number.isNaN(entry.data as number))
             // Reduce the data to a single array of objects
             .reduce((acc, curr) => {
               const existing = acc.find((item) => item.timePeriod === curr.timePeriod);
 
               if (existing) {
+                // If multi-department, we want to add the data as a new key in the data object
+                if (multiDept && curr.deptName) {
+                  if (typeof existing.data !== 'object') {
+                    existing.data = { [existing.deptName || 'Total']: existing.data } as Record<string, number>;
+                  }
+                  (existing.data as Record<string, number>)[curr.deptName] = curr.data as number;
+                  return acc;
+                }
+
                 // SUM: Accumulate values directly
                 if (aggType === 'sum') {
                   if (typeof existing.data === 'object' && typeof curr.data === 'object') {
+                    const existingData = existing.data as Record<string, number>;
+                    const currData = curr.data as Record<string, number>;
                     existing.data = {
-                      rbc_units_cost: existing.data.rbc_units_cost + curr.data.rbc_units_cost,
-                      plt_units_cost: existing.data.plt_units_cost + curr.data.plt_units_cost,
-                      ffp_units_cost: existing.data.ffp_units_cost + curr.data.ffp_units_cost,
-                      cryo_units_cost: existing.data.cryo_units_cost + curr.data.cryo_units_cost,
-                      whole_cost: existing.data.whole_cost + curr.data.whole_cost,
-                      cell_saver_cost: existing.data.cell_saver_cost + curr.data.cell_saver_cost,
+                      rbc_units_cost: (existingData.rbc_units_cost || 0) + (currData.rbc_units_cost || 0),
+                      plt_units_cost: (existingData.plt_units_cost || 0) + (currData.plt_units_cost || 0),
+                      ffp_units_cost: (existingData.ffp_units_cost || 0) + (currData.ffp_units_cost || 0),
+                      cryo_units_cost: (existingData.cryo_units_cost || 0) + (currData.cryo_units_cost || 0),
+                      whole_cost: (existingData.whole_cost || 0) + (currData.whole_cost || 0),
+                      cell_saver_cost: (existingData.cell_saver_cost || 0) + (currData.cell_saver_cost || 0),
                     };
                   } else {
                     (existing.data as number) += curr.data as number;
@@ -1065,10 +1116,10 @@ export class RootStore {
                     const totalCount = existing.counts_per_period!.reduce((a, b) => a + b, 0);
 
                     if (typeof existing.data === 'object' && typeof curr.data === 'object') {
-                      const costKeys = Object.keys(existing.data) as (keyof typeof existing.data)[];
+                      const costKeys = Object.keys(existing.data);
                       const avgObj: Record<string, number> = {};
                       for (const key of costKeys) {
-                        const values = existing.data_per_period!.map((d) => (typeof d === 'object' ? d[key] : 0));
+                        const values = existing.data_per_period!.map((d) => (typeof d === 'object' ? (d as Record<string, number>)[key] : 0));
                         const weighted = existing.counts_per_period!.map((count, idx) => (count * (values[idx] || 0)) / (totalCount || 1));
                         avgObj[key] = weighted.reduce((a, b) => a + b, 0);
                       }
@@ -1081,10 +1132,16 @@ export class RootStore {
                 }
               } else {
                 // If new time period: Initialize tracking arrays
-                acc.push({ ...curr, counts_per_period: curr.counts_per_period ? [curr.counts_per_period] : [], data_per_period: [curr.data] });
+                const initialData = (multiDept && curr.deptName) ? { [curr.deptName]: curr.data } : curr.data;
+                acc.push({
+                  ...curr,
+                  data: initialData as any,
+                  counts_per_period: curr.counts_per_period ? [curr.counts_per_period] : [],
+                  data_per_period: [curr.data],
+                } as any);
               }
               return acc;
-            }, [] as { timePeriod: TimePeriod; data: number | Record<Cost, number>, counts_per_period?: number[], data_per_period?: (number | Record<Cost, number>)[], _adherence_den?: number }[])
+            }, [] as { timePeriod: TimePeriod; deptName?: string; data: number | Record<string, number>, counts_per_period?: number[], data_per_period?: (number | Record<string, number>)[], _adherence_den?: number }[])
             // Compute final values and clean up tracking fields
             .map((entry) => {
               // Adherence avg: compute the ratio from accumulated numerator / denominator
