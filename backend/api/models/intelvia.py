@@ -96,7 +96,7 @@ class BillingCode(models.Model):
         db_table = "BillingCode"
         indexes = [
             models.Index(fields=["cpt_code", "visit_no"], name="billingcode_cpt_visit_idx"),
-            models.Index(fields=["visit_no", "cpt_code"], name="billingcode_visit_cpt_idx"),
+            models.Index(fields=["visit_no", "cpt_code"], name="idx_billingcode_visit_cpt"),
         ]
 
 
@@ -165,7 +165,7 @@ class Transfusion(models.Model):
     class Meta:
         db_table = "Transfusion"
         indexes = [
-            models.Index(fields=["visit_no", "trnsfsn_dtm"], name="transfusion_visit_time_idx"),
+            models.Index(fields=["visit_no", "trnsfsn_dtm"], name="idx_transfusion_visit_dtm"),
         ]
 
 

@@ -194,6 +194,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 "db_table": "Medication",
+                "indexes": [models.Index(fields=["visit_no", "admin_dtm"], name="medication_visit_admin_idx")],
             },
         ),
         migrations.CreateModel(
@@ -259,9 +260,10 @@ class Migration(migrations.Migration):
             options={
                 "db_table": "AttendingProvider",
                 "indexes": [
+                    models.Index(fields=["visit_no", "prov_id"], name="attprov_visit_prov_idx"),
                     models.Index(
-                        fields=["visit_no", "attend_start_dtm", "attend_end_dtm", "prov_id", "attend_prov_line"],
-                        name="idx_attprov_visit_dtm_range",
+                        fields=["visit_no", "attend_start_dtm", "attend_end_dtm", "attend_prov_line"],
+                        name="attprov_visit_window_idx",
                     ),
                 ],
             },
