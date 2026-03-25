@@ -6,6 +6,8 @@ from unittest.mock import patch
 from django.core.management import call_command
 from django.test import TransactionTestCase, override_settings
 
+from api.models_derived import refresh_derived_tables
+
 from .materialized_view_test_utils import (
     create_generate_parquets_null_robustness_fixture,
     set_generate_parquets_fixture_cell_to_null,
@@ -166,7 +168,16 @@ class GenerateParquetsNullRobustnessTests(TransactionTestCase):
     def setUp(self):
         truncate_intelvia_tables()
 
+    def _refresh_derived_tables_for_generate_mode(self, generate_mode: str) -> None:
+        refresh_target_by_mode = {
+            "all": "all",
+            "visit_attributes": "visit_attributes",
+            "surgery_cases": "surgery_case_attributes",
+        }
+        refresh_derived_tables(target=refresh_target_by_mode[generate_mode])
+
     def _run_generate_and_assert_artifacts(self, *, generate_mode: str) -> None:
+        self._refresh_derived_tables_for_generate_mode(generate_mode)
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
             mock_hierarchy = SimpleNamespace(
                 code_map={

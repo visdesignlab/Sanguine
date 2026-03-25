@@ -25,6 +25,7 @@ from .materialized_view_test_utils import (
     add_billing_code,
     create_empty_visit_fixture,
     create_visit_fixture,
+    materialize_visit_attributes,
     truncate_intelvia_tables,
     utc_dt,
 )
@@ -139,6 +140,7 @@ class GenerateParquetsTests(TransactionTestCase):
             ),
         }
         departments = hierarchy_departments()
+        materialize_visit_attributes()
 
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
             with patch(
@@ -224,6 +226,7 @@ class GenerateParquetsTests(TransactionTestCase):
                 "Stroke",
             ),
         }
+        materialize_visit_attributes()
 
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
             with patch(
@@ -283,6 +286,7 @@ class GenerateParquetsTests(TransactionTestCase):
                 "ECMO Initiation",
             ),
         }
+        materialize_visit_attributes()
 
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
             with patch(
@@ -336,6 +340,7 @@ class GenerateParquetsTests(TransactionTestCase):
                 "Stroke",
             ),
         }
+        materialize_visit_attributes()
 
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
             with patch(
@@ -461,6 +466,7 @@ class GenerateParquetsTests(TransactionTestCase):
             plt_result=Decimal("20000"),
             fibrinogen_result=Decimal("200"),
         )
+        materialize_visit_attributes()
 
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
             cache_dir = Path(base_dir) / "parquet_cache"
