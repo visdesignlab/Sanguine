@@ -1816,10 +1816,10 @@ export class RootStore {
                 const initialData = (multiDept && curr.deptName) ? { [curr.deptName]: curr.data } : curr.data;
                 acc.push({
                   ...curr,
-                  data: initialData as any,
+                  data: initialData as number | Record<string, number>,
                   counts_per_period: curr.counts_per_period ? [curr.counts_per_period] : [],
                   data_per_period: [curr.data],
-                } as any);
+                });
               }
               return acc;
             }, [] as { timePeriod: TimePeriod; deptName?: string; data: number | Record<string, number>, counts_per_period?: number[], data_per_period?: (number | Record<string, number>)[], _adherence_den?: number }[])

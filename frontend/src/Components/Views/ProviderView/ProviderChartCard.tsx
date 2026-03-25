@@ -55,6 +55,26 @@ function buildSeries(chart: ProviderChart) {
     }));
 }
 
+/**
+ * Snap a numeric value to the nearest category value in the chart data.
+ * Required because category x-axes only render reference lines at exact category values.
+ */
+function snapToNearestCategory(value: number | undefined, data: ProviderChart['data'], dataKey: string): number | undefined {
+  if (value === undefined || !Number.isFinite(value) || !data?.length) return undefined;
+  const categories = data.map((r) => Number(r[dataKey])).filter(Number.isFinite);
+  if (!categories.length) return undefined;
+  let closest = categories[0];
+  let minDist = Math.abs(value - closest);
+  for (let i = 1; i < categories.length; i += 1) {
+    const dist = Math.abs(value - categories[i]);
+    if (dist < minDist) {
+      closest = categories[i];
+      minDist = dist;
+    }
+  }
+  return closest;
+}
+
 interface ProviderChartCardProps {
   cfg: ProviderChartConfig;
   chart: ProviderChart;
@@ -144,7 +164,38 @@ export function ProviderChartCard({
                 />
               ),
             }}
-          />
+          >
+            {/* Recommended mark — visible dashed line */}
+            {!Number.isNaN(chart.recommendedMark) && (
+              <ReferenceLine
+                yAxisId="left"
+                y={chart.recommendedMark}
+                ifOverflow="visible"
+                stroke="#82ca9d"
+                strokeDasharray="3 3"
+              />
+            )}
+            {/* Invisible hitbox for recommended mark hover label */}
+            {!Number.isNaN(chart.recommendedMark) && (
+              <ReferenceLine
+                yAxisId="left"
+                y={chart.recommendedMark}
+                ifOverflow="visible"
+                stroke="transparent"
+                strokeWidth={8}
+                style={{ pointerEvents: 'stroke', cursor: 'pointer', zIndex: 9999 }}
+                onMouseEnter={() => setHoveredRecommendedLine(true)}
+                onMouseLeave={() => setHoveredRecommendedLine(false)}
+                label={hoveredRecommendedLine ? {
+                  value: 'Recommended',
+                  position: 'right',
+                  fill: '#2f9e44',
+                  fontSize: 12,
+                  style: { zIndex: 9999 },
+                } : undefined}
+              />
+            )}
+          </LineChart>
         ) : (
           <BarChart
             h={160}
@@ -161,8 +212,7 @@ export function ProviderChartCard({
             barProps={{ radius: 5 }}
             series={series}
             xAxisProps={{
-              type: 'number',
-              domain: ['dataMin', 'dataMax'],
+              type: 'category',
               padding: { left: 10, right: 10 },
               tickFormatter: formatHistogramTick,
             }}
@@ -182,7 +232,7 @@ export function ProviderChartCard({
             {/* Provider marker reference line */}
             <ReferenceLine
               yAxisId="left"
-              x={chart.providerMark}
+              x={snapToNearestCategory(chart.providerMark, chart.data, chart.dataKey)}
               ifOverflow="visible"
               stroke="#4a4a4a"
               label={{
@@ -198,31 +248,35 @@ export function ProviderChartCard({
               }}
             />
             {/* Recommended mark — visible dashed line */}
-            <ReferenceLine
-              yAxisId="left"
-              x={Number(chart.recommendedMark)}
-              ifOverflow="visible"
-              stroke="#82ca9d"
-              strokeDasharray="3 3"
-            />
+            {!Number.isNaN(chart.recommendedMark) && (
+              <ReferenceLine
+                yAxisId="left"
+                x={snapToNearestCategory(chart.recommendedMark, chart.data, chart.dataKey)}
+                ifOverflow="visible"
+                stroke="#82ca9d"
+                strokeDasharray="3 3"
+              />
+            )}
             {/* Invisible hitbox for recommended mark hover label */}
-            <ReferenceLine
-              yAxisId="left"
-              x={Number(chart.recommendedMark)}
-              ifOverflow="visible"
-              stroke="transparent"
-              strokeWidth={8}
-              style={{ pointerEvents: 'stroke', cursor: 'pointer', zIndex: 9999 }}
-              onMouseEnter={() => setHoveredRecommendedLine(true)}
-              onMouseLeave={() => setHoveredRecommendedLine(false)}
-              label={hoveredRecommendedLine ? {
-                value: 'Recommended',
-                position: 'bottom',
-                fill: '#2f9e44',
-                fontSize: 12,
-                style: { zIndex: 9999 },
-              } : undefined}
-            />
+            {!Number.isNaN(chart.recommendedMark) && (
+              <ReferenceLine
+                yAxisId="left"
+                x={snapToNearestCategory(chart.recommendedMark, chart.data, chart.dataKey)}
+                ifOverflow="visible"
+                stroke="transparent"
+                strokeWidth={8}
+                style={{ pointerEvents: 'stroke', cursor: 'pointer', zIndex: 9999 }}
+                onMouseEnter={() => setHoveredRecommendedLine(true)}
+                onMouseLeave={() => setHoveredRecommendedLine(false)}
+                label={hoveredRecommendedLine ? {
+                  value: 'Recommended',
+                  position: 'bottom',
+                  fill: '#2f9e44',
+                  fontSize: 12,
+                  style: { zIndex: 9999 },
+                } : undefined}
+              />
+            )}
           </BarChart>
         )}
         <Text
