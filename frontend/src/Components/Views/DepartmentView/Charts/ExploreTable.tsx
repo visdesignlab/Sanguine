@@ -295,7 +295,7 @@ function NumericBarCell({
   // Default Options
   const {
     cellHeight = 21,
-    fillColor = opts?.isSavings ? '#ffd43b' : '#8c8c8c',
+    fillColor = opts?.isSavings ? '#c7e9c0' : '#8c8c8c',
     padding = '1px 1px 1px 1px',
     isSavings = false,
   } = opts || {};
