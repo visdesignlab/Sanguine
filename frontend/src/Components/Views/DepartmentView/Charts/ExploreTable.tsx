@@ -188,7 +188,7 @@ function ViolinCell({
       }}
       >
         <svg viewBox={`0 0 ${internalWidth} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }} aria-hidden>
-          <path d={d} fill="#a6a6a6" stroke="#8c8c8c" strokeWidth={1} opacity={0.95} />
+          <path d={d} fill="#d9d9d9" stroke="#8c8c8c" strokeWidth={1} opacity={0.95} />
         </svg>
 
         <div
@@ -281,6 +281,13 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
 // 4. Classic Red (High-mid, RBCs)
 // 5. Deep Maroon (Peak/Maximum, Cryo)
 const chartColors = ['#fdf5e6', '#ffb366', '#fb7e07', '#d0021b', '#67000d'];
+
+// Helper to format histogram labels: max 1 decimal, 0.0 -> 0
+const formatHistogramLabel = (val: number): string => {
+  if (val === 0) return '0';
+  const formatted = parseFloat(val.toFixed(1));
+  return formatted === 0 ? '0' : String(formatted);
+};
 
 function NumericBarCell({
   value, max, colVar, opts = {}, setHoveredValue, agg,
@@ -509,13 +516,10 @@ function NumericFilterInput({
 }
 
 const HistogramFooter = observer(({
-  values, colVar, agg, colorScale, hoverState,
+  values, colVar, hoverState,
 }: {
   values: number[];
   colVar: string;
-  agg?: string;
-  type?: string;
-  colorScale?: (val: number) => string;
   hoverState: { current: HoveredValue };
 }) => {
   if (values.length === 0) return null;
@@ -529,11 +533,8 @@ const HistogramFooter = observer(({
   const isHoveredCol = hoveredValStr?.col === colVar;
   const hoveredVal = hoveredValStr?.value;
 
-  // Base colors
-  const baseColors = bins.map((bin) => {
-    if (colorScale) return colorScale((bin.binMin + bin.binMax) / 2);
-    return '#8c8c8c';
-  });
+  // Base colors - Standardized to grey for all histograms
+  const baseColors = bins.map(() => '#8c8c8c');
 
   // Final colors
   const colors = (!isHoveredCol || hoveredVal === undefined)
@@ -548,7 +549,7 @@ const HistogramFooter = observer(({
     ...Object.fromEntries(bins.map((bin, i) => [`bin${i}`, bin.count])),
   }];
   const series = bins.map((_, i) => ({ name: `bin${i}`, color: colors[i] }));
-  const themeColor = colorScale ? '#ef6548' : '#6f6f6f';
+  const themeColor = '#6f6f6f';
 
   return (
     <div className="histogram-footer-container">
@@ -565,13 +566,13 @@ const HistogramFooter = observer(({
         className="histogram-footer-chart"
         withTooltip={false}
       />
-      <div className="histogram-footer-line" style={{ borderTop: `1px solid ${colorScale ? '#fc8d59' : '#6f6f6f'}` }} />
+      <div className="histogram-footer-line" style={{ borderTop: '1px solid #6f6f6f' }} />
       <div className="histogram-footer-ticks">
         <div className="histogram-footer-tick-min" style={{ color: themeColor }}>
-          {colVar ? histogramMinVal.toFixed(getDecimals(colVar, agg)) : histogramMinVal}
+          {formatHistogramLabel(histogramMinVal)}
         </div>
         <div className="histogram-footer-tick-max" style={{ color: themeColor }}>
-          {colVar ? histogramMaxVal.toFixed(getDecimals(colVar, agg)) : histogramMaxVal}
+          {formatHistogramLabel(histogramMaxVal)}
         </div>
       </div>
     </div>
@@ -916,9 +917,6 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           <HistogramFooter
             values={values}
             colVar={colVar}
-            agg={agg}
-            type={type}
-            colorScale={type === 'heatmap' ? getHeatmapColor : undefined}
             hoverState={hoverState}
           />
         ) : undefined,
