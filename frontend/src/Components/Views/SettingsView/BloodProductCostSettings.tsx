@@ -97,7 +97,7 @@ export function BloodProductCostSettings() {
             isAllowed={(value) => value.value.length < 12}
           />
           <NumberInput
-            label="Cell Saver Cost"
+            label="Cell Salvage Cost"
             value={cellSaverCost}
             onChange={setCellSaverCost}
             decimalScale={2}
