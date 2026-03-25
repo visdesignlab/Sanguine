@@ -56,58 +56,66 @@ SELECT
     CONCAT(YEAR(sc.case_date), '-Q', QUARTER(sc.case_date)) AS quarter,
     YEAR(sc.case_date) AS year,
     (
-        SELECT l.result_value FROM Lab l
+        SELECT CAST(TRIM(l.result_value) AS DECIMAL(10, 4)) FROM Lab l
         WHERE l.visit_no = sc.visit_no
           AND l.lab_draw_dtm < sc.surgery_start_dtm
+          AND TRIM(l.result_value) REGEXP '^-?[0-9]+(\\.[0-9]+)?$'
           AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
         ORDER BY l.lab_draw_dtm DESC LIMIT 1
     ) AS pre_hgb,
     (
-        SELECT l.result_value FROM Lab l
+        SELECT CAST(TRIM(l.result_value) AS DECIMAL(10, 4)) FROM Lab l
         WHERE l.visit_no = sc.visit_no
           AND l.lab_draw_dtm < sc.surgery_start_dtm
+          AND TRIM(l.result_value) REGEXP '^-?[0-9]+(\\.[0-9]+)?$'
           AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
         ORDER BY l.lab_draw_dtm DESC LIMIT 1
     ) AS pre_plt,
     (
-        SELECT l.result_value FROM Lab l
+        SELECT CAST(TRIM(l.result_value) AS DECIMAL(10, 4)) FROM Lab l
         WHERE l.visit_no = sc.visit_no
           AND l.lab_draw_dtm < sc.surgery_start_dtm
+          AND TRIM(l.result_value) REGEXP '^-?[0-9]+(\\.[0-9]+)?$'
           AND UPPER(l.result_desc) = 'FIBRINOGEN'
         ORDER BY l.lab_draw_dtm DESC LIMIT 1
     ) AS pre_fibrinogen,
     (
-        SELECT l.result_value FROM Lab l
+        SELECT CAST(TRIM(l.result_value) AS DECIMAL(10, 4)) FROM Lab l
         WHERE l.visit_no = sc.visit_no
           AND l.lab_draw_dtm < sc.surgery_start_dtm
+          AND TRIM(l.result_value) REGEXP '^-?[0-9]+(\\.[0-9]+)?$'
           AND UPPER(l.result_desc) = 'INR'
         ORDER BY l.lab_draw_dtm DESC LIMIT 1
     ) AS pre_inr,
     (
-        SELECT l.result_value FROM Lab l
+        SELECT CAST(TRIM(l.result_value) AS DECIMAL(10, 4)) FROM Lab l
         WHERE l.visit_no = sc.visit_no
           AND l.lab_draw_dtm > sc.surgery_end_dtm
+          AND TRIM(l.result_value) REGEXP '^-?[0-9]+(\\.[0-9]+)?$'
           AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
         ORDER BY l.lab_draw_dtm ASC LIMIT 1
     ) AS post_hgb,
     (
-        SELECT l.result_value FROM Lab l
+        SELECT CAST(TRIM(l.result_value) AS DECIMAL(10, 4)) FROM Lab l
         WHERE l.visit_no = sc.visit_no
           AND l.lab_draw_dtm > sc.surgery_end_dtm
+          AND TRIM(l.result_value) REGEXP '^-?[0-9]+(\\.[0-9]+)?$'
           AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
         ORDER BY l.lab_draw_dtm ASC LIMIT 1
     ) AS post_plt,
     (
-        SELECT l.result_value FROM Lab l
+        SELECT CAST(TRIM(l.result_value) AS DECIMAL(10, 4)) FROM Lab l
         WHERE l.visit_no = sc.visit_no
           AND l.lab_draw_dtm > sc.surgery_end_dtm
+          AND TRIM(l.result_value) REGEXP '^-?[0-9]+(\\.[0-9]+)?$'
           AND UPPER(l.result_desc) = 'FIBRINOGEN'
         ORDER BY l.lab_draw_dtm ASC LIMIT 1
     ) AS post_fibrinogen,
     (
-        SELECT l.result_value FROM Lab l
+        SELECT CAST(TRIM(l.result_value) AS DECIMAL(10, 4)) FROM Lab l
         WHERE l.visit_no = sc.visit_no
           AND l.lab_draw_dtm > sc.surgery_end_dtm
+          AND TRIM(l.result_value) REGEXP '^-?[0-9]+(\\.[0-9]+)?$'
           AND UPPER(l.result_desc) = 'INR'
         ORDER BY l.lab_draw_dtm ASC LIMIT 1
     ) AS post_inr,

@@ -78,7 +78,7 @@ RecentSurgeries AS (
 TransfusionLabs AS (
     SELECT
         t.transfusion_id,
-        l.result_value,
+        CAST(TRIM(l.result_value) AS DECIMAL(20, 4)) AS numeric_result_value,
         CASE
             WHEN UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN') THEN 'HGB'
             WHEN UPPER(l.result_desc) = 'INR' THEN 'INR'
@@ -99,6 +99,7 @@ TransfusionLabs AS (
     FROM UniqueProviderTransfusions t
     JOIN Lab l ON t.visit_no = l.visit_no
     WHERE l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 24 HOUR AND t.trnsfsn_dtm
+      AND TRIM(l.result_value) REGEXP '^-?[0-9]+(\\.[0-9]+)?$'
       AND (
           UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN', 'INR', 'PLT', 'PLATELET COUNT')
           OR UPPER(l.result_desc) REGEXP 'FIBRINOGEN'
@@ -107,10 +108,10 @@ TransfusionLabs AS (
 ClosestLabs AS (
     SELECT
         transfusion_id,
-        MAX(CASE WHEN lab_group = 'HGB' THEN result_value END) AS hgb_val,
-        MAX(CASE WHEN lab_group = 'INR' THEN result_value END) AS inr_val,
-        MAX(CASE WHEN lab_group = 'PLT' THEN result_value END) AS plt_val,
-        MAX(CASE WHEN lab_group = 'FIB' THEN result_value END) AS fib_val
+        MAX(CASE WHEN lab_group = 'HGB' THEN numeric_result_value END) AS hgb_val,
+        MAX(CASE WHEN lab_group = 'INR' THEN numeric_result_value END) AS inr_val,
+        MAX(CASE WHEN lab_group = 'PLT' THEN numeric_result_value END) AS plt_val,
+        MAX(CASE WHEN lab_group = 'FIB' THEN numeric_result_value END) AS fib_val
     FROM TransfusionLabs
     WHERE rn_lab = 1
     GROUP BY transfusion_id
