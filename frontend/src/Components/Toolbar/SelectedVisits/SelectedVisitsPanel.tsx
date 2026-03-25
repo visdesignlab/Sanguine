@@ -98,12 +98,16 @@ export function SelectedVisitsPanel() {
   // Filter visit details based on search query
   const [attributeSearchQuery, setAttributeSearchQuery] = useState('');
   const filteredVisitAttributes = useMemo(() => {
+    let visitAttributes = selectedVisit ? Object.entries(selectedVisit) : [];
+    if (store.state.ui.isInPrivateMode) {
+      visitAttributes = visitAttributes.filter(([key]) => key !== 'attending_provider_id' && key !== 'attending_provider');
+    }
     if (!selectedVisit || !attributeSearchQuery.trim()) {
-      return selectedVisit ? Object.entries(selectedVisit) : [];
+      return visitAttributes;
     }
 
     const searchTerm = attributeSearchQuery.toLowerCase().trim();
-    return Object.entries(selectedVisit).filter(([key, value]) => {
+    return Object.entries(visitAttributes).filter(([key, value]) => {
       // Search in the human-readable column name
       const humanReadableKey = makeHumanReadableColumn(key).toLowerCase();
       // Search in the human-readable value
@@ -116,7 +120,7 @@ export function SelectedVisitsPanel() {
         || humanReadableValue.includes(searchTerm)
         || key.toLowerCase().includes(searchTerm);
     });
-  }, [selectedVisit, attributeSearchQuery]);
+  }, [selectedVisit, store.state.ui.isInPrivateMode, attributeSearchQuery]);
 
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const handleClickVisitNo = useCallback((visitNo: number) => {
