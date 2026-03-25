@@ -12,9 +12,8 @@ import pyarrow.parquet as pq
 from django.core.management import call_command
 from django.test import TransactionTestCase, override_settings
 
-from api.models_derived import refresh_derived_tables
 from api.management.commands.generate_parquets import (
-    attach_cpt_dimensions,
+    build_visit_cpt_dimensions,
     build_visit_attributes_table,
     coerce_temporal_value_to_utc,
     get_surgery_case_attributes_schema,
@@ -238,7 +237,7 @@ class GenerateParquetsTests(TransactionTestCase):
             self.assertTrue(parquet_path.exists())
             self.assertFalse(procedure_hierarchy_path.exists())
 
-    def test_generate_parquets_refreshes_derived_tables_via_shared_runner(self):
+    def test_generate_parquets_does_not_refresh_derived_tables(self):
         create_visit_fixture(
             visit_no=2113,
             mrn="MRN-2113",
@@ -254,13 +253,11 @@ class GenerateParquetsTests(TransactionTestCase):
                 "api.management.commands.generate_parquets.get_cpt_hierarchy",
                 return_value=mock_hierarchy(code_map={}),
             ):
-                with patch(
-                    "api.management.commands.generate_parquets.refresh_derived_tables",
-                    wraps=refresh_derived_tables,
-                ) as refresh_mock:
-                    call_command("generate_parquets", generate="visit_attributes")
+                call_command("generate_parquets", generate="visit_attributes")
 
-        refresh_mock.assert_called_once_with(target="visit_attributes")
+            parquet_path = Path(base_dir) / "parquet_cache" / "visit_attributes.parquet"
+            self.assertTrue(parquet_path.exists())
+            self.assertEqual(pq.read_table(parquet_path).num_rows, 0)
 
     def test_generate_parquets_can_generate_only_procedure_hierarchy(self):
         create_visit_fixture(
@@ -485,7 +482,7 @@ class GenerateParquetsTests(TransactionTestCase):
 
             self.assertEqual(parquet_path.read_bytes(), sentinel)
 
-    def test_attach_cpt_dimensions_mutates_rows_with_sorted_dimension_ids(self):
+    def test_build_visit_cpt_dimensions_returns_sorted_dimension_ids(self):
         code_map = {
             "99291": ("critical-care", "Critical Care", "critical-care__stroke", "Stroke"),
             "33946": ("ecmo", "ECMO", "ecmo__initiation", "ECMO Initiation"),
@@ -511,15 +508,17 @@ class GenerateParquetsTests(TransactionTestCase):
             code_rank=2,
         )
 
-        rows = [{"visit_no": 3003}]
-        attached = attach_cpt_dimensions(rows=rows, code_map=code_map, billing_fetch_batch_size=2)
-        self.assertEqual(attached[0]["department_ids"], ["critical-care", "ecmo"])
+        visit_departments, visit_procedures = build_visit_cpt_dimensions(
+            code_map=code_map,
+            billing_fetch_batch_size=2,
+        )
+        self.assertEqual(visit_departments[3003], ["critical-care", "ecmo"])
         self.assertEqual(
-            attached[0]["procedure_ids"],
+            visit_procedures[3003],
             ["critical-care__stroke", "ecmo__initiation"],
         )
 
-    def test_attach_cpt_dimensions_handles_multiple_fetch_batches(self):
+    def test_build_visit_cpt_dimensions_handles_multiple_fetch_batches(self):
         code_map = {
             "99291": ("critical-care", "Critical Care", "critical-care__stroke", "Stroke"),
             "33946": ("ecmo", "ECMO", "ecmo__initiation", "ECMO Initiation"),
@@ -566,11 +565,13 @@ class GenerateParquetsTests(TransactionTestCase):
             code_rank=5,
         )
 
-        rows = [{"visit_no": 3004}]
-        attached = attach_cpt_dimensions(rows=rows, code_map=code_map, billing_fetch_batch_size=1)
-        self.assertEqual(attached[0]["department_ids"], ["critical-care", "ecmo"])
+        visit_departments, visit_procedures = build_visit_cpt_dimensions(
+            code_map=code_map,
+            billing_fetch_batch_size=1,
+        )
+        self.assertEqual(visit_departments[3004], ["critical-care", "ecmo"])
         self.assertEqual(
-            attached[0]["procedure_ids"],
+            visit_procedures[3004],
             ["critical-care__stroke", "ecmo__initiation"],
         )
 
@@ -632,9 +633,6 @@ class GenerateParquetsTests(TransactionTestCase):
                         call_command("generate_parquets", generate=case["mode"], stdout=out)
                         output = out.getvalue()
 
-                self.assertIn("Successfully materialized GuidelineAdherence.", output)
-                self.assertIn("Successfully materialized VisitAttributes.", output)
-
                 if case["expect_visit_msg"]:
                     self.assertIn("Parquet file generated at", output)
                 else:
@@ -645,7 +643,7 @@ class GenerateParquetsTests(TransactionTestCase):
                 else:
                     self.assertNotIn("Procedure hierarchy cache generated at", output)
 
-    def test_generate_parquets_can_skip_materialization(self):
+    def test_generate_parquets_has_no_skip_materialization_flag(self):
         visit = create_empty_visit_fixture(
             visit_no=3301,
             mrn="MRN-3301",
@@ -672,17 +670,12 @@ class GenerateParquetsTests(TransactionTestCase):
                 "api.management.commands.generate_parquets.get_cpt_hierarchy",
                 return_value=mock_hierarchy(code_map=code_map, departments=hierarchy_departments()),
             ):
-                out = io.StringIO()
-                call_command(
-                    "generate_parquets",
-                    generate="procedure_hierarchy",
-                    skip_materialize=True,
-                    stdout=out,
-                )
-                output = out.getvalue()
-
-        self.assertIn("Skipping VisitAttributes materialization.", output)
-        self.assertNotIn("Successfully materialized VisitAttributes.", output)
+                with self.assertRaises(TypeError):
+                    call_command(
+                        "generate_parquets",
+                        generate="procedure_hierarchy",
+                        skip_materialize=True,
+                    )
 
     def test_surgery_case_attributes_schema_has_utc_timestamps(self):
         schema = get_surgery_case_attributes_schema()

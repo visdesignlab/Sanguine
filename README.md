@@ -96,6 +96,8 @@ poetry run python manage.py generate_parquets
 poetry run python manage.py generate_parquets
 ```
 
+This command does not refresh derived tables. Run `refresh_derived_tables` first if the SQL-managed artifacts are stale.
+
 ### Refresh Derived Tables Only
 
 ```bash
@@ -155,7 +157,7 @@ Deployment expectations:
 - The VM-level nginx handles SSL termination.
 - Requests are routed to the frontend container, which proxies API traffic to the backend container.
 - Required environment variables must be present for Django, MariaDB, CAS auth, and any deployment-specific settings. These can be set in a `.env` file or injected through the deployment pipeline.
-- After deploy, the backend should run `migrate`, `migrate_derived_tables`, and `generate_parquets` as part of the environment bootstrap.
+- After deploy, the backend should run `migrate`, `migrate_derived_tables`, `refresh_derived_tables`, and `generate_parquets` as part of the environment bootstrap.
 
 ## Derived Data Pipeline
 
@@ -184,7 +186,7 @@ Responsibilities:
   Truncates and repopulates the derived tables from the source MariaDB tables using `*_refresh.sql`.
 
 - `generate_parquets`
-  Refreshes the required derived tables, reads them, normalizes values, and writes the parquet cache artifacts used by the frontend.
+  Reads the existing derived tables, normalizes values, and writes the parquet cache artifacts used by the frontend.
 
 The derived artifacts are intentionally not represented as Django models. They are treated as SQL-managed cache tables whose correctness is validated by integration tests and parquet generation tests.
 

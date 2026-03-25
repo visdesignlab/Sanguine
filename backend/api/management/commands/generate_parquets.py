@@ -424,15 +424,9 @@ class Command(BaseCommand):
                 "all, visit_attributes, procedure_hierarchy."
             ),
         )
-        parser.add_argument(
-            "--skip-materialize",
-            action="store_true",
-            help="Skip calling materializeVisitAttributes() before cache generation.",
-        )
 
     def handle(self, *args, **kwargs):
         generate_target = kwargs["generate"]
-        skip_materialize = kwargs["skip_materialize"]
         should_generate_visit_attributes = generate_target in ("all", "visit_attributes")
         should_generate_procedure_hierarchy = generate_target in ("all", "procedure_hierarchy")
         should_generate_surgery_cases = generate_target in ("all", "surgery_cases")
@@ -451,23 +445,11 @@ class Command(BaseCommand):
         visit_departments: dict[int, list[str]] = {}
         visit_procedures: dict[int, list[str]] = {}
         if should_generate_visit_attributes or should_generate_procedure_hierarchy:
-            if not skip_materialize:
-                with connection.cursor() as cursor:
-                    cursor.execute("CALL materializeVisitAttributes()")
-                self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
-            else:
-                self.stdout.write("Skipping VisitAttributes materialization.")
-
             hierarchy = get_cpt_hierarchy()
             visit_departments, visit_procedures = build_visit_cpt_dimensions(
                 code_map=hierarchy.code_map,
                 billing_fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
             )
-
-        if should_generate_surgery_cases:
-            with connection.cursor() as cursor:
-                cursor.execute("CALL materializeSurgeryCaseAttributes()")
-            self.stdout.write(self.style.SUCCESS("Successfully materialized SurgeryCaseAttributes."))
 
         procedure_hierarchy_payload = None
         if should_generate_procedure_hierarchy:
