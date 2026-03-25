@@ -48,7 +48,7 @@ def get_visit_attributes_schema() -> pa.Schema:
         pa.field("whole_units", pa.uint16(), nullable=False),
         pa.field("cell_saver_ml", pa.uint32(), nullable=False),
         pa.field("overall_units", pa.uint16(), nullable=False),
-        pa.field("los", pa.decimal128(6, 2), nullable=True),
+        pa.field("los", pa.float32(), nullable=True),
         pa.field("death", pa.bool_(), nullable=True),
         pa.field("vent", pa.bool_(), nullable=True),
         pa.field("stroke", pa.bool_(), nullable=True),
