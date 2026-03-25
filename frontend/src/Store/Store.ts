@@ -443,7 +443,7 @@ export class RootStore {
         unitCosts: { ...DEFAULT_UNIT_COSTS },
       },
       ui: {
-        activeTab: 'Dashboard',
+        activeTab: 'Hospital',
         leftToolbarOpened: true,
         activeLeftPanel: null,
         selectedVisitNo: null,
@@ -746,7 +746,7 @@ export class RootStore {
         explore: {},
         settings: {},
         ui: {
-          activeTab: 'Dashboard',
+          activeTab: 'Hospital',
           leftToolbarOpened: true,
           activeLeftPanel: null,
           selectedVisitNo: null,
@@ -814,7 +814,7 @@ export class RootStore {
   }
 
   set dashboardChartLayouts(input: { [key: string]: Layout[] }) {
-    if (this.state.ui.activeTab !== 'Dashboard') return;
+    if (this.state.ui.activeTab !== 'Hospital') return;
     this._baseDashboardLayouts = input;
   }
 
@@ -1327,7 +1327,7 @@ export class RootStore {
   }
 
   set exploreChartLayouts(input: { [key: string]: Layout[] }) {
-    if (this.state.ui.activeTab !== 'Explore') return;
+    if (this.state.ui.activeTab !== 'Department') return;
     this._transientExploreLayouts = input;
   }
 

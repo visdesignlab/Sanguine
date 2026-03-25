@@ -28,9 +28,9 @@ import {
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
 import classes from './Shell.module.css';
-import { DashboardView } from '../Components/Views/DashboardView/DashboardView';
-import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
-import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
+import { HospitalView } from '../Components/Views/HospitalView/HospitalView';
+import { DepartmentView } from '../Components/Views/DepartmentView/DepartmentView';
+import { ProviderView } from '../Components/Views/ProviderView/ProviderView';
 import { SettingsView } from '../Components/Views/SettingsView/SettingsView';
 import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/SelectedVisitsPanel';
 import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
@@ -48,16 +48,16 @@ export const Shell = observer(() => {
   // View tabs -----------------
   const TABS = [
     {
-      key: 'Dashboard',
-      content: <DashboardView />,
+      key: 'Hospital',
+      content: <HospitalView />,
     },
     {
-      key: 'Providers',
-      content: <ProvidersView />,
+      key: 'Department',
+      content: <DepartmentView />,
     },
     {
-      key: 'Explore',
-      content: <ExploreView />,
+      key: 'Provider',
+      content: <ProviderView />,
     },
     {
       key: 'Settings',
