@@ -210,12 +210,12 @@ export const presetStateCards: PresetGroup[] = [
     groupLabel: 'Outcomes',
     options: [
       {
-        question: 'What are the outcomes of cases using antifibrinolytics?',
+        question: 'How often are antifibrinolytic agents used and what is the impact on outcomes?',
         Icon: IconVaccineBottle,
         chartConfigs: [
           {
             chartId: 'preset-explore-table-antifib',
-            title: 'Outcomes per Surgeon (Antifibrinolytics)',
+            title: 'Antifibrinolytic Usage & Outcomes per Surgeon',
             chartType: 'exploreTable',
             rowVar: 'attending_provider',
             columns: [
@@ -349,12 +349,12 @@ export const presetStateCards: PresetGroup[] = [
     groupLabel: 'Cost / Savings',
     options: [
       {
-        question: 'What are the costs and potential savings for surgical blood products?',
+        question: 'What are the costs of blood products transfused intraoperatively by surgeon?',
         Icon: IconCoin,
         chartConfigs: [
           {
             chartId: 'preset-cost-savings-table',
-            title: 'Cost Savings Analysis',
+            title: 'Intraoperative Blood Product Costs per Surgeon',
             chartType: 'exploreTable',
             rowVar: 'attending_provider',
             columns: [
