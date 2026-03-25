@@ -78,6 +78,11 @@ docker compose -f docker-compose.dev.yml exec -it backend bash
 poetry run python manage.py recreatedata
 ```
 
+You may choose size when generating data: Default is --size lg
+```bash
+poetry run python manage.py recreatedata --size sm|md|lg
+```
+
 ### Rebuild Step-by-Step
 
 ```bash
@@ -90,6 +95,10 @@ poetry run python manage.py refresh_derived_tables
 poetry run python manage.py generate_parquets
 ```
 
+You may choose size when generating data: Default is --size lg
+```bash
+poetry run python manage.py mockdata --size sm|md|lg
+```
 ### Regenerate Parquets Only
 
 ```bash
