@@ -668,11 +668,12 @@ export interface ProviderChartTooltipProps {
 
 // Chart colors (for up to 5 lines/bars)
 export const chartColors = [
-  '#1770B8',
-  '#EF2026',
-  '#897BD3',
-  '#FFD13C',
-  '#73C3C5',
+  '#FF8787', // Muted Salmon/Coral (distinguishable from "Error Red")
+  '#D0BFFF', // Soft Lavender
+  '#74C0FC', // Sky Blue
+  '#66D9E8', // Aqua Blue (strictly blue-side)
+  '#91A7FF', // Periwinkle / Indigo
+  '#FAA2C1', // Dusty Rose / Pink
 ];
 
 export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
