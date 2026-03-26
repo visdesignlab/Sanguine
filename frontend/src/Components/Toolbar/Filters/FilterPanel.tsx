@@ -6,8 +6,6 @@ import {
   Stack,
   Divider,
   Grid,
-  Rating,
-  ThemeIcon,
   Text,
   Tooltip,
   Box,
@@ -17,7 +15,7 @@ import {
 import { BarChart } from '@mantine/charts';
 import { DateInput } from '@mantine/dates';
 import {
-  IconChartBar, IconCircle, IconCircleFilled, IconRestore,
+  IconChartBar, IconRestore,
 } from '@tabler/icons-react';
 import { useContext } from 'react';
 import { useObserver } from 'mobx-react-lite';
@@ -29,6 +27,7 @@ import { DepartmentProcedureFilter } from './DepartmentProcedureFilter';
 import classes from '../../../Shell/Shell.module.css';
 import { FilterHistogramWithSliderComponent } from './FilterHistogramWithSliderComponent';
 import { BLOOD_PRODUCTS_ARRAY, BloodComponent } from '../../../Types/bloodProducts';
+import { TrueFalseNotAppliedToggle } from './TrueFalseNotAppliedToggle';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
 
@@ -191,136 +190,11 @@ export function FilterPanel() {
                     </Text>
                   </Grid.Col>
                 </Grid>
-                <Flex>
-                  <Text w="45%" c={store.filterValues.b12 === null ? undefined : 'blue'}>
-                    B12
-                  </Text>
-                  <Rating
-                    value={
-                      store.filterValues.b12 === true
-                        ? 3
-                        : store.filterValues.b12 === false
-                          ? 1
-                          : 2
-                    }
-                    color={DEFAULT_DATA_COLOR}
-                    count={3}
-                    highlightSelectedOnly
-                    ml="sm"
-                    emptySymbol={(
-                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
-                        <IconCircle />
-                      </ThemeIcon>
-                    )}
-                    fullSymbol={(
-                      <ThemeIcon
-                        variant="white"
-                        color={
-                          store.filterValues.b12 === null
-                            ? DEFAULT_DATA_COLOR
-                            : 'blue'
-                        }
-                        size="sm"
-                        mr="lg"
-                      >
-                        <IconCircleFilled />
-                      </ThemeIcon>
-                    )}
-                    onChange={(value) => store.setFilterValue(
-                      'b12',
-                      value === 3 ? true : value === 1 ? false : null,
-                    )}
-                  />
-                </Flex>
-                <Flex>
-                  <Text w="45%" c={store.filterValues.iron === null ? undefined : 'blue'}>
-                    Iron
-                  </Text>
-                  <Rating
-                    value={
-                      store.filterValues.iron === true
-                        ? 3
-                        : store.filterValues.iron === false
-                          ? 1
-                          : 2
-                    }
-                    color={DEFAULT_DATA_COLOR}
-                    count={3}
-                    highlightSelectedOnly
-                    ml="sm"
-                    emptySymbol={(
-                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
-                        <IconCircle />
-                      </ThemeIcon>
-                    )}
-                    fullSymbol={(
-                      <ThemeIcon
-                        variant="white"
-                        color={
-                          store.filterValues.iron === null
-                            ? DEFAULT_DATA_COLOR
-                            : 'blue'
-                        }
-                        size="sm"
-                        mr="lg"
-                      >
-                        <IconCircleFilled />
-                      </ThemeIcon>
-                    )}
-                    onChange={(value) => store.setFilterValue(
-                      'iron',
-                      value === 3 ? true : value === 1 ? false : null,
-                    )}
-                  />
-                </Flex>
-                <Flex>
-                  <Text
-                    w="45%"
-                    c={
-                      store.filterValues.antifibrinolytic === null
-                        ? undefined
-                        : 'blue'
-                    }
-                  >
-                    Antifibrinolytic
-                  </Text>
-                  <Rating
-                    value={
-                      store.filterValues.antifibrinolytic === true
-                        ? 3
-                        : store.filterValues.antifibrinolytic === false
-                          ? 1
-                          : 2
-                    }
-                    color={DEFAULT_DATA_COLOR}
-                    count={3}
-                    highlightSelectedOnly
-                    ml="sm"
-                    emptySymbol={(
-                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
-                        <IconCircle />
-                      </ThemeIcon>
-                    )}
-                    fullSymbol={(
-                      <ThemeIcon
-                        variant="white"
-                        color={
-                          store.filterValues.antifibrinolytic === null
-                            ? DEFAULT_DATA_COLOR
-                            : 'blue'
-                        }
-                        size="sm"
-                        mr="lg"
-                      >
-                        <IconCircleFilled />
-                      </ThemeIcon>
-                    )}
-                    onChange={(value) => store.setFilterValue(
-                      'antifibrinolytic',
-                      value === 3 ? true : value === 1 ? false : null,
-                    )}
-                  />
-                </Flex>
+                <TrueFalseNotAppliedToggle label="B12" currentFilterValue={store.filterValues.b12} setFilterCallback={(value) => store.setFilterValue('b12', value)} />
+
+                <TrueFalseNotAppliedToggle label="Iron" currentFilterValue={store.filterValues.iron} setFilterCallback={(value) => store.setFilterValue('iron', value)} />
+                <TrueFalseNotAppliedToggle label="Antifibrinolytic" currentFilterValue={store.filterValues.antifibrinolytic} setFilterCallback={(value) => store.setFilterValue('antifibrinolytic', value)} />
+
               </Stack>
             </Accordion.Panel>
           </Accordion.Item>
@@ -369,166 +243,11 @@ export function FilterPanel() {
                     </Text>
                   </Grid.Col>
                 </Grid>
-                <Flex>
-                  <Text w="45%" c={store.filterValues.death === null ? undefined : 'blue'}>
-                    Death
-                  </Text>
-                  <Rating
-                    value={
-                      store.filterValues.death === true
-                        ? 3
-                        : store.filterValues.death === false
-                          ? 1
-                          : 2
-                    }
-                    color={DEFAULT_DATA_COLOR}
-                    count={3}
-                    highlightSelectedOnly
-                    emptySymbol={(
-                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
-                        <IconCircle />
-                      </ThemeIcon>
-                    )}
-                    fullSymbol={(
-                      <ThemeIcon
-                        variant="white"
-                        color={
-                          store.filterValues.death === null
-                            ? DEFAULT_DATA_COLOR
-                            : 'blue'
-                        }
-                        size="sm"
-                        mr="lg"
-                      >
-                        <IconCircleFilled />
-                      </ThemeIcon>
-                    )}
-                    onChange={(value) => store.setFilterValue(
-                      'death',
-                      value === 3 ? true : value === 1 ? false : null,
-                    )}
-                  />
-                </Flex>
-                <Flex>
-                  <Text w="45%" c={store.filterValues.vent === null ? undefined : 'blue'}>
-                    Vent
-                  </Text>
-                  <Rating
-                    value={
-                      store.filterValues.vent === true
-                        ? 3
-                        : store.filterValues.vent === false
-                          ? 1
-                          : 2
-                    }
-                    color={DEFAULT_DATA_COLOR}
-                    count={3}
-                    highlightSelectedOnly
-                    emptySymbol={(
-                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
-                        <IconCircle />
-                      </ThemeIcon>
-                    )}
-                    fullSymbol={(
-                      <ThemeIcon
-                        variant="white"
-                        color={
-                          store.filterValues.vent === null
-                            ? DEFAULT_DATA_COLOR
-                            : 'blue'
-                        }
-                        size="sm"
-                        mr="lg"
-                      >
-                        <IconCircleFilled />
-                      </ThemeIcon>
-                    )}
-                    onChange={(value) => store.setFilterValue(
-                      'vent',
-                      value === 3 ? true : value === 1 ? false : null,
-                    )}
-                  />
-                </Flex>
-                <Flex>
-                  <Text w="45%" c={store.filterValues.stroke === null ? undefined : 'blue'}>
-                    Stroke
-                  </Text>
-                  <Rating
-                    value={
-                      store.filterValues.stroke === true
-                        ? 3
-                        : store.filterValues.stroke === false
-                          ? 1
-                          : 2
-                    }
-                    color={DEFAULT_DATA_COLOR}
-                    count={3}
-                    highlightSelectedOnly
-                    emptySymbol={(
-                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
-                        <IconCircle />
-                      </ThemeIcon>
-                    )}
-                    fullSymbol={(
-                      <ThemeIcon
-                        variant="white"
-                        color={
-                          store.filterValues.stroke === null
-                            ? DEFAULT_DATA_COLOR
-                            : 'blue'
-                        }
-                        size="sm"
-                        mr="lg"
-                      >
-                        <IconCircleFilled />
-                      </ThemeIcon>
-                    )}
-                    onChange={(value) => store.setFilterValue(
-                      'stroke',
-                      value === 3 ? true : value === 1 ? false : null,
-                    )}
-                  />
-                </Flex>
-                <Flex>
-                  <Text w="45%" c={store.filterValues.ecmo === null ? undefined : 'blue'}>
-                    ECMO
-                  </Text>
-                  <Rating
-                    value={
-                      store.filterValues.ecmo === true
-                        ? 3
-                        : store.filterValues.ecmo === false
-                          ? 1
-                          : 2
-                    }
-                    color={DEFAULT_DATA_COLOR}
-                    count={3}
-                    highlightSelectedOnly
-                    emptySymbol={(
-                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
-                        <IconCircle />
-                      </ThemeIcon>
-                    )}
-                    fullSymbol={(
-                      <ThemeIcon
-                        variant="white"
-                        color={
-                          store.filterValues.ecmo === null
-                            ? DEFAULT_DATA_COLOR
-                            : 'blue'
-                        }
-                        size="sm"
-                        mr="lg"
-                      >
-                        <IconCircleFilled />
-                      </ThemeIcon>
-                    )}
-                    onChange={(value) => store.setFilterValue(
-                      'ecmo',
-                      value === 3 ? true : value === 1 ? false : null,
-                    )}
-                  />
-                </Flex>
+                <TrueFalseNotAppliedToggle label="Death" currentFilterValue={store.filterValues.death} setFilterCallback={(value) => store.setFilterValue('death', value)} />
+                <TrueFalseNotAppliedToggle label="Vent" currentFilterValue={store.filterValues.vent} setFilterCallback={(value) => store.setFilterValue('vent', value)} />
+                <TrueFalseNotAppliedToggle label="Stroke" currentFilterValue={store.filterValues.stroke} setFilterCallback={(value) => store.setFilterValue('stroke', value)} />
+                <TrueFalseNotAppliedToggle label="ECMO" currentFilterValue={store.filterValues.ecmo} setFilterCallback={(value) => store.setFilterValue('ecmo', value)} />
+
                 <Divider my="xs" />
                 <Input.Wrapper
                   label="Length of Stay"
