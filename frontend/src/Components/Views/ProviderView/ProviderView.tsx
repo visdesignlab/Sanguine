@@ -13,7 +13,8 @@ import {
   IconShare2,
 } from '@tabler/icons-react';
 import dayjs from 'dayjs';
-import { useObserver } from 'mobx-react-lite';
+import { useDisclosure } from '@mantine/hooks';
+import { observer } from 'mobx-react-lite';
 import {
   useCallback, useContext, useEffect, useRef, useState,
 } from 'react';
@@ -28,43 +29,6 @@ import { ProviderChartCard } from './ProviderChartCard';
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
-/** Build the human-readable date-range subtitle for the Provider Summary card. */
-function buildDateRangeLabel(
-  dateRange: [string | null, string | null],
-  datePresets: DatePickerPreset<'range'>[],
-  earliestDate: string | null | undefined,
-) {
-  const [s, e] = dateRange;
-
-  if (!s || !e) {
-    if (earliestDate) {
-      return <Text component="span" td="underline">{`Since ${dayjs(earliestDate).format('MMM D, YYYY')}`}</Text>;
-    }
-    return <Text component="span" td="underline">Since our earliest records</Text>;
-  }
-
-  const matchedPreset = datePresets.find((p) => p.value[0] === s && p.value[1] === e);
-  if (matchedPreset) {
-    const label = String(matchedPreset.label);
-    if (label.startsWith('Past ')) {
-      return <Text component="span" td="underline">{`In the past ${label.slice(5)}`}</Text>;
-    }
-    if (label.startsWith('This ')) {
-      return <Text component="span" td="underline">{label}</Text>;
-    }
-    if (label === 'All time') {
-      return <Text component="span" td="underline">{`Since ${dayjs(s).format('MMM D, YYYY')}`}</Text>;
-    }
-    return <Text component="span" td="underline">{label}</Text>;
-  }
-
-  return (
-    <Text component="span" td="underline">
-      {`During ${dayjs(s).format('MMM D, YYYY')} — ${dayjs(e).format('MMM D, YYYY')}`}
-    </Text>
-  );
-}
-
 const datePresets: DatePickerPreset<'range'>[] = [
   { label: 'Past month', value: [dayjs().startOf('month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
   { label: 'This quarter', value: [dayjs().subtract(dayjs().month() % 3, 'month').startOf('month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
@@ -74,7 +38,32 @@ const datePresets: DatePickerPreset<'range'>[] = [
   { label: 'All time', value: [dayjs('2020-01-01').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
 ];
 
-export function ProviderView() {
+/** Build the human-readable date-range subtitle for the Provider Summary card. */
+function DateRangeLabel({
+  dateRange,
+  earliestDate,
+}: {
+  dateRange: [string | null, string | null];
+  earliestDate: string | null | undefined;
+}) {
+  const [s, e] = dateRange;
+
+  if (!s || !e) {
+    const label = earliestDate ? `Since ${dayjs(earliestDate).format('MMM D, YYYY')}` : 'Since our earliest records';
+    return <Text component="span" td="underline">{label}</Text>;
+  }
+
+  const matchedPreset = datePresets.find((p) => p.value[0] === s && p.value[1] === e);
+  let label = matchedPreset ? String(matchedPreset.label) : '';
+
+  if (label === 'Past month') label = 'In the past month';
+  else if (label === 'All time') label = `Since ${dayjs(s).format('MMM D, YYYY')}`;
+  else if (!label) label = `During ${dayjs(s).format('MMM D, YYYY')} — ${dayjs(e).format('MMM D, YYYY')}`;
+
+  return <Text component="span" td="underline">{label}</Text>;
+}
+
+export const ProviderView = observer(() => {
   const store = useContext(Store);
   const {
     buttonIconSize, cardIconStroke, toolbarWidth, iconStroke,
@@ -83,12 +72,13 @@ export function ProviderView() {
   // --- Export / Screenshot ---
   const [exportMenuOpened, setExportMenuOpened] = useState(false);
   const [sharingInProgress, setSharingInProgress] = useState(false);
-  const prevExportMenuOpen = useRef(false);
   const screenshotRef = useRef<HTMLDivElement | null>(null);
 
-  const handleDownloadView = useCallback(async () => {
+  const captureView = useCallback(async (mode: 'download' | 'share') => {
     try {
-      // Capture Screenshot
+      if (mode === 'share') setSharingInProgress(true);
+      setExportMenuOpened(false);
+
       const dataUrl = await captureScreenshot(
         screenshotRef.current ?? document.documentElement,
         {
@@ -98,42 +88,20 @@ export function ProviderView() {
           hideSelector: '[data-screenshot-hidden]',
         },
       );
-      // Download Screenshot
-      downloadDataUrl(dataUrl, buildScreenshotFilename('provider'));
+
+      const filename = buildScreenshotFilename('provider');
+      if (mode === 'download') {
+        downloadDataUrl(dataUrl, filename);
+      } else {
+        const file = await dataUrlToFile(dataUrl, filename);
+        await shareFiles([file], 'Screenshot from Intelvia - Patient Blood Management Analytics\n\n');
+      }
     } catch (err) {
-      console.error('ProviderView: Download View failed', err);
+      console.error(`ProviderView: ${mode} View failed`, err);
     } finally {
-      setExportMenuOpened(false);
+      if (mode === 'share') setSharingInProgress(false);
     }
   }, []);
-
-  const handleShareView = useCallback(async () => {
-    try {
-      prevExportMenuOpen.current = exportMenuOpened;
-      setSharingInProgress(true);
-      setExportMenuOpened(true);
-
-      // Capture Screenshot
-      const dataUrl = await captureScreenshot(
-        screenshotRef.current ?? document.documentElement,
-        {
-          pixelRatio: 2,
-          paddingPx: 16,
-          backgroundColor: '#ffffff',
-          hideSelector: '[data-screenshot-hidden]',
-        },
-      );
-
-      // Share files
-      const file = await dataUrlToFile(dataUrl, buildScreenshotFilename('provider'));
-      await shareFiles([file], 'Screenshot from Intelvia - Patient Blood Management Analytics\n\n');
-    } catch (err) {
-      console.error('ProviderView: Share View failed', err);
-    } finally {
-      setSharingInProgress(false);
-      setExportMenuOpened(prevExportMenuOpen.current);
-    }
-  }, [exportMenuOpened]);
 
   // --- Charts ---
   const handleRemoveChart = useCallback((chartId: string) => {
@@ -166,161 +134,161 @@ export function ProviderView() {
     }
   }, [store.duckDB, store.providersStore]);
 
-  // --- Render ---
-  return useObserver(() => {
-    const selectedProviderName = store.providersStore?.selectedProvider ?? 'No Provider Selected';
-    const { openModal, modal: addChartModal } = AddChartModal({
-      providerName: selectedProviderName,
-      providersStore: store.providersStore,
-    });
+  const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
+  const selectedProviderName = store.providersStore?.selectedProvider ?? 'No Provider Selected';
 
-    return (
-      <Stack mb="xl" gap="lg">
-        {/* Toolbar */}
-        <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-          <Title order={3}>Providers</Title>
-          <Flex direction="row" align="center" gap="md" ml="auto">
-            {/* Visit Count */}
-            <Tooltip label="Visible visits after filters" position="bottom">
-              <Title order={5} c="dimmed">
-                {`${store.filteredVisitsLength} / ${store.allVisitsLength}`}
-                {' '}
-                Visits
-              </Title>
-            </Tooltip>
-            {/* Export menu */}
-            <Tooltip label="Export View" position="bottom">
-              <Menu
-                withinPortal
-                shadow="md"
-                trigger="hover"
-                closeOnItemClick={false}
-                opened={exportMenuOpened}
-                onOpen={() => setExportMenuOpened(true)}
-                onClose={() => { if (!sharingInProgress) setExportMenuOpened(false); }}
-              >
-                <Menu.Target>
-                  <ActionIcon size="lg" aria-label="Export View">
-                    <IconShare2 stroke={iconStroke} />
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item leftSection={<IconDownload size={16} />} onClick={handleDownloadView}>
-                    Download View
-                  </Menu.Item>
-                  <Menu.Item leftSection={<IconShare size={16} />} onClick={handleShareView}>
-                    Share View
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            </Tooltip>
-            {/* Date Range Picker */}
-            <DatePickerInput
-              type="range"
-              presets={datePresets}
-              defaultValue={[dayjs().format(DATE_FORMAT), dayjs().format(DATE_FORMAT)]}
-              defaultLevel="month"
-              leftSection={<IconCalendarWeek size={18} stroke={1} />}
-              placeholder="Pick dates range"
-              value={dateRange}
-              onChange={onDateRangeChange}
-            />
-            {/* Select Provider */}
-            <Select
-              leftSection={<IconSearch size={18} stroke={1} />}
-              searchable
-              data={store.providersStore.providerList}
-              value={store.providersStore.selectedProvider}
-              w="fit-content"
-              style={{ minWidth: 180 }}
-              onChange={(val) => { if (store.providersStore) store.providersStore.selectedProvider = val; }}
-            />
-            {/* Add Chart */}
-            <Button onClick={openModal}>
-              <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
-              Add Chart
-            </Button>
-          </Flex>
+  return (
+    <Stack mb="xl" gap="lg">
+      <AddChartModal
+        opened={modalOpened}
+        onClose={closeModal}
+        providerName={selectedProviderName}
+        providersStore={store.providersStore}
+      />
+
+      {/* Toolbar */}
+      <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
+        <Title order={3}>Providers</Title>
+        <Flex direction="row" align="center" gap="md" ml="auto">
+          {/* Visit Count */}
+          <Tooltip label="Visible visits after filters" position="bottom">
+            <Title order={5} c="dimmed">
+              {`${store.filteredVisitsLength} / ${store.allVisitsLength}`}
+              {' '}
+              Visits
+            </Title>
+          </Tooltip>
+          {/* Export menu */}
+          <Tooltip label="Export View" position="bottom">
+            <Menu
+              withinPortal
+              shadow="md"
+              trigger="hover"
+              closeOnItemClick={false}
+              opened={exportMenuOpened}
+              onOpen={() => setExportMenuOpened(true)}
+              onClose={() => { if (!sharingInProgress) setExportMenuOpened(false); }}
+            >
+              <Menu.Target>
+                <ActionIcon size="lg" aria-label="Export View">
+                  <IconShare2 stroke={iconStroke} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item leftSection={<IconDownload size={16} />} onClick={() => captureView('download')}>
+                  Download View
+                </Menu.Item>
+                <Menu.Item leftSection={<IconShare size={16} />} onClick={() => captureView('share')}>
+                  Share View
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Tooltip>
+          {/* Date Range Picker */}
+          <DatePickerInput
+            type="range"
+            presets={datePresets}
+            defaultValue={[dayjs().format(DATE_FORMAT), dayjs().format(DATE_FORMAT)]}
+            defaultLevel="month"
+            leftSection={<IconCalendarWeek size={18} stroke={1} />}
+            placeholder="Pick dates range"
+            value={dateRange}
+            onChange={onDateRangeChange}
+          />
+          {/* Select Provider */}
+          <Select
+            leftSection={<IconSearch size={18} stroke={1} />}
+            searchable
+            data={store.providersStore.providerList}
+            value={store.providersStore.selectedProvider}
+            w="fit-content"
+            style={{ minWidth: 180 }}
+            onChange={(val) => { if (store.providersStore) store.providersStore.selectedProvider = val; }}
+          />
+          {/* Add Chart */}
+          <Button onClick={openModal}>
+            <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+            Add Chart
+          </Button>
         </Flex>
+      </Flex>
 
-        <Divider />
+      <Divider />
 
-        {addChartModal}
-
-        {/* Screenshot target */}
-        <div ref={screenshotRef} data-screenshot-target>
-          {/* Provider Summary Card */}
-          <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
-            <Stack gap="xs">
-              <Title order={3}>
-                Provider Summary -
+      {/* Screenshot target */}
+      <div ref={screenshotRef} data-screenshot-target>
+        {/* Provider Summary Card */}
+        <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
+          <Stack gap="xs">
+            <Title order={3}>
+              Provider Summary -
+              {' '}
+              {selectedProviderName}
+            </Title>
+            <Title order={4} mt="xs">
+              <DateRangeLabel
+                dateRange={[
+                  dateRange?.[0] ?? store.providersStore?.dateStart ?? null,
+                  dateRange?.[1] ?? store.providersStore?.dateEnd ?? null,
+                ]}
+                earliestDate={store.providersStore.earliestDate}
+              />
+              ,
+              {' '}
+              {store.providersStore.selectedProvider}
+              {' '}
+              has recorded:
+            </Title>
+            <Stack gap={2} mt="xs">
+              <Text size="md">
+                • Involvement in
                 {' '}
-                {selectedProviderName}
-              </Title>
-              <Title order={4} mt="xs">
-                {buildDateRangeLabel(
-                  [dateRange?.[0] ?? store.providersStore?.dateStart ?? null,
-                    dateRange?.[1] ?? store.providersStore?.dateEnd ?? null],
-                  datePresets,
-                  store.providersStore.earliestDate,
-                )}
-                ,
+                <Text component="span" td="underline">{store.providersStore?.selectedProvSurgCount ?? 0}</Text>
                 {' '}
-                {store.providersStore.selectedProvider}
+                Surgeries
+              </Text>
+              <Text size="md">
+                • Used
                 {' '}
-                has recorded:
-              </Title>
-              <Stack gap={2} mt="xs">
-                <Text size="md">
-                  • Involvement in
-                  {' '}
-                  <Text component="span" td="underline">{store.providersStore?.selectedProvSurgCount ?? 0}</Text>
-                  {' '}
-                  Surgeries
-                </Text>
-                <Text size="md">
-                  • Used
-                  {' '}
-                  <Text component="span" td="underline">{store.providersStore?.selectedProvRbcUnits ?? 0}</Text>
-                  {' '}
-                  Units of Red Blood Cells
-                </Text>
-                <Text size="md">
-                  • Average Complexity of cases
-                  {' '}
-                  <Text component="span" td="underline">{store.providersStore?.cmiComparisonLabel ?? 'within typical range'}</Text>
-                </Text>
-              </Stack>
+                <Text component="span" td="underline">{store.providersStore?.selectedProvRbcUnits ?? 0}</Text>
+                {' '}
+                Units of Red Blood Cells
+              </Text>
+              <Text size="md">
+                • Average Complexity of cases
+                {' '}
+                <Text component="span" td="underline">{store.providersStore?.cmiComparisonLabel ?? 'within typical range'}</Text>
+              </Text>
             </Stack>
-          </Card>
+          </Stack>
+        </Card>
 
-          {/* Provider Charts — grouped by category */}
-          {providerChartGroups.map((group) => (
-            <div key={group}>
-              <Title order={3} mt="xl" mb="md">{group}</Title>
-              <Flex gap="md" mt="md" wrap="wrap">
-                {(store.providersStore?.chartConfigs || [])
-                  .filter((cfg) => cfg.group === group)
-                  .map((cfg) => {
-                    const chartKey = `${cfg.chartId}_${cfg.xAxisVar}`;
-                    const chart = store.providersStore?.providerChartData?.[chartKey];
-                    if (!chart) return null;
+        {/* Provider Charts — grouped by category */}
+        {providerChartGroups.map((group) => (
+          <div key={group}>
+            <Title order={3} mt="xl" mb="md">{group}</Title>
+            <Flex gap="md" mt="md" wrap="wrap">
+              {(store.providersStore?.chartConfigs || [])
+                .filter((cfg) => cfg.group === group)
+                .map((cfg) => {
+                  const chartKey = `${cfg.chartId}_${cfg.xAxisVar}`;
+                  const chart = store.providersStore?.providerChartData?.[chartKey];
+                  if (!chart) return null;
 
-                    return (
-                      <ProviderChartCard
-                        key={chartKey}
-                        cfg={cfg}
-                        chart={chart}
-                        selectedProviderName={store.providersStore?.selectedProvider ?? null}
-                        onRemove={handleRemoveChart}
-                      />
-                    );
-                  })}
-              </Flex>
-            </div>
-          ))}
-        </div>
-      </Stack>
-    );
-  });
-}
+                  return (
+                    <ProviderChartCard
+                      key={chartKey}
+                      cfg={cfg}
+                      chart={chart}
+                      selectedProviderName={store.providersStore?.selectedProvider ?? null}
+                      onRemove={handleRemoveChart}
+                    />
+                  );
+                })}
+            </Flex>
+          </div>
+        ))}
+      </div>
+    </Stack>
+  );
+});

@@ -5,8 +5,7 @@ import {
   Stack,
   Tabs,
 } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   AGGREGATION_OPTIONS,
   ProviderChartConfig,
@@ -25,6 +24,8 @@ const variableOptions = providerXAxisOptions.map((opt) => ({
 const timeGroupingOptions = Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }));
 
 interface AddChartModalProps {
+  opened: boolean;
+  onClose: () => void;
   providerName: string;
   providersStore: ProvidersStore;
 }
@@ -33,20 +34,13 @@ interface AddChartModalProps {
  * Modal for adding a new chart to the Provider view.
  * Supports two tabs: Compare to Population (histogram) and Progress over Time (line).
  */
-export function AddChartModal({ providerName, providersStore }: AddChartModalProps) {
-  const [isOpen, { open, close }] = useDisclosure(false);
+export function AddChartModal({
+  opened, onClose, providerName, providersStore,
+}: AddChartModalProps) {
   const [selectedAggregation, setSelectedAggregation] = useState('avg');
   const [selectedChartType, setSelectedChartType] = useState('population-histogram');
   const [selectedVar, setSelectedVar] = useState('');
   const [selectedTimeGrouping, setSelectedTimeGrouping] = useState('month');
-
-  const openModal = useCallback(() => {
-    setSelectedAggregation('avg');
-    setSelectedVar('');
-    setSelectedChartType('population-histogram');
-    setSelectedTimeGrouping('month');
-    open();
-  }, [open]);
 
   const handleAddChart = useCallback(() => {
     const isHistogram = selectedChartType === 'population-histogram';
@@ -68,80 +62,87 @@ export function AddChartModal({ providerName, providersStore }: AddChartModalPro
       group: 'Anemia Management',
     });
 
-    close();
-  }, [selectedAggregation, selectedVar, selectedChartType, selectedTimeGrouping, close, providersStore]);
+    onClose();
+  }, [selectedAggregation, selectedVar, selectedChartType, selectedTimeGrouping, onClose, providersStore]);
 
-  return {
-    openModal,
-    modal: (
-      <Modal
-        opened={isOpen}
-        onClose={close}
-        title={`Add chart for ${providerName}`}
-        centered
+  // Reset local state when modal is opened
+  useEffect(() => {
+    if (opened) {
+      setSelectedAggregation('avg');
+      setSelectedVar('');
+      setSelectedChartType('population-histogram');
+      setSelectedTimeGrouping('month');
+    }
+  }, [opened]);
+
+  return (
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={`Add chart for ${providerName}`}
+      centered
+    >
+      <Tabs
+        defaultValue="compare"
+        style={{ width: '100%' }}
+        onChange={(val) => setSelectedChartType(val === 'progress' ? 'time-series-line' : 'population-histogram')}
       >
-        <Tabs
-          defaultValue="compare"
-          style={{ width: '100%' }}
-          onChange={(val) => setSelectedChartType(val === 'progress' ? 'time-series-line' : 'population-histogram')}
-        >
-          <Tabs.List grow>
-            <Tabs.Tab value="compare">Compare to Population</Tabs.Tab>
-            <Tabs.Tab value="progress">Progress over Time</Tabs.Tab>
-          </Tabs.List>
+        <Tabs.List grow>
+          <Tabs.Tab value="compare">Compare to Population</Tabs.Tab>
+          <Tabs.Tab value="progress">Progress over Time</Tabs.Tab>
+        </Tabs.List>
 
-          <Tabs.Panel value="compare" pt="md">
-            <Stack gap="md">
-              <Select
-                label="Aggregation"
-                placeholder="Choose aggregation type"
-                data={aggregationOptions}
-                value={selectedAggregation}
-                onChange={(value) => setSelectedAggregation(value || 'avg')}
-              />
-              <Select
-                label="Variable"
-                placeholder="Choose Variable"
-                data={variableOptions}
-                value={selectedVar}
-                onChange={(value) => setSelectedVar(value || '')}
-              />
-              <Button mt="md" onClick={handleAddChart} disabled={!selectedVar} fullWidth>
-                Done
-              </Button>
-            </Stack>
-          </Tabs.Panel>
+        <Tabs.Panel value="compare" pt="md">
+          <Stack gap="md">
+            <Select
+              label="Aggregation"
+              placeholder="Choose aggregation type"
+              data={aggregationOptions}
+              value={selectedAggregation}
+              onChange={(value) => setSelectedAggregation(value || 'avg')}
+            />
+            <Select
+              label="Variable"
+              placeholder="Choose Variable"
+              data={variableOptions}
+              value={selectedVar}
+              onChange={(value) => setSelectedVar(value || '')}
+            />
+            <Button mt="md" onClick={handleAddChart} disabled={!selectedVar} fullWidth>
+              Done
+            </Button>
+          </Stack>
+        </Tabs.Panel>
 
-          <Tabs.Panel value="progress" pt="md">
-            <Stack gap="md">
-              <Select
-                label="Aggregation"
-                placeholder="Choose aggregation type"
-                data={aggregationOptions}
-                value={selectedAggregation}
-                onChange={(value) => setSelectedAggregation(value || 'avg')}
-              />
-              <Select
-                label="Variable"
-                placeholder="Choose Variable"
-                data={variableOptions}
-                value={selectedVar}
-                onChange={(value) => setSelectedVar(value || '')}
-              />
-              <Select
-                label="Time Grouping"
-                placeholder="Month / Quarter / Year"
-                data={timeGroupingOptions}
-                value={selectedTimeGrouping}
-                onChange={(value) => setSelectedTimeGrouping(value || 'month')}
-              />
-              <Button mt="md" onClick={handleAddChart} disabled={!selectedVar} fullWidth>
-                Done
-              </Button>
-            </Stack>
-          </Tabs.Panel>
-        </Tabs>
-      </Modal>
-    ),
-  };
+        <Tabs.Panel value="progress" pt="md">
+          <Stack gap="md">
+            <Select
+              label="Aggregation"
+              placeholder="Choose aggregation type"
+              data={aggregationOptions}
+              value={selectedAggregation}
+              onChange={(value) => setSelectedAggregation(value || 'avg')}
+            />
+            <Select
+              label="Variable"
+              placeholder="Choose Variable"
+              data={variableOptions}
+              value={selectedVar}
+              onChange={(value) => setSelectedVar(value || '')}
+            />
+            <Select
+              label="Time Grouping"
+              placeholder="Month / Quarter / Year"
+              data={timeGroupingOptions}
+              value={selectedTimeGrouping}
+              onChange={(value) => setSelectedTimeGrouping(value || 'month')}
+            />
+            <Button mt="md" onClick={handleAddChart} disabled={!selectedVar} fullWidth>
+              Done
+            </Button>
+          </Stack>
+        </Tabs.Panel>
+      </Tabs>
+    </Modal>
+  );
 }

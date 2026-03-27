@@ -1,5 +1,4 @@
 /* eslint-disable react/no-unstable-nested-components */
-/* eslint-disable react/prop-types */
 import {
   Card, CloseButton, Stack, Text,
 } from '@mantine/core';
@@ -59,20 +58,100 @@ function buildSeries(chart: ProviderChart) {
  * Snap a numeric value to the nearest category value in the chart data.
  * Required because category x-axes only render reference lines at exact category values.
  */
-function snapToNearestCategory(value: number | undefined, data: ProviderChart['data'], dataKey: string): number | undefined {
+function snapToNearestCategory(value: number | undefined, data: ProviderChart['data'], dataKey: string): number | string | undefined {
   if (value === undefined || !Number.isFinite(value) || !data?.length) return undefined;
-  const categories = data.map((r) => Number(r[dataKey])).filter(Number.isFinite);
+  const categories = data
+    .map((r) => r[dataKey])
+    .filter((v): v is string | number => typeof v === 'string' || typeof v === 'number');
   if (!categories.length) return undefined;
+
   let closest = categories[0];
-  let minDist = Math.abs(value - closest);
+  let minDist = Math.abs(value - Number(closest));
+
   for (let i = 1; i < categories.length; i += 1) {
-    const dist = Math.abs(value - categories[i]);
+    const dist = Math.abs(value - Number(categories[i]));
     if (dist < minDist) {
       closest = categories[i];
       minDist = dist;
     }
   }
   return closest;
+}
+
+/**
+ * Common chart adornments including the Provider marker and the Recommended threshold line.
+ */
+function ChartAdornments({
+  chart,
+  dataKey,
+  selectedProviderName,
+  isHistogram,
+}: {
+  chart: ProviderChart;
+  dataKey: string;
+  selectedProviderName: string | null;
+  isHistogram: boolean;
+}) {
+  const [hoveredRecommendedLine, setHoveredRecommendedLine] = useState(false);
+
+  const providerX = isHistogram ? snapToNearestCategory(chart.providerMark, chart.data, dataKey) : undefined;
+  const recommendedX = isHistogram ? snapToNearestCategory(chart.recommendedMark, chart.data, dataKey) : undefined;
+  const recommendedY = !isHistogram ? chart.recommendedMark : undefined;
+
+  return (
+    <>
+      {/* Provider marker (Histogram only) */}
+      {isHistogram && providerX !== undefined && (
+        <ReferenceLine
+          yAxisId="left"
+          x={providerX}
+          ifOverflow="visible"
+          stroke="#4a4a4a"
+          label={{
+            value: selectedProviderName ?? 'Provider',
+            fill: '#4a4a4a',
+            position: getProviderLabelPosition(Number(chart.providerMark) || 0, chart.data, dataKey),
+            offset: -25,
+            fontSize: 12,
+          }}
+        />
+      )}
+
+      {/* Recommended mark — visible dashed line */}
+      {!Number.isNaN(chart.recommendedMark) && (
+        <ReferenceLine
+          yAxisId="left"
+          x={recommendedX}
+          y={recommendedY}
+          ifOverflow="visible"
+          stroke="#82ca9d"
+          strokeDasharray="3 3"
+        />
+      )}
+
+      {/* Invisible hitbox for recommended mark hover label */}
+      {!Number.isNaN(chart.recommendedMark) && (
+        <ReferenceLine
+          yAxisId="left"
+          x={recommendedX}
+          y={recommendedY}
+          ifOverflow="visible"
+          stroke="transparent"
+          strokeWidth={8}
+          style={{ pointerEvents: 'stroke', cursor: 'pointer', zIndex: 9999 }}
+          onMouseEnter={() => setHoveredRecommendedLine(true)}
+          onMouseLeave={() => setHoveredRecommendedLine(false)}
+          label={hoveredRecommendedLine ? {
+            value: 'Recommended',
+            position: isHistogram ? 'bottom' : 'right',
+            fill: '#2f9e44',
+            fontSize: 12,
+            style: { zIndex: 9999 },
+          } : undefined}
+        />
+      )}
+    </>
+  );
 }
 
 interface ProviderChartCardProps {
@@ -90,13 +169,33 @@ export function ProviderChartCard({
   cfg, chart, selectedProviderName, onRemove,
 }: ProviderChartCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const [hoveredRecommendedLine, setHoveredRecommendedLine] = useState(false);
-  const chartKey = `${cfg.chartId}_${cfg.xAxisVar}`;
   const series = buildSeries(chart);
+
+  const commonProps = {
+    h: 160,
+    w: '100%',
+    data: chart.data,
+    dataKey: chart.dataKey,
+    series,
+    tooltipProps: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      content: (props: any) => (
+        <ProviderChartTooltip
+          active
+          payload={props.payload}
+          label={props.label}
+          xAxisVar={cfg.xAxisVar}
+          yAxisVar={cfg.yAxisVar}
+          aggregation={cfg.aggregation}
+        />
+      ),
+    },
+  };
+
+  const isTimeSeries = cfg.chartType === 'time-series-line';
 
   return (
     <Card
-      key={chartKey}
       p="md"
       shadow="sm"
       withBorder
@@ -118,13 +217,9 @@ export function ProviderChartCard({
         />
       )}
       <Stack gap={0} align="stretch" justify="space-between" h="100%">
-        {cfg.chartType === 'time-series-line' ? (
+        {isTimeSeries ? (
           <LineChart
-            h={160}
-            w="100%"
-            data={chart.data}
-            dataKey={chart.dataKey}
-            orientation={chart.orientation}
+            {...commonProps}
             lineProps={{ strokeWidth: 2, dot: false }}
             lineChartProps={{
               margin: {
@@ -145,63 +240,23 @@ export function ProviderChartCard({
               domain: ['dataMin', 'dataMax'],
               tickFormatter: (value) => formatValueForDisplay(cfg.yAxisVar, value, cfg.aggregation, false),
             }}
-            series={series}
             xAxisProps={{
               type: 'category',
               domain: ['dataMin', 'dataMax'],
               padding: { left: 10, right: 10 },
               tickFormatter: (value) => formatValueForDisplay(cfg.xAxisVar, value, cfg.aggregation, false),
             }}
-            tooltipProps={{
-              content: (props) => (
-                <ProviderChartTooltip
-                  active
-                  payload={props.payload}
-                  label={props.label}
-                  xAxisVar={cfg.xAxisVar}
-                  yAxisVar={cfg.yAxisVar}
-                  aggregation={cfg.aggregation}
-                />
-              ),
-            }}
           >
-            {/* Recommended mark — visible dashed line */}
-            {!Number.isNaN(chart.recommendedMark) && (
-              <ReferenceLine
-                yAxisId="left"
-                y={chart.recommendedMark}
-                ifOverflow="visible"
-                stroke="#82ca9d"
-                strokeDasharray="3 3"
-              />
-            )}
-            {/* Invisible hitbox for recommended mark hover label */}
-            {!Number.isNaN(chart.recommendedMark) && (
-              <ReferenceLine
-                yAxisId="left"
-                y={chart.recommendedMark}
-                ifOverflow="visible"
-                stroke="transparent"
-                strokeWidth={8}
-                style={{ pointerEvents: 'stroke', cursor: 'pointer', zIndex: 9999 }}
-                onMouseEnter={() => setHoveredRecommendedLine(true)}
-                onMouseLeave={() => setHoveredRecommendedLine(false)}
-                label={hoveredRecommendedLine ? {
-                  value: 'Recommended',
-                  position: 'right',
-                  fill: '#2f9e44',
-                  fontSize: 12,
-                  style: { zIndex: 9999 },
-                } : undefined}
-              />
-            )}
+            <ChartAdornments
+              chart={chart}
+              dataKey={chart.dataKey}
+              selectedProviderName={selectedProviderName}
+              isHistogram={false}
+            />
           </LineChart>
         ) : (
           <BarChart
-            h={160}
-            w="100%"
-            data={chart.data}
-            dataKey={chart.dataKey}
+            {...commonProps}
             orientation={chart.orientation}
             barChartProps={{
               margin: {
@@ -210,73 +265,18 @@ export function ProviderChartCard({
             }}
             yAxisProps={{ width: 20 }}
             barProps={{ radius: 5 }}
-            series={series}
             xAxisProps={{
               type: 'category',
               padding: { left: 10, right: 10 },
               tickFormatter: formatHistogramTick,
             }}
-            tooltipProps={{
-              content: (props) => (
-                <ProviderChartTooltip
-                  active
-                  payload={props.payload}
-                  label={props.label}
-                  xAxisVar={cfg.xAxisVar}
-                  yAxisVar={cfg.yAxisVar}
-                  aggregation={cfg.aggregation}
-                />
-              ),
-            }}
           >
-            {/* Provider marker reference line */}
-            <ReferenceLine
-              yAxisId="left"
-              x={snapToNearestCategory(chart.providerMark, chart.data, chart.dataKey)}
-              ifOverflow="visible"
-              stroke="#4a4a4a"
-              label={{
-                value: selectedProviderName ?? 'Provider',
-                fill: '#4a4a4a',
-                position: getProviderLabelPosition(
-                  Number(chart.providerMark) || 0,
-                  chart.data,
-                  chart.dataKey,
-                ),
-                offset: -25,
-                fontSize: 12,
-              }}
+            <ChartAdornments
+              chart={chart}
+              dataKey={chart.dataKey}
+              selectedProviderName={selectedProviderName}
+              isHistogram
             />
-            {/* Recommended mark — visible dashed line */}
-            {!Number.isNaN(chart.recommendedMark) && (
-              <ReferenceLine
-                yAxisId="left"
-                x={snapToNearestCategory(chart.recommendedMark, chart.data, chart.dataKey)}
-                ifOverflow="visible"
-                stroke="#82ca9d"
-                strokeDasharray="3 3"
-              />
-            )}
-            {/* Invisible hitbox for recommended mark hover label */}
-            {!Number.isNaN(chart.recommendedMark) && (
-              <ReferenceLine
-                yAxisId="left"
-                x={snapToNearestCategory(chart.recommendedMark, chart.data, chart.dataKey)}
-                ifOverflow="visible"
-                stroke="transparent"
-                strokeWidth={8}
-                style={{ pointerEvents: 'stroke', cursor: 'pointer', zIndex: 9999 }}
-                onMouseEnter={() => setHoveredRecommendedLine(true)}
-                onMouseLeave={() => setHoveredRecommendedLine(false)}
-                label={hoveredRecommendedLine ? {
-                  value: 'Recommended',
-                  position: 'bottom',
-                  fill: '#2f9e44',
-                  fontSize: 12,
-                  style: { zIndex: 9999 },
-                } : undefined}
-              />
-            )}
           </BarChart>
         )}
         <Text
