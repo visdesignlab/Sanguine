@@ -10,7 +10,6 @@ import { InteractionStore } from './InteractionStore';
 import { ActionEvents } from './Types/EventTypes';
 import { ApplicationState } from './Types/StateTypes';
 import { SingleCasePoint } from './Types/DataTypes';
-import { SurgeryUrgencyArray } from '../Presets/DataDict';
 
 export class RootStore {
   provenance: Provenance<ApplicationState, ActionEvents>;
