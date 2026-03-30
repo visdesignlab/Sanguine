@@ -2,6 +2,31 @@
 
 An API server for the Bloodvis application.
 
+## Authentication
+
+The backend now supports two production authentication providers selected by `DJANGO_AUTH_PROVIDER`:
+
+- `cas` keeps the current University of Utah CAS flow.
+- `saml` enables a `djangosaml2` service provider for partner-hosted deployments.
+
+The public login/logout contract stays stable at `/api/accounts/login/` and `/api/accounts/logout/`. In SAML mode, the backend also exposes:
+
+- `/saml2/login/`
+- `/saml2/acs/`
+- `/saml2/logout/`
+- `/saml2/metadata/`
+
+SAML deployments must provide:
+
+- `SAML_ENTITY_ID`
+- `SAML_SP_BASE_URL` or `DJANGO_HOSTNAME`
+- `SAML_IDP_METADATA_MODE=remote|file|inline`
+- `SAML_IDP_METADATA_URL`, `SAML_IDP_METADATA_PATH`, or `SAML_IDP_METADATA_XML`
+- `SAML_SP_CERT_PATH` / `SAML_SP_KEY_PATH` or `SAML_SP_CERT_B64` / `SAML_SP_KEY_B64`
+- `SAML_USERNAME_ATTRIBUTE` and optional `SAML_EMAIL_ATTRIBUTE`, `SAML_FIRST_NAME_ATTRIBUTE`, `SAML_LAST_NAME_ATTRIBUTE`
+
+The partner institution should register the deployed `/saml2/metadata/` output with their IdP and configure their IdP to post assertions back to `/saml2/acs/`.
+
 ## API
 
 There are several routes set up for accessing the patient and surgery data. Here are the names, allowed methods, parameters, descriptions, and examples:

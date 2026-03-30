@@ -1,6 +1,6 @@
 from django.conf import settings
-from django_cas_ng.decorators import login_required
 from functools import wraps
+from django.contrib.auth.decorators import login_required
 
 
 def conditional_login_required(view_func):

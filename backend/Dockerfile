@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
     build-essential \
     pkg-config \
+    xmlsec1 \
     mariadb-client  # This is useful to connect to the database from the container
 
 RUN pip install poetry
