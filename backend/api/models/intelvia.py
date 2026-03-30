@@ -3,12 +3,12 @@ from django.db import models
 
 class Patient(models.Model):
     mrn = models.CharField(max_length=20, primary_key=True)
-    last_name = models.CharField(max_length=30)
-    first_name = models.CharField(max_length=30)
-    birth_date = models.DateField()
-    sex_code = models.CharField(max_length=80)
-    race_desc = models.CharField(max_length=80)
-    ethnicity_desc = models.CharField(max_length=2000)
+    last_name = models.CharField(max_length=30, null=True)
+    first_name = models.CharField(max_length=30, null=True)
+    birth_date = models.DateField(null=True)
+    sex_code = models.CharField(max_length=80, null=True)
+    race_desc = models.CharField(max_length=80, null=True)
+    ethnicity_desc = models.CharField(max_length=2000, null=True)
     death_date = models.DateField(null=True)
 
     class Meta:
@@ -117,12 +117,15 @@ class Medication(models.Model):
  
     class Meta:
         db_table = "Medication"
+        indexes = [
+            models.Index(fields=["visit_no", "admin_dtm"], name="medication_visit_admin_idx"),
+        ]
 
 
 class Lab(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
-    lab_id = models.BigIntegerField(null=True)
+    lab_id = models.CharField(max_length=64, null=True)
     lab_draw_dtm = models.DateTimeField(null=True)
     lab_panel_code = models.CharField(max_length=30, null=True)
     lab_panel_desc = models.CharField(max_length=256, null=True)
@@ -130,10 +133,10 @@ class Lab(models.Model):
     result_code = models.CharField(max_length=30, null=True)
     result_loinc = models.CharField(max_length=30, null=True)
     result_desc = models.CharField(max_length=256, null=True)
-    result_value = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    result_value = models.CharField(max_length=256, null=True)
     uom_code = models.CharField(max_length=30, null=True)
-    lower_limit = models.DecimalField(max_digits=20, decimal_places=4, null=True)
-    upper_limit = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    lower_limit = models.CharField(max_length=256, null=True)
+    upper_limit = models.CharField(max_length=256, null=True)
 
     class Meta:
         db_table = "Lab"
@@ -177,23 +180,26 @@ class AttendingProvider(models.Model):
     class Meta:
         db_table = "AttendingProvider"
         indexes = [
-            models.Index(fields=["visit_no", "attend_start_dtm", "attend_end_dtm", "prov_id", "attend_prov_line"], name="idx_attprov_visit_dtm_range"),
+            models.Index(fields=["visit_no", "prov_id"], name="attprov_visit_prov_idx"),
+            models.Index(
+                fields=["visit_no", "attend_start_dtm", "attend_end_dtm", "attend_prov_line"],
+                name="attprov_visit_window_idx",
+            ),
         ]
 
 
 class RoomTrace(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
-    department_id = models.CharField(max_length=30)
-    department_name = models.CharField(max_length=100)
-    room_id = models.CharField(max_length=30)
-    bed_id = models.CharField(max_length=30)
-    service_in_c = models.CharField(max_length=10)
-    service_in_desc = models.CharField(max_length=100)
-    in_dtm = models.DateTimeField()
-    out_dtm = models.DateTimeField()
-    duration_days = models.FloatField()
-    bed_room_dept_line = models.FloatField()
+    department_id = models.CharField(max_length=30, null=True)
+    department_name = models.CharField(max_length=100, null=True)
+    room_id = models.CharField(max_length=30, null=True)
+    bed_id = models.CharField(max_length=30, null=True)
+    service_in_c = models.CharField(max_length=10, null=True)
+    service_in_desc = models.CharField(max_length=100, null=True)
+    in_dtm = models.DateTimeField(null=True)
+    out_dtm = models.DateTimeField(null=True)
+    duration_days = models.FloatField(null=True)
+    bed_room_dept_line = models.FloatField(null=True)
 
     class Meta:
         db_table = "RoomTrace"
-

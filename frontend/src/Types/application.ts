@@ -453,10 +453,10 @@ export const COSTS = {
   cell_saver_cost: {
     value: 'cell_saver_cost',
     label: {
-      short: 'Cell Saver Cost',
-      base: 'Cell Saver Cost',
-      sum: 'Total Cell Saver Cost',
-      avg: 'Average Cell Saver Cost Per Visit',
+      short: 'Cell Salvage Cost',
+      base: 'Cell Salvage Cost',
+      sum: 'Total Cell Salvage Cost',
+      avg: 'Average Cell Salvage Cost Per Visit',
     },
     units: {
       sum: '$', avg: '$', sumShort: '$', avgShort: '$', type: 'prefix',

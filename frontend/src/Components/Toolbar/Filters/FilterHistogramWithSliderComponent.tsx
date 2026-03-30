@@ -120,7 +120,7 @@ export function FilterHistogramWithSliderComponent({
                           || DEFAULT_DATA_COLOR
                     }
                   >
-                    <title>{`${d.units}:${d.count}`}</title>
+                    <title>{`Unit: ${d.units}; Count: ${d.count}`}</title>
                   </rect>
                 ))}
             </svg>
