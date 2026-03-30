@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -8,6 +9,7 @@ from django.http import HttpResponseRedirect
 AUTH_PROVIDER_CAS = "cas"
 AUTH_PROVIDER_SAML = "saml"
 VALID_AUTH_PROVIDERS = {AUTH_PROVIDER_CAS, AUTH_PROVIDER_SAML}
+logger = logging.getLogger(__name__)
 
 
 def normalize_auth_provider(value: str | None) -> str:
@@ -40,6 +42,7 @@ def auth_logout(request):
 
             return LogoutInitView.as_view()(request)
         except Exception:
+            logger.exception("SAML logout initiation failed; falling back to local logout.")
             django_logout(request)
             return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
 
