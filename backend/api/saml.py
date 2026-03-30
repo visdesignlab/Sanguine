@@ -1,8 +1,17 @@
 import base64
+import logging
 import tempfile
+from datetime import datetime, timezone
 from typing import Any
 
+from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
+from django.utils.dateparse import parse_datetime
+
+
+logger = logging.getLogger(__name__)
+DEFAULT_REPLAY_CACHE_TIMEOUT = 60 * 5
+REPLAY_CACHE_KEY_PREFIX = "saml-assertion-id:"
 
 
 def _first_value(values):
@@ -57,13 +66,25 @@ def _build_attribute_mapping(*, username_attr: str, email_attr: str, first_name_
 
 
 def _metadata_config(env) -> dict[str, list]:
-    mode = _env_value(env, "SAML_IDP_METADATA_MODE", "remote").lower()
+    mode = _env_value(env, "SAML_IDP_METADATA_MODE", "file").lower()
 
     if mode == "remote":
         url = _env_value(env, "SAML_IDP_METADATA_URL")
+        cert_path = _env_value(env, "SAML_IDP_METADATA_CERT_PATH")
         if not url:
             raise ImproperlyConfigured("SAML_IDP_METADATA_URL is required in remote metadata mode.")
-        return {"remote": [{"url": url}]}
+        if not cert_path:
+            raise ImproperlyConfigured("SAML_IDP_METADATA_CERT_PATH is required in remote metadata mode.")
+        return {"remote": [{"url": url, "cert": cert_path}]}
+
+    if mode == "mdq":
+        url = _env_value(env, "SAML_IDP_METADATA_URL")
+        cert_path = _env_value(env, "SAML_IDP_METADATA_CERT_PATH")
+        if not url:
+            raise ImproperlyConfigured("SAML_IDP_METADATA_URL is required in mdq metadata mode.")
+        if not cert_path:
+            raise ImproperlyConfigured("SAML_IDP_METADATA_CERT_PATH is required in mdq metadata mode.")
+        return {"mdq": [{"url": url, "cert": cert_path}]}
 
     if mode == "file":
         path_value = _env_value(env, "SAML_IDP_METADATA_PATH")
@@ -78,7 +99,27 @@ def _metadata_config(env) -> dict[str, list]:
         metadata_path = _write_temp_file("saml-idp-metadata-", ".xml", metadata_xml)
         return {"local": [metadata_path]}
 
-    raise ImproperlyConfigured("SAML_IDP_METADATA_MODE must be one of: remote, file, inline.")
+    raise ImproperlyConfigured("SAML_IDP_METADATA_MODE must be one of: mdq, remote, file, inline.")
+
+
+def _cache_timeout_for_assertion(assertion_info: dict | None) -> int:
+    if not assertion_info:
+        return DEFAULT_REPLAY_CACHE_TIMEOUT
+
+    not_on_or_after = assertion_info.get("not_on_or_after")
+    if not not_on_or_after:
+        return DEFAULT_REPLAY_CACHE_TIMEOUT
+
+    expiration = not_on_or_after
+    if not isinstance(expiration, datetime):
+        expiration = parse_datetime(str(not_on_or_after))
+    if expiration is None:
+        return DEFAULT_REPLAY_CACHE_TIMEOUT
+    if expiration.tzinfo is None:
+        expiration = expiration.replace(tzinfo=timezone.utc)
+
+    delta = int((expiration - datetime.now(timezone.utc)).total_seconds())
+    return max(delta, 1)
 
 
 def _normalize_base_url(raw_base_url: str, hostname: str) -> str:
@@ -93,6 +134,7 @@ def _normalize_base_url(raw_base_url: str, hostname: str) -> str:
 def build_saml_settings(*, env, hostname: str) -> dict[str, Any]:
     import saml2
     import saml2.saml
+    import saml2.xmldsig
 
     username_attr = _env_value(env, "SAML_USERNAME_ATTRIBUTE", "email")
     email_attr = _env_value(env, "SAML_EMAIL_ATTRIBUTE", "email")
@@ -100,6 +142,13 @@ def build_saml_settings(*, env, hostname: str) -> dict[str, Any]:
     last_name_attr = _env_value(env, "SAML_LAST_NAME_ATTRIBUTE", "last_name")
     base_url = _normalize_base_url(_env_value(env, "SAML_SP_BASE_URL"), hostname)
     entity_id = _env_value(env, "SAML_ENTITY_ID", f"{base_url}/saml2/metadata/")
+    verify_ssl_cert = env("SAML_VERIFY_SSL_CERT", default=True)
+    ca_certs_path = _env_value(env, "SAML_CA_CERTS_PATH")
+    authn_requests_signed = env("SAML_AUTHN_REQUESTS_SIGNED", default=True)
+    logout_requests_signed = env("SAML_LOGOUT_REQUESTS_SIGNED", default=True)
+    want_assertions_signed = env("SAML_WANT_ASSERTIONS_SIGNED", default=True)
+    want_response_signed = env("SAML_WANT_RESPONSE_SIGNED", default=True)
+    accepted_time_diff = env("SAML_ACCEPTED_TIME_DIFF", default=60)
     cert_file = _resolve_file_setting(
         path_value=_env_value(env, "SAML_SP_CERT_PATH"),
         base64_value=_env_value(env, "SAML_SP_CERT_B64"),
@@ -122,11 +171,14 @@ def build_saml_settings(*, env, hostname: str) -> dict[str, Any]:
                 "name": "Sanguine SAML Service Provider",
                 "name_id_format": saml2.saml.NAMEID_FORMAT_TRANSIENT,
                 "allow_unsolicited": False,
-                "authn_requests_signed": False,
-                "logout_requests_signed": False,
-                "want_assertions_signed": True,
-                "want_response_signed": False,
+                "authn_requests_signed": authn_requests_signed,
+                "logout_requests_signed": logout_requests_signed,
+                "want_assertions_signed": want_assertions_signed,
+                "want_response_signed": want_response_signed,
                 "only_use_keys_in_metadata": True,
+                "validate_certificate": True,
+                "signing_algorithm": saml2.xmldsig.SIG_RSA_SHA256,
+                "digest_algorithm": saml2.xmldsig.DIGEST_SHA256,
                 "endpoints": {
                     "assertion_consumer_service": [
                         (f"{base_url}/saml2/acs/", saml2.BINDING_HTTP_POST),
@@ -140,9 +192,19 @@ def build_saml_settings(*, env, hostname: str) -> dict[str, Any]:
         },
         "metadata": _metadata_config(env),
         "debug": 1 if env("DJANGO_DEBUG") else 0,
+        "verify_ssl_cert": verify_ssl_cert,
         "key_file": key_file,
         "cert_file": cert_file,
+        "encryption_keypairs": [
+            {
+                "key_file": key_file,
+                "cert_file": cert_file,
+            }
+        ],
+        "accepted_time_diff": accepted_time_diff,
     }
+    if ca_certs_path:
+        saml_config["ca_certs"] = ca_certs_path
 
     return {
         "SAML_ATTRIBUTE_MAPPING": _build_attribute_mapping(
@@ -161,6 +223,7 @@ def build_saml_settings(*, env, hostname: str) -> dict[str, Any]:
         "SAML_LAST_NAME_ATTRIBUTE": last_name_attr,
         "SAML_SESSION_COOKIE_NAME": "saml_session",
         "SAML_SESSION_COOKIE_SAMESITE": "None",
+        "SAML_SESSION_COOKIE_SECURE": True,
         "SAML_USERNAME_ATTRIBUTE": username_attr,
         "ACS_DEFAULT_REDIRECT_URL": _env_value(env, "SAML_DEFAULT_REDIRECT_URL", "/api"),
     }
@@ -187,6 +250,33 @@ class SanguineSaml2Backend(Saml2Backend):
         from django.conf import settings
 
         return getattr(settings, "SAML_USERNAME_ATTRIBUTE", "email")
+
+    def is_authorized(
+        self,
+        attributes: dict,
+        attribute_mapping: dict,
+        idp_entityid: str,
+        assertion_info: dict | None,
+        **kwargs,
+    ) -> bool:
+        if not super().is_authorized(attributes, attribute_mapping, idp_entityid, assertion_info, **kwargs):
+            return False
+
+        if not assertion_info:
+            logger.warning("SAML assertion metadata is missing; rejecting login.")
+            return False
+
+        assertion_id = assertion_info.get("assertion_id")
+        if not assertion_id:
+            logger.warning("SAML assertion_id is missing; rejecting login.")
+            return False
+
+        cache_key = f"{REPLAY_CACHE_KEY_PREFIX}{assertion_id}"
+        if not cache.add(cache_key, True, timeout=_cache_timeout_for_assertion(assertion_info)):
+            logger.warning("SAML assertion replay detected for assertion_id=%s", assertion_id)
+            return False
+
+        return True
 
     def _update_user(self, user, attributes: dict, attribute_mapping: dict, force_save: bool = False):
         username = _first_value(attributes.get(self._configured_username_attr))
