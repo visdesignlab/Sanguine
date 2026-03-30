@@ -8,7 +8,13 @@ trap 'kill -SIGTERM $PID' SIGTERM
 poetry run python manage.py migrate admin
 poetry run python manage.py migrate auth
 poetry run python manage.py migrate contenttypes
-poetry run python manage.py migrate django_cas_ng
+AUTH_PROVIDER="${DJANGO_AUTH_PROVIDER:-cas}"
+AUTH_PROVIDER="${AUTH_PROVIDER,,}"
+
+if [[ "$AUTH_PROVIDER" == "cas" ]]; then
+  poetry run python manage.py migrate django_cas_ng
+fi
+
 poetry run python manage.py migrate sessions
 
 # Start the server with 
