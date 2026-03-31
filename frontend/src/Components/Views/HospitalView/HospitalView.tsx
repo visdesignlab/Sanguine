@@ -33,7 +33,6 @@ import {
   type DashboardChartConfig,
   DashboardStatConfig,
   chartColors,
-  Cost,
   BLOOD_PRODUCT_COLOR_THEME,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
