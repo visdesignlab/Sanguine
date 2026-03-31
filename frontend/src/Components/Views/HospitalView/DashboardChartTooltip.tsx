@@ -1,4 +1,6 @@
-import { Title, Paper, Flex, Box, Divider } from '@mantine/core';
+import {
+  Title, Paper, Flex, Box, Divider,
+} from '@mantine/core';
 import { dashboardYAxisVars } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
@@ -26,7 +28,7 @@ export function DashboardChartTooltip({
   return (
     <Paper p="xs" shadow="md" radius="sm" style={{ ...tooltipStyles, minWidth: 150 }}>
       {payload.map((p, i) => (
-        // eslint-disable-next-line react/no-array-index-key
+
         <Flex key={`${p.name}-${i}`} direction="row" align="center" justify="space-between" gap="sm">
           <Flex align="center" gap="xs">
             <Box style={{

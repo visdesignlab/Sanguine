@@ -988,8 +988,8 @@ export class RootStore {
     const query = multiDept
       ? `
       WITH unnested AS (
-        SELECT v.*, unnest(v.department_ids) as dept_id
-        FROM filteredVisits v
+        SELECT a.*, unnest(a.department_ids) as dept_id
+        FROM aggregatedVisits a
       )
       SELECT
         month,
@@ -1147,9 +1147,11 @@ export class RootStore {
                 const initialData = (multiDept && curr.deptName) ? { [curr.deptName]: curr.data } : curr.data;
                 acc.push({
                   ...curr,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   data: initialData as any,
                   counts_per_period: curr.counts_per_period ? [curr.counts_per_period] : [],
                   data_per_period: [curr.data],
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any);
               }
               return acc;
