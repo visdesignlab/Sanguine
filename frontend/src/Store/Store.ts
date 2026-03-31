@@ -39,6 +39,9 @@ import {
 
 export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
+const sqlString = (value: string) => `'${value.replace(/'/g, "''")}'`;
+const safeIdPattern = /^[A-Za-z0-9_-]+$/;
+
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
     {
@@ -993,7 +996,7 @@ export class RootStore {
           COUNT(visit_no) AS visit_count,
           ${selectClauses.join(',\n')}
         FROM unnested
-        WHERE dept_id IN (${selectedDeptIds.map((id) => `'${id}'`).join(', ')})
+        WHERE dept_id IN (${selectedDeptIds.filter((id) => safeIdPattern.test(id)).map(sqlString).join(', ')})
         GROUP BY ${xAxisVar}, dept_id;
       `
         // If no departments are selected, just group by x-axis (month, quarter, year)
@@ -1228,7 +1231,7 @@ export class RootStore {
       month,
       ${sparklineSelects.join(',\n')}
     FROM aggregatedVisits
-    WHERE month IN (${sparklineMonths.map((m) => `'${m}'`).join(', ')})
+    WHERE month IN (${sparklineMonths.map(sqlString).join(', ')})
     GROUP BY month
     ORDER BY month;
   `;
@@ -1688,7 +1691,7 @@ export class RootStore {
 
   async getVisitInfo(visitNo: number) {
     if (!this.duckDB) return null;
-    const result = await this.duckDB.query(`SELECT * FROM filteredVisits WHERE visit_no = ${visitNo}`);
+    const result = await this.duckDB.query(`SELECT * FROM filteredVisits WHERE visit_no = ${Number(visitNo)}`);
     return result.toArray().map((row) => row.toJSON())[0] || null;
   }
 
@@ -1702,9 +1705,7 @@ export class RootStore {
       this.selectedVisitNos = [];
       return;
     }
-    // Escape single quotes for SQL strings
-    const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
-    const result = await this.duckDB.query(`SELECT visit_no FROM filteredVisits WHERE month IN (${months.map(q).join(', ')})`);
+    const result = await this.duckDB.query(`SELECT visit_no FROM filteredVisits WHERE month IN (${months.map(sqlString).join(', ')})`);
     this.selectedVisitNos = result.toArray().map((row) => Number(row.toJSON().visit_no));
   }
   // endregion
@@ -1752,7 +1753,6 @@ export class RootStore {
 
     // Generate the visit-level HAVING conditions --------
     const visitFilterConditions: string[] = [];
-    const sqlString = (value: string) => `'${value.replace(/'/g, "''")}'`;
 
     const sumRangeFilterKeys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
     sumRangeFilterKeys.forEach((key) => {
@@ -1779,7 +1779,6 @@ export class RootStore {
 
     // Use list-native predicates to avoid UNNEST/CTE rescans on each filter update.
     // Only allow slug-like IDs (alphanumeric, underscore, hyphen) to be interpolated into SQL.
-    const safeIdPattern = /^[A-Za-z0-9_-]+$/;
 
     if (filterValues.departments.length > 0) {
       const departmentIdList = filterValues.departments.map(sqlString).join(', ');
