@@ -624,7 +624,7 @@ export type DashboardStatConfig = {
 
 export type DashboardStatData = Record<DashboardAggYAxisVar, { value: string, diff: number, comparedTo?: string, sparklineData: number[] }>;
 
-// Chart colors (for up to 5 lines/bars)
+// Chart colors (for up to 6 lines/bars)
 export const chartColors = [
   '#FF8787', // Muted Salmon/Coral (distinguishable from "Error Red")
   '#D0BFFF', // Soft Lavender
