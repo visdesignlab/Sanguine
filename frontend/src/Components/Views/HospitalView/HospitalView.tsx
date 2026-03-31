@@ -227,10 +227,13 @@ export function HospitalView() {
           }) => {
             const selectedSet = new Set(store.selectedTimePeriods);
 
-            let chartData = store.dashboardChartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
-            if (chartData.length > 0 && typeof chartData[0].data === 'object' && Array.isArray(chartData)) {
-              chartData = chartData.map((d) => ({ timePeriod: d.timePeriod, ...(d.data as Record<string, number>) }));
-            }
+            const rawChartData = store.dashboardChartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
+            const chartData = rawChartData.map((d) => {
+              if (typeof d.data === 'object') {
+                return { timePeriod: d.timePeriod, ...d.data };
+              }
+              return { timePeriod: d.timePeriod, [yAxisVar]: d.data };
+            });
 
             const chartDataKeys = chartData.length > 0
               ? Object.keys(chartData[0]).filter((k) => !['timePeriod', 'deptName', 'counts_per_period', 'data_per_period', '_adherence_den'].includes(k))

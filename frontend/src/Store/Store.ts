@@ -15,6 +15,7 @@ import {
   DashboardAggYAxisVar,
   DashboardChartConfig,
   DashboardChartData,
+  DashboardChartDatum,
   DashboardStatConfig,
   DashboardStatData,
   ExploreChartConfig,
@@ -1031,7 +1032,7 @@ export class RootStore {
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
 
           // Reduce the rows to a single object (time period & data) with time periods as keys
-          const reducedObj = rows.reduce((acc, row) => {
+          const reducedObj: Record<string, DashboardChartDatum> = rows.reduce((acc, row) => {
             const timePeriod = row.timePeriod as TimePeriod;
             if (timePeriod === null || timePeriod === undefined) return acc;
 
@@ -1081,13 +1082,12 @@ export class RootStore {
               (acc[timePeriod].data as Record<string, number>)[deptName] = rowData as number;
             }
             return acc;
-          }, {} as Record<string, { timePeriod: TimePeriod; data: number | Record<string, number> }>);
+          }, {} as Record<string, DashboardChartDatum>);
 
           // Sort the data by time period, and add to result
-          const chartDatum = (Object.values(reducedObj) as { timePeriod: TimePeriod }[]).sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
+          const chartDatum = Object.values(reducedObj).sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
           const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          result[compositeKey] = chartDatum as any;
+          result[compositeKey] = chartDatum;
         });
       });
     }

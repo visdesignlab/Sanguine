@@ -599,8 +599,20 @@ export type DashboardChartConfig = ChartConfig<typeof dashboardXAxisVars[number]
 // Dashboard chart configuration key type
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
 
+/**
+ * Dashboard chart data point.
+ * The 'data' property can be:
+ * - number: Standard single-series metric
+ * - Record<Cost, number>: Cost breakdown (RBC, FFP, etc.)
+ * - Record<string, number>: Multi-department comparison (DeptName -> Value)
+ */
+export type DashboardChartDatum = {
+  timePeriod: TimePeriod;
+  data: number | Record<Cost, number> | Record<string, number>;
+};
+
 // Dashboard chart data type (key, value)
-export type DashboardChartData = Record<DashboardChartConfigKey, ({ timePeriod: TimePeriod, [key: string]: string | number | Record<Cost, number> })[]>;
+export type DashboardChartData = Record<DashboardChartConfigKey, DashboardChartDatum[]>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {
