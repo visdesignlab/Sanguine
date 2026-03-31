@@ -33,7 +33,6 @@ import {
   type DashboardChartConfig,
   DashboardStatConfig,
   chartColors,
-  Cost,
   BLOOD_PRODUCT_COLOR_THEME,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
@@ -228,23 +227,46 @@ export function HospitalView() {
           }) => {
             const selectedSet = new Set(store.selectedTimePeriods);
 
-            let chartData = store.dashboardChartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
-            if (yAxisVar === 'total_blood_product_cost' && Array.isArray(chartData)) {
-              chartData = chartData.map((data) => ({ timePeriod: data.timePeriod, ...data.data as Record<Cost, number> }));
-            }
+            const rawChartData = store.dashboardChartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
+            const chartData = rawChartData.map((d) => {
+              if (typeof d.data === 'object') {
+                return { timePeriod: d.timePeriod, ...d.data };
+              }
+              return { timePeriod: d.timePeriod, [yAxisVar]: d.data };
+            });
+
             const chartDataKeys = chartData.length > 0
-              ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
+              ? Object.keys(chartData[0]).filter((k) => !['timePeriod', 'deptName', 'counts_per_period', 'data_per_period', '_adherence_den'].includes(k))
               : [];
 
-            const series = chartDataKeys.map((name, idx) => ({
-              name,
-              color: chartDataKeys.length === 1
-                ? (BLOOD_PRODUCT_COLOR_THEME[yAxisVar] || DEFAULT_DATA_COLOR)// Or use a constant like DEFAULT_DATA_COLOR if defined
-                : (BLOOD_PRODUCT_COLOR_THEME[chartDataKeys[idx].replace(/_cost$/, '')] || chartColors[idx % chartColors.length]),
-              label: chartDataKeys.length === 1
-                ? 'Total'
-                : dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
-            }));
+            const isMultiDept = (store.state.filterValues.departmentIds?.length || 0) > 1;
+
+            const series = chartDataKeys.map((name, idx) => {
+              let label = name;
+              if (isMultiDept) {
+                label = name;
+              } else if (chartDataKeys.length === 1) {
+                const selectedDeptIds = store.state.filterValues.departmentIds || [];
+                if (selectedDeptIds.length === 0) {
+                  label = 'All Departments';
+                } else if (selectedDeptIds.length === 1 && store.procedureHierarchy) {
+                  const dept = store.procedureHierarchy.departments.find((d) => d.id === selectedDeptIds[0]);
+                  label = dept ? dept.name : 'Total';
+                } else {
+                  label = 'Total';
+                }
+              } else {
+                label = dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name;
+              }
+
+              return {
+                name,
+                color: chartDataKeys.length === 1
+                  ? (BLOOD_PRODUCT_COLOR_THEME[yAxisVar] || DEFAULT_DATA_COLOR)
+                  : (BLOOD_PRODUCT_COLOR_THEME[name.replace(/_cost$/, '')] || chartColors[idx % chartColors.length]),
+                label,
+              };
+            });
             return (
               <Card
                 key={chartId}
@@ -355,21 +377,17 @@ export function HospitalView() {
                         type="stacked"
                         withLegend
                         tooltipAnimationDuration={200}
-                        tooltipProps={
-                          chartDataKeys.length === 1
-                            ? {
-                              content: ({ active, payload, label }) => (
-                                <DashboardChartTooltip
-                                  active={active}
-                                  payload={payload}
-                                  xAxisVar={label}
-                                  yAxisVar={yAxisVar}
-                                  aggregation={aggregation}
-                                />
-                              ),
-                            }
-                            : {}
-                        }
+                        tooltipProps={{
+                          content: ({ active, payload, label }) => (
+                            <DashboardChartTooltip
+                              active={active}
+                              payload={payload}
+                              xAxisVar={label}
+                              yAxisVar={yAxisVar}
+                              aggregation={aggregation}
+                            />
+                          ),
+                        }}
                         valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
                         barProps={{
                           onClick: (data: { payload?: { timePeriod?: string } }) => {
@@ -436,21 +454,17 @@ export function HospitalView() {
                           },
                         }}
                         tooltipAnimationDuration={200}
-                        tooltipProps={
-                          chartDataKeys.length === 1
-                            ? {
-                              content: ({ active, payload, label }) => (
-                                <DashboardChartTooltip
-                                  active={active}
-                                  payload={payload}
-                                  xAxisVar={label}
-                                  yAxisVar={yAxisVar}
-                                  aggregation={aggregation}
-                                />
-                              ),
-                            }
-                            : {}
-                        }
+                        tooltipProps={{
+                          content: ({ active, payload, label }) => (
+                            <DashboardChartTooltip
+                              active={active}
+                              payload={payload}
+                              xAxisVar={label}
+                              yAxisVar={yAxisVar}
+                              aggregation={aggregation}
+                            />
+                          ),
+                        }}
                         valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
                       />
                     )}
