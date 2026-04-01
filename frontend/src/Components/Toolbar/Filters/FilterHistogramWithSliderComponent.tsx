@@ -6,7 +6,7 @@ import { Flex, Input, Tooltip } from '@mantine/core';
 import { useObserver } from 'mobx-react-lite';
 import { Store } from '../../../Store/Store';
 import { HistogramData } from '../../../Types/database';
-import { BLOOD_PRODUCT_COLOR_THEME } from '../../../Types/application';
+import { BLOOD_PRODUCT_COLOR_THEME, OUTCOMES } from '../../../Types/application';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 import { FilterRangeSlider } from './FilterRangeSlider';
 import {
@@ -61,7 +61,7 @@ export function FilterHistogramWithSliderComponent({
       <Tooltip label={filterToolTip} position="top-start">
         <Input.Wrapper
           label={
-            BLOOD_COMPONENTS.find((c) => c.value === unitName)?.label.base
+            BLOOD_COMPONENTS.find((c) => c.value === unitName)?.label.base || OUTCOMES.find((o) => o.value === unitName)?.label.base
             || unitName
           }
           mb="lg"
