@@ -2,7 +2,6 @@ import {
   ScrollArea,
   Accordion,
   Flex,
-  Input,
   Stack,
   Divider,
   Grid,
@@ -12,34 +11,22 @@ import {
   ActionIcon,
   Title,
 } from '@mantine/core';
-import { BarChart } from '@mantine/charts';
 import { DateInput } from '@mantine/dates';
 import {
   IconChartBar, IconRestore,
 } from '@tabler/icons-react';
 import { useContext } from 'react';
 import { useObserver } from 'mobx-react-lite';
-import { DEFAULT_DATA_COLOR, useThemeConstants } from '../../../Theme/mantineTheme';
-import { FilterRangeSlider } from './FilterRangeSlider';
+import { useThemeConstants } from '../../../Theme/mantineTheme';
 import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
 import { DepartmentProcedureFilter } from './DepartmentProcedureFilter';
 import classes from '../../../Shell/Shell.module.css';
 import { FilterHistogramWithSliderComponent } from './FilterHistogramWithSliderComponent';
-import { BLOOD_PRODUCTS_ARRAY, BloodComponent } from '../../../Types/bloodProducts';
+import { BLOOD_PRODUCTS_ARRAY } from '../../../Types/bloodProducts';
 import { TrueFalseNotAppliedToggle } from './TrueFalseNotAppliedToggle';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
-
-// Utility: Detect if a range filter has been applied
-function rangeChanged(
-  store: RootStore,
-  key: BloodComponent | 'los',
-) {
-  const cur = store.filterValues[key];
-  const init = store.initialFilterValues[key];
-  return cur[0] !== init[0] || cur[1] !== init[1];
-}
 
 // Utility: Detect if a date filter has been applied
 function dateChanged(
@@ -249,29 +236,7 @@ export function FilterPanel() {
                 <TrueFalseNotAppliedToggle label="ECMO" currentFilterValue={store.filterValues.ecmo} setFilterCallback={(value) => store.setFilterValue('ecmo', value)} />
 
                 <Divider my="xs" />
-                <Input.Wrapper
-                  label="Length of Stay"
-                  styles={{ label: { color: rangeChanged(store, 'los') ? 'var(--mantine-color-blue-filled)' : undefined } }}
-                >
-                  {store.state.ui.showFilterHistograms && (
-                    <Flex justify="center">
-                      <BarChart
-                        h={30}
-                        style={{ width: 'calc(100% - 12px)' }}
-                        barProps={{ barSize: '100%' }}
-                        data={store.losHistogramData || []}
-                        dataKey="units"
-                        withXAxis={false}
-                        withYAxis={false}
-                        withTooltip={false}
-                        gridAxis="none"
-                        series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
-                        ml={1}
-                      />
-                    </Flex>
-                  )}
-                  <FilterRangeSlider varName="los" />
-                </Input.Wrapper>
+                <FilterHistogramWithSliderComponent key="filter-los" data={store.getHistogramData('los')} unitName="los" />
               </Stack>
             </Accordion.Panel>
           </Accordion.Item>
