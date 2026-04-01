@@ -5,6 +5,8 @@ services:
       - .env
     ports:
       - "8000:8000"
+    volumes:
+      - ./saml:/run/sanguine/saml:ro
     depends_on:
       mariadb:
         condition: service_healthy

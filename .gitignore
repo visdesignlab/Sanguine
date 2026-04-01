@@ -47,6 +47,8 @@ yarn-error.log*
 
 docker-images/
 mariadb_data/
+/saml/*
+!/saml/.gitkeep
 *.zip
 
 __pycache__/
