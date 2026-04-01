@@ -74,6 +74,60 @@ export const Shell = observer(() => {
     store.actions.setUiState({ activeTab: tab });
   };
 
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const [departmentFiltersBeforeEnter, setDepartmentFiltersBeforeEnter] = useState<{ departmentIds: string[], procedureIds: string[] }>({ departmentIds: [], procedureIds: [] });
+  const [departmentFiltersOnEnter, setDepartmentFiltersOnEnter] = useState<{ departmentIds: string[], procedureIds: string[] }>({ departmentIds: [], procedureIds: [] });
+
+  const getTabPageTitle = (tab: string) => {
+    switch (tab) {
+      case 'Hospital': return 'Hospital Dashboard';
+      case 'Department': return 'Department Charts';
+      case 'Provider': return 'Provider Summary';
+      case 'Settings': return 'Settings';
+      default: return tab;
+    }
+  };
+
+  const handleTabChangeConfirmed = (newTab: string) => {
+    setActiveTab(newTab);
+    if (newTab === 'Department') {
+      store.actions.setUiState({
+        leftToolbarOpened: true,
+        activeLeftPanel: 0,
+        filterPanelExpandedItems: ['department-procedure-filters'],
+      });
+
+      const currentDepts = [...store.state.filterValues.departmentIds];
+      const currentProcs = [...store.state.filterValues.procedureIds];
+
+      setDepartmentFiltersBeforeEnter({
+        departmentIds: currentDepts,
+        procedureIds: currentProcs,
+      });
+
+      let onEnterDepts = [...currentDepts];
+      let onEnterProcs = [...currentProcs];
+
+      if (currentDepts.length === 0 && currentProcs.length === 0) {
+        const departments = store.procedureHierarchy?.departments || [];
+        if (departments.length > 0) {
+          const largestDept = departments.reduce((prev, current) => ((prev.visit_count > current.visit_count) ? prev : current));
+          store.setProcedureFilters(
+            [largestDept.id],
+            largestDept.procedures.map((p) => p.id),
+          );
+          onEnterDepts = [largestDept.id];
+          onEnterProcs = largestDept.procedures.map((p) => p.id);
+        }
+      }
+
+      setDepartmentFiltersOnEnter({
+        departmentIds: onEnterDepts.sort(),
+        procedureIds: onEnterProcs.sort(),
+      });
+    }
+  };
+
   // About modal ----------------------
   const [aboutModalOpened, setAboutModalOpened] = useState(false);
 
@@ -183,7 +237,21 @@ export const Shell = observer(() => {
               variant="outline"
               value={store.state.ui.activeTab}
               onChange={(value) => {
-                if (value) setActiveTab(value);
+                if (value && value !== store.state.ui.activeTab) {
+                  if (store.state.ui.activeTab === 'Department') {
+                    const currentDepts = [...store.state.filterValues.departmentIds].sort();
+                    const currentProcs = [...store.state.filterValues.procedureIds].sort();
+
+                    const changedDepts = JSON.stringify(currentDepts) !== JSON.stringify(departmentFiltersOnEnter.departmentIds);
+                    const changedProcs = JSON.stringify(currentProcs) !== JSON.stringify(departmentFiltersOnEnter.procedureIds);
+
+                    if (changedDepts || changedProcs) {
+                      setPendingTab(value);
+                      return;
+                    }
+                  }
+                  handleTabChangeConfirmed(value);
+                }
               }}
               radius="md"
               defaultValue={defaultTab}
@@ -369,6 +437,48 @@ export const Shell = observer(() => {
           {TABS.find((tab) => tab.key === store.state.ui.activeTab)?.content}
         </Container>
       </AppShell.Main>
+
+      <Modal
+        opened={pendingTab !== null}
+        onClose={() => setPendingTab(null)}
+        title="Change View"
+        centered
+        size="auto"
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Do you want to reset your department and procedure filters before moving to
+            {' '}
+            {getTabPageTitle(pendingTab || '')}
+            ?
+          </Text>
+          <Group justify="flex-end" gap="sm" mt="xs">
+            <Button variant="default" onClick={() => setPendingTab(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (pendingTab) handleTabChangeConfirmed(pendingTab);
+                setPendingTab(null);
+              }}
+            >
+              No, keep filters
+            </Button>
+            <Button onClick={() => {
+              store.setProcedureFilters(
+                departmentFiltersBeforeEnter.departmentIds,
+                departmentFiltersBeforeEnter.procedureIds,
+              );
+              if (pendingTab) handleTabChangeConfirmed(pendingTab);
+              setPendingTab(null);
+            }}
+            >
+              Yes, reset filters
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
 
       <Modal
         opened={aboutModalOpened}

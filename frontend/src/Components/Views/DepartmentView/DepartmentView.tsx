@@ -228,199 +228,237 @@ export function DepartmentView() {
   const costGroupOptions = costYAxisOptions.map((o) => ({ value: o.value, label: o.label }));
 
   // -------------------------------------------------------
-  return useObserver(() => (
-    <Stack>
-      {/* Title, Add Chart Button */}
-      <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-        <Title order={3}>Department</Title>
+  return useObserver(() => {
+    const { departmentIds, procedureIds } = store.state.filterValues;
+    const hierarchy = store.procedureHierarchy;
+    let dynamicTitleSuffix = 'All Departments';
 
-        <Flex direction="row" align="center" gap="md">
-          <Tooltip label="Visible visits after filters" position="bottom">
-            <Title order={5} c="dimmed">
-              {`${store.filteredVisitsLength} / ${store.allVisitsLength}`}
-              {' '}
-              Visits
-            </Title>
-          </Tooltip>
-          <Button onClick={handleOpenAdd}>
-            <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
-            Add Chart
-          </Button>
+    if (hierarchy && hierarchy.departments && (departmentIds.length > 0 || procedureIds.length > 0)) {
+      const selectedProcs = new Set(procedureIds);
+      const selectedDepts = new Set(departmentIds);
+      const titleParts: string[] = [];
+
+      for (const dept of hierarchy.departments) {
+        if (selectedDepts.has(dept.id)) {
+          titleParts.push(dept.name);
+        } else {
+          const deptSelectedProcs = dept.procedures.filter((p) => selectedProcs.has(p.id));
+          if (deptSelectedProcs.length > 0) {
+            if (deptSelectedProcs.length === dept.procedures.length) {
+              titleParts.push(dept.name);
+            } else {
+              deptSelectedProcs.forEach((p) => titleParts.push(p.name));
+            }
+          }
+        }
+      }
+
+      dynamicTitleSuffix = titleParts.join(', ');
+    }
+
+    return (
+      <Stack>
+        {/* Title, Add Chart Button */}
+        <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
+          <Title order={3}>
+            Department Charts
+            {dynamicTitleSuffix && (
+              <Text span size="md" c="dimmed" fw={300} ml="xs">
+                -
+                {' '}
+                {dynamicTitleSuffix}
+              </Text>
+            )}
+          </Title>
+
+          <Flex direction="row" align="center" gap="md">
+            <Tooltip label="Visible visits after filters" position="bottom">
+              <Title order={5} c="dimmed">
+                {`${store.filteredVisitsLength} / ${store.allVisitsLength}`}
+                {' '}
+                Visits
+              </Title>
+            </Tooltip>
+            <Button onClick={handleOpenAdd}>
+              <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+              Add Chart
+            </Button>
+          </Flex>
         </Flex>
-      </Flex>
-      <Divider />
-      {/* Add Chart Modal */}
-      <Modal
-        opened={isAddModalOpen}
-        onClose={closeAddModal}
-        title="Add Chart"
-        centered
-      >
-        <Stack gap="md">
-          <Select
-            label="Chart Type"
-            value={chartType}
-            data={[
-              { value: 'cost', label: 'Costs & Savings' },
-              { value: 'exploreTable', label: 'Heatmap' },
-              { value: 'dumbbell', label: 'Dumbbell Chart' },
-              { value: 'scatterPlot', label: 'Scatter Plot' },
-            ]}
-            onChange={(v) => {
-              const val = (v as 'cost' | 'exploreTable' | 'dumbbell' | 'scatterPlot') || 'cost';
-              setChartType(val);
-              if (val === 'exploreTable') {
-                setAggregation('avg');
-              } else if (val === 'scatterPlot' || val === 'dumbbell') {
-                setAggregation('none');
-              }
-            }}
-          />
-          {(chartType === 'cost' || chartType === 'exploreTable') && (
+        <Divider />
+        {/* Add Chart Modal */}
+        <Modal
+          opened={isAddModalOpen}
+          onClose={closeAddModal}
+          title="Add Chart"
+          centered
+        >
+          <Stack gap="md">
+            <Select
+              label="Chart Type"
+              value={chartType}
+              data={[
+                { value: 'cost', label: 'Costs & Savings' },
+                { value: 'exploreTable', label: 'Heatmap' },
+                { value: 'dumbbell', label: 'Dumbbell Chart' },
+                { value: 'scatterPlot', label: 'Scatter Plot' },
+              ]}
+              onChange={(v) => {
+                const val = (v as 'cost' | 'exploreTable' | 'dumbbell' | 'scatterPlot') || 'cost';
+                setChartType(val);
+                if (val === 'exploreTable') {
+                  setAggregation('avg');
+                } else if (val === 'scatterPlot' || val === 'dumbbell') {
+                  setAggregation('none');
+                }
+              }}
+            />
+            {(chartType === 'cost' || chartType === 'exploreTable') && (
             <Select
               label="Aggregation"
               value={aggregation}
               data={aggregationOptions}
               onChange={(v) => setAggregation((v as 'sum' | 'avg' | 'none') || 'sum')}
             />
-          )}
+            )}
 
-          {chartType === 'cost' ? (
-            <Select
-              label="Group By"
-              placeholder="Choose grouping variable"
-              value={costGroupVar}
-              data={costGroupOptions}
-              onChange={(v) => setCostGroupVar(v || '')}
-            />
-          ) : chartType === 'exploreTable' ? (
-            <Select
-              label="Group By"
-              placeholder="Choose grouping variable"
-              value={exploreTableGroupVar}
-              data={ExploreTableRowOptions}
-              onChange={(v) => setExploreTableGroupVar(v || '')}
-            />
-          ) : chartType === 'scatterPlot' ? (
-            <Flex gap="md" direction="column">
+            {chartType === 'cost' ? (
               <Select
-                label="X-Axis"
-                placeholder="Choose X-axis variable"
-                value={scatterXVar}
-                data={SCATTER_X_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-                onChange={(v) => setScatterXVar(v || '')}
+                label="Group By"
+                placeholder="Choose grouping variable"
+                value={costGroupVar}
+                data={costGroupOptions}
+                onChange={(v) => setCostGroupVar(v || '')}
               />
+            ) : chartType === 'exploreTable' ? (
               <Select
-                label="Y-Axis"
-                placeholder="Choose Y-axis variable"
-                value={scatterYVar}
-                data={SCATTER_Y_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-                onChange={(v) => setScatterYVar(v || '')}
+                label="Group By"
+                placeholder="Choose grouping variable"
+                value={exploreTableGroupVar}
+                data={ExploreTableRowOptions}
+                onChange={(v) => setExploreTableGroupVar(v || '')}
               />
-            </Flex>
-          ) : chartType === 'dumbbell' ? (
-            <Flex gap="md" direction="column">
-              <Select
-                label="X-Axis"
-                placeholder="Choose X-axis variable"
-                value={dumbbellXVar}
-                data={DUMBBELL_X_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-                onChange={(v) => setDumbbellXVar(v || '')}
-              />
-              <Select
-                label="Y-Axis"
-                placeholder="Choose Y-axis variable"
-                value={dumbbellYVar}
-                data={DUMBBELL_Y_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-                onChange={(v) => setDumbbellYVar(v || '')}
-              />
-            </Flex>
-          ) : null}
-          <Button
-            onClick={handleAddChart}
-            disabled={
+            ) : chartType === 'scatterPlot' ? (
+              <Flex gap="md" direction="column">
+                <Select
+                  label="X-Axis"
+                  placeholder="Choose X-axis variable"
+                  value={scatterXVar}
+                  data={SCATTER_X_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                  onChange={(v) => setScatterXVar(v || '')}
+                />
+                <Select
+                  label="Y-Axis"
+                  placeholder="Choose Y-axis variable"
+                  value={scatterYVar}
+                  data={SCATTER_Y_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                  onChange={(v) => setScatterYVar(v || '')}
+                />
+              </Flex>
+            ) : chartType === 'dumbbell' ? (
+              <Flex gap="md" direction="column">
+                <Select
+                  label="X-Axis"
+                  placeholder="Choose X-axis variable"
+                  value={dumbbellXVar}
+                  data={DUMBBELL_X_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                  onChange={(v) => setDumbbellXVar(v || '')}
+                />
+                <Select
+                  label="Y-Axis"
+                  placeholder="Choose Y-axis variable"
+                  value={dumbbellYVar}
+                  data={DUMBBELL_Y_AXIS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                  onChange={(v) => setDumbbellYVar(v || '')}
+                />
+              </Flex>
+            ) : null}
+            <Button
+              onClick={handleAddChart}
+              disabled={
               (chartType === 'cost' && !costGroupVar)
               || (chartType === 'exploreTable' && !exploreTableGroupVar)
               || (chartType === 'scatterPlot' && (!scatterXVar || !scatterYVar))
               || (chartType === 'dumbbell' && (!dumbbellXVar || !dumbbellYVar))
             }
-            fullWidth
+              fullWidth
+            >
+              Done
+            </Button>
+          </Stack>
+        </Modal>
+        {store.exploreChartLayouts.main.length > 0 ? (
+          <ResponsiveGridLayout
+            className="layout"
+            breakpoints={{
+              main: 852, sm: 0,
+            }}
+            cols={{
+              main: 4, sm: 1,
+            }}
+            rowHeight={150}
+            containerPadding={[0, 0]}
+            draggableHandle=".move-icon"
+            onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+              store.updateExploreLayout({ main: _layout });
+            }}
+            onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+              store.updateExploreLayout({ main: _layout });
+            }}
+            layouts={store.exploreChartLayouts}
           >
-            Done
-          </Button>
-        </Stack>
-      </Modal>
-      {store.exploreChartLayouts.main.length > 0 ? (
-        <ResponsiveGridLayout
-          className="layout"
-          breakpoints={{
-            main: 852, sm: 0,
-          }}
-          cols={{
-            main: 4, sm: 1,
-          }}
-          rowHeight={150}
-          containerPadding={[0, 0]}
-          draggableHandle=".move-icon"
-          onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.updateExploreLayout({ main: _layout });
-          }}
-          onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.updateExploreLayout({ main: _layout });
-          }}
-          layouts={store.exploreChartLayouts}
-        >
-          {/** Render each chart defined in the store. */}
-          {store.exploreChartConfigs.map((chartConfig) => (
-            <Card
-              key={chartConfig.chartId}
-              withBorder
-              className={classes.gridItem}
-            >
-              {chartConfig.chartType === 'exploreTable' && <ExploreTable chartConfig={chartConfig} />}
-              {chartConfig.chartType === 'dumbbell' && <DumbbellChart chartConfig={chartConfig} />}
-              {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
-            </Card>
-          ))}
-        </ResponsiveGridLayout>
-      ) : (
-        presetStateCards.map(({ groupLabel, options }, groupIdx) => (
-          <Box key={groupLabel}>
-            {/* Preset state group label */}
-            <Text
-              mb={verticalMargin}
-              className={`${classes.variableTitle} ${hoveredIdx && hoveredIdx.group === groupIdx ? classes.active : ''}`.trim()}
-            >
-              {groupLabel}
-            </Text>
-            {/* Preset state, for each option in group */}
-            <Stack>
-              {options.map(({ question, Icon }, cardIdx) => (
-                <Card
-                  key={question}
-                  withBorder
-                  style={{ height: toolbarWidth, cursor: 'pointer' }}
-                  className={`${cardStyles.presetStateCard} ${classes.gridItem}`}
-                  onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
-                  onMouseLeave={() => setHoveredIdx(null)}
-                  onClick={() => handlePresetClick(groupIdx, cardIdx)}
-                >
-                  <Group className={cardStyles.presetStateContent}>
-                    <Group className={cardStyles.question}>
-                      {/* Preset state icon */}
-                      <Box className={cardStyles.iconContainer}>
-                        <Icon size={cardIconSize} stroke={cardIconStroke} />
-                      </Box>
-                      {/* Preset state question */}
-                      <Text size="sm">{question}</Text>
+            {/** Render each chart defined in the store. */}
+            {store.exploreChartConfigs.map((chartConfig) => (
+              <Card
+                key={chartConfig.chartId}
+                withBorder
+                className={classes.gridItem}
+              >
+                {chartConfig.chartType === 'exploreTable' && <ExploreTable chartConfig={chartConfig} />}
+                {chartConfig.chartType === 'dumbbell' && <DumbbellChart chartConfig={chartConfig} />}
+                {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
+              </Card>
+            ))}
+          </ResponsiveGridLayout>
+        ) : (
+          presetStateCards.map(({ groupLabel, options }, groupIdx) => (
+            <Box key={groupLabel}>
+              {/* Preset state group label */}
+              <Text
+                mb={verticalMargin}
+                className={`${classes.variableTitle} ${hoveredIdx && hoveredIdx.group === groupIdx ? classes.active : ''}`.trim()}
+              >
+                {groupLabel}
+              </Text>
+              {/* Preset state, for each option in group */}
+              <Stack>
+                {options.map(({ question, Icon }, cardIdx) => (
+                  <Card
+                    key={question}
+                    withBorder
+                    style={{ height: toolbarWidth, cursor: 'pointer' }}
+                    className={`${cardStyles.presetStateCard} ${classes.gridItem}`}
+                    onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
+                    onMouseLeave={() => setHoveredIdx(null)}
+                    onClick={() => handlePresetClick(groupIdx, cardIdx)}
+                  >
+                    <Group className={cardStyles.presetStateContent}>
+                      <Group className={cardStyles.question}>
+                        {/* Preset state icon */}
+                        <Box className={cardStyles.iconContainer}>
+                          <Icon size={cardIconSize} stroke={cardIconStroke} />
+                        </Box>
+                        {/* Preset state question */}
+                        <Text size="sm">{question}</Text>
+                      </Group>
                     </Group>
-                  </Group>
-                </Card>
-              ))}
-            </Stack>
-          </Box>
-        ))
-      )}
-    </Stack>
-  ));
+                  </Card>
+                ))}
+              </Stack>
+            </Box>
+          ))
+        )}
+      </Stack>
+    );
+  });
 }
