@@ -42,10 +42,10 @@ export function DepartmentView() {
   // Initial Load Default Preset
   useEffect(() => {
     if (store.exploreChartConfigs.length === 0 && presetStateCards[0]?.options[0]) {
-      const { chartConfigs, chartLayouts } = presetStateCards[0].options[0];
-      store.loadExplorePreset([...chartConfigs], { main: [...chartLayouts.main] });
+      const { chartConfigs, chartLayouts, question } = presetStateCards[0].options[0];
+      store.loadExplorePreset([...chartConfigs], { main: [...chartLayouts.main] }, question);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sidebar state
@@ -77,10 +77,10 @@ export function DepartmentView() {
 
   // Handler for clicking a preset card
   const handlePresetClick = (groupIdx: number, cardIdx: number) => {
-    const { chartConfigs, chartLayouts } = presetStateCards[groupIdx].options[cardIdx];
+    const { chartConfigs, chartLayouts, question } = presetStateCards[groupIdx].options[cardIdx];
     store.loadExplorePreset([...chartConfigs], {
       main: [...chartLayouts.main],
-    });
+    }, question);
   };
 
   // Add Chart Modal State ---------------------------------
@@ -313,12 +313,12 @@ export function DepartmentView() {
               }}
             />
             {(chartType === 'cost' || chartType === 'exploreTable') && (
-            <Select
-              label="Aggregation"
-              value={aggregation}
-              data={aggregationOptions}
-              onChange={(v) => setAggregation((v as 'sum' | 'avg' | 'none') || 'sum')}
-            />
+              <Select
+                label="Aggregation"
+                value={aggregation}
+                data={aggregationOptions}
+                onChange={(v) => setAggregation((v as 'sum' | 'avg' | 'none') || 'sum')}
+              />
             )}
 
             {chartType === 'cost' ? (
@@ -375,11 +375,11 @@ export function DepartmentView() {
             <Button
               onClick={handleAddChart}
               disabled={
-              (chartType === 'cost' && !costGroupVar)
-              || (chartType === 'exploreTable' && !exploreTableGroupVar)
-              || (chartType === 'scatterPlot' && (!scatterXVar || !scatterYVar))
-              || (chartType === 'dumbbell' && (!dumbbellXVar || !dumbbellYVar))
-            }
+                (chartType === 'cost' && !costGroupVar)
+                || (chartType === 'exploreTable' && !exploreTableGroupVar)
+                || (chartType === 'scatterPlot' && (!scatterXVar || !scatterYVar))
+                || (chartType === 'dumbbell' && (!dumbbellXVar || !dumbbellYVar))
+              }
               fullWidth
             >
               Done
@@ -452,11 +452,18 @@ export function DepartmentView() {
             const filteredOptions = options.map((opt, cardIdx) => ({ opt, cardIdx }))
               .filter(({ opt }) => opt.question.toLowerCase().includes(searchQuery.toLowerCase()));
             if (filteredOptions.length === 0) return null;
+
+            const isGroupActive = options.some((opt) => opt.question === store.activeDepartmentViewQuestion);
+
             return (
               <Box key={groupLabel} mb="xl">
                 <Text
                   mb="md"
-                  className={`${classes.variableTitle} ${hoveredIdx && hoveredIdx.group === groupIdx ? classes.active : ''}`.trim()}
+                  className={`${classes.variableTitle} ${
+                    (hoveredIdx && hoveredIdx.group === groupIdx) || isGroupActive
+                      ? classes.active
+                      : ''
+                  }`.trim()}
                 >
                   {groupLabel}
                 </Text>
@@ -466,7 +473,7 @@ export function DepartmentView() {
                       key={question}
                       withBorder
                       style={{ minHeight: toolbarWidth, cursor: 'pointer' }}
-                      className={`${cardStyles.presetStateCard} ${classes.gridItem}`}
+                      className={`${cardStyles.presetStateCard} ${classes.gridItem} ${store.activeDepartmentViewQuestion === question ? cardStyles.active : ''}`.trim()}
                       onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
                       onMouseLeave={() => setHoveredIdx(null)}
                       onClick={() => handlePresetClick(groupIdx, cardIdx)}
