@@ -944,6 +944,12 @@ export type ExploreTableColumn = {
   numericTextVisible?: boolean;
 };
 
+// Explore Table Sort
+export type ExploreTableSort = {
+  colVar: string;
+  direction: 'asc' | 'desc';
+};
+
 // Explore Table Chart Config
 export type ExploreTableConfig = {
   chartId: string;
@@ -953,6 +959,7 @@ export type ExploreTableConfig = {
   columns: ExploreTableColumn[];
   aggregation?: 'sum' | 'avg';
   twoValsPerRow?: boolean;
+  sort?: ExploreTableSort;
 };
 
 // Explore Table Data

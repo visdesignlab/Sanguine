@@ -28,6 +28,12 @@ export const presetStateCards: PresetGroup[] = [
             rowVar: 'attending_provider',
             columns: [
               {
+                colVar: 'death',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Deaths',
+              },
+              {
                 colVar: 'drg_weight',
                 aggregation: 'none',
                 type: 'violin',
@@ -80,8 +86,10 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'avg',
                 type: 'heatmap',
                 title: '≥5 RBC',
-              }],
+              },
+            ],
             twoValsPerRow: false,
+            sort: { colVar: 'percent_above_5_rbc', direction: 'desc' },
           },
           {
             chartId: 'preset-scatter-prevent-anemia',

@@ -594,10 +594,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   const setHoveredValue = useCallback((val: HoveredValue) => { hoverState.current = val; }, [hoverState]);
 
   // Sorting
-  const defaultSortCol = chartConfig.columns[0]?.colVar || 'surgeon_prov_id';
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ExploreTableRow>>({
-    columnAccessor: defaultSortCol,
-    direction: 'asc',
+    columnAccessor: chartConfig.sort?.colVar || chartConfig.columns[0]?.colVar || 'surgeon_prov_id',
+    direction: chartConfig.sort?.direction || 'asc',
   });
 
   // Apply filters and sorting ---
