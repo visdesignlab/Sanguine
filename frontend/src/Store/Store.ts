@@ -2037,7 +2037,7 @@ export class RootStore {
         }
       }
       if (config.chartType === 'dumbbell') {
-        // TODO: Don't limit to only 10,000 surgeries.
+      // TODO: Don't limit to only 10,000 surgeries.
         const query = `
           SELECT
              CAST(case_id AS VARCHAR) as case_id,
