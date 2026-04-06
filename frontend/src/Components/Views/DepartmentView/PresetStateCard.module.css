@@ -30,6 +30,8 @@
 /* Hover states */
 .presetStateCard:hover .arrow,
 .presetStateCard:hover .question,
+.presetStateCard.active .arrow,
+.presetStateCard.active .question,
 .title.active {
     color: var(--mantine-color-blue-6);
 }

@@ -215,6 +215,8 @@ export class RootStore {
 
   departmentViewQuestionsWidth = 380;
 
+  activeDepartmentViewQuestion: string | null = null;
+
   // --- Common ---
   allVisitsLength = 0;
 
@@ -1340,12 +1342,14 @@ export class RootStore {
     this.actions.updateExploreState({ chartConfigs: input }, 'Update Explore Config');
   }
 
-  loadExplorePreset(configs: ExploreChartConfig[], layouts: { [key: string]: Layout[] }) {
+  loadExplorePreset(configs: ExploreChartConfig[], layouts: { [key: string]: Layout[] }, title?: string) {
     this.actions.updateExploreState({ chartConfigs: configs, chartLayouts: layouts }, 'Load Explore Preset');
     this._transientExploreLayouts = null;
+    this.activeDepartmentViewQuestion = title || null;
   }
 
   addExploreChart(config: ExploreChartConfig) {
+    this.activeDepartmentViewQuestion = null;
     const currentConfigs = this.exploreChartConfigs;
     const currentLayouts = this.exploreChartLayouts;
     const newConfigs = [config, ...currentConfigs];
@@ -1359,6 +1363,7 @@ export class RootStore {
   }
 
   removeExploreChart(chartId: string) {
+    this.activeDepartmentViewQuestion = null;
     const currentConfigs = this.exploreChartConfigs;
     const currentLayouts = this.exploreChartLayouts;
     const newConfigs = currentConfigs.filter((config) => config.chartId !== chartId);
@@ -2127,7 +2132,7 @@ export class RootStore {
       }
       // DUMBBELL CHART -------------------------------
       if (config.chartType === 'dumbbell') {
-      // TODO: Don't limit to only 10,000 surgeries.
+        // TODO: Don't limit to only 10,000 surgeries.
         const query = `
           SELECT
              CAST(case_id AS VARCHAR) as case_id,
