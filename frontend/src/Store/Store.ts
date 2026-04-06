@@ -210,6 +210,11 @@ export class RootStore {
 
   selectedVisitNos: number[] = [];
 
+  // --- Department Aside State (non-provenance) ---
+  departmentViewQuestionsOpened = true;
+
+  departmentViewQuestionsWidth = 380;
+
   // --- Common ---
   allVisitsLength = 0;
 
@@ -813,6 +818,14 @@ export class RootStore {
 
   get selectedTimePeriods() {
     return this.state.selections?.selectedTimePeriods || [];
+  }
+
+  toggleDepartmentViewQuestions() {
+    this.departmentViewQuestionsOpened = !this.departmentViewQuestionsOpened;
+  }
+
+  setDepartmentViewQuestionsWidth(width: number) {
+    this.departmentViewQuestionsWidth = Math.max(250, Math.min(800, width));
   }
   // endregion
 

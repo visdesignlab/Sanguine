@@ -164,6 +164,11 @@ export const Shell = observer(() => {
         breakpoint: 0,
         collapsed: { desktop: !store.state.ui.leftToolbarOpened },
       }}
+      aside={{
+        width: store.departmentViewQuestionsWidth,
+        breakpoint: 0,
+        collapsed: { desktop: store.state.ui.activeTab !== 'Department' || !store.departmentViewQuestionsOpened },
+      }}
       padding="xs"
     >
       {/** Header Toolbar */}
