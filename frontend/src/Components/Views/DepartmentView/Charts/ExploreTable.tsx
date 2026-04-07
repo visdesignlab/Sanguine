@@ -900,10 +900,14 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         if (agg && titleMap[agg]) displayTitle = titleMap[agg];
       }
 
+      const isActiveSort = sortStatus.columnAccessor === colVar;
+      const isActiveFilter = !!(numericFilters[colVar]?.query || (textFilters[colVar] && textFilters[colVar].length > 0));
+
       // Base column definition
       const column: DataTableColumn<ExploreTableRow> = {
         accessor: colVar,
         title: displayTitle,
+        titleClassName: `${isActiveSort ? 'sorted-column-header' : ''} ${isActiveFilter ? 'filtered-column-header' : ''}`.trim() || undefined,
         draggable: colVar !== 'cases' && !(colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar),
         resizable: false,
         sortable: true,
