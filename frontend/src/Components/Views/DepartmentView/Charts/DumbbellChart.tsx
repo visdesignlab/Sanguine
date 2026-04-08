@@ -437,6 +437,7 @@ export const DumbbellChartContent = memo(({
 
   const initialSelection = useRef<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
   const dragStart = useRef<{ x: number, y: number } | null>(null);
+  const sessionCaseIds = useRef<string[]>([]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
@@ -482,10 +483,12 @@ export const DumbbellChartContent = memo(({
     if (y < chartTop || y > chartBottom) {
       setAppliedSelection(null);
       setSelection(null);
+      sessionCaseIds.current = []; // End session
       return;
     }
 
     setInteractionMode('selecting');
+    sessionCaseIds.current = []; // Start new session
     setSelection({
       x1: x,
       y1: y,
@@ -626,7 +629,7 @@ export const DumbbellChartContent = memo(({
         const minY = Math.min(selection.y1, selection.y2);
         const maxY = Math.max(selection.y1, selection.y2);
 
-        const caseIds: string[] = [];
+        const currentCaseIds: string[] = [];
         processedData.forEach((bg) => {
           if (collapsedBinGroups.has(bg.id)) return;
           bg.cases.forEach((c, ci) => {
@@ -642,14 +645,19 @@ export const DumbbellChartContent = memo(({
             const postIn = cyPost !== null && cx >= minX && cx <= maxX && cyPost >= minY && cyPost <= maxY;
 
             if (preIn || postIn) {
-              caseIds.push(c.case_id);
+              currentCaseIds.push(c.case_id);
             }
           });
         });
 
-        if (caseIds.length > 0) {
-          store.actions.updateCaseSelection(caseIds, 'add');
+        // Session logic: Remove previous session selections before adding new ones
+        if (sessionCaseIds.current.length > 0) {
+          store.actions.updateCaseSelection(sessionCaseIds.current, 'remove');
         }
+        if (currentCaseIds.length > 0) {
+          store.actions.updateCaseSelection(currentCaseIds, 'add');
+        }
+        sessionCaseIds.current = currentCaseIds;
       }
     }
   }, [selection, processedData, collapsedBinGroups, binGroupLayout, labConfig, yScale, store.actions]);

@@ -569,6 +569,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [brushHoverCursor, setBrushHoverCursor] = useState<string>('crosshair');
   const initialSelection = useRef<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
   const dragStart = useRef<{ x: number, y: number } | null>(null);
+  const sessionCaseIds = useRef<string[]>([]);
 
   // Hover state for canvas
   const hoveredPointRef = useRef<PointPosition | null>(null);
@@ -703,8 +704,15 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       if (handle) { setInteractionMode('resizing'); setResizeHandle(handle); initialSelection.current = { ...selection }; return; }
       if (x > minX && x < maxX && y > minY && y < maxY) { setInteractionMode('moving'); dragStart.current = { x, y }; initialSelection.current = { ...selection }; return; }
     }
-    if (y < chartTop || y > chartBottom) { setAppliedSelection(null); setSelection(null); return; }
+    if (y < chartTop || y > chartBottom) {
+      setAppliedSelection(null);
+      setSelection(null);
+      sessionCaseIds.current = []; // End session
+      return;
+    }
+
     setInteractionMode('selecting');
+    sessionCaseIds.current = []; // Start new session
     setSelection({
       x1: x, y1: y, x2: x, y2: y,
     });
@@ -822,11 +830,16 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         const maxY = Math.max(selection.y1, selection.y2);
 
         const selectedInBox = pointPositions.filter((p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY);
-        const caseIds = selectedInBox.map((p) => String(rawData[p.caseIdx]?.case_id || '')).filter(Boolean);
+        const currentCaseIds = selectedInBox.map((p) => String(rawData[p.caseIdx]?.case_id || '')).filter(Boolean);
 
-        if (caseIds.length > 0) {
-          store.actions.updateCaseSelection(caseIds, 'add');
+        // Session logic: Remove previous session selections before adding new ones
+        if (sessionCaseIds.current.length > 0) {
+          store.actions.updateCaseSelection(sessionCaseIds.current, 'remove');
         }
+        if (currentCaseIds.length > 0) {
+          store.actions.updateCaseSelection(currentCaseIds, 'add');
+        }
+        sessionCaseIds.current = currentCaseIds;
       }
     }
   }, [selection, spatialIndex, pointPositions, rawData, store.actions]);
