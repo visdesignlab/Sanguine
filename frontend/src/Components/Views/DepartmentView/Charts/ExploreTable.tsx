@@ -18,9 +18,10 @@ import {
   TextInput,
   Select,
   Text,
+  Divider,
 } from '@mantine/core';
 import {
-  IconGripVertical, IconMathGreater, IconMathLower, IconPercentage,
+  IconGripVertical, IconMathGreater, IconMathLower, IconPercentage, IconColumns3,
 } from '@tabler/icons-react';
 import {
   DataTable, DataTableColumn, useDataTableColumns, type DataTableSortStatus,
@@ -1113,24 +1114,39 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           </Tooltip>
           {/** Row Selection */}
           <Select
-            placeholder="Rows"
+            leftSection={(
+              <Tooltip label="Row grouping variable" position="top" withArrow>
+                <IconColumns3 size={18} style={{ transform: 'rotate(90deg)', opacity: 0.6 }} />
+              </Tooltip>
+            )}
+            leftSectionWidth={40}
             data={ExploreTableRowOptions}
             value={chartConfig.rowVar}
             onChange={handleRowChange}
             allowDeselect={false}
-            w={120}
+            w={140}
           />
           {/** Add Column */}
           <MultiSelect
-            placeholder="Columns"
+            leftSection={(
+              <Flex gap={8} ml={8} align="center" style={{ whiteSpace: 'nowrap' }}>
+                <Tooltip label="Measures for columns" position="top" withArrow>
+                  <IconColumns3 size={18} style={{ opacity: 0.6 }} />
+                </Tooltip>
+                <Text size="sm">{`${chartConfig.columns.length} Selected`}</Text>
+              </Flex>
+            )}
+            leftSectionWidth={100}
             searchable
             clearable={false}
             nothingFoundMessage="No options"
             data={availableColumnOptions}
             onChange={handleColumnsChange}
             value={chartConfig.columns.map((c) => c.colVar)}
+            w={160}
             styles={{
               pill: { display: 'none' },
+              input: { paddingLeft: 100 },
             }}
           />
           {/** Close Chart */}
