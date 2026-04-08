@@ -57,6 +57,7 @@ export function FilterHistogramWithSliderComponent({
 
   return useObserver(() => {
     const bgColor = getComputedStyle(document.body).backgroundColor;
+    const barColor = BLOOD_PRODUCT_COLOR_THEME[unitName] || DEFAULT_DATA_COLOR;
     return (
       <Tooltip label={filterToolTip} position="top-start">
         <Input.Wrapper
@@ -98,11 +99,11 @@ export function FilterHistogramWithSliderComponent({
                   <stop offset="0%" stopColor={bgColor} />
                   <stop
                     offset="40%"
-                    stopColor={BLOOD_PRODUCT_COLOR_THEME[unitName]}
+                    stopColor={barColor}
                   />
                   <stop
                     offset="100%"
-                    stopColor={BLOOD_PRODUCT_COLOR_THEME[unitName]}
+                    stopColor={barColor}
                   />
                 </linearGradient>
               </defs>
@@ -117,8 +118,7 @@ export function FilterHistogramWithSliderComponent({
                     fill={
                       d.count > maxCountExcludeZeroUnit
                         ? `url(#grad${unitName})`
-                        : BLOOD_PRODUCT_COLOR_THEME[unitName]
-                          || DEFAULT_DATA_COLOR
+                        : barColor
                     }
                   >
                     <title>{`Unit: ${d.units}; Count: ${d.count}`}</title>
