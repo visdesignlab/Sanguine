@@ -599,8 +599,20 @@ export type DashboardChartConfig = ChartConfig<typeof dashboardXAxisVars[number]
 // Dashboard chart configuration key type
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
 
+/**
+ * Dashboard chart data point.
+ * The 'data' property can be:
+ * - number: Standard single-series metric
+ * - Record<Cost, number>: Cost breakdown (RBC, FFP, etc.)
+ * - Record<string, number>: Multi-department comparison (DeptName -> Value)
+ */
+export type DashboardChartDatum = {
+  timePeriod: TimePeriod;
+  data: number | Record<Cost, number> | Record<string, number>;
+};
+
 // Dashboard chart data type (key, value)
-export type DashboardChartData = Record<DashboardChartConfigKey, ({ timePeriod: TimePeriod, [key: string]: string | number | Record<Cost, number> })[]>;
+export type DashboardChartData = Record<DashboardChartConfigKey, DashboardChartDatum[]>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {
@@ -612,13 +624,14 @@ export type DashboardStatConfig = {
 
 export type DashboardStatData = Record<DashboardAggYAxisVar, { value: string, diff: number, comparedTo?: string, sparklineData: number[] }>;
 
-// Chart colors (for up to 5 lines/bars)
+// Chart colors (for up to 6 lines/bars)
 export const chartColors = [
-  '#1770B8',
-  '#EF2026',
-  '#897BD3',
-  '#FFD13C',
-  '#73C3C5',
+  '#FF8787', // Muted Salmon/Coral (distinguishable from "Error Red")
+  '#D0BFFF', // Soft Lavender
+  '#74C0FC', // Sky Blue
+  '#66D9E8', // Aqua Blue (strictly blue-side)
+  '#91A7FF', // Periwinkle / Indigo
+  '#FAA2C1', // Dusty Rose / Pink
 ];
 
 export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
