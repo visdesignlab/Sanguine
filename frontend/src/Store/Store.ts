@@ -189,7 +189,7 @@ export class RootStore {
 
   histogramData: Record<string, HistogramData> = {};
 
-  getHistogramData(bloodProduct: BloodComponent) {
+  getHistogramData(bloodProduct: BloodComponent | 'los') {
     return this.histogramData[bloodProduct];
   }
 
