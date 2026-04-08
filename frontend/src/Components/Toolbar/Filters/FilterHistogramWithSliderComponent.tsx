@@ -6,7 +6,7 @@ import { Flex, Input, Tooltip } from '@mantine/core';
 import { useObserver } from 'mobx-react-lite';
 import { Store } from '../../../Store/Store';
 import { HistogramData } from '../../../Types/database';
-import { BLOOD_PRODUCT_COLOR_THEME } from '../../../Types/application';
+import { BLOOD_PRODUCT_COLOR_THEME, OUTCOMES } from '../../../Types/application';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 import { FilterRangeSlider } from './FilterRangeSlider';
 import {
@@ -35,7 +35,7 @@ export function FilterHistogramWithSliderComponent({
   const bandScale = useCallback(() => {
     const maxUnit = store.initialFilterValues[unitName][1];
     const dataBins = range(
-      0,
+      store.initialFilterValues[unitName][0],
       maxUnit + 1,
       unitName === CELL_SAVER_ML ? 50 : 1,
     ).map(String);
@@ -43,6 +43,7 @@ export function FilterHistogramWithSliderComponent({
     return scaleBand(dataBins, [0, svgWidth]);
   }, [store.initialFilterValues, unitName]);
 
+  //   special handling to exclude zero unit when calculating max count for better visualization, since zero unit count is usually much higher than non-zero units and will make the bars for non-zero units too short to see
   const maxCountExcludeZeroUnit = useMemo(
     () => (data ? Math.max(...data.map((d) => (d.units === '0' ? 0 : d.count))) : 0),
     [data],
@@ -56,11 +57,12 @@ export function FilterHistogramWithSliderComponent({
 
   return useObserver(() => {
     const bgColor = getComputedStyle(document.body).backgroundColor;
+    const barColor = BLOOD_PRODUCT_COLOR_THEME[unitName] || DEFAULT_DATA_COLOR;
     return (
       <Tooltip label={filterToolTip} position="top-start">
         <Input.Wrapper
           label={
-            BLOOD_COMPONENTS.find((c) => c.value === unitName)?.label.base
+            BLOOD_COMPONENTS.find((c) => c.value === unitName)?.label.base || OUTCOMES.find((o) => o.value === unitName)?.label.base
             || unitName
           }
           mb="lg"
@@ -97,11 +99,11 @@ export function FilterHistogramWithSliderComponent({
                   <stop offset="0%" stopColor={bgColor} />
                   <stop
                     offset="40%"
-                    stopColor={BLOOD_PRODUCT_COLOR_THEME[unitName]}
+                    stopColor={barColor}
                   />
                   <stop
                     offset="100%"
-                    stopColor={BLOOD_PRODUCT_COLOR_THEME[unitName]}
+                    stopColor={barColor}
                   />
                 </linearGradient>
               </defs>
@@ -116,8 +118,7 @@ export function FilterHistogramWithSliderComponent({
                     fill={
                       d.count > maxCountExcludeZeroUnit
                         ? `url(#grad${unitName})`
-                        : BLOOD_PRODUCT_COLOR_THEME[unitName]
-                          || DEFAULT_DATA_COLOR
+                        : barColor
                     }
                   >
                     <title>{`Unit: ${d.units}; Count: ${d.count}`}</title>
