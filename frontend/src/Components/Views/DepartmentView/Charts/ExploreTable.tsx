@@ -32,8 +32,11 @@ import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3
 import {
   ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions, ExploreTableColumnOptionsGrouped, ExploreTableRowOptions,
 } from '../../../../Types/application';
-import { backgroundHoverColor, smallHoverColor } from '../../../../Theme/mantineTheme';
+import { backgroundHoverColor, backgroundSelectedColor, smallHoverColor } from '../../../../Theme/mantineTheme';
 import './ExploreTable.css';
+
+// Extended row type for selection
+type SelectionRow = ExploreTableRow & { _case_ids?: string[] };
 
 // Types
 type NumericFilter = { query: string; cmp: '>' | '<' };
@@ -1049,6 +1052,32 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     }
   }, [columnVars, resetColumnsOrder]);
 
+  // Selection Logic --------------
+  const [lastClickedRowIndex, setLastClickedRowIndex] = useState<number | null>(null);
+
+  const handleRowClick = useCallback(({ index, event, record }: { index: number; event: React.MouseEvent; record: SelectionRow }) => {
+    // Normalize to array — DuckDB may return custom objects or typed arrays
+    const rawIds = record._case_ids;
+    const caseIds = rawIds ? Array.from(rawIds) : [];
+    if (caseIds.length === 0) return;
+
+    if (event.shiftKey && lastClickedRowIndex !== null) {
+      // Batch selection
+      const start = Math.min(lastClickedRowIndex, index);
+      const end = Math.max(lastClickedRowIndex, index);
+      const batchCaseIds = rows.slice(start, end + 1).flatMap((r) => (r as SelectionRow)._case_ids || []);
+
+      // If the clicked row is already fully selected, we are likely trying to deselect the range
+      const isAlreadySelected = caseIds.every((id) => store.selectedCaseIdsSet.has(id));
+      store.actions.updateCaseSelection(batchCaseIds, isAlreadySelected ? 'remove' : 'add');
+    } else {
+      // Toggle selection
+      store.actions.updateCaseSelection(caseIds, 'toggle');
+    }
+    setLastClickedRowIndex(index);
+  }, [rows, lastClickedRowIndex, store.selectedCaseIdsSet, store.actions]);
+
+  // -------------------------------------------------------
   // Data Table -------
   return (
     <Stack style={{ height: '100%', width: '100%' }}>
@@ -1120,12 +1149,22 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           withRowBorders={false}
           highlightOnHoverColor={backgroundHoverColor}
           records={rows}
+          idAccessor={chartConfig.rowVar}
           sortStatus={sortStatus}
           onSortStatusChange={setSortStatus}
           storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
           columns={effectiveColumns}
           style={useMemo(() => ({ fontStyle: 'italic' }), [])}
-          onRowClick={undefined}
+          onRowClick={handleRowClick}
+          rowStyle={(record: SelectionRow) => {
+            const rawIds = record._case_ids;
+            const caseIds = rawIds ? Array.from(rawIds) : [];
+            const isSelected = caseIds.length > 0 && caseIds.every((id) => store.selectedCaseIdsSet.has(id));
+            if (isSelected) {
+              return { backgroundColor: backgroundSelectedColor };
+            }
+            return {};
+          }}
         />
       </Box>
     </Stack>

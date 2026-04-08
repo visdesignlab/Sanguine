@@ -10,6 +10,7 @@ import {
   IconGripVertical, IconArrowUp, IconArrowDown, IconArrowRightDashed, IconCircles,
 } from '@tabler/icons-react';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
+import { reaction } from 'mobx';
 import { useObserver } from 'mobx-react-lite';
 import { Store } from '../../../../Store/Store';
 
@@ -22,7 +23,7 @@ import {
 import {
   AddGroupModal, GroupDefinition, GroupCondition, CONDITION_FIELDS_FLAT,
 } from './AddGroupModal';
-import { smallHoverColor } from '../../../../Theme/mantineTheme';
+import { smallHoverColor, backgroundSelectedColor, smallSelectColor } from '../../../../Theme/mantineTheme';
 import {
   getProcessedScatterData, calculateScatterLayout,
   buildSpatialIndex, findNearestPoint,
@@ -614,14 +615,21 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         }
       }
 
-      // Check selection
-      if (sel) {
+      // Cross-chart selection highlight
+      const pointCaseId = String(rawData[p.caseIdx]?.case_id || '');
+      const isCaseSelected = store.selectedCaseIdsSet.has(pointCaseId);
+
+      if (isCaseSelected) {
+        color = smallSelectColor;
+        opacity = 0.95;
+      } else if (sel) {
+        // Visual brush selection (temporary highlight while brushing or for local context)
         const minX = Math.min(sel.x1, sel.x2);
         const maxX = Math.max(sel.x1, sel.x2);
         const minY = Math.min(sel.y1, sel.y2);
         const maxY = Math.max(sel.y1, sel.y2);
         if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
-          color = theme.colors.orange[6];
+          color = smallSelectColor;
           opacity = 0.9;
         }
       }
@@ -641,10 +649,18 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
 
     ctx.restore();
-  }, [pointPositions, appliedSelection, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange]);
+  }, [pointPositions, appliedSelection, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange, store.selectedCaseIdsSet, rawData]);
 
-  // Redraw canvas when dependencies change
+  // Redraw canvas when dependencies change (React path)
   useEffect(() => { drawPoints(); }, [drawPoints]);
+
+  // MobX reaction for manual redraw when selection changes (Performance path)
+  // This bypasses React re-renders for selection changes
+  useEffect(() => reaction(
+    () => store.selectedCaseIdsSet,
+    () => { drawPoints(); },
+    { name: 'ScatterPlotSelectionRedraw' },
+  ), [store.selectedCaseIdsSet, drawPoints]);
 
   // Set canvas size
   useEffect(() => {
@@ -773,17 +789,47 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
   }, [interactionMode, selection, height, resizeHandle, bottomMargin, spatialIndex, pointPositions, drawPoints, rawData]);
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((e?: React.MouseEvent) => {
     setInteractionMode('idle');
     setResizeHandle(null);
     dragStart.current = null;
     initialSelection.current = null;
+
     if (selection) {
-      if (Math.abs(selection.x2 - selection.x1) < 5 && Math.abs(selection.y2 - selection.y1) < 5) {
-        setSelection(null); setAppliedSelection(null);
-      } else { setAppliedSelection(selection); }
+      const dx = Math.abs(selection.x2 - selection.x1);
+      const dy = Math.abs(selection.y2 - selection.y1);
+
+      if (dx < 5 && dy < 5 && e) {
+        // Click interaction: Toggle single case
+        const rect = chartRef.current?.getBoundingClientRect();
+        if (rect) {
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const nearest = findNearestPoint(spatialIndex, pointPositions, x, y, 12);
+          if (nearest) {
+            const caseId = String(rawData[nearest.caseIdx]?.case_id || '');
+            if (caseId) store.actions.updateCaseSelection([caseId], 'toggle');
+          }
+        }
+        setSelection(null);
+        setAppliedSelection(null);
+      } else {
+        // Brush interaction: Add all points in rectangle to selection
+        setAppliedSelection(selection);
+        const minX = Math.min(selection.x1, selection.x2);
+        const maxX = Math.max(selection.x1, selection.x2);
+        const minY = Math.min(selection.y1, selection.y2);
+        const maxY = Math.max(selection.y1, selection.y2);
+
+        const selectedInBox = pointPositions.filter((p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY);
+        const caseIds = selectedInBox.map((p) => String(rawData[p.caseIdx]?.case_id || '')).filter(Boolean);
+
+        if (caseIds.length > 0) {
+          store.actions.updateCaseSelection(caseIds, 'add');
+        }
+      }
     }
-  }, [selection]);
+  }, [selection, spatialIndex, pointPositions, rawData, store.actions]);
 
   // X axis label for title
   const xLabel = xAxisOption?.label || selectedX;

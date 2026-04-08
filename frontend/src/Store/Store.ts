@@ -112,6 +112,7 @@ export interface ApplicationState {
   };
   selections: {
     selectedTimePeriods: string[];
+    selectedCaseIds: string[];
   };
   dashboard: {
     chartConfigs: DashboardChartConfig[];
@@ -214,6 +215,14 @@ export class RootStore {
   allVisitsLength = 0;
 
   filteredVisitsLength = 0;
+
+  get selectedCaseIds(): string[] {
+    return this.state.selections.selectedCaseIds || [];
+  }
+
+  get selectedCaseIdsSet(): Set<string> {
+    return new Set(this.selectedCaseIds);
+  }
   // endregion
 
   // region Constructor
@@ -233,6 +242,7 @@ export class RootStore {
       procedureHierarchy: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
+      selectedCaseIdsSet: computed,
     });
 
     this.initReactions();
@@ -402,8 +412,47 @@ export class RootStore {
         selections: {
           ...state.selections,
           selectedTimePeriods: [],
+          selectedCaseIds: [],
         },
       }), null);
+    },
+
+    updateCaseSelection: (caseIds: string[], mode: 'toggle' | 'add' | 'remove' | 'set' | 'clear') => {
+      this.applyAction(`Update Case Selection (${mode})`, (state) => {
+        const current = new Set(state.selections.selectedCaseIds || []);
+        switch (mode) {
+          case 'add':
+            caseIds.forEach((id) => current.add(id));
+            break;
+          case 'remove':
+            caseIds.forEach((id) => current.delete(id));
+            break;
+          case 'set':
+            current.clear();
+            caseIds.forEach((id) => current.add(id));
+            break;
+          case 'toggle':
+            // If all provided IDs are already in the set, remove them. Otherwise, add them.
+            if (caseIds.every((id) => current.has(id))) {
+              caseIds.forEach((id) => current.delete(id));
+            } else {
+              caseIds.forEach((id) => current.add(id));
+            }
+            break;
+          case 'clear':
+            current.clear();
+            break;
+          default:
+            break;
+        }
+        return {
+          ...state,
+          selections: {
+            ...state.selections,
+            selectedCaseIds: Array.from(current),
+          },
+        };
+      }, null);
     },
   };
   // endregion
@@ -440,6 +489,7 @@ export class RootStore {
       },
       selections: {
         selectedTimePeriods: [],
+        selectedCaseIds: [],
       },
       dashboard: {
         chartConfigs: JSON.parse(JSON.stringify(DEFAULT_CHART_CONFIGS || [])),
@@ -1874,6 +1924,10 @@ export class RootStore {
         ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY anesth_prov_name)'
         : 'anesth_prov_name';
 
+      const attendingNameExpr = this.uiState.isInPrivateMode
+        ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY attending_provider)'
+        : 'attending_provider';
+
       if (config.chartType === 'exploreTable') {
         // Configuration of table (rowVar, columns, aggregation, etc.)
         const tableConfig = config as ExploreTableConfig;
@@ -1892,13 +1946,18 @@ export class RootStore {
 
           const aggFn = colAggregation.toUpperCase();
 
-          // If this column is the grouping variable, select it directly
           if (colVar === tableConfig.rowVar) {
             if (colVar === 'attending_provider') {
-              if (this.uiState.isInPrivateMode) {
-                columnClauses.push(`'Provider ' || ROW_NUMBER() OVER (ORDER BY ${colVar}) AS ${colVar}`);
-                return;
-              }
+              columnClauses.push(`${attendingNameExpr} AS ${colVar}`);
+              return;
+            }
+            if (colVar === 'surgeon_prov_name') {
+              columnClauses.push(`${surgeonNameExpr} AS ${colVar}`);
+              return;
+            }
+            if (colVar === 'anesth_prov_name') {
+              columnClauses.push(`${anesthNameExpr} AS ${colVar}`);
+              return;
             }
             columnClauses.push(colVar);
             return;
@@ -1920,21 +1979,17 @@ export class RootStore {
             return;
           }
 
-          // Special case: cases (visit count)
+          // Special case: cases (count of units)
           if (colVar === 'cases') {
-            columnClauses.push(`COUNT(*) AS ${colVar}`);
+            columnClauses.push(`COUNT(DISTINCT sc.case_id) AS ${colVar}`);
             return;
           }
 
-          // Special case: identity columns (attending_provider, year, quarter) - return strings (e.g. Dr. Provider)
           if (colVar === 'attending_provider') {
             const isRowVar = colVar === tableConfig.rowVar;
 
             if (isRowVar) {
-              const expr = this.uiState.isInPrivateMode
-                ? `'Provider ' || ROW_NUMBER() OVER (ORDER BY ${colVar})`
-                : colVar;
-              columnClauses.push(`${expr} AS ${colVar}`);
+              columnClauses.push(`${attendingNameExpr} AS ${colVar}`);
             } else {
               const expr = this.uiState.isInPrivateMode
                 ? 'string_agg(DISTINCT \'Provider\', \', \')'
@@ -1973,11 +2028,12 @@ export class RootStore {
           const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
           if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
             if (colAggregation === 'avg') {
-              // Calculate percentage: AVG(1|0) * 100
-              columnClauses.push(`AVG(CAST(${colVar} AS INT)) * 100.0 AS ${colVar}`);
+              // For all views: what % of VISITS associated with this grouping had outcome
+              // This avoids double-counting patients with multiple surgeries in outcomes
+              columnClauses.push(`COUNT(DISTINCT CASE WHEN v.${colVar} = 1 THEN v.visit_no END) * 100.0 / NULLIF(COUNT(DISTINCT v.visit_no), 0) AS ${colVar}`);
             } else {
-              // Count occurrences: SUM(1|0)
-              columnClauses.push(`SUM(CAST(${colVar} AS INT)) AS ${colVar}`);
+              // Count distinct visits with outcome
+              columnClauses.push(`COUNT(DISTINCT CASE WHEN v.${colVar} = 1 THEN v.visit_no END) AS ${colVar}`);
             }
           } else if (col.type === 'violin') {
             // Special case for violin: fetch all values as a list for distribution
@@ -1995,13 +2051,27 @@ export class RootStore {
           columnClauses.unshift(tableConfig.rowVar);
         }
 
-        // Build the query
+        // Determine the raw grouping column for the GROUP BY clause
+        const groupCol = ['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].includes(tableConfig.rowVar)
+          ? `sc.${tableConfig.rowVar}`
+          : `v.${tableConfig.rowVar}`;
+
+        // Build the query - Universally surgery-centric for selection parity
         const query = `
           SELECT
-            ${columnClauses.join(',\n            ')}
-          FROM filteredVisits
-          GROUP BY ${tableConfig.rowVar}
-          ORDER BY ${tableConfig.rowVar};
+            ${columnClauses.map((c) => {
+              // Ensure we prefer sc. for time/provider groupings and v. for outcomes
+              let clause = c;
+              if (['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].some((v) => clause.includes(v))) {
+                clause = clause.replace(/v\./g, 'sc.');
+              }
+              return clause;
+            }).join(',\n            ')},
+            list_distinct(list(CAST(sc.case_id AS VARCHAR))) AS _case_ids
+          FROM filteredSurgeryCases sc
+          LEFT JOIN filteredVisits v ON sc.visit_no = v.visit_no
+          GROUP BY ${groupCol}
+          ORDER BY ${groupCol};
         `;
 
         try {
@@ -2046,7 +2116,6 @@ export class RootStore {
              (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
           FROM filteredSurgeryCases
           ORDER BY surgery_start_dtm
-          LIMIT 10000
         `;
         try {
           const result = await this.duckDB!.query(query);
@@ -2089,9 +2158,10 @@ export class RootStore {
              pre_inr, post_inr,
 
              total_cost,
-             rbc_cost
+             rbc_cost,
+             (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
            FROM filteredSurgeryCases
-           LIMIT 10000
+           ORDER BY surgery_start_dtm
         `;
         try {
           const result = await this.duckDB!.query(query);

@@ -12,6 +12,8 @@ import {
   IconArrowsVertical,
   IconArrowRightDashed,
 } from '@tabler/icons-react';
+import { reaction } from 'mobx';
+import { observer } from 'mobx-react-lite';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { Store } from '../../../../Store/Store';
 import {
@@ -20,7 +22,7 @@ import {
   DUMBBELL_CHAR_WIDTH_CASE, DUMBBELL_DOT_RADIUS,
   DUMBBELL_DRAG_LIMIT, DumbbellLabConfig as LabConfig,
 } from '../../../../Types/application';
-import { smallHoverColor } from '../../../../Theme/mantineTheme';
+import { smallHoverColor, backgroundSelectedColor, smallSelectColor } from '../../../../Theme/mantineTheme';
 import { getProcessedDumbbellData, calculateDumbbellLayout } from './DumbbellUtils';
 
 interface DumbbellChartSVGProps {
@@ -422,6 +424,7 @@ export const DumbbellChartContent = memo(({
   targets: { preMin: number; postMin: number; postMax: number },
   setHoveredTarget: (t: string | null) => void,
 }) => {
+  const store = useContext(Store);
   const chartRef = useRef<HTMLDivElement>(null);
   const bottomMargin = 25;
   const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - bottomMargin);
@@ -568,20 +571,88 @@ export const DumbbellChartContent = memo(({
     }
   }, [interactionMode, selection, height, resizeHandle, bottomMargin]);
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((e?: React.MouseEvent) => {
     setInteractionMode('idle');
     setResizeHandle(null);
     dragStart.current = null;
     initialSelection.current = null;
+
     if (selection) {
-      if (Math.abs(selection.x2 - selection.x1) < 5 && Math.abs(selection.y2 - selection.y1) < 5) {
+      const dx = Math.abs(selection.x2 - selection.x1);
+      const dy = Math.abs(selection.y2 - selection.y1);
+
+      if (dx < 5 && dy < 5 && e) {
+        // Click interaction: Toggle single case
+        const rect = chartRef.current?.getBoundingClientRect();
+        if (rect) {
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          // Detection logic matches handleCanvasHover roughly
+          let nearest = null;
+          let bestDist = 12;
+          processedData.forEach((bg) => {
+            if (collapsedBinGroups.has(bg.id)) return;
+            bg.cases.forEach((c, ci) => {
+              const bgLayout = binGroupLayout.get(bg.id);
+              if (!bgLayout) return;
+              const cx = bgLayout.x + ci * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
+              const preVal = c[labConfig.preKey] as number | null;
+              const postVal = c[labConfig.postKey] as number | null;
+              const cyPre = preVal !== null ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
+              const cyPost = postVal !== null ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
+
+              if (cyPre !== null) {
+                const dist = Math.sqrt((cx - x) ** 2 + (cyPre - y) ** 2);
+                if (dist < bestDist) { bestDist = dist; nearest = c.case_id; }
+              }
+              if (cyPost !== null) {
+                const dist = Math.sqrt((cx - x) ** 2 + (cyPost - y) ** 2);
+                if (dist < bestDist) { bestDist = dist; nearest = c.case_id; }
+              }
+            });
+          });
+
+          if (nearest) {
+            store.actions.updateCaseSelection([nearest], 'toggle');
+          }
+        }
         setSelection(null);
         setAppliedSelection(null);
       } else {
+        // Brush interaction: Add all points in rectangle to selection
         setAppliedSelection(selection);
+        const minX = Math.min(selection.x1, selection.x2);
+        const maxX = Math.max(selection.x1, selection.x2);
+        const minY = Math.min(selection.y1, selection.y2);
+        const maxY = Math.max(selection.y1, selection.y2);
+
+        const caseIds: string[] = [];
+        processedData.forEach((bg) => {
+          if (collapsedBinGroups.has(bg.id)) return;
+          bg.cases.forEach((c, ci) => {
+            const bgLayout = binGroupLayout.get(bg.id);
+            if (!bgLayout) return;
+            const cx = bgLayout.x + ci * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
+            const preVal = c[labConfig.preKey] as number | null;
+            const postVal = c[labConfig.postKey] as number | null;
+            const cyPre = preVal !== null ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
+            const cyPost = postVal !== null ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
+
+            const preIn = cyPre !== null && cx >= minX && cx <= maxX && cyPre >= minY && cyPre <= maxY;
+            const postIn = cyPost !== null && cx >= minX && cx <= maxX && cyPost >= minY && cyPost <= maxY;
+
+            if (preIn || postIn) {
+              caseIds.push(c.case_id);
+            }
+          });
+        });
+
+        if (caseIds.length > 0) {
+          store.actions.updateCaseSelection(caseIds, 'add');
+        }
       }
     }
-  }, [selection]);
+  }, [selection, processedData, collapsedBinGroups, binGroupLayout, labConfig, yScale, store.actions]);
 
   const isSelected = useCallback((cx: number, cy: number) => {
     if (!appliedSelection) return false;
@@ -599,6 +670,15 @@ export const DumbbellChartContent = memo(({
   const [tooltipData, setTooltipData] = useState<{ x: number; y: number; caseData: DumbbellCase; preVal: number | null; postVal: number | null } | null>(null);
   const hoveredAvgRef = useRef<{ bgId: string; type: 'pre' | 'post' } | null>(null);
   const [avgTooltipData, setAvgTooltipData] = useState<{ bgId: string; type: 'pre' | 'post'; x: number; y: number; val: number; bgLabel: string } | null>(null);
+
+  const isInBrush = useCallback((cx: number, cy: number) => {
+    if (!appliedSelection) return false;
+    const minX = Math.min(appliedSelection.x1, appliedSelection.x2);
+    const maxX = Math.max(appliedSelection.x1, appliedSelection.x2);
+    const minY = Math.min(appliedSelection.y1, appliedSelection.y2);
+    const maxY = Math.max(appliedSelection.y1, appliedSelection.y2);
+    return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY;
+  }, [appliedSelection]);
 
   const drawDumbbells = useCallback(() => {
     const canvas = canvasRef.current;
@@ -703,7 +783,8 @@ export const DumbbellChartContent = memo(({
               const cyPost = postVal !== null ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
 
               const isHovered = hovered && hovered.caseData.case_id === d.case_id;
-              const selected = (cyPre !== null && isSelected(caseX, cyPre)) || (cyPost !== null && isSelected(caseX, cyPost));
+              const isCaseSelected = store.selectedCaseIdsSet.has(d.case_id);
+              const inBrush = (cyPre !== null && isInBrush(caseX, cyPre)) || (cyPost !== null && isInBrush(caseX, cyPost));
 
               let preColor = theme.colors.teal[6];
               let postColor = theme.colors.indigo[6];
@@ -714,13 +795,19 @@ export const DumbbellChartContent = memo(({
                 preColor = smallHoverColor;
                 postColor = smallHoverColor;
                 lineColor = smallHoverColor;
-              } else if (selected) {
-                preColor = theme.colors.orange[6];
-                postColor = theme.colors.orange[6];
-                lineColor = theme.colors.orange[4];
+              } else if (isCaseSelected) {
+                preColor = smallSelectColor;
+                postColor = smallSelectColor;
+                lineColor = backgroundSelectedColor;
+                opacity = 0.95;
+              } else if (inBrush) {
+                preColor = smallSelectColor;
+                postColor = smallSelectColor;
+                lineColor = backgroundSelectedColor;
+                opacity = 0.9;
               }
 
-              if (sel && !selected && !isHovered) {
+              if (sel && !inBrush && !isCaseSelected && !isHovered) {
                 opacity = 0.25;
               }
 
@@ -759,10 +846,18 @@ export const DumbbellChartContent = memo(({
     }
 
     ctx.restore();
-  }, [processedData, collapsedBinGroups, visibleRange, labConfig, yScale, showPre, showPost, appliedSelection, isSelected, theme, binGroupLayout, showMedian, totalWidth]);
+  }, [processedData, collapsedBinGroups, visibleRange, labConfig, yScale, showPre, showPost, appliedSelection, isInBrush, theme, binGroupLayout, showMedian, totalWidth, store.selectedCaseIdsSet]);
 
-  // Redraw when deps change
+  // Redraw canvas when dependencies change (React path)
   useEffect(() => { drawDumbbells(); }, [drawDumbbells]);
+
+  // MobX reaction for manual redraw when selection changes (Performance path)
+  // This bypasses React re-renders for selection changes
+  useEffect(() => reaction(
+    () => store.selectedCaseIdsSet,
+    () => { drawDumbbells(); },
+    { name: 'DumbbellSelectionRedraw' },
+  ), [store.selectedCaseIdsSet, drawDumbbells]);
 
   // Resize canvas
   useEffect(() => {
@@ -1173,10 +1268,10 @@ export const DumbbellChartContent = memo(({
 // #endregion
 
 // #region Dumbbell Chart Final
-DumbbellChartContent.displayName = 'DumbbellChartContent';
+ DumbbellChartContent.displayName = 'DumbbellChartContent';
 
-export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfig }) {
-  const store = useContext(Store);
+ export const DumbbellChart = observer(({ chartConfig }: { chartConfig: DumbbellChartConfig }) => {
+   const store = useContext(Store);
   const theme = useMantineTheme();
 
   // State
@@ -1649,4 +1744,4 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
       </div>
     </Box>
   );
-}
+});
