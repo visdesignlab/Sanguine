@@ -27,18 +27,23 @@ function ProcedureOption({
   procedure,
   checked,
   onToggle,
+  dynamicCount,
 }: {
   procedure: ProcedureHierarchyProcedure;
   checked: boolean;
   onToggle: () => void;
+  dynamicCount: number;
 }) {
+  const isZero = dynamicCount === 0 && !checked;
+
   return (
     <Checkbox
       checked={checked}
       onChange={onToggle}
+      disabled={isZero}
       size="xs"
       label={(
-        <Flex justify="space-between" align="flex-start" gap="xs" w="100%" wrap="nowrap">
+        <Flex justify="space-between" align="flex-start" gap="xs" w="100%" wrap="nowrap" style={{ opacity: dynamicCount === 0 ? 0.5 : 1 }}>
           <Text size="xs" style={{ flex: 1, minWidth: 0 }}>
             {procedure.name}
           </Text>
@@ -48,7 +53,7 @@ function ProcedureOption({
             color={checked ? 'blue' : 'gray'}
             style={{ flexShrink: 0 }}
           >
-            {procedure.visit_count.toLocaleString()}
+            {dynamicCount.toLocaleString()}
           </Badge>
         </Flex>
       )}
@@ -68,6 +73,7 @@ function DepartmentOption({
   totalProcedureCount,
   selectedProcedureIdsSet,
   onToggleProcedureById,
+  dynamicHierarchyCounts,
 }: {
   department: ProcedureHierarchyDepartment;
   checked: boolean;
@@ -80,17 +86,21 @@ function DepartmentOption({
   totalProcedureCount: number;
   selectedProcedureIdsSet: Set<string>;
   onToggleProcedureById: (procedureId: string) => void;
+  dynamicHierarchyCounts: Record<string, number> | null;
 }) {
   const isActive = checked || selectedProcedureCount > 0;
+  const departmentCount = dynamicHierarchyCounts ? (dynamicHierarchyCounts[department.id] || 0) : department.visit_count;
+  const isZero = departmentCount === 0 && !checked && selectedProcedureCount === 0;
 
   return (
-    <Paper withBorder p="xs" radius="md">
+    <Paper withBorder p="xs" radius="md" style={{ opacity: departmentCount === 0 ? 0.6 : 1 }}>
       <Flex justify="space-between" align="flex-start" gap="xs">
         <Flex gap="xs" align="flex-start" style={{ flex: 1, minWidth: 0 }}>
           <Checkbox
             checked={checked}
             indeterminate={indeterminate}
             onChange={onToggleDepartment}
+            disabled={isZero}
             mt={2}
             aria-label={`Toggle ${department.name}`}
           />
@@ -128,7 +138,7 @@ function DepartmentOption({
           variant={isActive ? 'light' : 'outline'}
           color={isActive ? 'blue' : 'gray'}
         >
-          {department.visit_count.toLocaleString()}
+          {departmentCount.toLocaleString()}
           {' '}
           visits
         </Badge>
@@ -143,6 +153,7 @@ function DepartmentOption({
               procedure={procedure}
               checked={selectedProcedureIdsSet.has(procedure.id)}
               onToggle={() => onToggleProcedureById(procedure.id)}
+              dynamicCount={dynamicHierarchyCounts ? (dynamicHierarchyCounts[procedure.id] || 0) : procedure.visit_count}
             />
           ))}
           {procedures.length === 0 && (
@@ -196,7 +207,17 @@ function getVisibleDepartments(
     .filter((department): department is VisibleDepartment => Boolean(department));
 }
 
-export function DepartmentProcedureFilter() {
+export function DepartmentProcedureFilter({
+  mode: _mode = 'global',
+  selectedDepartmentIds: overrideDeptIds,
+  selectedProcedureIds: overrideProcIds,
+  onChange,
+}: {
+  mode?: 'global' | 'department';
+  selectedDepartmentIds?: string[];
+  selectedProcedureIds?: string[];
+  onChange?: (departmentIds: string[], procedureIds: string[]) => void;
+} = {}) {
   const store = useContext(Store);
   const [expandedDepartments, setExpandedDepartments] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -219,11 +240,13 @@ export function DepartmentProcedureFilter() {
       );
     }
 
-    const selectedDepartmentIdsSet = new Set(store.filterValues.departmentIds);
-    const selectedProcedureIdsSet = new Set(store.filterValues.procedureIds);
+    const selectedDepartmentIdsSet = new Set(overrideDeptIds ?? store.filterValues.departmentIds);
+    const selectedProcedureIdsSet = new Set(overrideProcIds ?? store.filterValues.procedureIds);
     const hierarchyDepartmentById = new Map(hierarchy.departments.map((department) => [department.id, department]));
 
-    const visibleDepartments = getVisibleDepartments(hierarchy.departments, searchTerm);
+    const availableDepartments = hierarchy.departments;
+
+    const visibleDepartments = getVisibleDepartments(availableDepartments, searchTerm);
 
     const involvedDepartmentIds = new Set(selectedDepartmentIdsSet);
     selectedProcedureIdsSet.forEach((procedureId) => {
@@ -250,10 +273,14 @@ export function DepartmentProcedureFilter() {
         targetDepartment.procedures.forEach((procedure) => selectedProcedureIdsSet.add(procedure.id));
       }
 
-      store.setProcedureFilters(
-        Array.from(selectedDepartmentIdsSet).sort(),
-        Array.from(selectedProcedureIdsSet).sort(),
-      );
+      if (onChange) {
+        onChange(Array.from(selectedDepartmentIdsSet).sort(), Array.from(selectedProcedureIdsSet).sort());
+      } else {
+        store.setProcedureFilters(
+          Array.from(selectedDepartmentIdsSet).sort(),
+          Array.from(selectedProcedureIdsSet).sort(),
+        );
+      }
     };
 
     const toggleProcedureSelectionById = (procedureId: string) => {
@@ -277,10 +304,14 @@ export function DepartmentProcedureFilter() {
         }
       }
 
-      store.setProcedureFilters(
-        Array.from(selectedDepartmentIdsSet).sort(),
-        Array.from(selectedProcedureIdsSet).sort(),
-      );
+      if (onChange) {
+        onChange(Array.from(selectedDepartmentIdsSet).sort(), Array.from(selectedProcedureIdsSet).sort());
+      } else {
+        store.setProcedureFilters(
+          Array.from(selectedDepartmentIdsSet).sort(),
+          Array.from(selectedProcedureIdsSet).sort(),
+        );
+      }
     };
 
     const toggleDepartmentExpanded = (departmentId: string) => {
@@ -355,6 +386,7 @@ export function DepartmentProcedureFilter() {
                 totalProcedureCount={totalProcedureCount}
                 selectedProcedureIdsSet={selectedProcedureIdsSet}
                 onToggleProcedureById={toggleProcedureSelectionById}
+                dynamicHierarchyCounts={store.dynamicHierarchyCounts}
               />
             );
           })}

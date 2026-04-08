@@ -10,6 +10,25 @@
   padding-bottom: 2.25px !important;
 }
 
+/* Highlight sort icon in blue when its column is active */
+.explore-table-data-table .active-sort-icon {
+  color: #1770B8 !important;
+  stroke: #1770B8 !important;
+  /* Add bright blue outline effect as requested */
+  filter: drop-shadow(0px 0px 1px #1770B8) drop-shadow(0px 0px 1px inset #1770B8) !important;
+}
+
+/* 
+  Highlight filter icon in blue when its column is active.
+  We target any SVG in the header cell that is NOT one of our explicit sort icons.
+*/
+.explore-table-data-table thead th:has(.filtered-column-header) svg:not(.active-sort-icon):not(.inactive-sort-icon) {
+  color: #1770B8 !important;
+  fill: #1770B8 !important;
+  stroke: #1770B8 !important;
+  /* Add bright blue outline effect, matching the sorting styling */
+  filter: drop-shadow(0px 0px 1px #1770B8) drop-shadow(0px 0px 1px inset #1770B8) !important;
+}
 
 /* Highlight bar fill on hover */
 .numeric-bar-cell:hover .bar-fill {

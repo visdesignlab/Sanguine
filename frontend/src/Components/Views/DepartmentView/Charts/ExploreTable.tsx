@@ -20,7 +20,7 @@ import {
   Text,
 } from '@mantine/core';
 import {
-  IconGripVertical, IconMathGreater, IconMathLower, IconPercentage,
+  IconGripVertical, IconMathGreater, IconMathLower, IconPercentage, IconArrowUp, IconSelector,
 } from '@tabler/icons-react';
 import {
   DataTable, DataTableColumn, useDataTableColumns, type DataTableSortStatus,
@@ -913,6 +913,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         sortable: true,
         noWrap: true,
         width: colVar === 'cases' ? 90 : colVar === 'salvage_savings' ? 250 : colVar === 'total_cost' ? 400 : (colVar === 'attending_provider' || (colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar)) ? 175 : undefined,
+        filtering: isActiveFilter,
         filter: filterComponent,
         footer: type === 'violin' ? violinFooter : (type === 'numeric' || type === 'heatmap') ? (
           <HistogramFooter
@@ -1029,7 +1030,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
       return column;
     });
-  }, [rows, chartConfig.twoValsPerRow, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue]);
+  }, [rows, chartConfig.twoValsPerRow, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, sortStatus.columnAccessor]);
 
   // Data Table Columns -------
   const columnDefs = useMemo(
@@ -1125,6 +1126,10 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           records={rows}
           sortStatus={sortStatus}
           onSortStatusChange={setSortStatus}
+          sortIcons={{
+            sorted: <IconArrowUp size={14} color="#1770B8" stroke={3} style={{ fill: 'none' }} className="active-sort-icon" />,
+            unsorted: <IconSelector size={14} color="gray" opacity={0.5} className="inactive-sort-icon" />,
+          }}
           storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
           columns={effectiveColumns}
           style={useMemo(() => ({ fontStyle: 'italic' }), [])}
