@@ -1,5 +1,5 @@
 import {
-  useCallback, useContext, useEffect, useMemo, useState,
+  useCallback, useContext, useEffect, useMemo, useState, useRef,
 } from 'react';
 import {
   ActionIcon,
@@ -8,9 +8,12 @@ import {
   Tooltip,
   Modal,
   Select,
+  Popover,
+  Box,
+  ScrollArea,
 } from '@mantine/core';
 import {
-  IconPlus, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand,
+  IconPlus, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand, IconFilter,
 } from '@tabler/icons-react';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { useObserver } from 'mobx-react-lite';
@@ -29,6 +32,47 @@ import {
 import { DumbbellChart } from './Charts/DumbbellChart';
 import ExploreTable from './Charts/ExploreTable';
 import { ScatterPlot } from './Charts/ScatterPlot';
+import { DepartmentProcedureFilter } from '../../Toolbar/Filters/DepartmentProcedureFilter';
+
+function FilteredDepartmentsText({ names }: { names: string[] }) {
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [isAtEnd, setIsAtEnd] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    if (viewportRef.current) {
+      const { scrollWidth, clientWidth, scrollLeft } = viewportRef.current;
+      setIsAtEnd(scrollWidth <= clientWidth || scrollLeft >= scrollWidth - clientWidth - 10);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [checkScroll, names]);
+
+  return (
+    <>
+      <Text size="lg" fw={300} c="dimmed" style={{ flexShrink: 0 }}>
+        {' - '}
+      </Text>
+      <ScrollArea
+        viewportRef={viewportRef}
+        type="never"
+        onScrollPositionChange={checkScroll}
+        style={{
+          flex: 1,
+          maskImage: isAtEnd ? 'none' : 'linear-gradient(to right, black 85%, transparent 100%)',
+          WebkitMaskImage: isAtEnd ? 'none' : 'linear-gradient(to right, black 85%, transparent 100%)',
+        }}
+      >
+        <Text size="lg" fw={300} c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+          {names.join(', ')}
+        </Text>
+      </ScrollArea>
+    </>
+  );
+}
 
 export function DepartmentView() {
   const store = useContext(Store);
@@ -54,6 +98,7 @@ export function DepartmentView() {
 
   // Add Chart Modal State ---------------------------------
   const [isAddModalOpen, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
+  const [filterPopoverOpened, setFilterPopoverOpened] = useState(false);
 
   const [chartType, setChartType] = useState<'cost' | 'dumbbell' | 'exploreTable' | 'scatterPlot'>('cost');
   const [aggregation, setAggregation] = useState<'sum' | 'avg' | 'none'>('sum');
@@ -227,17 +272,63 @@ export function DepartmentView() {
   return useObserver(() => (
     <Stack>
       {/* Title, Add Chart Button */}
-      <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-        <Title order={3}>Department</Title>
+      <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2} w="100%">
+        <Flex align="center" gap="xs" style={{ flex: 1, minWidth: 0, paddingRight: '1rem' }}>
+          <Title order={3} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>Department Charts</Title>
+          {(() => {
+            if (!store.procedureHierarchy) return null;
+            const deps = store.state.explore.departmentIds;
+            const procs = store.state.explore.procedureIds;
+            if (deps.length === 0 && procs.length === 0) return null;
 
-        <Flex direction="row" align="center" gap="md">
-          <Tooltip label="Visible visits after filters" position="bottom">
+            const names: string[] = [];
+            const deptMap = new Map(store.procedureHierarchy.departments.map((d) => [d.id, d.name]));
+            deps.forEach((id: string) => {
+              if (deptMap.has(id)) names.push(deptMap.get(id)!);
+            });
+
+            if (procs.length > 0) {
+              store.procedureHierarchy.departments.forEach((d) => {
+                d.procedures.forEach((p) => {
+                  if (procs.includes(p.id)) {
+                    if (!deps.includes(d.id)) {
+                      names.push(p.name);
+                    }
+                  }
+                });
+              });
+            }
+
+            if (names.length === 0) return null;
+            return <FilteredDepartmentsText names={names} />;
+          })()}
+        </Flex>
+
+        <Flex direction="row" align="center" gap="md" style={{ flexShrink: 0 }}>
+          <Tooltip label="Visits shown, out of all visits hospital-wide" position="bottom">
             <Title order={5} c="dimmed">
-              {`${store.filteredVisitsLength} / ${store.allVisitsLength}`}
-              {' '}
-              Visits
+              {`${store.exploreFilteredVisitsLength.toLocaleString()} / ${store.allVisitsLength.toLocaleString()} Visits`}
             </Title>
           </Tooltip>
+          <Popover opened={filterPopoverOpened} onChange={setFilterPopoverOpened} position="bottom-end" shadow="md" withArrow>
+            <Popover.Target>
+              <Button onClick={() => setFilterPopoverOpened((o) => !o)}>
+                <IconFilter size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+                Select Department
+              </Button>
+            </Popover.Target>
+            <Popover.Dropdown p="sm">
+              <Box w={350}>
+                <Text fw={700} mb="xs">Department Charts Filters</Text>
+                <DepartmentProcedureFilter
+                  mode="department"
+                  selectedDepartmentIds={store.state.explore.departmentIds}
+                  selectedProcedureIds={store.state.explore.procedureIds}
+                  onChange={(deps, procs) => store.actions.setExploreProcedureFilters(deps, procs)}
+                />
+              </Box>
+            </Popover.Dropdown>
+          </Popover>
           <Button onClick={handleOpenAdd}>
             <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
             Add Chart

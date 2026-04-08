@@ -121,6 +121,8 @@ export interface ApplicationState {
   explore: {
     chartConfigs: ExploreChartConfig[];
     chartLayouts: { [key: string]: Layout[] };
+    departmentIds: string[];
+    procedureIds: string[];
   };
   settings: {
     unitCosts: Record<Cost, number>;
@@ -221,6 +223,10 @@ export class RootStore {
   allVisitsLength = 0;
 
   filteredVisitsLength = 0;
+
+  exploreFilteredVisitsLength = 0;
+
+  dynamicHierarchyCounts: Record<string, number> | null = null;
   // endregion
 
   // region Constructor
@@ -238,6 +244,7 @@ export class RootStore {
       dashboardChartData: observable.ref,
       exploreChartData: observable.ref,
       procedureHierarchy: observable.ref,
+      dynamicHierarchyCounts: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
     });
@@ -347,6 +354,16 @@ export class RootStore {
         },
       }), exploreState);
     },
+    setExploreProcedureFilters: (departmentIds: string[], procedureIds: string[]) => {
+      this.applyAction('Update Department Charts Filters', (state, filters) => ({
+        ...state,
+        explore: {
+          ...state.explore,
+          departmentIds: filters.departmentIds,
+          procedureIds: filters.procedureIds,
+        },
+      }), { departmentIds, procedureIds });
+    },
     updateSettings: (unitCosts: Record<Cost, number>) => {
       this.applyAction('Update Settings', (state, costs) => ({
         ...state,
@@ -455,6 +472,8 @@ export class RootStore {
       explore: {
         chartConfigs: JSON.parse(JSON.stringify(this.exploreInitialChartConfigs || [])),
         chartLayouts: JSON.parse(JSON.stringify(this.exploreInitialChartLayouts || {})),
+        departmentIds: [],
+        procedureIds: [],
       },
       settings: {
         unitCosts: { ...DEFAULT_UNIT_COSTS },
@@ -761,7 +780,7 @@ export class RootStore {
           selectedTimePeriods: [],
         },
         dashboard: {},
-        explore: {},
+        explore: { departmentIds: [], procedureIds: [] },
         settings: {},
         ui: {
           activeTab: 'Hospital',
@@ -1780,7 +1799,11 @@ export class RootStore {
       async () => { await this.updateCostsTable(); },
     );
     reaction(
-      () => this.state.explore.chartConfigs,
+      () => [
+        this.state.explore.chartConfigs,
+        this.state.explore.departmentIds,
+        this.state.explore.procedureIds,
+      ],
       async () => { await this.computeExploreChartData(); },
     );
   }
@@ -1868,6 +1891,7 @@ export class RootStore {
 
     // Update all the data retrievers
     await this.updateFilteredVisitsLength();
+    await this.updateDynamicHierarchyCounts();
     await this.computeDashboardChartData();
     await this.computeDashboardStatData();
     await this.computeExploreChartData();
@@ -1876,6 +1900,42 @@ export class RootStore {
   }
 
   async computeExploreChartData(): Promise<void> {
+    const { departmentIds, procedureIds } = this.state.explore;
+    const safeIdPattern = /^[A-Za-z0-9_-]+$/;
+    const localFilters: string[] = [];
+    const localFiltersWithPrefix: string[] = [];
+
+    if (departmentIds && departmentIds.length > 0) {
+      const safeDeptIds = departmentIds.filter((id) => safeIdPattern.test(id)).map((id) => `'${id}'`).join(', ');
+      if (safeDeptIds) {
+        localFilters.push(`list_has_any(department_ids, [${safeDeptIds}]::VARCHAR[])`);
+        localFiltersWithPrefix.push(`list_has_any(v.department_ids, [${safeDeptIds}]::VARCHAR[])`);
+      }
+    }
+
+    if (procedureIds && procedureIds.length > 0) {
+      const safeProcIds = procedureIds.filter((id) => safeIdPattern.test(id)).map((id) => `'${id}'`).join(', ');
+      if (safeProcIds) {
+        localFilters.push(`list_has_any(procedure_ids, [${safeProcIds}]::VARCHAR[])`);
+        localFiltersWithPrefix.push(`list_has_any(v.procedure_ids, [${safeProcIds}]::VARCHAR[])`);
+      }
+    }
+
+    const localWhereClause = localFilters.length > 0 ? `WHERE ${localFilters.join(' OR ')}` : '';
+    const localWhereClauseWithPrefix = localFiltersWithPrefix.length > 0 ? `WHERE ${localFiltersWithPrefix.join(' OR ')}` : '';
+
+    // Update explore-specific visit count
+    try {
+      if (this.duckDB) {
+        const countQuery = `SELECT COUNT(DISTINCT visit_no) AS count FROM filteredVisits ${localWhereClause};`;
+        const result = await this.duckDB.query(countQuery);
+        this.exploreFilteredVisitsLength = Number(result.toArray()[0].toJSON().count);
+      }
+    } catch (error) {
+      console.error('Error counting explore visits:', error);
+      this.exploreFilteredVisitsLength = this.filteredVisitsLength;
+    }
+
     const promises = this.exploreChartConfigs.map(async (config) => {
       const surgeonNameExpr = this.uiState.isInPrivateMode
         ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY surgeon_prov_name)'
@@ -2132,7 +2192,7 @@ export class RootStore {
       }
       // DUMBBELL CHART -------------------------------
       if (config.chartType === 'dumbbell') {
-      // TODO: Don't limit to only 10,000 surgeries.
+        // TODO: Don't limit to only 10,000 surgeries.
         const query = `
           SELECT
              CAST(case_id AS VARCHAR) as case_id,
@@ -2157,7 +2217,8 @@ export class RootStore {
              intraop_whole_units,
              intraop_cell_saver_ml,
              (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
-          FROM filteredSurgeryCases
+          FROM filteredSurgeryCases sc
+          ${localWhereClauseWithPrefix ? `JOIN visits v ON sc.visit_no = v.visit_no ${localWhereClauseWithPrefix}` : ''}
           ORDER BY surgery_start_dtm
         `;
         try {
@@ -2248,6 +2309,30 @@ export class RootStore {
     if (!this.duckDB) return;
     const result = await this.duckDB.query('SELECT COUNT(DISTINCT visit_no) AS count FROM filteredVisitIds;');
     this.filteredVisitsLength = Number(result.toArray()[0].toJSON().count);
+  }
+
+  async updateDynamicHierarchyCounts() {
+    if (!this.duckDB) return;
+    try {
+      const query = `
+        SELECT id, COUNT(DISTINCT visit_no) as count FROM (
+          SELECT UNNEST(department_ids) AS id, visit_no FROM filteredVisits
+          UNION ALL
+          SELECT UNNEST(procedure_ids) AS id, visit_no FROM filteredVisits
+        ) GROUP BY id;
+      `;
+      const result = await this.duckDB.query(query);
+      const counts: Record<string, number> = {};
+      for (const row of result.toArray()) {
+        const { id, count } = row.toJSON();
+        counts[id] = Number(count);
+      }
+      runInAction(() => {
+        this.dynamicHierarchyCounts = counts;
+      });
+    } catch (error) {
+      console.error('Error calculating dynamic procedure counts:', error);
+    }
   }
 
   async updateAllVisitsLength() {

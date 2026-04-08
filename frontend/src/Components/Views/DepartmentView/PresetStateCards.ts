@@ -17,7 +17,7 @@ export const presetStateCards: PresetGroup[] = [
     groupLabel: 'Guideline Adherence',
     options: [
       {
-        question: 'In cases with preoperative anemia, how many RBCs were transfused per surgeon?',
+        question: 'How common is preoperative anemia in patients undergoing elective surgery?',
         Icon: IconDropletHalf2Filled,
         // Add a ExploreTable chart config so clicking this preset opens the ExploreTable.
         chartConfigs: [
@@ -119,7 +119,7 @@ export const presetStateCards: PresetGroup[] = [
         },
       },
       {
-        question: 'What were the pre-op and post-op HGB levels of cases per surgeon?',
+        question: 'What is the postoperative hemoglobin value among patients transfused during surgery?',
         Icon: IconTestPipe2,
         chartConfigs: [
           {
@@ -304,7 +304,7 @@ export const presetStateCards: PresetGroup[] = [
         },
       },
       {
-        question: 'What are the outcomes of using cell salvage, for each anesthesiologist?',
+        question: 'How often do patients undergoing surgery receive 1+ allogeneic RBC transfusion but no cell salvage?',
         Icon: IconRecycle,
         chartConfigs: [
           {
