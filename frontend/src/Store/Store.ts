@@ -2297,7 +2297,6 @@ export class RootStore {
       SELECT
         MIN(min_adm_dtm) AS min_adm,
         MAX(max_dsch_dtm) AS max_dsch,
-
         MIN(rbc_units)::DOUBLE AS min_rbc,
         MAX(rbc_units)::DOUBLE AS max_rbc,
         COALESCE(quantile_disc(NULLIF(rbc_units, 0), ${percentileClamp}), MAX(rbc_units))::DOUBLE AS stats_max_rbc,
