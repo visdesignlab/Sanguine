@@ -32,7 +32,7 @@ import { useThemeConstants } from '../Theme/mantineTheme';
 import classes from './Shell.module.css';
 import { HospitalView } from '../Components/Views/HospitalView/HospitalView';
 import { DepartmentView } from '../Components/Views/DepartmentView/DepartmentView';
-import { DepartmentViewQuestions } from '../Components/Views/DepartmentView/DepartmentViewQuestions';
+
 import { ProviderView } from '../Components/Views/ProviderView/ProviderView';
 import { SettingsView } from '../Components/Views/SettingsView/SettingsView';
 import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/SelectedVisitsPanel';
@@ -164,11 +164,6 @@ export const Shell = observer(() => {
         width: navbarWidth,
         breakpoint: 0,
         collapsed: { desktop: !store.state.ui.leftToolbarOpened },
-      }}
-      aside={{
-        width: store.departmentViewQuestionsWidth,
-        breakpoint: 0,
-        collapsed: { desktop: store.state.ui.activeTab !== 'Department' || !store.departmentViewQuestionsOpened },
       }}
       padding="xs"
     >
@@ -375,7 +370,6 @@ export const Shell = observer(() => {
           {TABS.find((tab) => tab.key === store.state.ui.activeTab)?.content}
         </Container>
       </AppShell.Main>
-      {store.state.ui.activeTab === 'Department' && <DepartmentViewQuestions />}
 
       <Modal
         opened={aboutModalOpened}
