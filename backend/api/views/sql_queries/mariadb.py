@@ -228,41 +228,49 @@ surgery_case_query = rf"""
     ),
     PREOP_HB AS (
         SELECT
-            X.VISIT_NO,
-            X.CASE_ID,
-            X.DI_PREOP_DRAW_DTM,
-            LH2.RESULT_VALUE AS PREOP_HEMO
+            PREOP_ROWS.VISIT_NO,
+            PREOP_ROWS.CASE_ID,
+            PREOP_ROWS.LAB_DRAW_DTM AS DI_PREOP_DRAW_DTM,
+            PREOP_ROWS.RESULT_VALUE AS PREOP_HEMO
         FROM (
             SELECT
                 SC.VISIT_NO,
                 SC.CASE_ID,
-                MAX(LH.LAB_DRAW_DTM) AS DI_PREOP_DRAW_DTM
+                LH.LAB_DRAW_DTM,
+                LH.RESULT_VALUE,
+                ROW_NUMBER() OVER (
+                    PARTITION BY SC.CASE_ID
+                    ORDER BY LH.LAB_DRAW_DTM DESC, LH.RESULT_DTM DESC, LH.RESULT_CODE DESC
+                ) AS RN
             FROM SURGERY_CASE SC
-            INNER JOIN LAB_HB LH ON SC.VISIT_NO = LH.VISIT_NO and LH.LAB_DRAW_DTM < SC.SURGERY_START_DTM
-            GROUP BY SC.VISIT_NO, SC.CASE_ID
-        ) X
-        INNER JOIN LAB_HB LH2
-            ON X.VISIT_NO = LH2.VISIT_NO
-           AND X.DI_PREOP_DRAW_DTM = LH2.LAB_DRAW_DTM
+            INNER JOIN LAB_HB LH
+                ON SC.VISIT_NO = LH.VISIT_NO
+               AND LH.LAB_DRAW_DTM < SC.SURGERY_START_DTM
+        ) PREOP_ROWS
+        WHERE PREOP_ROWS.RN = 1
     ),
     POSTOP_HB AS (
         SELECT
-            X.VISIT_NO,
-            X.CASE_ID,
-            X.DI_POSTOP_DRAW_DTM,
-            LH2.RESULT_VALUE AS POSTOP_HEMO
+            POSTOP_ROWS.VISIT_NO,
+            POSTOP_ROWS.CASE_ID,
+            POSTOP_ROWS.LAB_DRAW_DTM AS DI_POSTOP_DRAW_DTM,
+            POSTOP_ROWS.RESULT_VALUE AS POSTOP_HEMO
         FROM (
             SELECT
                 SC.VISIT_NO,
                 SC.CASE_ID,
-                MIN(LH.LAB_DRAW_DTM) AS DI_POSTOP_DRAW_DTM
+                LH.LAB_DRAW_DTM,
+                LH.RESULT_VALUE,
+                ROW_NUMBER() OVER (
+                    PARTITION BY SC.CASE_ID
+                    ORDER BY LH.LAB_DRAW_DTM ASC, LH.RESULT_DTM DESC, LH.RESULT_CODE DESC
+                ) AS RN
             FROM SURGERY_CASE SC
-            INNER JOIN LAB_HB LH ON SC.VISIT_NO = LH.VISIT_NO and LH.LAB_DRAW_DTM > SC.SURGERY_END_DTM
-            GROUP BY SC.VISIT_NO, SC.CASE_ID
-        ) X
-        INNER JOIN LAB_HB LH2
-            ON X.VISIT_NO = LH2.VISIT_NO
-            AND X.DI_POSTOP_DRAW_DTM = LH2.LAB_DRAW_DTM
+            INNER JOIN LAB_HB LH
+                ON SC.VISIT_NO = LH.VISIT_NO
+               AND LH.LAB_DRAW_DTM > SC.SURGERY_END_DTM
+        ) POSTOP_ROWS
+        WHERE POSTOP_ROWS.RN = 1
     )
     SELECT
         SURG.CASE_ID,
