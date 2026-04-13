@@ -1,5 +1,6 @@
 import {
   IconDropletHalf2Filled, IconTestPipe2, IconVaccineBottle, IconRecycle, IconCoin, IconProps,
+  IconReportSearch,
 } from '@tabler/icons-react';
 import { Layout } from 'react-grid-layout';
 import { ExploreChartConfig } from '../../../Types/application';
@@ -13,6 +14,85 @@ export type PresetOption = {
 export type PresetGroup = { groupLabel: string; options: PresetOption[] };
 
 export const presetStateCards: PresetGroup[] = [
+  {
+    groupLabel: 'Overview',
+    options: [
+      {
+        question: 'How many blood products were transfused in [department]?',
+        Icon: IconReportSearch,
+        chartConfigs: [
+          {
+            chartId: 'preset-overview-department',
+            title: 'Blood Product Utilization per Surgeon',
+            chartType: 'exploreTable',
+            rowVar: 'attending_provider',
+            columns: [
+              {
+                colVar: 'attending_provider',
+                aggregation: 'none',
+                type: 'text',
+                title: 'Surgeon',
+              },
+              {
+                colVar: 'cases',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Cases',
+              },
+              {
+                colVar: 'drg_weight',
+                aggregation: 'none',
+                type: 'violin',
+                title: 'DRG Weight',
+              },
+              {
+                colVar: 'death',
+                aggregation: 'avg',
+                type: 'numeric',
+                title: 'Deaths',
+              },
+              {
+                colVar: 'cryo_units',
+                aggregation: 'avg',
+                type: 'numeric',
+                title: 'Cryo',
+              },
+              {
+                colVar: 'plt_units',
+                aggregation: 'avg',
+                type: 'numeric',
+                title: 'Platelets',
+              },
+              {
+                colVar: 'ffp_units',
+                aggregation: 'avg',
+                type: 'numeric',
+                title: 'FFP',
+              },
+              {
+                colVar: 'whole_units',
+                aggregation: 'avg',
+                type: 'numeric',
+                title: 'Whole Blood',
+              },
+            ],
+            twoValsPerRow: false,
+          },
+        ],
+        chartLayouts: {
+          main: [
+            {
+              i: 'preset-overview-department',
+              x: 0,
+              y: 0,
+              w: 4,
+              h: 4,
+            },
+          ],
+        },
+      },
+    ],
+  },
   {
     groupLabel: 'Guideline Adherence',
     options: [

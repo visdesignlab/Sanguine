@@ -37,11 +37,17 @@ export function DepartmentViewQuestions() {
     document.addEventListener('mouseup', onMouseUp);
   }, [store]);
 
+  const resolveQuestion = useCallback((q: string) => {
+    if (!q.includes('[department]')) return q;
+    const deptName = store.procedureHierarchy?.departments.find((d) => d.id === store.selectedDepartmentId)?.name || 'Department';
+    return q.replace('[department]', deptName);
+  }, [store.procedureHierarchy, store.selectedDepartmentId]);
+
   const handlePresetClick = (groupIdx: number, cardIdx: number) => {
     const { chartConfigs, chartLayouts, question } = presetStateCards[groupIdx].options[cardIdx];
     store.loadExplorePreset([...chartConfigs], {
       main: [...chartLayouts.main],
-    }, question);
+    }, resolveQuestion(question));
   };
 
   return useObserver(() => (
@@ -115,7 +121,7 @@ export function DepartmentViewQuestions() {
                         <Box className={cardStyles.iconContainer} style={{ flexShrink: 0 }}>
                           <Icon size={cardIconSize} stroke={cardIconStroke} />
                         </Box>
-                        <Text size="sm">{question}</Text>
+                        <Text size="sm">{resolveQuestion(question)}</Text>
                       </Group>
                     </Group>
                   </Card>
