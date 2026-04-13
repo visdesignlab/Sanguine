@@ -37,7 +37,7 @@ class AuthDispatchTests(TestCase):
         response = client.get("/api/accounts/login/", {"next": "/api/state"})
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response["Location"], "/saml2/login/?next=%2Fapi%2Fstate")
+        self.assertEqual(response["Location"], "/api/saml2/login/?next=%2Fapi%2Fstate")
 
     @override_settings(AUTH_PROVIDER="saml", LOGOUT_REDIRECT_URL="/api/")
     def test_logout_falls_back_to_local_logout_when_saml_errors(self):

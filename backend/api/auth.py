@@ -28,7 +28,7 @@ def query_redirect(path: str, query_params) -> HttpResponseRedirect:
 
 def auth_login(request):
     if settings.AUTH_PROVIDER == AUTH_PROVIDER_SAML:
-        return query_redirect("/saml2/login/", request.GET)
+        return query_redirect("/api/saml2/login/", request.GET)
 
     from django_cas_ng.views import LoginView
 

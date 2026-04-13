@@ -73,7 +73,7 @@ class SAMLConfigTests(SimpleTestCase):
         )
         self.assertEqual(
             settings_dict["SAML_CONFIG"]["entityid"],
-            "https://partner.example.edu/saml2/metadata/",
+            "https://partner.example.edu/api/saml2/metadata/",
         )
         self.assertTrue(settings_dict["SAML_CONFIG"]["verify_ssl_cert"])
         self.assertTrue(settings_dict["SAML_CONFIG"]["service"]["sp"]["authn_requests_signed"])

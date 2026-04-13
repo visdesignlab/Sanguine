@@ -26,7 +26,7 @@ SAML deployments must provide:
 
 Optional SAML settings:
 
-- `SAML_ENTITY_ID` (defaults to `{SAML_SP_BASE_URL}/saml2/metadata/` when unset)
+- `SAML_ENTITY_ID` (defaults to `{SAML_SP_BASE_URL}/api/saml2/metadata/` when unset)
 - `SAML_IDP_METADATA_CERT_PATH` for `mdq` or `remote` metadata validation
 - `SAML_VERIFY_SSL_CERT`, `SAML_CA_CERTS_PATH`, and stricter signing overrides if the partner requires custom trust settings
 

@@ -141,7 +141,7 @@ def build_saml_settings(*, env, hostname: str) -> dict[str, Any]:
     first_name_attr = _env_value(env, "SAML_FIRST_NAME_ATTRIBUTE", "first_name")
     last_name_attr = _env_value(env, "SAML_LAST_NAME_ATTRIBUTE", "last_name")
     base_url = _normalize_base_url(_env_value(env, "SAML_SP_BASE_URL"), hostname)
-    entity_id = _env_value(env, "SAML_ENTITY_ID", f"{base_url}/saml2/metadata/")
+    entity_id = _env_value(env, "SAML_ENTITY_ID", f"{base_url}/api/saml2/metadata/")
     verify_ssl_cert = env("SAML_VERIFY_SSL_CERT", default=True)
     ca_certs_path = _env_value(env, "SAML_CA_CERTS_PATH")
     authn_requests_signed = env("SAML_AUTHN_REQUESTS_SIGNED", default=True)
@@ -181,11 +181,11 @@ def build_saml_settings(*, env, hostname: str) -> dict[str, Any]:
                 "digest_algorithm": saml2.xmldsig.DIGEST_SHA256,
                 "endpoints": {
                     "assertion_consumer_service": [
-                        (f"{base_url}/saml2/acs/", saml2.BINDING_HTTP_POST),
+                        (f"{base_url}/api/saml2/acs/", saml2.BINDING_HTTP_POST),
                     ],
                     "single_logout_service": [
-                        (f"{base_url}/saml2/ls/", saml2.BINDING_HTTP_REDIRECT),
-                        (f"{base_url}/saml2/ls/post/", saml2.BINDING_HTTP_POST),
+                        (f"{base_url}/api/saml2/ls/", saml2.BINDING_HTTP_REDIRECT),
+                        (f"{base_url}/api/saml2/ls/post/", saml2.BINDING_HTTP_POST),
                     ],
                 },
             },

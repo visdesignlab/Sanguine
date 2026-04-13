@@ -22,4 +22,4 @@ urlpatterns = [
 ]
 
 if settings.AUTH_PROVIDER == "saml":
-    urlpatterns.append(path("saml2/", include("djangosaml2.urls")))
+    urlpatterns.append(path("api/saml2/", include("djangosaml2.urls")))
