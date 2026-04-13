@@ -1,6 +1,6 @@
 import { useCallback, useContext, useState } from 'react';
 import {
-  Card, Group, Box, Text, Stack, TextInput, AppShell,
+  Card, Group, Box, Text, Stack, TextInput, ScrollArea,
 } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 import { useObserver } from 'mobx-react-lite';
@@ -45,7 +45,17 @@ export function DepartmentViewQuestions() {
   };
 
   return useObserver(() => (
-    <AppShell.Aside>
+    <Box
+      style={{
+        width: store.departmentViewQuestionsWidth,
+        flexShrink: 0,
+        position: 'relative',
+        borderLeft: '1px solid var(--mantine-color-gray-3)',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+      }}
+    >
       <Box
         onMouseDown={startResizing}
         style={{
@@ -60,7 +70,7 @@ export function DepartmentViewQuestions() {
         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--mantine-color-blue-2)'; }}
         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
       />
-      <Box p="md" pb={0} pl="lg">
+      <Box pt={0} pb={0} px="lg">
         <TextInput
           placeholder="Search questions..."
           value={searchQuery}
@@ -69,7 +79,7 @@ export function DepartmentViewQuestions() {
           mb="md"
         />
       </Box>
-      <AppShell.Section grow p="md" pt={0} pl="lg" style={{ overflowY: 'auto' }}>
+      <ScrollArea style={{ flex: 1 }} p="md" pt={0} pl="lg">
         {presetStateCards.map(({ groupLabel, options }, groupIdx) => {
           const filteredOptions = options.map((opt, cardIdx) => ({ opt, cardIdx }))
             .filter(({ opt }) => opt.question.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -114,7 +124,7 @@ export function DepartmentViewQuestions() {
             </Box>
           );
         })}
-      </AppShell.Section>
-    </AppShell.Aside>
+      </ScrollArea>
+    </Box>
   ));
 }

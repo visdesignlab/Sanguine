@@ -3,7 +3,7 @@ import {
 } from 'react';
 import {
   ActionIcon,
-  Title, Card, Text, Stack, Flex, Button,
+  Title, Card, Text, Stack, Flex, Button, Box,
   Badge,
   Divider,
   Tooltip,
@@ -31,6 +31,7 @@ import {
 import { DumbbellChart } from './Charts/DumbbellChart';
 import ExploreTable from './Charts/ExploreTable';
 import { ScatterPlot } from './Charts/ScatterPlot';
+import { DepartmentViewQuestions } from './DepartmentViewQuestions';
 
 export function DepartmentView() {
   const store = useContext(Store);
@@ -405,41 +406,47 @@ export function DepartmentView() {
           </Button>
         </Stack>
       </Modal>
-      {store.exploreChartLayouts.main.length > 0 ? (
-        <ResponsiveGridLayout
-          className="layout"
-          breakpoints={{
-            main: 852, sm: 0,
-          }}
-          cols={{
-            main: 4, sm: 1,
-          }}
-          rowHeight={150}
-          containerPadding={[0, 0]}
-          draggableHandle=".move-icon"
-          onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.updateExploreLayout({ main: _layout });
-          }}
-          onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-            store.updateExploreLayout({ main: _layout });
-          }}
-          layouts={store.exploreChartLayouts}
-        >
-          {store.exploreChartConfigs.map((chartConfig) => (
-            <Card
-              key={chartConfig.chartId}
-              withBorder
-              className={classes.gridItem}
+      {/* Charts + Sidebar flex row */}
+      <Flex gap="md" style={{ flex: 1, minHeight: 0 }}>
+        <Box style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
+          {store.exploreChartLayouts.main.length > 0 ? (
+            <ResponsiveGridLayout
+              className="layout"
+              breakpoints={{
+                main: 852, sm: 0,
+              }}
+              cols={{
+                main: 4, sm: 1,
+              }}
+              rowHeight={150}
+              containerPadding={[0, 0]}
+              draggableHandle=".move-icon"
+              onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+                store.updateExploreLayout({ main: _layout });
+              }}
+              onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
+                store.updateExploreLayout({ main: _layout });
+              }}
+              layouts={store.exploreChartLayouts}
             >
-              {chartConfig.chartType === 'exploreTable' && <ExploreTable chartConfig={chartConfig} />}
-              {chartConfig.chartType === 'dumbbell' && <DumbbellChart chartConfig={chartConfig} />}
-              {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
-            </Card>
-          ))}
-        </ResponsiveGridLayout>
-      ) : (
-        <Text c="dimmed" p="md">No charts loaded. Select a preset question from the right sidebar.</Text>
-      )}
+              {store.exploreChartConfigs.map((chartConfig) => (
+                <Card
+                  key={chartConfig.chartId}
+                  withBorder
+                  className={classes.gridItem}
+                >
+                  {chartConfig.chartType === 'exploreTable' && <ExploreTable chartConfig={chartConfig} />}
+                  {chartConfig.chartType === 'dumbbell' && <DumbbellChart chartConfig={chartConfig} />}
+                  {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
+                </Card>
+              ))}
+            </ResponsiveGridLayout>
+          ) : (
+            <Text c="dimmed" p="md">No charts loaded. Select a preset question from the right sidebar.</Text>
+          )}
+        </Box>
+        {store.departmentViewQuestionsOpened && <DepartmentViewQuestions />}
+      </Flex>
     </Stack>
   ));
 }
