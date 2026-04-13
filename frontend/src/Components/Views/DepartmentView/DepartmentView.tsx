@@ -265,17 +265,6 @@ export function DepartmentView() {
         </Flex>
 
         <Flex direction="row" align="center" gap="md">
-          <Select
-            placeholder="Select department"
-            value={store.selectedDepartmentId}
-            onChange={(value) => store.setSelectedDepartment(value)}
-            data={departmentOptions}
-            renderOption={renderDeptOption}
-            leftSection={<IconBuildingHospital size={18} />}
-            w={260}
-            searchable
-            allowDeselect={false}
-          />
           <Tooltip label="Visible visits after filters" position="bottom">
             <Title order={5} c="dimmed">
               {`${(store.selectedDepartmentId ? (store.departmentVisitCounts[store.selectedDepartmentId] || 0) : store.filteredVisitsLength).toLocaleString()} / ${store.allVisitsLength.toLocaleString()}`}
@@ -283,6 +272,23 @@ export function DepartmentView() {
               Visits
             </Title>
           </Tooltip>
+          <Select
+            placeholder="Select department"
+            value={store.selectedDepartmentId}
+            onChange={(value) => store.setSelectedDepartment(value)}
+            data={departmentOptions}
+            renderOption={renderDeptOption}
+            leftSection={<IconBuildingHospital size={18} stroke={1.2} color="black" />}
+            styles={{
+              input: {
+                borderColor: 'black',
+                borderWidth: '1px',
+              },
+            }}
+            w={260}
+            searchable
+            allowDeselect={false}
+          />
           <Button onClick={handleOpenAdd}>
             <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
             Add Chart
