@@ -121,8 +121,6 @@ export interface ApplicationState {
   explore: {
     chartConfigs: ExploreChartConfig[];
     chartLayouts: { [key: string]: Layout[] };
-    departmentIds: string[];
-    procedureIds: string[];
   };
   settings: {
     unitCosts: Record<Cost, number>;
@@ -212,21 +210,21 @@ export class RootStore {
 
   selectedVisitNos: number[] = [];
 
-  // --- Department Aside State (non-provenance) ---
+  // --- Department View State (non-provenance) ---
   departmentViewQuestionsOpened = true;
 
   departmentViewQuestionsWidth = 380;
 
   activeDepartmentViewQuestion: string | null = null;
 
+  selectedDepartmentId: string | null = null;
+
+  departmentVisitCounts: Record<string, number> = {};
+
   // --- Common ---
   allVisitsLength = 0;
 
   filteredVisitsLength = 0;
-
-  exploreFilteredVisitsLength = 0;
-
-  dynamicHierarchyCounts: Record<string, number> | null = null;
   // endregion
 
   // region Constructor
@@ -244,7 +242,7 @@ export class RootStore {
       dashboardChartData: observable.ref,
       exploreChartData: observable.ref,
       procedureHierarchy: observable.ref,
-      dynamicHierarchyCounts: observable.ref,
+      departmentVisitCounts: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
     });
@@ -355,16 +353,6 @@ export class RootStore {
         },
       }), exploreState);
     },
-    setExploreProcedureFilters: (departmentIds: string[], procedureIds: string[]) => {
-      this.applyAction('Update Department Charts Filters', (state, filters) => ({
-        ...state,
-        explore: {
-          ...state.explore,
-          departmentIds: filters.departmentIds,
-          procedureIds: filters.procedureIds,
-        },
-      }), { departmentIds, procedureIds });
-    },
     updateSettings: (unitCosts: Record<Cost, number>) => {
       this.applyAction('Update Settings', (state, costs) => ({
         ...state,
@@ -473,8 +461,6 @@ export class RootStore {
       explore: {
         chartConfigs: JSON.parse(JSON.stringify(this.exploreInitialChartConfigs || [])),
         chartLayouts: JSON.parse(JSON.stringify(this.exploreInitialChartLayouts || {})),
-        departmentIds: [],
-        procedureIds: [],
       },
       settings: {
         unitCosts: { ...DEFAULT_UNIT_COSTS },
@@ -781,7 +767,7 @@ export class RootStore {
           selectedTimePeriods: [],
         },
         dashboard: {},
-        explore: { departmentIds: [], procedureIds: [] },
+        explore: {},
         settings: {},
         ui: {
           activeTab: 'Hospital',
@@ -847,6 +833,30 @@ export class RootStore {
 
   setDepartmentViewQuestionsWidth(width: number) {
     this.departmentViewQuestionsWidth = Math.max(250, Math.min(800, width));
+  }
+
+  setSelectedDepartment(departmentId: string | null) {
+    this.selectedDepartmentId = departmentId;
+  }
+
+  /**
+   * Returns the DuckDB WHERE clause to filter by the selected department.
+   * For filteredVisits (which has department_ids as a list column).
+   */
+  get departmentWhereClause(): string {
+    if (!this.selectedDepartmentId) return '';
+    const safeId = this.selectedDepartmentId.replace(/[^A-Za-z0-9_-]/g, '');
+    return `WHERE list_has(department_ids, '${safeId}')`;
+  }
+
+  /**
+   * Returns the DuckDB join + where clause to filter surgery cases by department.
+   * filteredSurgeryCases doesn't have department_ids, so we join through visits.
+   */
+  get departmentSurgeryJoinClause(): string {
+    if (!this.selectedDepartmentId) return '';
+    const safeId = this.selectedDepartmentId.replace(/[^A-Za-z0-9_-]/g, '');
+    return `JOIN visits v ON sc.visit_no = v.visit_no WHERE list_has(v.department_ids, '${safeId}')`;
   }
   // endregion
 
@@ -1810,11 +1820,11 @@ export class RootStore {
       async () => { await this.updateCostsTable(); },
     );
     reaction(
-      () => [
-        this.state.explore.chartConfigs,
-        this.state.explore.departmentIds,
-        this.state.explore.procedureIds,
-      ],
+      () => this.state.explore.chartConfigs,
+      async () => { await this.computeExploreChartData(); },
+    );
+    reaction(
+      () => this.selectedDepartmentId,
       async () => { await this.computeExploreChartData(); },
     );
   }
@@ -1898,7 +1908,7 @@ export class RootStore {
 
     // Update all the data retrievers
     await this.updateFilteredVisitsLength();
-    await this.updateDynamicHierarchyCounts();
+    await this.updateDepartmentVisitCounts();
     await this.computeDashboardChartData();
     await this.computeDashboardStatData();
     await this.computeExploreChartData();
@@ -1907,41 +1917,9 @@ export class RootStore {
   }
 
   async computeExploreChartData(): Promise<void> {
-    const { departmentIds, procedureIds } = this.state.explore;
-    const safeIdPattern = /^[A-Za-z0-9_-]+$/;
-    const localFilters: string[] = [];
-    const localFiltersWithPrefix: string[] = [];
-
-    if (departmentIds && departmentIds.length > 0) {
-      const safeDeptIds = departmentIds.filter((id) => safeIdPattern.test(id)).map((id) => `'${id}'`).join(', ');
-      if (safeDeptIds) {
-        localFilters.push(`list_has_any(department_ids, [${safeDeptIds}]::VARCHAR[])`);
-        localFiltersWithPrefix.push(`list_has_any(v.department_ids, [${safeDeptIds}]::VARCHAR[])`);
-      }
-    }
-
-    if (procedureIds && procedureIds.length > 0) {
-      const safeProcIds = procedureIds.filter((id) => safeIdPattern.test(id)).map((id) => `'${id}'`).join(', ');
-      if (safeProcIds) {
-        localFilters.push(`list_has_any(procedure_ids, [${safeProcIds}]::VARCHAR[])`);
-        localFiltersWithPrefix.push(`list_has_any(v.procedure_ids, [${safeProcIds}]::VARCHAR[])`);
-      }
-    }
-
-    const localWhereClause = localFilters.length > 0 ? `WHERE ${localFilters.join(' OR ')}` : '';
-    const localWhereClauseWithPrefix = localFiltersWithPrefix.length > 0 ? `WHERE ${localFiltersWithPrefix.join(' OR ')}` : '';
-
-    // Update explore-specific visit count
-    try {
-      if (this.duckDB) {
-        const countQuery = `SELECT COUNT(DISTINCT visit_no) AS count FROM filteredVisits ${localWhereClause};`;
-        const result = await this.duckDB.query(countQuery);
-        this.exploreFilteredVisitsLength = Number(result.toArray()[0].toJSON().count);
-      }
-    } catch (error) {
-      console.error('Error counting explore visits:', error);
-      this.exploreFilteredVisitsLength = this.filteredVisitsLength;
-    }
+    // Build department filter clauses
+    const deptWhere = this.departmentWhereClause;
+    const deptSurgeryJoin = this.departmentSurgeryJoinClause;
 
     const promises = this.exploreChartConfigs.map(async (config) => {
       const surgeonNameExpr = this.uiState.isInPrivateMode
@@ -2078,7 +2056,7 @@ export class RootStore {
           SELECT
             ${columnClauses.join(',\n            ')}
           FROM filteredVisits
-          ${localWhereClause}
+          ${deptWhere}
           GROUP BY ${tableConfig.rowVar}
           ORDER BY ${tableConfig.rowVar};
         `;
@@ -2124,7 +2102,7 @@ export class RootStore {
              intraop_cell_saver_ml,
              (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
           FROM filteredSurgeryCases sc
-          ${localWhereClauseWithPrefix ? `JOIN visits v ON sc.visit_no = v.visit_no ${localWhereClauseWithPrefix}` : ''}
+          ${deptSurgeryJoin}
           ORDER BY surgery_start_dtm
           LIMIT 10000
         `;
@@ -2171,7 +2149,7 @@ export class RootStore {
              total_cost,
              rbc_cost
            FROM filteredSurgeryCases sc
-           ${localWhereClauseWithPrefix ? `JOIN visits v ON sc.visit_no = v.visit_no ${localWhereClauseWithPrefix}` : ''}
+           ${deptSurgeryJoin}
            LIMIT 10000
         `;
         try {
@@ -2218,27 +2196,43 @@ export class RootStore {
     this.filteredVisitsLength = Number(result.toArray()[0].toJSON().count);
   }
 
-  async updateDynamicHierarchyCounts() {
+  /**
+   * Query filteredVisits to get visit counts per department.
+   * Auto-selects the largest department if none is currently selected
+   * or if the current selection has 0 visits.
+   */
+  async updateDepartmentVisitCounts() {
     if (!this.duckDB) return;
     try {
       const query = `
-        SELECT id, COUNT(DISTINCT visit_no) as count FROM (
-          SELECT UNNEST(department_ids) AS id, visit_no FROM filteredVisits
-          UNION ALL
-          SELECT UNNEST(procedure_ids) AS id, visit_no FROM filteredVisits
-        ) GROUP BY id;
+        SELECT UNNEST(department_ids) AS dept_id, COUNT(DISTINCT visit_no) AS visit_count
+        FROM filteredVisits
+        GROUP BY dept_id;
       `;
       const result = await this.duckDB.query(query);
       const counts: Record<string, number> = {};
       for (const row of result.toArray()) {
-        const { id, count } = row.toJSON();
-        counts[id] = Number(count);
+        const { dept_id: deptId, visit_count: visitCount } = row.toJSON();
+        counts[String(deptId)] = Number(visitCount);
       }
+
       runInAction(() => {
-        this.dynamicHierarchyCounts = counts;
+        this.departmentVisitCounts = counts;
+
+        // Auto-select the largest department if none selected or current has 0 visits
+        const currentCount = this.selectedDepartmentId ? (counts[this.selectedDepartmentId] || 0) : 0;
+        if (!this.selectedDepartmentId || currentCount === 0) {
+          const largest = Object.entries(counts).reduce<[string, number] | null>(
+            (best, [id, count]) => (!best || count > best[1] ? [id, count] : best),
+            null,
+          );
+          if (largest) {
+            this.selectedDepartmentId = largest[0];
+          }
+        }
       });
     } catch (error) {
-      console.error('Error calculating dynamic procedure counts:', error);
+      console.error('Error calculating department visit counts:', error);
     }
   }
 
