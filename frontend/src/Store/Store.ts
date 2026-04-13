@@ -2205,8 +2205,11 @@ export class RootStore {
     if (!this.duckDB) return;
     try {
       const query = `
-        SELECT UNNEST(department_ids) AS dept_id, COUNT(DISTINCT visit_no) AS visit_count
-        FROM filteredVisits
+        SELECT dept_id, COUNT(DISTINCT visit_no) AS visit_count
+        FROM (
+          SELECT UNNEST(department_ids) AS dept_id, visit_no
+          FROM filteredVisits
+        )
         GROUP BY dept_id;
       `;
       const result = await this.duckDB.query(query);
