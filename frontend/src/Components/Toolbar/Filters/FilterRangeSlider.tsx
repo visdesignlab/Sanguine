@@ -4,7 +4,7 @@ import {
   useContext, useMemo, useState, useEffect,
 } from 'react';
 import {
-  Store, MANUAL_INFINITY, ApplicationState,
+  Store, ApplicationState,
 } from '../../../Store/Store';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 import { CELL_SAVER_ML } from '../../../Types/bloodProducts';
@@ -23,8 +23,8 @@ export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: { varN
   // TODO redo the clamping logic
   // Clamp slider max value to prevent outliers
   const clampedMax = useMemo(
-    () => Math.min(MANUAL_INFINITY, initialFilterMax),
-    [initialFilterMax],
+    () => Math.min(store.clampedMax[varName], initialFilterMax),
+    [initialFilterMax, store.clampedMax, varName],
   );
 
   // Local state for smooth sliding
