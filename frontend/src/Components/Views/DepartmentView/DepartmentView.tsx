@@ -12,8 +12,9 @@ import {
   Menu,
 } from '@mantine/core';
 import {
-  IconPlus, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand,
+  IconPlus,
   IconBuildingHospital, IconChartLine, IconNumbers,
+  IconSearch, IconChevronLeft, IconChevronRight,
 } from '@tabler/icons-react';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { useObserver } from 'mobx-react-lite';
@@ -343,14 +344,30 @@ export function DepartmentView() {
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
-          <ActionIcon
-            variant={store.departmentViewQuestionsOpened ? 'light' : 'subtle'}
-            onClick={() => store.toggleDepartmentViewQuestions()}
-            size="lg"
-            aria-label="Toggle Preset Questions Panel"
-          >
-            {store.departmentViewQuestionsOpened ? <IconLayoutSidebarRightCollapse size={buttonIconSize} /> : <IconLayoutSidebarRightExpand size={buttonIconSize} />}
-          </ActionIcon>
+          <Tooltip label="Chart Presets" position="bottom">
+            <ActionIcon
+              variant={store.departmentViewQuestionsOpened ? 'light' : 'default'}
+              onClick={() => store.toggleDepartmentViewQuestions()}
+              size="lg"
+              aria-label="Chart Presets"
+            >
+              <Flex align="center" gap={1}>
+                {store.departmentViewQuestionsOpened
+                  ? (
+                    <>
+                      <IconSearch size={buttonIconSize - 4} />
+                      <IconChevronRight size={buttonIconSize - 6} />
+                    </>
+                  )
+                  : (
+                    <>
+                      <IconChevronLeft size={buttonIconSize - 6} />
+                      <IconSearch size={buttonIconSize - 4} />
+                    </>
+                  )}
+              </Flex>
+            </ActionIcon>
+          </Tooltip>
         </Flex>
       </Flex>
       <Divider />
@@ -530,7 +547,16 @@ export function DepartmentView() {
             <Text c="dimmed" p="md">No charts loaded. Select a preset question from the right sidebar.</Text>
           )}
         </Box>
-        {store.departmentViewQuestionsOpened && <DepartmentViewQuestions />}
+        <Box
+          style={{
+            width: store.departmentViewQuestionsOpened ? store.departmentViewQuestionsWidth : 0,
+            overflow: 'hidden',
+            flexShrink: 0,
+            transition: 'width 0.35s ease-in-out',
+          }}
+        >
+          <DepartmentViewQuestions />
+        </Box>
       </Flex>
     </Stack>
   ));
