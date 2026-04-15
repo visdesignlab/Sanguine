@@ -3,13 +3,14 @@ import {
   IconReportSearch,
 } from '@tabler/icons-react';
 import { Layout } from 'react-grid-layout';
-import { ExploreChartConfig } from '../../../Types/application';
+import { ExploreChartConfig, ExploreStatConfig } from '../../../Types/application';
 
 export type PresetOption = {
   question: string;
   Icon: React.ComponentType<IconProps>;
   chartConfigs: ExploreChartConfig[];
   chartLayouts: { [key: string]: Layout[] };
+  statConfigs?: ExploreStatConfig[];
 };
 export type PresetGroup = { groupLabel: string; options: PresetOption[] };
 
@@ -90,6 +91,26 @@ export const presetStateCards: PresetGroup[] = [
             },
           ],
         },
+        statConfigs: [
+          {
+            statId: 'preset-stat-rbc-avg',
+            yAxisVar: 'rbc_units',
+            aggregation: 'avg',
+            title: 'Average RBCs Transfused Per Visit',
+          },
+          {
+            statId: 'preset-stat-cell-saver-sum',
+            yAxisVar: 'cell_saver_ml',
+            aggregation: 'sum',
+            title: 'Total Cell Salvage Volume (ml) Used',
+          },
+          {
+            statId: 'preset-stat-plt-adherent',
+            yAxisVar: 'plt_units_adherent',
+            aggregation: 'avg',
+            title: 'Percentage of Platelet Units Transfused According to Guidelines',
+          },
+        ],
       },
     ],
   },

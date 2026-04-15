@@ -19,6 +19,8 @@ import {
   DashboardStatData,
   ExploreChartConfig,
   ExploreChartData,
+  ExploreStatConfig,
+  ExploreStatData,
   ExploreTableConfig,
   ExploreTableRow,
   ProcedureHierarchyResponse,
@@ -121,6 +123,7 @@ export interface ApplicationState {
   explore: {
     chartConfigs: ExploreChartConfig[];
     chartLayouts: { [key: string]: Layout[] };
+    statConfigs: ExploreStatConfig[];
   };
   settings: {
     unitCosts: Record<Cost, number>;
@@ -165,6 +168,8 @@ export class RootStore {
   _transientExploreLayouts: { [key: string]: Layout[] } | null = null;
 
   exploreChartData: ExploreChartData = {};
+
+  exploreStatData: ExploreStatData = {};
 
   // --- Filters State ---
   _initialFilterValues = {
@@ -241,6 +246,7 @@ export class RootStore {
       uiState: computed,
       dashboardChartData: observable.ref,
       exploreChartData: observable.ref,
+      exploreStatData: observable.ref,
       procedureHierarchy: observable.ref,
       departmentVisitCounts: observable.ref,
       selectedVisits: observable.ref,
@@ -461,6 +467,7 @@ export class RootStore {
       explore: {
         chartConfigs: JSON.parse(JSON.stringify(this.exploreInitialChartConfigs || [])),
         chartLayouts: JSON.parse(JSON.stringify(this.exploreInitialChartLayouts || {})),
+        statConfigs: [],
       },
       settings: {
         unitCosts: { ...DEFAULT_UNIT_COSTS },
@@ -1402,8 +1409,8 @@ export class RootStore {
     this.actions.updateExploreState({ chartConfigs: input }, 'Update Explore Config');
   }
 
-  loadExplorePreset(configs: ExploreChartConfig[], layouts: { [key: string]: Layout[] }, title?: string) {
-    this.actions.updateExploreState({ chartConfigs: configs, chartLayouts: layouts }, 'Load Explore Preset');
+  loadExplorePreset(configs: ExploreChartConfig[], layouts: { [key: string]: Layout[] }, title?: string, statConfigs?: ExploreStatConfig[]) {
+    this.actions.updateExploreState({ chartConfigs: configs, chartLayouts: layouts, statConfigs: statConfigs || [] }, 'Load Explore Preset');
     this._transientExploreLayouts = null;
     this.activeDepartmentViewQuestion = title || null;
   }
@@ -1437,6 +1444,27 @@ export class RootStore {
 
   updateExploreChartConfig(updatedConfig: ExploreChartConfig) {
     this.exploreChartConfigs = this.exploreChartConfigs.map((cfg) => (cfg.chartId === updatedConfig.chartId ? updatedConfig : cfg));
+  }
+
+  get exploreStatConfigs(): ExploreStatConfig[] {
+    const { state } = this;
+    return (state && state.explore && state.explore.statConfigs) ? state.explore.statConfigs : [];
+  }
+
+  set exploreStatConfigs(input: ExploreStatConfig[]) {
+    this.actions.updateExploreState({ statConfigs: input }, 'Update Explore Stats');
+  }
+
+  addExploreStat(config: ExploreStatConfig) {
+    this.activeDepartmentViewQuestion = null;
+    const currentStats = this.exploreStatConfigs;
+    this.actions.updateExploreState({ statConfigs: [...currentStats, config] }, 'Add Explore Stat');
+  }
+
+  removeExploreStat(statId: string) {
+    this.activeDepartmentViewQuestion = null;
+    const newStats = this.exploreStatConfigs.filter((s) => s.statId !== statId);
+    this.actions.updateExploreState({ statConfigs: newStats }, 'Remove Explore Stat');
   }
   // endregion
 
@@ -1824,8 +1852,15 @@ export class RootStore {
       async () => { await this.computeExploreChartData(); },
     );
     reaction(
+      () => this.state.explore.statConfigs,
+      async () => { await this.computeExploreStatData(); },
+    );
+    reaction(
       () => this.selectedDepartmentId,
-      async () => { await this.computeExploreChartData(); },
+      async () => {
+        await this.computeExploreChartData();
+        await this.computeExploreStatData();
+      },
     );
   }
 
@@ -1912,6 +1947,7 @@ export class RootStore {
     await this.computeDashboardChartData();
     await this.computeDashboardStatData();
     await this.computeExploreChartData();
+    await this.computeExploreStatData();
     await this.generateHistogramData();
     await this.updateSelectedVisits();
   }
@@ -2188,6 +2224,83 @@ export class RootStore {
     });
 
     this.exploreChartData = data;
+  }
+
+  async computeExploreStatData(): Promise<void> {
+    if (!this.duckDB || this.exploreStatConfigs.length === 0) {
+      this.exploreStatData = {};
+      return;
+    }
+
+    const deptWhere = this.departmentWhereClause;
+    const result: ExploreStatData = {};
+
+    const statSelects: string[] = [];
+    this.exploreStatConfigs.forEach(({ yAxisVar, aggregation }) => {
+      const aggFn = aggregation.toUpperCase();
+
+      if (yAxisVar === 'total_blood_product_cost') {
+        statSelects.push(
+          `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
+        );
+        return;
+      }
+      if (yAxisVar === 'case_mix_index') {
+        statSelects.push(
+          `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`,
+        );
+        return;
+      }
+      if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
+        const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
+        statSelects.push(
+          `CASE WHEN SUM(${baseSum}) > 0 THEN CAST(SUM(overall_units_adherent) AS DOUBLE) / SUM(${baseSum}) ELSE NULL END AS avg_overall_units_adherent`,
+        );
+        return;
+      }
+      if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
+        const baseUnit = yAxisVar.replace('_adherent', '');
+        statSelects.push(
+          `CASE WHEN SUM(${baseUnit}) > 0 THEN CAST(SUM(${yAxisVar}) AS DOUBLE) / SUM(${baseUnit}) ELSE NULL END AS avg_${yAxisVar}`,
+        );
+        return;
+      }
+      if (yAxisVar === 'visit_count') {
+        statSelects.push(`COUNT(visit_no) AS ${aggregation}_visit_count`);
+        return;
+      }
+      statSelects.push(`${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`);
+    });
+
+    if (statSelects.length === 0) {
+      this.exploreStatData = {};
+      return;
+    }
+
+    try {
+      const query = `
+        SELECT ${statSelects.join(',\n')}
+        FROM filteredVisits
+        ${deptWhere};
+      `;
+      const queryResult = await this.duckDB.query(query);
+      const row = queryResult.toArray()[0]?.toJSON();
+
+      if (row) {
+        this.exploreStatConfigs.forEach(({ yAxisVar, aggregation }) => {
+          const key = `${aggregation}_${yAxisVar}`;
+          const rawValue = Number(row[key]);
+          const formattedValue = yAxisVar.includes('adherent')
+            ? formatValueForDisplay(yAxisVar, rawValue, aggregation as 'sum' | 'avg', false)
+            : formatValueForDisplay(yAxisVar, rawValue, aggregation as 'sum' | 'avg');
+          result[key] = { value: formattedValue };
+        });
+      }
+    } catch (error) {
+      console.error('Error computing explore stat data:', error);
+    }
+
+    this.exploreStatData = result;
   }
 
   async updateFilteredVisitsLength() {

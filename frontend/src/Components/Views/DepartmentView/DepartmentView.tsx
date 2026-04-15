@@ -9,10 +9,11 @@ import {
   Tooltip,
   Modal,
   Select,
+  Menu,
 } from '@mantine/core';
 import {
   IconPlus, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand,
-  IconBuildingHospital,
+  IconBuildingHospital, IconChartLine, IconNumbers,
 } from '@tabler/icons-react';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { useObserver } from 'mobx-react-lite';
@@ -27,11 +28,14 @@ import {
   ScatterXAxisVar, ScatterYAxisVar,
   DumbbellXAxisVar, DumbbellYAxisVar,
   DUMBBELL_X_AXIS_OPTIONS, DUMBBELL_Y_AXIS_OPTIONS,
+  exploreStatYAxisOptions,
+  AGGREGATION_OPTIONS,
 } from '../../../Types/application';
 import { DumbbellChart } from './Charts/DumbbellChart';
 import ExploreTable from './Charts/ExploreTable';
 import { ScatterPlot } from './Charts/ScatterPlot';
 import { DepartmentViewQuestions } from './DepartmentViewQuestions';
+import { DepartmentStatsGrid } from './DepartmentStatsGrid';
 
 export function DepartmentView() {
   const store = useContext(Store);
@@ -42,8 +46,10 @@ export function DepartmentView() {
   // Initial Load Default Preset
   useEffect(() => {
     if (store.exploreChartConfigs.length === 0 && presetStateCards[0]?.options[0]) {
-      const { chartConfigs, chartLayouts, question } = presetStateCards[0].options[0];
-      store.loadExplorePreset([...chartConfigs], { main: [...chartLayouts.main] }, question);
+      const {
+        chartConfigs, chartLayouts, question, statConfigs,
+      } = presetStateCards[0].options[0];
+      store.loadExplorePreset([...chartConfigs], { main: [...chartLayouts.main] }, question, statConfigs ? [...statConfigs] : undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -51,6 +57,7 @@ export function DepartmentView() {
   // Sizes
   const {
     cardIconStroke,
+    cardIconSize,
     toolbarWidth,
     buttonIconSize,
   } = useThemeConstants();
@@ -82,6 +89,30 @@ export function DepartmentView() {
     resetModal();
     openAddModal();
   };
+
+  // Add Stat Modal State ---------------------------------
+  const [isStatModalOpen, { open: openStatModal, close: closeStatModal }] = useDisclosure(false);
+  const [statAggregation, setStatAggregation] = useState<'sum' | 'avg'>('avg');
+  const [statYAxisVar, setStatYAxisVar] = useState<string>('');
+
+  const handleAddStat = useCallback(() => {
+    if (!statYAxisVar) return;
+    const option = exploreStatYAxisOptions.find((o) => o.value === statYAxisVar);
+    const aggLabel = statAggregation === 'sum' ? option?.label.sum : option?.label.avg;
+    store.addExploreStat({
+      statId: `stat-${Date.now()}`,
+      yAxisVar: statYAxisVar as typeof exploreStatYAxisOptions[number]['value'],
+      aggregation: statAggregation,
+      title: aggLabel || statYAxisVar,
+    });
+    closeStatModal();
+  }, [statYAxisVar, statAggregation, store, closeStatModal]);
+
+  const handleOpenStatModal = useCallback(() => {
+    setStatAggregation('avg');
+    setStatYAxisVar('');
+    openStatModal();
+  }, [openStatModal]);
 
   const handleAddChart = () => {
     const id = `explore-${Date.now()}`;
@@ -290,10 +321,28 @@ export function DepartmentView() {
             searchable
             allowDeselect={false}
           />
-          <Button onClick={handleOpenAdd}>
-            <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
-            Add Chart
-          </Button>
+          <Menu width="md">
+            <Menu.Target>
+              <Button>
+                <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+                Add Item
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconNumbers size={cardIconSize} stroke={cardIconStroke} />}
+                onClick={handleOpenStatModal}
+              >
+                Add Stat
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconChartLine size={cardIconSize} stroke={cardIconStroke} />}
+                onClick={handleOpenAdd}
+              >
+                Add Chart
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
           <ActionIcon
             variant={store.departmentViewQuestionsOpened ? 'light' : 'subtle'}
             onClick={() => store.toggleDepartmentViewQuestions()}
@@ -406,9 +455,45 @@ export function DepartmentView() {
           </Button>
         </Stack>
       </Modal>
+      {/* Add Stat Modal */}
+      <Modal
+        opened={isStatModalOpen}
+        onClose={closeStatModal}
+        title="Add Stat"
+        centered
+      >
+        <Stack gap="md">
+          <Select
+            label="Aggregation"
+            data={Object.entries(AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }))}
+            value={statAggregation}
+            onChange={(v) => setStatAggregation((v as 'sum' | 'avg') || 'avg')}
+          />
+          <Select
+            label="Metric"
+            placeholder="Choose metric"
+            data={exploreStatYAxisOptions.map((opt) => ({
+              value: opt.value,
+              label: opt.label.base,
+            }))}
+            value={statYAxisVar}
+            onChange={(v) => setStatYAxisVar(v || '')}
+            searchable
+          />
+          <Button
+            onClick={handleAddStat}
+            disabled={!statYAxisVar}
+            fullWidth
+          >
+            Done
+          </Button>
+        </Stack>
+      </Modal>
       {/* Charts + Sidebar flex row */}
       <Flex gap="md" style={{ flex: 1, minHeight: 0 }}>
         <Box style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
+          {/* Explore Stat Cards */}
+          <DepartmentStatsGrid />
           {store.exploreChartLayouts.main.length > 0 ? (
             <ResponsiveGridLayout
               className="layout"
