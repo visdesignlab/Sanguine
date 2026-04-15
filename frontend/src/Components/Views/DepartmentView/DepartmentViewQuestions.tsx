@@ -1,4 +1,6 @@
-import { useCallback, useContext, useState } from 'react';
+import {
+  useCallback, useContext, useState, useRef,
+} from 'react';
 import {
   Card, Group, Box, Text, Stack, TextInput, ScrollArea,
 } from '@mantine/core';
@@ -15,6 +17,8 @@ export function DepartmentViewQuestions() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredIdx, setHoveredIdx] = useState<{ group: number; card: number } | null>(null);
+  const [flashKey, setFlashKey] = useState<string | null>(null);
+  const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     cardIconSize,
@@ -47,16 +51,30 @@ export function DepartmentViewQuestions() {
     const {
       chartConfigs, chartLayouts, question, statConfigs,
     } = presetStateCards[groupIdx].options[cardIdx];
+    const resolvedQ = resolveQuestion(question);
+
+    // Flash the clicked card border
+    setFlashKey(question);
+
     store.loadExplorePreset([...chartConfigs], {
       main: [...chartLayouts.main],
-    }, resolveQuestion(question), statConfigs ? [...statConfigs] : undefined);
+    }, resolvedQ, statConfigs ? [...statConfigs] : undefined);
+
+    // Auto-collapse the panel after a brief delay
+    if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+    collapseTimerRef.current = setTimeout(() => {
+      if (store.departmentViewQuestionsOpened) {
+        store.toggleDepartmentViewQuestions();
+      }
+      setFlashKey(null);
+    }, 600);
   };
 
   return useObserver(() => (
     <Box
       style={{
+        minWidth: store.departmentViewQuestionsWidth,
         width: store.departmentViewQuestionsWidth,
-        flexShrink: 0,
         position: 'relative',
         borderLeft: '1px solid var(--mantine-color-gray-3)',
         display: 'flex',
@@ -113,7 +131,7 @@ export function DepartmentViewQuestions() {
                     key={question}
                     withBorder
                     style={{ minHeight: toolbarWidth, cursor: 'pointer' }}
-                    className={`${cardStyles.presetStateCard} ${classes.gridItem} ${store.activeDepartmentViewQuestion === question ? cardStyles.active : ''}`.trim()}
+                    className={`${cardStyles.presetStateCard} ${classes.gridItem} ${store.activeDepartmentViewQuestion === question ? cardStyles.active : ''} ${flashKey === question ? cardStyles.flash : ''}`.trim()}
                     onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
                     onMouseLeave={() => setHoveredIdx(null)}
                     onClick={() => handlePresetClick(groupIdx, cardIdx)}

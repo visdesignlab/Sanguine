@@ -38,3 +38,9 @@
 .presetStateCard:hover .arrow {
     transform: translateY(-8px);
 }
+
+/* Active / selected question: light yellow fill */
+.presetStateCard.active,
+.presetStateCard.flash {
+    background-color: #f5faff;
+}
