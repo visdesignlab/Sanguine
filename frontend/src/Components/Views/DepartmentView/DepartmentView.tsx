@@ -299,11 +299,14 @@ export function DepartmentView() {
 
         <Flex direction="row" align="center" gap="md">
           <Tooltip label="Visible visits after filters" position="bottom">
-            <Title order={5} c="dimmed">
-              {`${(store.selectedDepartmentId ? (store.departmentVisitCounts[store.selectedDepartmentId] || 0) : store.filteredVisitsLength).toLocaleString()} / ${store.allVisitsLength.toLocaleString()}`}
-              {' '}
-              Visits
-            </Title>
+            <Text size="sm">
+              <Text span fw={500}>
+                {(store.selectedDepartmentId ? (store.departmentVisitCounts[store.selectedDepartmentId] || 0) : store.filteredVisitsLength).toLocaleString()}
+              </Text>
+              <Text span fw={300} c="dimmed">
+                {` / ${store.allVisitsLength.toLocaleString()} Visits`}
+              </Text>
+            </Text>
           </Tooltip>
           <Select
             placeholder="Select department"
@@ -544,7 +547,13 @@ export function DepartmentView() {
               ))}
             </ResponsiveGridLayout>
           ) : (
-            <Text c="dimmed" p="md">No charts loaded. Select a preset question from the right sidebar.</Text>
+            <Text c="dimmed" fw={300} fs="italic" ta="center" pt="xl">
+              Add Item or select a question from the
+              {' '}
+              <IconSearch size={14} style={{ verticalAlign: 'middle' }} />
+              {' '}
+              right sidebar.
+            </Text>
           )}
         </Box>
         <Box

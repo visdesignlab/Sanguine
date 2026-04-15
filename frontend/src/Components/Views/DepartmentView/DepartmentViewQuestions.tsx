@@ -51,14 +51,13 @@ export function DepartmentViewQuestions() {
     const {
       chartConfigs, chartLayouts, question, statConfigs,
     } = presetStateCards[groupIdx].options[cardIdx];
-    const resolvedQ = resolveQuestion(question);
 
     // Flash the clicked card border
     setFlashKey(question);
 
     store.loadExplorePreset([...chartConfigs], {
       main: [...chartLayouts.main],
-    }, resolvedQ, statConfigs ? [...statConfigs] : undefined);
+    }, question, statConfigs ? [...statConfigs] : undefined);
 
     // Auto-collapse the panel after a brief delay
     if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
