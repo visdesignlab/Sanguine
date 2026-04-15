@@ -875,11 +875,17 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     const aggLabel = chartConfig.aggregation === 'avg' ? 'Average' : 'Total';
     const newTitle = `${aggLabel} RBC Transfusions per ${groupLabel}`;
 
+    let groupByVar = chartConfig.groupByVar;
+    if (['year', 'quarter'].includes(value) && groupByVar === 'year') {
+      groupByVar = undefined;
+    }
+
     const updatedConfig: ExploreTableConfig = {
       ...chartConfig,
       rowVar: value,
       columns: newColumns,
       title: newTitle,
+      groupByVar,
     };
     store.updateExploreChartConfig(updatedConfig);
 
@@ -1503,7 +1509,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             )}
             searchable
             placeholder="Group by"
-            data={ExploreTableGroupByOptions}
+            data={['year', 'quarter'].includes(chartConfig.rowVar) ? ExploreTableGroupByOptions.filter((o) => o.value !== 'year') : ExploreTableGroupByOptions}
             value={chartConfig.groupByVar || null}
             onChange={(val) => {
               store.updateExploreChartConfig({

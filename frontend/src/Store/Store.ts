@@ -1910,7 +1910,11 @@ export class RootStore {
               columnClauses.push(`${anesthNameExpr} AS ${colVar}`);
               return;
             }
-            columnClauses.push(colVar);
+            if (['year', 'quarter', 'month', 'department_id', 'procedure_id'].includes(colVar)) {
+              columnClauses.push(`sc.${colVar} AS ${colVar}`);
+            } else {
+              columnClauses.push(`${colVar} AS ${colVar}`);
+            }
             return;
           }
 
@@ -2023,7 +2027,7 @@ export class RootStore {
           columnClauses.splice(1, 0, `${secondaryGroupCol} AS _group_val`);
         }
 
-        const groupByIndices = tableConfig.groupByVar ? `1, 2` : `1`;
+        const groupByIndices = tableConfig.groupByVar ? '1, 2' : '1';
 
         // Build the query - Universally surgery-centric for selection parity
         const query = `
