@@ -1,5 +1,11 @@
 .explore-table-data-table td {
   padding: 0 !important;
+  vertical-align: top !important;
+}
+
+.fat-row {
+  height: 60px !important;
+  min-height: 60px !important;
 }
 
 .explore-table-data-table tfoot td,
@@ -61,7 +67,7 @@
   justify-content: space-between;
   align-items: center;
   box-sizing: border-box;
-  font-size: 14px;
+  font-size: 11.5px;
   color: #6f6f6f;
   font-weight: 600;
   opacity: 0.7;

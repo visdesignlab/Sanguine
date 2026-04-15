@@ -1874,6 +1874,10 @@ export class RootStore {
         ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY anesth_prov_name)'
         : 'anesth_prov_name';
 
+      const attendingNameExpr = this.uiState.isInPrivateMode
+        ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY attending_provider)'
+        : 'attending_provider';
+
       if (config.chartType === 'exploreTable') {
         // Configuration of table (rowVar, columns, aggregation, etc.)
         const tableConfig = config as ExploreTableConfig;
@@ -1895,10 +1899,16 @@ export class RootStore {
           // If this column is the grouping variable, select it directly
           if (colVar === tableConfig.rowVar) {
             if (colVar === 'attending_provider') {
-              if (this.uiState.isInPrivateMode) {
-                columnClauses.push(`'Provider ' || ROW_NUMBER() OVER (ORDER BY ${colVar}) AS ${colVar}`);
-                return;
-              }
+              columnClauses.push(`${attendingNameExpr} AS ${colVar}`);
+              return;
+            }
+            if (colVar === 'surgeon_prov_name') {
+              columnClauses.push(`${surgeonNameExpr} AS ${colVar}`);
+              return;
+            }
+            if (colVar === 'anesth_prov_name') {
+              columnClauses.push(`${anesthNameExpr} AS ${colVar}`);
+              return;
             }
             columnClauses.push(colVar);
             return;
@@ -1920,9 +1930,9 @@ export class RootStore {
             return;
           }
 
-          // Special case: cases (visit count)
+          // Special case: cases (count of units)
           if (colVar === 'cases') {
-            columnClauses.push(`COUNT(*) AS ${colVar}`);
+            columnClauses.push(`COUNT(DISTINCT sc.case_id) AS ${colVar}`);
             return;
           }
 
@@ -1931,10 +1941,7 @@ export class RootStore {
             const isRowVar = colVar === tableConfig.rowVar;
 
             if (isRowVar) {
-              const expr = this.uiState.isInPrivateMode
-                ? `'Provider ' || ROW_NUMBER() OVER (ORDER BY ${colVar})`
-                : colVar;
-              columnClauses.push(`${expr} AS ${colVar}`);
+              columnClauses.push(`${attendingNameExpr} AS ${colVar}`);
             } else {
               const expr = this.uiState.isInPrivateMode
                 ? 'string_agg(DISTINCT \'Provider\', \', \')'
@@ -1973,11 +1980,12 @@ export class RootStore {
           const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
           if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
             if (colAggregation === 'avg') {
-              // Calculate percentage: AVG(1|0) * 100
-              columnClauses.push(`AVG(CAST(${colVar} AS INT)) * 100.0 AS ${colVar}`);
+              // For all views: what % of VISITS associated with this grouping had outcome
+              // This avoids double-counting patients with multiple surgeries in outcomes
+              columnClauses.push(`COUNT(DISTINCT CASE WHEN v.${colVar} = 1 THEN v.visit_no END) * 100.0 / NULLIF(COUNT(DISTINCT v.visit_no), 0) AS ${colVar}`);
             } else {
-              // Count occurrences: SUM(1|0)
-              columnClauses.push(`SUM(CAST(${colVar} AS INT)) AS ${colVar}`);
+              // Count distinct visits with outcome
+              columnClauses.push(`COUNT(DISTINCT CASE WHEN v.${colVar} = 1 THEN v.visit_no END) AS ${colVar}`);
             }
           } else if (col.type === 'violin') {
             // Special case for violin: fetch all values as a list for distribution
@@ -1995,18 +2003,63 @@ export class RootStore {
           columnClauses.unshift(tableConfig.rowVar);
         }
 
-        // Build the query
+        // Determine the raw grouping column for the GROUP BY clause
+        const groupCol = ['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].includes(tableConfig.rowVar)
+          ? `sc.${tableConfig.rowVar}`
+          : `v.${tableConfig.rowVar}`;
+
+        const secondaryGroupCol = tableConfig.groupByVar
+          ? (['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].includes(tableConfig.groupByVar)
+            ? `sc.${tableConfig.groupByVar}`
+            : `v.${tableConfig.groupByVar}`)
+          : null;
+
+        // Build the query - Universally surgery-centric for selection parity
         const query = `
           SELECT
-            ${columnClauses.join(',\n            ')}
-          FROM filteredVisits
-          GROUP BY ${tableConfig.rowVar}
-          ORDER BY ${tableConfig.rowVar};
+            ${columnClauses.map((c) => {
+    // Ensure we prefer sc. for time/provider groupings and v. for outcomes
+    let clause = c;
+    if (['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].some((v) => clause.includes(v))) {
+      clause = clause.replace(/v\./g, 'sc.');
+    }
+    return clause;
+  }).join(',\n            ')}${tableConfig.groupByVar ? `,\n            ${secondaryGroupCol} AS _group_val` : ''},
+            list_distinct(list(CAST(sc.case_id AS VARCHAR))) AS _case_ids
+          FROM filteredSurgeryCases sc
+          LEFT JOIN filteredVisits v ON sc.visit_no = v.visit_no
+          GROUP BY ${groupCol}${secondaryGroupCol ? `, ${secondaryGroupCol}` : ''}
+          ORDER BY ${groupCol}${secondaryGroupCol ? `, ${secondaryGroupCol}` : ''};
         `;
 
         try {
           const queryResult = await this.duckDB!.query(query);
-          const rows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as ExploreTableRow);
+          const rawRows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as ExploreTableRow);
+
+          let rows = rawRows;
+          if (tableConfig.groupByVar) {
+            // Transform flat rows into grouped rows
+            const groupedMap = new Map<string | number, ExploreTableRow>();
+
+            rawRows.forEach((r) => {
+              const rowKey = String(r[tableConfig.rowVar] ?? 'Unknown');
+              if (!groupedMap.has(rowKey)) {
+                groupedMap.set(rowKey, {
+                  ...r,
+                  _groups: [],
+                  _case_ids: [],
+                });
+              }
+              const rowObj = groupedMap.get(rowKey)!;
+              (rowObj._groups as ExploreTableRow[]).push(r);
+              // Union case IDs
+              const caseIds = (r._case_ids as unknown) as string[];
+              const existingIds = (rowObj._case_ids as unknown) as string[];
+              rowObj._case_ids = Array.from(new Set([...existingIds, ...caseIds]));
+            });
+
+            rows = Array.from(groupedMap.values());
+          }
 
           if (tableConfig.twoValsPerRow) {
             console.warn('twoValsPerRow is not yet fully implemented, using basic data');
@@ -2046,7 +2099,6 @@ export class RootStore {
              (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
           FROM filteredSurgeryCases
           ORDER BY surgery_start_dtm
-          LIMIT 10000
         `;
         try {
           const result = await this.duckDB!.query(query);
@@ -2089,9 +2141,10 @@ export class RootStore {
              pre_inr, post_inr,
 
              total_cost,
-             rbc_cost
+             rbc_cost,
+             (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
            FROM filteredSurgeryCases
-           LIMIT 10000
+           ORDER BY surgery_start_dtm
         `;
         try {
           const result = await this.duckDB!.query(query);
