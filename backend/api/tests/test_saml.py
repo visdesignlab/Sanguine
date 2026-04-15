@@ -101,6 +101,31 @@ class SAMLConfigTests(SimpleTestCase):
         self.assertEqual(settings_dict["SAML_CONFIG"]["metadata"], {"local": [metadata_file.name]})
 
     @unittest.skipUnless(HAS_PYSAML2, "pysaml2 is not installed")
+    def test_blank_entity_id_falls_back_to_metadata_url(self):
+        with NamedTemporaryFile(mode="w", suffix=".xml") as metadata_file:
+            metadata_file.write("<xml />")
+            metadata_file.flush()
+            with patch.dict(
+                os.environ,
+                {
+                    "DJANGO_DEBUG": "False",
+                    "SAML_ENTITY_ID": "",
+                    "SAML_SP_BASE_URL": "https://sanguine.shands.ufl.edu",
+                    "SAML_IDP_METADATA_MODE": "file",
+                    "SAML_IDP_METADATA_PATH": metadata_file.name,
+                    "SAML_SP_CERT_B64": base64.b64encode(b"cert").decode("utf-8"),
+                    "SAML_SP_KEY_B64": base64.b64encode(b"key").decode("utf-8"),
+                },
+                clear=False,
+            ):
+                settings_dict = build_saml_settings(env=saml_env(), hostname="partner.example.edu")
+
+        self.assertEqual(
+            settings_dict["SAML_CONFIG"]["entityid"],
+            "https://sanguine.shands.ufl.edu/api/saml2/metadata/",
+        )
+
+    @unittest.skipUnless(HAS_PYSAML2, "pysaml2 is not installed")
     def test_mdq_metadata_mode_requires_signed_metadata_cert(self):
         with NamedTemporaryFile(mode="w", suffix=".pem") as cert_file:
             cert_file.write("cert")
