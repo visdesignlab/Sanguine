@@ -941,7 +941,6 @@ export const ExploreTableGroupByOptions = [
   { value: 'antifibrinolytic', label: 'Antifibrinolytics' },
   { value: 'overall_units_adherent', label: 'Guideline Adherent' },
   { value: 'year', label: 'Year' },
-  { value: 'quarter', label: 'Quarter' },
 ];
 
 // Variables
