@@ -2056,12 +2056,6 @@ export class RootStore {
           ? `sc.${tableConfig.rowVar}`
           : `v.${tableConfig.rowVar}`;
 
-        const secondaryGroupCol = tableConfig.groupByVar
-          ? (['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].includes(tableConfig.groupByVar)
-            ? `sc.${tableConfig.groupByVar}`
-            : `v.${tableConfig.groupByVar}`)
-          : null;
-
         // Build the query - Universally surgery-centric for selection parity
         const query = `
           SELECT
@@ -2072,42 +2066,17 @@ export class RootStore {
       clause = clause.replace(/v\./g, 'sc.');
     }
     return clause;
-  }).join(',\n            ')}${tableConfig.groupByVar ? `,\n            ${secondaryGroupCol} AS _group_val` : ''},
+  }).join(',\n            ')},
             list_distinct(list(CAST(sc.case_id AS VARCHAR))) AS _case_ids
           FROM filteredSurgeryCases sc
           LEFT JOIN filteredVisits v ON sc.visit_no = v.visit_no
-          GROUP BY ${groupCol}${secondaryGroupCol ? `, ${secondaryGroupCol}` : ''}
-          ORDER BY ${groupCol}${secondaryGroupCol ? `, ${secondaryGroupCol}` : ''};
+          GROUP BY ${groupCol}
+          ORDER BY ${groupCol};
         `;
 
         try {
           const queryResult = await this.duckDB!.query(query);
-          const rawRows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as ExploreTableRow);
-
-          let rows = rawRows;
-          if (tableConfig.groupByVar) {
-            // Transform flat rows into grouped rows
-            const groupedMap = new Map<string | number, ExploreTableRow>();
-
-            rawRows.forEach((r) => {
-              const rowKey = String(r[tableConfig.rowVar] ?? 'Unknown');
-              if (!groupedMap.has(rowKey)) {
-                groupedMap.set(rowKey, {
-                  ...r,
-                  _groups: [],
-                  _case_ids: [],
-                });
-              }
-              const rowObj = groupedMap.get(rowKey)!;
-              (rowObj._groups as ExploreTableRow[]).push(r);
-              // Union case IDs
-              const caseIds = (r._case_ids as unknown) as string[];
-              const existingIds = (rowObj._case_ids as unknown) as string[];
-              rowObj._case_ids = Array.from(new Set([...existingIds, ...caseIds]));
-            });
-
-            rows = Array.from(groupedMap.values());
-          }
+          const rows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as ExploreTableRow);
 
           if (tableConfig.twoValsPerRow) {
             console.warn('twoValsPerRow is not yet fully implemented, using basic data');

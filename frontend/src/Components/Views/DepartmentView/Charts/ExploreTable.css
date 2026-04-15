@@ -1,11 +1,5 @@
 .explore-table-data-table td {
   padding: 0 !important;
-  vertical-align: top !important;
-}
-
-.fat-row {
-  height: 60px !important;
-  min-height: 60px !important;
 }
 
 .explore-table-data-table tfoot td,
