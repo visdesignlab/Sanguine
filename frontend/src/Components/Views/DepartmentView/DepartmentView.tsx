@@ -269,14 +269,36 @@ export function DepartmentView() {
       .sort((a, b) => (store.departmentVisitCounts[b.value] || 0) - (store.departmentVisitCounts[a.value] || 0));
   }, [store.procedureHierarchy, store.departmentVisitCounts]);
 
-  const renderDeptOption = useCallback(({ option }: { option: { value: string; label: string } }) => (
-    <Flex justify="space-between" align="center" w="100%" gap="xs">
-      <Text size="sm" style={{ flex: 1, minWidth: 0 }}>{option.label}</Text>
-      <Badge size="xs" variant="light" color="gray" style={{ flexShrink: 0 }}>
-        {(store.departmentVisitCounts[option.value] ?? 0).toLocaleString()}
-      </Badge>
-    </Flex>
-  ), [store.departmentVisitCounts]);
+  const renderDeptOption = useCallback(({ option }: { option: { value: string; label: string } }) => {
+    const filteredCount = store.departmentVisitCounts[option.value] ?? 0;
+    const totalCount = store.procedureHierarchy?.departments.find((dept) => dept.id === option.value)?.visit_count ?? filteredCount;
+    const isAfterFilters = filteredCount < totalCount;
+
+    return (
+      <Flex justify="space-between" align="center" w="100%" gap="xs">
+        <Text size="sm" style={{ flex: 1, minWidth: 0 }}>{option.label}</Text>
+        <Tooltip
+          label={(
+            <Text size="sm">
+              {`${filteredCount.toLocaleString()} Visits saw ${option.label}`}
+              {isAfterFilters && (
+                <>
+                  {' ('}
+                  <Text span size="xs" fs="italic">After Filters</Text>
+                  )
+                </>
+              )}
+            </Text>
+          )}
+          position="left"
+        >
+          <Badge size="xs" variant="light" color="gray" style={{ flexShrink: 0 }}>
+            {filteredCount.toLocaleString()}
+          </Badge>
+        </Tooltip>
+      </Flex>
+    );
+  }, [store.departmentVisitCounts, store.procedureHierarchy]);
 
   // -------------------------------------------------------
   return useObserver(() => (
