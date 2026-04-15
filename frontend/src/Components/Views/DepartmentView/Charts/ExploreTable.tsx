@@ -218,13 +218,21 @@ function ViolinCell({
         label={groupFilter ? (
           <Stack gap={4} align="center">
             <Text size="sm">No data</Text>
-            <Text size="xs" fs="italic" c={groupFilter.color}>(Filter: {groupFilter.label})</Text>
+            <Text size="xs" fs="italic" c={groupFilter.color}>
+              (Filter:
+              {' '}
+              {groupFilter.label}
+              )
+            </Text>
           </Stack>
         ) : 'No data'}
         withArrow
         position="top"
       >
-        <div style={{ width: '100%', height, display: 'flex', alignItems: 'center' }}>
+        <div style={{
+          width: '100%', height, display: 'flex', alignItems: 'center',
+        }}
+        >
           <div style={{
             width: '30%', height: 6, background: '#ddd', margin: '0 auto', borderRadius: 3,
           }}
@@ -276,7 +284,10 @@ function ViolinCell({
           <Text size="sm">{`Min ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(sampleMin)} • Median ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(median)} • Max ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(sampleMax)}`}</Text>
           {groupFilter && (
             <Text size="xs" fs="italic" c={groupFilter.color}>
-              (Filter: {groupFilter.label})
+              (Filter:
+              {' '}
+              {groupFilter.label}
+              )
             </Text>
           )}
         </Stack>
@@ -429,7 +440,10 @@ function NumericBarCell({
           <Text size="sm">{hasValue ? tooltipTextValue : 'No data'}</Text>
           {opts?.groupFilter && (
             <Text size="xs" fs="italic" c={opts.groupFilter.color}>
-              (Filter: {opts.groupFilter.label})
+              (Filter:
+              {' '}
+              {opts.groupFilter.label}
+              )
             </Text>
           )}
         </Stack>
@@ -562,7 +576,10 @@ function StackedBarCell({
           {groupFilter && (
             <Box pt={0} style={{ display: 'flex', justifyContent: 'center' }}>
               <Text size="xs" fs="italic" c={groupFilter.color} ta="center">
-                (Filter: {groupFilter.label})
+                (Filter:
+                {' '}
+                {groupFilter.label}
+                )
               </Text>
             </Box>
           )}
@@ -844,7 +861,29 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       result = result.filter((v) => ['0', '1', 'true', 'false'].includes(v));
     }
     return result.sort().reverse(); // Show '1'/'true' on top, '0'/'false' on bottom
-  }, [rows, chartConfig.groupByVar]);
+  }, [rows, chartConfig]);
+
+  // Precompute filtered+sorted groups per row so column renderers don't repeat this work per cell
+  const getFilteredGroups = useCallback((row: ExploreTableRow): ExploreTableRow[] => {
+    if (!row._groups || row._groups.length === 0) return [];
+    return row._groups
+      .filter((g) => g._group_val !== undefined && g._group_val !== null && g._group_val !== '' && groupValues.includes(String(g._group_val)))
+      .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
+  }, [groupValues]);
+
+  const buildGroupFilter = useCallback((filterValue: string, index: number) => ({
+    label: getGroupLabel(chartConfig.groupByVar, filterValue),
+    color: getGroupColor(chartConfig.groupByVar, filterValue, groupValues.indexOf(filterValue) !== -1 ? groupValues.indexOf(filterValue) : index),
+  }), [chartConfig.groupByVar, groupValues]);
+
+  // Cache filtered groups on each row so it's computed once per row instead of once per cell
+  const rowsWithGroups = useMemo(() => {
+    if (!chartConfig.groupByVar) return rows;
+    return rows.map((row) => ({
+      ...row,
+      _filteredGroups: getFilteredGroups(row),
+    }));
+  }, [rows, chartConfig.groupByVar, getFilteredGroups]);
 
   const handleRowChange = (value: string | null) => {
     if (!value) return;
@@ -875,7 +914,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     const aggLabel = chartConfig.aggregation === 'avg' ? 'Average' : 'Total';
     const newTitle = `${aggLabel} RBC Transfusions per ${groupLabel}`;
 
-    let groupByVar = chartConfig.groupByVar;
+    let { groupByVar } = chartConfig;
     if (['year', 'quarter'].includes(value) && groupByVar === 'year') {
       groupByVar = undefined;
     }
@@ -958,7 +997,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     const heatmapCols = colConfigs.filter((c) => c.type === 'heatmap');
 
     if (heatmapCols.length > 0) {
-      rows.forEach((r: ExploreTableRow) => {
+      rowsWithGroups.forEach((r: ExploreTableRow) => {
         heatmapCols.forEach((c) => {
           const val = r[c.colVar];
           const values = Array.isArray(val) ? val : [val];
@@ -988,7 +1027,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       } = colConfig;
 
       // Extract values for footer
-      const rawValues = rows.map((r: ExploreTableRow) => r[colVar]);
+      const rawValues = rowsWithGroups.map((r: ExploreTableRow) => r[colVar]);
       const values = chartConfig.twoValsPerRow
         ? rawValues.flat().map((v: unknown) => Number(v ?? 0))
         : rawValues.map((r: unknown) => Number(r ?? 0));
@@ -997,7 +1036,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Compute violin aggregate for footer when violin columns exist
       const violinAggregate = (() => {
         if (type !== 'violin') return null;
-        const perRow = rows.map((r: ExploreTableRow) => {
+        const perRow = rowsWithGroups.map((r: ExploreTableRow) => {
           const raw = r[colVar];
           return raw ? Array.from(raw as Iterable<number>, Number) : [] as number[];
         });
@@ -1111,20 +1150,13 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Custom Render Logic
       if (type === 'stackedBar') {
         column.render = (row: ExploreTableRow) => {
-          if (row._groups && row._groups.length > 0) {
-            const filteredGroups = row._groups
-              .filter((g) => g._group_val !== undefined && g._group_val !== null && g._group_val !== '' && groupValues.includes(String(g._group_val)))
-              .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
-
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
                 {filteredGroups.map((g, i) => {
                   const filterValue = String(g._group_val);
-                  const colorIndex = groupValues.indexOf(filterValue);
-                  const groupFilter = {
-                    label: getGroupLabel(chartConfig.groupByVar, filterValue),
-                    color: getGroupColor(chartConfig.groupByVar, filterValue, colorIndex !== -1 ? colorIndex : i),
-                  };
+                  const groupFilter = buildGroupFilter(filterValue, i);
                   return (
                     <Box key={i} h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
                       <StackedBarCell row={g} max={maxVal} colVar={colVar} agg={agg} groupFilter={groupFilter} />
@@ -1138,20 +1170,13 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         };
       } else if (type === 'numericBar') {
         column.render = (row: ExploreTableRow) => {
-          if (row._groups && row._groups.length > 0) {
-            const filteredGroups = row._groups
-              .filter((g) => g._group_val !== undefined && g._group_val !== null && g._group_val !== '' && groupValues.includes(String(g._group_val)))
-              .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
-
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
                 {filteredGroups.map((g, i) => {
                   const filterValue = String(g._group_val);
-                  const colorIndex = groupValues.indexOf(filterValue);
-                  const groupFilter = {
-                    label: getGroupLabel(chartConfig.groupByVar, filterValue),
-                    color: getGroupColor(chartConfig.groupByVar, filterValue, colorIndex !== -1 ? colorIndex : i),
-                  };
+                  const groupFilter = buildGroupFilter(filterValue, i);
                   return (
                     <Box key={i} h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
                       <NumericBarCell
@@ -1192,7 +1217,10 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                 <Text size="sm">{val === 0 ? 'No data' : tooltipText}</Text>
                 {groupFilter && (
                   <Text size="xs" fs="italic" c={groupFilter.color}>
-                    (Filter: {groupFilter.label})
+                    (Filter:
+                    {' '}
+                    {groupFilter.label}
+                    )
                   </Text>
                 )}
               </Stack>
@@ -1237,20 +1265,13 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             );
           };
 
-          if (row._groups && row._groups.length > 0) {
-            const filteredGroups = row._groups
-              .filter((g) => g._group_val !== undefined && g._group_val !== null && g._group_val !== '' && groupValues.includes(String(g._group_val)))
-              .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
-
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
                 {filteredGroups.map((g, i) => {
                   const filterValue = String(g._group_val);
-                  const colorIndex = groupValues.indexOf(filterValue);
-                  const groupFilter = {
-                    label: getGroupLabel(chartConfig.groupByVar, filterValue),
-                    color: getGroupColor(chartConfig.groupByVar, filterValue, colorIndex !== -1 ? colorIndex : i),
-                  };
+                  const groupFilter = buildGroupFilter(filterValue, i);
                   return (
                     <Box key={i} h={SUB_ROW_H} style={{ opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
                       {renderHeatmapCell(Number(g[colVar] ?? 0), '0px', '100%', groupFilter)}
@@ -1279,22 +1300,15 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             ? [violinAggregate.minAll, violinAggregate.maxAll]
             : [0, 1];
 
-          if (row._groups && row._groups.length > 0) {
-            const filteredGroups = row._groups
-              .filter((g) => g._group_val !== undefined && g._group_val !== null && g._group_val !== '' && groupValues.includes(String(g._group_val)))
-              .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
-
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
                 {filteredGroups.map((g, i) => {
                   const raw = g[colVar];
                   const samples = raw ? Array.from(raw as Iterable<number>, Number) : [];
                   const filterValue = String(g._group_val);
-                  const colorIndex = groupValues.indexOf(filterValue);
-                  const groupFilter = {
-                    label: getGroupLabel(chartConfig.groupByVar, filterValue),
-                    color: getGroupColor(chartConfig.groupByVar, filterValue, colorIndex !== -1 ? colorIndex : i),
-                  };
+                  const groupFilter = buildGroupFilter(filterValue, i);
                   return (
                     <Box key={i} h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
                       <ViolinCell samples={samples} domain={domain} height={22} padding={0} groupFilter={groupFilter} />
@@ -1310,20 +1324,13 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         };
       } else if (type === 'numeric') {
         column.render = (row: ExploreTableRow) => {
-          if (row._groups && row._groups.length > 0) {
-            const filteredGroups = row._groups
-              .filter((g) => g._group_val !== undefined && g._group_val !== null && g._group_val !== '' && groupValues.includes(String(g._group_val)))
-              .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
-
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
                 {filteredGroups.map((g, i) => {
                   const filterValue = String(g._group_val);
-                  const colorIndex = groupValues.indexOf(filterValue);
-                  const groupFilter = {
-                    label: getGroupLabel(chartConfig.groupByVar, filterValue),
-                    color: getGroupColor(chartConfig.groupByVar, filterValue, colorIndex !== -1 ? colorIndex : i),
-                  };
+                  const groupFilter = buildGroupFilter(filterValue, i);
                   return (
                     <Box key={i} h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
                       <NumericBarCell
@@ -1357,11 +1364,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         };
       } else {
         column.render = (row: ExploreTableRow) => {
-          if (row._groups && row._groups.length > 0) {
-            const filteredGroups = row._groups
-              .filter((g) => g._group_val !== undefined && g._group_val !== null && g._group_val !== '' && groupValues.includes(String(g._group_val)))
-              .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
-
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
             return (
               <Box h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} py={ROW_GAP / 2} display="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10 }}>
                 <div>{String(row[colVar] ?? '')}</div>
@@ -1380,8 +1384,6 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     if (chartConfig.groupByVar) {
       const groupOption = ExploreTableGroupByOptions.find((o) => o.value === chartConfig.groupByVar);
 
-
-
       resultColumns.unshift({
         accessor: '_group_val',
         title: groupOption?.label || 'Group',
@@ -1391,16 +1393,14 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         noWrap: true,
         width: 140,
         render: (row: ExploreTableRow) => {
-          if (row._groups && row._groups.length > 0) {
-            const filteredGroups = row._groups
-              .filter((g) => g._group_val !== undefined && g._group_val !== null && g._group_val !== '' && groupValues.includes(String(g._group_val)))
-              .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
-
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center" w="100%">
                 {filteredGroups.map((g, i) => {
                   const val = String(g._group_val);
-                  const color = getGroupColor(chartConfig.groupByVar, val, i);
+                  const colorIndex = groupValues.indexOf(val);
+                  const color = getGroupColor(chartConfig.groupByVar, val, colorIndex !== -1 ? colorIndex : i);
                   return (
                     <Box
                       key={i}
@@ -1435,7 +1435,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     }
 
     return resultColumns;
-  }, [rows, groupValues, chartConfig.twoValsPerRow, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity]);
+  }, [rowsWithGroups, chartConfig.twoValsPerRow, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues]);
 
   // Data Table Columns -------
   const columnDefs = useMemo(
@@ -1587,7 +1587,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           highlightOnHover
           withRowBorders={false}
           highlightOnHoverColor={backgroundHoverColor}
-          records={rows}
+          records={rowsWithGroups}
           idAccessor={chartConfig.rowVar}
           sortStatus={sortStatus}
           onSortStatusChange={setSortStatus}
