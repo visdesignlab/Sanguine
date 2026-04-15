@@ -46,6 +46,7 @@ type SetHoveredValue = (val: HoveredValue) => void;
 
 const ROW_H_GROUPED = 60;
 const SUB_ROW_H = 26;
+const ROW_GAP = 12;
 
 const GROUP_COLORS = ['#D81B60', '#1E88E5', '#40c057', '#fd7e14', '#be4bdb', '#1098ad', '#868e96'];
 
@@ -1110,7 +1111,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
 
             return (
-              <Stack gap={0} p={0} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H)} justify="center">
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
                 {filteredGroups.map((g, i) => {
                   const filterValue = String(g._group_val);
                   const colorIndex = groupValues.indexOf(filterValue);
@@ -1137,7 +1138,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
 
             return (
-              <Stack gap={0} p={0} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H)} justify="center">
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
                 {filteredGroups.map((g, i) => {
                   const filterValue = String(g._group_val);
                   const colorIndex = groupValues.indexOf(filterValue);
@@ -1236,7 +1237,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
 
             return (
-              <Stack gap={0} p={0} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H)} justify="center">
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
                 {filteredGroups.map((g, i) => {
                   const filterValue = String(g._group_val);
                   const colorIndex = groupValues.indexOf(filterValue);
@@ -1278,7 +1279,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
 
             return (
-              <Stack gap={0} p={0} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H)} justify="center">
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
                 {filteredGroups.map((g, i) => {
                   const raw = g[colVar];
                   const samples = raw ? Array.from(raw as Iterable<number>, Number) : [];
@@ -1309,7 +1310,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
 
             return (
-              <Stack gap={0} p={0} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H)} justify="center">
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
                 {filteredGroups.map((g, i) => {
                   const filterValue = String(g._group_val);
                   const colorIndex = groupValues.indexOf(filterValue);
@@ -1356,7 +1357,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
 
             return (
-              <Box h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H)} display="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10 }}>
+              <Box h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} py={ROW_GAP / 2} display="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10 }}>
                 <div>{String(row[colVar] ?? '')}</div>
               </Box>
             );
@@ -1390,7 +1391,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
 
             return (
-              <Stack gap={0} p={0} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H)} justify="center" w="100%">
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center" w="100%">
                 {filteredGroups.map((g, i) => {
                   const val = String(g._group_val);
                   const color = getGroupColor(chartConfig.groupByVar, val, i);

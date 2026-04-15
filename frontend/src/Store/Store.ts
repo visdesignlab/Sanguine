@@ -1951,11 +1951,11 @@ export class RootStore {
             return;
           }
 
-          if (['year', 'quarter'].includes(colVar)) {
+          if (['year', 'quarter', 'month'].includes(colVar)) {
             if (colVar === tableConfig.rowVar) {
-              columnClauses.push(`${colVar}`);
+              columnClauses.push(`sc.${colVar} AS ${colVar}`);
             } else {
-              columnClauses.push(`string_agg(DISTINCT CAST(${colVar} AS VARCHAR), ', ') AS ${colVar}`);
+              columnClauses.push(`string_agg(DISTINCT CAST(sc.${colVar} AS VARCHAR), ', ') AS ${colVar}`);
             }
             return;
           }
@@ -1998,11 +1998,6 @@ export class RootStore {
           }
         });
 
-        // Ensure the grouping variable is selected
-        if (!columnClauses.some((clause) => clause.includes(tableConfig.rowVar) && !clause.includes('STRING_AGG'))) {
-          columnClauses.unshift(tableConfig.rowVar);
-        }
-
         // Determine the raw grouping column for the GROUP BY clause
         const groupCol = ['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].includes(tableConfig.rowVar)
           ? `sc.${tableConfig.rowVar}`
@@ -2014,6 +2009,22 @@ export class RootStore {
             : `v.${tableConfig.groupByVar}`)
           : null;
 
+        // Ensure the primary grouping variable is the FIRST column selected
+        const rowVarIndex = columnClauses.findIndex((clause) => clause.trim().endsWith(`AS ${tableConfig.rowVar}`));
+        if (rowVarIndex > 0) {
+          const [rowVarClause] = columnClauses.splice(rowVarIndex, 1);
+          columnClauses.unshift(rowVarClause);
+        } else if (rowVarIndex === -1) {
+          columnClauses.unshift(`${groupCol} AS ${tableConfig.rowVar}`);
+        }
+
+        // Ensure the secondary grouping variable is the SECOND column selected
+        if (tableConfig.groupByVar && secondaryGroupCol) {
+          columnClauses.splice(1, 0, `${secondaryGroupCol} AS _group_val`);
+        }
+
+        const groupByIndices = tableConfig.groupByVar ? `1, 2` : `1`;
+
         // Build the query - Universally surgery-centric for selection parity
         const query = `
           SELECT
@@ -2024,12 +2035,12 @@ export class RootStore {
       clause = clause.replace(/v\./g, 'sc.');
     }
     return clause;
-  }).join(',\n            ')}${tableConfig.groupByVar ? `,\n            ${secondaryGroupCol} AS _group_val` : ''},
+  }).join(',\n            ')},
             list_distinct(list(CAST(sc.case_id AS VARCHAR))) AS _case_ids
           FROM filteredSurgeryCases sc
           LEFT JOIN filteredVisits v ON sc.visit_no = v.visit_no
-          GROUP BY ${groupCol}${secondaryGroupCol ? `, ${secondaryGroupCol}` : ''}
-          ORDER BY ${groupCol}${secondaryGroupCol ? `, ${secondaryGroupCol}` : ''};
+          GROUP BY ${groupByIndices}
+          ORDER BY ${groupByIndices};
         `;
 
         try {
