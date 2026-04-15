@@ -44,10 +44,12 @@ export function DepartmentViewQuestions() {
   }, [store.procedureHierarchy, store.selectedDepartmentId]);
 
   const handlePresetClick = (groupIdx: number, cardIdx: number) => {
-    const { chartConfigs, chartLayouts, question } = presetStateCards[groupIdx].options[cardIdx];
+    const {
+      chartConfigs, chartLayouts, question, statConfigs,
+    } = presetStateCards[groupIdx].options[cardIdx];
     store.loadExplorePreset([...chartConfigs], {
       main: [...chartLayouts.main],
-    }, resolveQuestion(question));
+    }, resolveQuestion(question), statConfigs ? [...statConfigs] : undefined);
   };
 
   return useObserver(() => (
