@@ -2066,13 +2066,13 @@ export class RootStore {
         const query = `
           SELECT
             ${columnClauses.map((c) => {
-              // Ensure we prefer sc. for time/provider groupings and v. for outcomes
-              let clause = c;
-              if (['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].some((v) => clause.includes(v))) {
-                clause = clause.replace(/v\./g, 'sc.');
-              }
-              return clause;
-            }).join(',\n            ')}${tableConfig.groupByVar ? `,\n            ${secondaryGroupCol} AS _group_val` : ''},
+    // Ensure we prefer sc. for time/provider groupings and v. for outcomes
+    let clause = c;
+    if (['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].some((v) => clause.includes(v))) {
+      clause = clause.replace(/v\./g, 'sc.');
+    }
+    return clause;
+  }).join(',\n            ')}${tableConfig.groupByVar ? `,\n            ${secondaryGroupCol} AS _group_val` : ''},
             list_distinct(list(CAST(sc.case_id AS VARCHAR))) AS _case_ids
           FROM filteredSurgeryCases sc
           LEFT JOIN filteredVisits v ON sc.visit_no = v.visit_no

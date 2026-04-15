@@ -23,7 +23,7 @@ import {
 import {
   AddGroupModal, GroupDefinition, GroupCondition, CONDITION_FIELDS_FLAT,
 } from './AddGroupModal';
-import { smallHoverColor, backgroundSelectedColor, smallSelectColor } from '../../../../Theme/mantineTheme';
+import { smallHoverColor, smallSelectColor } from '../../../../Theme/mantineTheme';
 import {
   getProcessedScatterData, calculateScatterLayout,
   buildSpatialIndex, findNearestPoint,

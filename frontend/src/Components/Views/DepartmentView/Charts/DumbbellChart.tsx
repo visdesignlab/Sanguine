@@ -662,15 +662,6 @@ export const DumbbellChartContent = memo(({
     }
   }, [selection, processedData, collapsedBinGroups, binGroupLayout, labConfig, yScale, store.actions]);
 
-  const isSelected = useCallback((cx: number, cy: number) => {
-    if (!appliedSelection) return false;
-    const minX = Math.min(appliedSelection.x1, appliedSelection.x2);
-    const maxX = Math.max(appliedSelection.x1, appliedSelection.x2);
-    const minY = Math.min(appliedSelection.y1, appliedSelection.y2);
-    const maxY = Math.max(appliedSelection.y1, appliedSelection.y2);
-    return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY;
-  }, [appliedSelection]);
-
   // Canvas rendering for cases
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gradientCacheRef = useRef<Map<string, CanvasGradient>>(new Map());
@@ -1276,10 +1267,10 @@ export const DumbbellChartContent = memo(({
 // #endregion
 
 // #region Dumbbell Chart Final
- DumbbellChartContent.displayName = 'DumbbellChartContent';
+DumbbellChartContent.displayName = 'DumbbellChartContent';
 
- export const DumbbellChart = observer(({ chartConfig }: { chartConfig: DumbbellChartConfig }) => {
-   const store = useContext(Store);
+export const DumbbellChart = observer(({ chartConfig }: { chartConfig: DumbbellChartConfig }) => {
+  const store = useContext(Store);
   const theme = useMantineTheme();
 
   // State
