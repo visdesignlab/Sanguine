@@ -5,6 +5,7 @@ import React, {
 import { area, curveCatmullRom } from 'd3-shape';
 import { scaleLinear, scaleLog } from 'd3-scale';
 import { max as d3Max, ticks as d3Ticks } from 'd3-array';
+import { interpolateReds } from 'd3';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import {
   MultiSelect,
@@ -28,7 +29,7 @@ import {
   DataTable, DataTableColumn, useDataTableColumns, type DataTableSortStatus,
 } from 'mantine-datatable';
 import { BarChart } from '@mantine/charts';
-import { interpolateReds } from 'd3';
+
 import { Store } from '../../../../Store/Store';
 import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3Utils';
 import {
@@ -72,6 +73,7 @@ export const getGroupLabel = (groupByVar: string | undefined, val: string) => {
   if (['death', 'stroke', 'vent', 'ecmo', 'b12', 'iron', 'antifibrinolytic', 'overall_units_adherent'].includes(groupByVar)) {
     const label = ExploreTableGroupByOptions.find((o) => o.value === groupByVar)?.label || val;
     if (val === '1' || val === 'true') return label;
+    if (groupByVar === 'overall_units_adherent') return `Not ${label}`;
     return `No ${label}`;
   }
   return val;
@@ -261,11 +263,7 @@ function ViolinCell({
 
   const d = path(density as [number, number][]) ?? '';
 
-  const median = (() => {
-    const sorted = [...samples].sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-  })();
+  const median = computeMedian(samples);
 
   const medianX = xScale(median);
   const medianHalfH = yDensityScale(maxDens);
