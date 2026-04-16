@@ -399,7 +399,7 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
 const chartColors = ['#fdf5e6', '#ffb366', '#fb7e07', '#d0021b', '#67000d'];
 
 function NumericBarCell({
-  value, max, colVar, opts = {}, setHoveredValue, agg,
+  value, max, colVar, opts = {}, setHoveredValue, agg, rowLabel, columnLabel,
 }: {
   value: number | null | undefined;
   max: number;
@@ -407,6 +407,8 @@ function NumericBarCell({
   setHoveredValue: SetHoveredValue;
   opts?: { padding?: string; cellHeight?: number; fillColor?: string; isSavings?: boolean; groupFilter?: { label: string; color: string } };
   agg?: string;
+  rowLabel?: string;
+  columnLabel?: string;
 }) {
   // Default Options
   const {
@@ -435,8 +437,11 @@ function NumericBarCell({
   return (
     <Tooltip
       label={(
-        <Stack gap={4} align="center">
-          <Text size="sm">{hasValue ? tooltipTextValue : 'No data'}</Text>
+        <Stack gap={2} align="center">
+          {columnLabel && <Text size="xs" fw={600}>{hasValue ? `${columnLabel}: ${tooltipTextValue}` : columnLabel}</Text>}
+          {!columnLabel && <Text size="sm">{hasValue ? tooltipTextValue : 'No data'}</Text>}
+          {!hasValue && <Text size="xs" c="dimmed">No data</Text>}
+          {rowLabel && <Text size="xs" c="dimmed" fs="italic">{rowLabel}</Text>}
           {opts?.groupFilter && (
             <Text size="xs" fs="italic" c={opts.groupFilter.color}>
               (Filter:
@@ -519,13 +524,15 @@ function NumericBarCell({
 }
 
 function StackedBarCell({
-  row, max, colVar, agg, groupFilter,
+  row, max, colVar, agg, groupFilter, rowLabel, columnLabel,
 }: {
   row: ExploreTableRow;
   max: number;
   colVar: string;
   agg?: string;
   groupFilter?: { label: string; color: string };
+  rowLabel?: string;
+  columnLabel?: string;
 }) {
   const parts = [
     {
@@ -553,6 +560,7 @@ function StackedBarCell({
     <Tooltip
       label={(
         <Stack gap={4}>
+          {columnLabel && <Text fz="xs" fw={700}>{columnLabel}</Text>}
           {parts.map((p) => (
             <Flex key={p.key} align="center" gap={6}>
               <div style={{
@@ -572,6 +580,9 @@ function StackedBarCell({
               {tooltipTextValue}
             </Text>
           </Box>
+          {rowLabel && (
+            <Text size="xs" c="dimmed" fs="italic">{rowLabel}</Text>
+          )}
           {groupFilter && (
             <Box pt={0} style={{ display: 'flex', justifyContent: 'center' }}>
               <Text size="xs" fs="italic" c={groupFilter.color} ta="center">
@@ -1149,6 +1160,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Custom Render Logic
       if (type === 'stackedBar') {
         column.render = (row: ExploreTableRow) => {
+          const rowLabel = String(row[chartConfig.rowVar] ?? '');
           const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
           if (filteredGroups.length > 0) {
             return (
@@ -1158,17 +1170,18 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                   const groupFilter = buildGroupFilter(filterValue, i);
                   return (
                     <Box key={i} h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
-                      <StackedBarCell row={g} max={maxVal} colVar={colVar} agg={agg} groupFilter={groupFilter} />
+                      <StackedBarCell row={g} max={maxVal} colVar={colVar} agg={agg} groupFilter={groupFilter} rowLabel={rowLabel} columnLabel={displayTitle} />
                     </Box>
                   );
                 })}
               </Stack>
             );
           }
-          return <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} />;
+          return <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />;
         };
       } else if (type === 'numericBar') {
         column.render = (row: ExploreTableRow) => {
+          const rowLabel = String(row[chartConfig.rowVar] ?? '');
           const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
           if (filteredGroups.length > 0) {
             return (
@@ -1185,6 +1198,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                         setHoveredValue={setHoveredValue}
                         agg={agg}
                         opts={{ isSavings: colVar === 'salvage_savings', cellHeight: 22, groupFilter }}
+                        rowLabel={rowLabel}
+                        columnLabel={displayTitle}
                       />
                     </Box>
                   );
@@ -1201,19 +1216,26 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               setHoveredValue={setHoveredValue}
               agg={agg}
               opts={{ isSavings: colVar === 'salvage_savings' }}
+              rowLabel={rowLabel}
+              columnLabel={displayTitle}
             />
           );
         };
       } else if (type === 'heatmap') {
         column.render = (row: ExploreTableRow) => {
+          const rowLabel = String(row[chartConfig.rowVar] ?? '');
           const renderHeatmapCell = (val: number, padding: string, height: number | string = '100%', groupFilter?: { label: string; color: string }) => {
             const normalizedVal = getNormalizedValue(val);
             const textVal = getFormattedValue(val, colVar, agg, false);
             const tooltipText = getFormattedValue(val, colVar, agg, true);
 
             const tooltipContent = (
-              <Stack gap={4} align="center">
-                <Text size="sm">{val === 0 ? 'No data' : tooltipText}</Text>
+              <Stack gap={2} align="center">
+                {val === 0
+                  ? <Text size="xs" fw={600}>{displayTitle}</Text>
+                  : <Text size="xs" fw={600}>{`${displayTitle}: ${tooltipText}`}</Text>}
+                {val === 0 && <Text size="xs" c="dimmed">No data</Text>}
+                {rowLabel && <Text size="xs" c="dimmed" fs="italic">{rowLabel}</Text>}
                 {groupFilter && (
                   <Text size="xs" fs="italic" c={groupFilter.color}>
                     (Filter:
@@ -1323,6 +1345,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         };
       } else if (type === 'numeric') {
         column.render = (row: ExploreTableRow) => {
+          const rowLabel = String(row[chartConfig.rowVar] ?? '');
           const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
           if (filteredGroups.length > 0) {
             return (
@@ -1339,6 +1362,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                         setHoveredValue={setHoveredValue}
                         agg={agg}
                         opts={{ cellHeight: 22, groupFilter }}
+                        rowLabel={rowLabel}
+                        columnLabel={displayTitle}
                       />
                     </Box>
                   );
@@ -1351,15 +1376,15 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             return (
               <Stack gap={0} p={0} h={ROW_H_GROUPED}>
                 <Box h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10 }}>
-                  <NumericBarCell value={val?.[0]} max={maxVal} colVar={colVar} opts={{ padding: '0px', cellHeight: 20 }} setHoveredValue={setHoveredValue} agg={agg} />
+                  <NumericBarCell value={val?.[0]} max={maxVal} colVar={colVar} opts={{ padding: '0px', cellHeight: 20 }} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />
                 </Box>
                 <Box h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10 }}>
-                  <NumericBarCell value={val?.[1]} max={maxVal} colVar={colVar} opts={{ padding: '0px', cellHeight: 20 }} setHoveredValue={setHoveredValue} agg={agg} />
+                  <NumericBarCell value={val?.[1]} max={maxVal} colVar={colVar} opts={{ padding: '0px', cellHeight: 20 }} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />
                 </Box>
               </Stack>
             );
           }
-          return <NumericBarCell value={row[colVar] as number} max={maxVal} colVar={colVar} setHoveredValue={setHoveredValue} agg={agg} />;
+          return <NumericBarCell value={row[colVar] as number} max={maxVal} colVar={colVar} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />;
         };
       } else {
         column.render = (row: ExploreTableRow) => {
@@ -1434,7 +1459,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     }
 
     return resultColumns;
-  }, [rowsWithGroups, chartConfig.twoValsPerRow, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues]);
+  }, [rowsWithGroups, chartConfig.twoValsPerRow, chartConfig.rowVar, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues]);
 
   // Data Table Columns -------
   const columnDefs = useMemo(

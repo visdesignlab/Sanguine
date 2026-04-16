@@ -1825,6 +1825,25 @@ export class RootStore {
         ;
     `);
 
+    // Refresh materialized surgery case count tables
+    await this.duckDB.query(`
+      TRUNCATE TABLE filteredProviderCases;
+      INSERT INTO filteredProviderCases
+        SELECT prov_id, COUNT(DISTINCT case_id) AS case_count
+        FROM (
+          SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id
+          FROM filteredSurgeryCases
+        ) sub
+        WHERE prov_id IS NOT NULL
+        GROUP BY prov_id;
+
+      TRUNCATE TABLE filteredPeriodCases;
+      INSERT INTO filteredPeriodCases
+        SELECT year, quarter, COUNT(DISTINCT case_id) AS case_count
+        FROM filteredSurgeryCases
+        GROUP BY year, quarter;
+    `);
+
     // Update all the data retrievers
     await this.updateFilteredVisitsLength();
     await this.computeDashboardChartData();
@@ -1852,6 +1871,25 @@ export class RootStore {
         // Configuration of table (rowVar, columns, aggregation, etc.)
         const tableConfig = config as ExploreTableConfig;
 
+        // --- Build JOIN for surgery case counts (only if cases column is requested) ---
+        const needsCaseJoin = tableConfig.columns.some((c) => c.colVar === 'cases');
+        let caseJoinClause = '';
+        let caseCountExpr = '0';
+
+        if (needsCaseJoin) {
+          caseCountExpr = 'COALESCE(MAX(pc.case_count), 0)';
+
+          if (tableConfig.rowVar === 'attending_provider') {
+            caseJoinClause = 'LEFT JOIN filteredProviderCases pc ON pc.prov_id = v.attending_provider_id';
+          } else {
+            caseJoinClause = `LEFT JOIN (
+              SELECT ${tableConfig.rowVar}, SUM(case_count) AS case_count
+              FROM filteredPeriodCases
+              GROUP BY ${tableConfig.rowVar}
+            ) pc ON pc.${tableConfig.rowVar} = v.${tableConfig.rowVar}`;
+          }
+        }
+
         // Build column selection clauses based on config.columns
         const columnClauses: string[] = [];
 
@@ -1866,24 +1904,12 @@ export class RootStore {
 
           const aggFn = colAggregation.toUpperCase();
 
-          // If this column is the grouping variable, select it directly
+          // If this column is the row variable, select it directly
           if (colVar === tableConfig.rowVar) {
             if (colVar === 'attending_provider') {
               columnClauses.push(`${attendingNameExpr} AS ${colVar}`);
-              return;
-            }
-            if (colVar === 'surgeon_prov_name') {
-              columnClauses.push(`${surgeonNameExpr} AS ${colVar}`);
-              return;
-            }
-            if (colVar === 'anesth_prov_name') {
-              columnClauses.push(`${anesthNameExpr} AS ${colVar}`);
-              return;
-            }
-            if (['year', 'quarter', 'month', 'department_id', 'procedure_id'].includes(colVar)) {
-              columnClauses.push(`sc.${colVar} AS ${colVar}`);
             } else {
-              columnClauses.push(`${colVar} AS ${colVar}`);
+              columnClauses.push(`v.${colVar} AS ${colVar}`);
             }
             return;
           }
@@ -1904,33 +1930,24 @@ export class RootStore {
             return;
           }
 
-          // Special case: cases (count of units)
+          // Special case: cases (count from CTE)
           if (colVar === 'cases') {
-            columnClauses.push(`COUNT(DISTINCT sc.case_id) AS ${colVar}`);
+            columnClauses.push(`${caseCountExpr} AS ${colVar}`);
             return;
           }
 
-          // Special case: identity columns (attending_provider, year, quarter) - return strings (e.g. Dr. Provider)
+          // Special case: attending_provider as non-row column
           if (colVar === 'attending_provider') {
-            const isRowVar = colVar === tableConfig.rowVar;
-
-            if (isRowVar) {
-              columnClauses.push(`${attendingNameExpr} AS ${colVar}`);
-            } else {
-              const expr = this.uiState.isInPrivateMode
-                ? 'string_agg(DISTINCT \'Provider\', \', \')'
-                : `string_agg(DISTINCT CAST(${colVar} AS VARCHAR), ', ')`;
-              columnClauses.push(`${expr} AS ${colVar}`);
-            }
+            const expr = this.uiState.isInPrivateMode
+              ? 'string_agg(DISTINCT \'Provider\', \', \')'
+              : 'string_agg(DISTINCT CAST(v.attending_provider AS VARCHAR), \', \')';
+            columnClauses.push(`${expr} AS ${colVar}`);
             return;
           }
 
+          // Special case: time columns as non-row columns
           if (['year', 'quarter', 'month'].includes(colVar)) {
-            if (colVar === tableConfig.rowVar) {
-              columnClauses.push(`sc.${colVar} AS ${colVar}`);
-            } else {
-              columnClauses.push(`string_agg(DISTINCT CAST(sc.${colVar} AS VARCHAR), ', ') AS ${colVar}`);
-            }
+            columnClauses.push(`string_agg(DISTINCT CAST(v.${colVar} AS VARCHAR), ', ') AS ${colVar}`);
             return;
           }
 
@@ -1954,34 +1971,37 @@ export class RootStore {
           const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
           if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
             if (colAggregation === 'avg') {
-              // For all views: what % of VISITS associated with this grouping had outcome
-              // This avoids double-counting patients with multiple surgeries in outcomes
-              columnClauses.push(`COUNT(DISTINCT CASE WHEN v.${colVar} = 1 THEN v.visit_no END) * 100.0 / NULLIF(COUNT(DISTINCT v.visit_no), 0) AS ${colVar}`);
+              // Percentage: SUM of true values / COUNT of non-NULL values
+              // Outcomes (death etc.) are NULL for non-admitting lines, so COUNT excludes them
+              // Medications (b12 etc.) are never NULL, so COUNT covers all lines
+              columnClauses.push(`SUM(CAST(v.${colVar} AS INT)) * 100.0 / NULLIF(COUNT(v.${colVar}), 0) AS ${colVar}`);
             } else {
-              // Count distinct visits with outcome
-              columnClauses.push(`COUNT(DISTINCT CASE WHEN v.${colVar} = 1 THEN v.visit_no END) AS ${colVar}`);
+              // Count of lines where this boolean is true
+              columnClauses.push(`SUM(CAST(v.${colVar} AS INT)) AS ${colVar}`);
             }
           } else if (col.type === 'violin') {
-            // Special case for violin: fetch all values as a list for distribution
-            // We use apr_drg_weight specifically for drg_weight colVar
             const dbCol = colVar === 'drg_weight' ? 'apr_drg_weight' : colVar;
-            columnClauses.push(`list(CAST(${dbCol} AS DOUBLE)) AS ${colVar}`);
+            const filterClause = tableConfig.rowVar !== 'attending_provider'
+              ? ' FILTER (WHERE is_admitting_attending)'
+              : '';
+            columnClauses.push(`list(CAST(${dbCol} AS DOUBLE))${filterClause} AS ${colVar}`);
           } else {
             // Standard numeric aggregation
             columnClauses.push(`${aggFn}(${colVar}) AS ${colVar}`);
           }
         });
 
-        // Determine the raw grouping column for the GROUP BY clause
-        const groupCol = ['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].includes(tableConfig.rowVar)
-          ? `sc.${tableConfig.rowVar}`
-          : `v.${tableConfig.rowVar}`;
+        // Build GROUP BY and ORDER BY with explicit columns
+        const groupByParts: string[] = [];
+        const orderByParts: string[] = [];
 
-        const secondaryGroupCol = tableConfig.groupByVar
-          ? (['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].includes(tableConfig.groupByVar)
-            ? `sc.${tableConfig.groupByVar}`
-            : `v.${tableConfig.groupByVar}`)
-          : null;
+        if (tableConfig.rowVar === 'attending_provider') {
+          groupByParts.push('v.attending_provider_id', 'v.attending_provider');
+          orderByParts.push('v.attending_provider');
+        } else {
+          groupByParts.push(`v.${tableConfig.rowVar}`);
+          orderByParts.push(`v.${tableConfig.rowVar}`);
+        }
 
         // Ensure the primary grouping variable is the FIRST column selected
         const rowVarIndex = columnClauses.findIndex((clause) => clause.trim().endsWith(`AS ${tableConfig.rowVar}`));
@@ -1989,32 +2009,32 @@ export class RootStore {
           const [rowVarClause] = columnClauses.splice(rowVarIndex, 1);
           columnClauses.unshift(rowVarClause);
         } else if (rowVarIndex === -1) {
-          columnClauses.unshift(`${groupCol} AS ${tableConfig.rowVar}`);
+          if (tableConfig.rowVar === 'attending_provider') {
+            columnClauses.unshift(`${attendingNameExpr} AS ${tableConfig.rowVar}`);
+          } else {
+            columnClauses.unshift(`v.${tableConfig.rowVar} AS ${tableConfig.rowVar}`);
+          }
         }
 
-        // Ensure the secondary grouping variable is the SECOND column selected
-        if (tableConfig.groupByVar && secondaryGroupCol) {
+        // Add secondary grouping variable if present
+        if (tableConfig.groupByVar) {
+          const secondaryGroupCol = `v.${tableConfig.groupByVar}`;
+          groupByParts.push(secondaryGroupCol);
+          orderByParts.push(secondaryGroupCol);
           columnClauses.splice(1, 0, `${secondaryGroupCol} AS _group_val`);
         }
 
-        const groupByIndices = tableConfig.groupByVar ? '1, 2' : '1';
+        const groupByClause = groupByParts.join(', ');
+        const orderByClause = orderByParts.join(', ');
 
-        // Build the query - Universally surgery-centric for selection parity
+        // Build the query - Visit-centric with pre-materialized case counts
         const query = `
           SELECT
-            ${columnClauses.map((c) => {
-    // Ensure we prefer sc. for time/provider groupings and v. for outcomes
-    let clause = c;
-    if (['year', 'quarter', 'month', 'surgeon_prov_name', 'anesth_prov_name', 'department_id', 'procedure_id'].some((v) => clause.includes(v))) {
-      clause = clause.replace(/v\./g, 'sc.');
-    }
-    return clause;
-  }).join(',\n            ')},
-            list_distinct(list(CAST(sc.case_id AS VARCHAR))) AS _case_ids
-          FROM filteredSurgeryCases sc
-          LEFT JOIN filteredVisits v ON sc.visit_no = v.visit_no
-          GROUP BY ${groupByIndices}
-          ORDER BY ${groupByIndices};
+            ${columnClauses.join(',\n            ')}
+          FROM filteredVisits v
+          ${caseJoinClause}
+          GROUP BY ${groupByClause}
+          ORDER BY ${orderByClause};
         `;
 
         try {
@@ -2032,15 +2052,10 @@ export class RootStore {
                 groupedMap.set(rowKey, {
                   ...r,
                   _groups: [],
-                  _case_ids: [],
                 });
               }
               const rowObj = groupedMap.get(rowKey)!;
               (rowObj._groups as ExploreTableRow[]).push(r);
-              // Union case IDs
-              const caseIds = (r._case_ids as unknown) as string[];
-              const existingIds = (rowObj._case_ids as unknown) as string[];
-              rowObj._case_ids = Array.from(new Set([...existingIds, ...caseIds]));
             });
 
             rows = Array.from(groupedMap.values());
@@ -2056,6 +2071,7 @@ export class RootStore {
           return { id: config.chartId, data: [] };
         }
       }
+      // DUMBBELL CHART -------------------------------
       if (config.chartType === 'dumbbell') {
       // TODO: Don't limit to only 10,000 surgeries.
         const query = `

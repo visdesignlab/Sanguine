@@ -131,6 +131,25 @@ function App() {
           FROM surgery_cases sc
           INNER JOIN filteredVisitIds fvi ON sc.visit_no = fvi.visit_no;
 
+          CREATE TABLE IF NOT EXISTS filteredProviderCases AS
+          SELECT
+            prov_id,
+            COUNT(DISTINCT case_id) AS case_count
+          FROM (
+            SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id
+            FROM filteredSurgeryCases
+          ) sub
+          WHERE prov_id IS NOT NULL
+          GROUP BY prov_id;
+
+          CREATE TABLE IF NOT EXISTS filteredPeriodCases AS
+          SELECT
+            year,
+            quarter,
+            COUNT(DISTINCT case_id) AS case_count
+          FROM filteredSurgeryCases
+          GROUP BY year, quarter;
+
           CREATE VIEW IF NOT EXISTS aggregatedVisits AS
           SELECT
             visit_no,
