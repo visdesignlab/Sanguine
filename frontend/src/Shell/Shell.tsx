@@ -85,7 +85,6 @@ export const Shell = observer(() => {
   const LEFT_PANEL_WIDTH = 6 * toolbarWidth;
 
   // Open and close the left toolbar, burger toggle visible on hover.
-  // Open and close the left toolbar, burger toggle visible on hover.
   const toggleLeftToolbar = () => {
     store.actions.setUiState({ leftToolbarOpened: !store.state.ui.leftToolbarOpened });
   };
