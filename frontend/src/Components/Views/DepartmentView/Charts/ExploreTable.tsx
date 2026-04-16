@@ -54,7 +54,7 @@ export const getGroupColor = (groupByVar: string | undefined, groupVal: string, 
   if (!groupByVar) return GROUP_COLORS[index % GROUP_COLORS.length];
 
   const outcomes = ['death', 'stroke', 'vent', 'ecmo'];
-  const nonOutcomes = ['b12', 'iron', 'antifibrinolytic', 'overall_units_adherent'];
+  const nonOutcomes = ['b12', 'iron', 'antifibrinolytic'];
 
   if (outcomes.includes(groupByVar)) {
     if (groupVal === '1' || groupVal === 'true') return '#D81B60'; // Red
@@ -71,10 +71,9 @@ export const getGroupColor = (groupByVar: string | undefined, groupVal: string, 
 
 export const getGroupLabel = (groupByVar: string | undefined, val: string) => {
   if (!groupByVar) return val;
-  if (['death', 'stroke', 'vent', 'ecmo', 'b12', 'iron', 'antifibrinolytic', 'overall_units_adherent'].includes(groupByVar)) {
+  if (['death', 'stroke', 'vent', 'ecmo', 'b12', 'iron', 'antifibrinolytic'].includes(groupByVar)) {
     const label = ExploreTableGroupByOptions.find((o) => o.value === groupByVar)?.label || val;
     if (val === '1' || val === 'true') return label;
-    if (groupByVar === 'overall_units_adherent') return `Not ${label}`;
     return `No ${label}`;
   }
   return val;
@@ -857,7 +856,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
     // Filter noise for boolean vars: keep only '0' and '1' or 'true' and 'false'
     let result = Array.from(values);
-    if (groupByVar && ['death', 'stroke', 'vent', 'ecmo', 'b12', 'iron', 'antifibrinolytic', 'overall_units_adherent'].includes(groupByVar)) {
+    if (groupByVar && ['death', 'stroke', 'vent', 'ecmo', 'b12', 'iron', 'antifibrinolytic'].includes(groupByVar)) {
       result = result.filter((v) => ['0', '1', 'true', 'false'].includes(v));
     }
     return result.sort().reverse(); // Show '1'/'true' on top, '0'/'false' on bottom

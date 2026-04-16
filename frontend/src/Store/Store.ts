@@ -967,14 +967,6 @@ export class RootStore {
         if (yAxisVar === 'case_mix_index') {
           return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`;
         }
-        // Special case: Overall adherence – return raw numerator & denominator sums
-        if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
-          const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
-          return [
-            `SUM(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
-            `SUM(${baseSum}) AS ${aggregation}_${yAxisVar}_den`,
-          ];
-        }
         // Average adherence – return raw numerator & denominator sums
         if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
           const baseUnit = yAxisVar.replace('_adherent', '');
@@ -1176,20 +1168,6 @@ export class RootStore {
                   THEN ms_drg_weight ELSE NULL END) / visit_count_comparison_sum AS case_mix_index_comparison_${aggregation}
               `;
         }
-        // Special case: Overall adherence (avg. adherent units as percentage of total units)
-        if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
-          const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
-          return `
-                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN (${baseSum}) ELSE 0 END) > 0
-                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) /
-                       SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN (${baseSum}) ELSE 0 END)
-                  ELSE NULL END AS ${yAxisVar}_current_${aggregation},
-                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN (${baseSum}) ELSE 0 END) > 0
-                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) /
-                       SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN (${baseSum}) ELSE 0 END)
-                  ELSE NULL END AS ${yAxisVar}_comparison_${aggregation}
-              `;
-        }
         // Avg. adherent units as percentage of total units
         if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
           const baseUnit = yAxisVar.replace('_adherent', '');
@@ -1256,14 +1234,6 @@ export class RootStore {
       if (yAxisVar === 'case_mix_index') {
         sparklineSelects.push(
           `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`,
-        );
-        return;
-      }
-      // Special case: Overall Adherence (Avg. adherent units as percentage of total units)
-      if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
-        const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
-        sparklineSelects.push(
-          `CASE WHEN SUM(${baseSum}) > 0 THEN CAST(SUM(${yAxisVar}) AS DOUBLE) / SUM(${baseSum}) ELSE NULL END AS ${aggregation}_${yAxisVar}`,
         );
         return;
       }
