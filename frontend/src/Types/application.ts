@@ -972,6 +972,7 @@ export type ExploreTableConfig = {
 export type ExploreTableRow = {
   [key: string]: string | number | number[] | number[][] | unknown[] | undefined;
 } & {
+  _row_key?: string | number;
   _groups?: ExploreTableRow[];
   _case_ids?: string[];
 };

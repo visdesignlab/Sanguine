@@ -1851,6 +1851,9 @@ export class RootStore {
       if (config.chartType === 'exploreTable') {
         // Configuration of table (rowVar, columns, aggregation, etc.)
         const tableConfig = config as ExploreTableConfig;
+        const internalRowKeyExpr = tableConfig.rowVar === 'attending_provider'
+          ? 'v.attending_provider_id'
+          : `v.${tableConfig.rowVar}`;
 
         // --- Build JOIN for surgery case counts (only if cases column is requested) ---
         const needsCaseJoin = tableConfig.columns.some((c) => c.colVar === 'cases');
@@ -1906,7 +1909,7 @@ export class RootStore {
         }
 
         // Build column selection clauses based on config.columns
-        const columnClauses: string[] = [];
+        const columnClauses: string[] = [`${internalRowKeyExpr} AS _row_key`];
 
         // Iterate over the columns and build the column selection clauses
         tableConfig.columns.forEach((col) => {
@@ -2062,7 +2065,7 @@ export class RootStore {
             const groupedMap = new Map<string | number, ExploreTableRow>();
 
             rawRows.forEach((r) => {
-              const rowKey = String(r[tableConfig.rowVar] ?? 'Unknown');
+              const rowKey = String(r._row_key ?? r[tableConfig.rowVar] ?? 'Unknown');
               if (!groupedMap.has(rowKey)) {
                 groupedMap.set(rowKey, {
                   ...r,
