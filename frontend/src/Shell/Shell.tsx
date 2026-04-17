@@ -32,6 +32,7 @@ import { useThemeConstants } from '../Theme/mantineTheme';
 import classes from './Shell.module.css';
 import { HospitalView } from '../Components/Views/HospitalView/HospitalView';
 import { DepartmentView } from '../Components/Views/DepartmentView/DepartmentView';
+
 import { ProviderView } from '../Components/Views/ProviderView/ProviderView';
 import { SettingsView } from '../Components/Views/SettingsView/SettingsView';
 import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/SelectedVisitsPanel';

@@ -944,6 +944,12 @@ export type ExploreTableColumn = {
   numericTextVisible?: boolean;
 };
 
+// Explore Table Sort
+export type ExploreTableSort = {
+  colVar: string;
+  direction: 'asc' | 'desc';
+};
+
 // Explore Table Chart Config
 export type ExploreTableConfig = {
   chartId: string;
@@ -953,6 +959,7 @@ export type ExploreTableConfig = {
   columns: ExploreTableColumn[];
   aggregation?: 'sum' | 'avg';
   twoValsPerRow?: boolean;
+  sort?: ExploreTableSort;
 };
 
 // Explore Table Data
@@ -962,6 +969,22 @@ export type ExploreTableData = ExploreTableRow[]; // E.g. [{ attending_provider:
 // --- Explore Chart ---
 export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData | DumbbellData>;
 export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig | DumbbellChartConfig;
+
+// --- Explore Stats ---
+// Stat options for explore view — same as dashboard but excluding costs
+export const exploreStatYAxisOptions = dashboardYAxisOptions.filter(
+  (opt) => !COST_OPTIONS.some((c) => c.value === opt.value)
+    && opt.value !== OVERALL_BLOOD_PRODUCT_COST.value,
+);
+
+export type ExploreStatConfig = {
+  statId: string;
+  yAxisVar: typeof dashboardYAxisVars[number];
+  aggregation: keyof typeof AGGREGATION_OPTIONS;
+  title: string;
+};
+
+export type ExploreStatData = Record<string, { value: string }>;
 
 // Procedure hierarchy ---------------------------------------------------
 export type ProcedureHierarchyProcedure = {

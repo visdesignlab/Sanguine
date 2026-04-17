@@ -21,6 +21,7 @@ import {
 } from '@mantine/core';
 import {
   IconGripVertical, IconMathGreater, IconMathLower, IconPercentage,
+  IconChevronUp, IconSelector,
 } from '@tabler/icons-react';
 import {
   DataTable, DataTableColumn, useDataTableColumns, type DataTableSortStatus,
@@ -595,10 +596,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   const setHoveredValue = useCallback((val: HoveredValue) => { hoverState.current = val; }, [hoverState]);
 
   // Sorting
-  const defaultSortCol = chartConfig.columns[0]?.colVar || 'surgeon_prov_id';
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ExploreTableRow>>({
-    columnAccessor: defaultSortCol,
-    direction: 'asc',
+    columnAccessor: chartConfig.sort?.colVar || chartConfig.columns[0]?.colVar || 'surgeon_prov_id',
+    direction: chartConfig.sort?.direction || 'asc',
   });
 
   // Apply filters and sorting ---
@@ -902,15 +902,20 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         if (agg && titleMap[agg]) displayTitle = titleMap[agg];
       }
 
+      const isActiveSort = sortStatus.columnAccessor === colVar;
+      const isActiveFilter = !!(numericFilters[colVar]?.query || (textFilters[colVar] && textFilters[colVar].length > 0));
+
       // Base column definition
       const column: DataTableColumn<ExploreTableRow> = {
         accessor: colVar,
         title: displayTitle,
+        titleClassName: `${isActiveSort ? 'sorted-column-header' : ''} ${isActiveFilter ? 'filtered-column-header' : ''}`.trim() || undefined,
         draggable: colVar !== 'cases' && !(colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar),
         resizable: false,
         sortable: true,
         noWrap: true,
         width: colVar === 'cases' ? 90 : colVar === 'salvage_savings' ? 250 : colVar === 'total_cost' ? 400 : (colVar === 'attending_provider' || (colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar)) ? 175 : undefined,
+        filtering: isActiveFilter,
         filter: filterComponent,
         footer: type === 'violin' ? violinFooter : (type === 'numeric' || type === 'heatmap') ? (
           <HistogramFooter
@@ -1024,7 +1029,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
       return column;
     });
-  }, [rows, chartConfig.twoValsPerRow, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue]);
+  }, [rows, chartConfig.twoValsPerRow, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, sortStatus.columnAccessor]);
 
   // Data Table Columns -------
   const columnDefs = useMemo(
@@ -1120,6 +1125,10 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           records={rows}
           sortStatus={sortStatus}
           onSortStatusChange={setSortStatus}
+          sortIcons={{
+            sorted: <IconChevronUp size={14} className="active-sort-icon" />,
+            unsorted: <IconSelector size={14} />,
+          }}
           storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
           columns={effectiveColumns}
           style={useMemo(() => ({ fontStyle: 'italic' }), [])}

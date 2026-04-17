@@ -1,23 +1,124 @@
 import {
   IconDropletHalf2Filled, IconTestPipe2, IconVaccineBottle, IconRecycle, IconCoin, IconProps,
+  IconReportSearch,
 } from '@tabler/icons-react';
 import { Layout } from 'react-grid-layout';
-import { ExploreChartConfig } from '../../../Types/application';
+import { ExploreChartConfig, ExploreStatConfig } from '../../../Types/application';
 
 export type PresetOption = {
   question: string;
   Icon: React.ComponentType<IconProps>;
   chartConfigs: ExploreChartConfig[];
   chartLayouts: { [key: string]: Layout[] };
+  statConfigs?: ExploreStatConfig[];
 };
 export type PresetGroup = { groupLabel: string; options: PresetOption[] };
 
 export const presetStateCards: PresetGroup[] = [
   {
+    groupLabel: 'Overview',
+    options: [
+      {
+        question: 'How many blood products were transfused in [department]?',
+        Icon: IconReportSearch,
+        chartConfigs: [
+          {
+            chartId: 'preset-overview-department',
+            title: 'Blood Product Utilization per Surgeon',
+            chartType: 'exploreTable',
+            rowVar: 'attending_provider',
+            columns: [
+              {
+                colVar: 'attending_provider',
+                aggregation: 'none',
+                type: 'text',
+                title: 'Surgeon',
+              },
+              {
+                colVar: 'cases',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Cases',
+              },
+              {
+                colVar: 'drg_weight',
+                aggregation: 'none',
+                type: 'violin',
+                title: 'DRG Weight',
+              },
+              {
+                colVar: 'death',
+                aggregation: 'avg',
+                type: 'numeric',
+                title: 'Deaths',
+              },
+              {
+                colVar: 'cryo_units',
+                aggregation: 'avg',
+                type: 'numeric',
+                title: 'Cryo',
+              },
+              {
+                colVar: 'plt_units',
+                aggregation: 'avg',
+                type: 'numeric',
+                title: 'Platelets',
+              },
+              {
+                colVar: 'ffp_units',
+                aggregation: 'avg',
+                type: 'numeric',
+                title: 'FFP',
+              },
+              {
+                colVar: 'whole_units',
+                aggregation: 'avg',
+                type: 'numeric',
+                title: 'Whole Blood',
+              },
+            ],
+            twoValsPerRow: false,
+          },
+        ],
+        chartLayouts: {
+          main: [
+            {
+              i: 'preset-overview-department',
+              x: 0,
+              y: 0,
+              w: 4,
+              h: 4,
+            },
+          ],
+        },
+        statConfigs: [
+          {
+            statId: 'preset-stat-rbc-avg',
+            yAxisVar: 'rbc_units',
+            aggregation: 'avg',
+            title: 'Average RBCs Transfused Per Visit',
+          },
+          {
+            statId: 'preset-stat-cell-saver-sum',
+            yAxisVar: 'cell_saver_ml',
+            aggregation: 'sum',
+            title: 'Total Cell Salvage Volume (ml) Used',
+          },
+          {
+            statId: 'preset-stat-plt-adherent',
+            yAxisVar: 'plt_units_adherent',
+            aggregation: 'avg',
+            title: 'Percentage of Platelet Units Transfused According to Guidelines',
+          },
+        ],
+      },
+    ],
+  },
+  {
     groupLabel: 'Guideline Adherence',
     options: [
       {
-        question: 'In cases with preoperative anemia, how many RBCs were transfused per surgeon?',
+        question: 'How common is preoperative anemia in patients undergoing elective surgery?',
         Icon: IconDropletHalf2Filled,
         // Add a ExploreTable chart config so clicking this preset opens the ExploreTable.
         chartConfigs: [
@@ -27,6 +128,12 @@ export const presetStateCards: PresetGroup[] = [
             chartType: 'exploreTable',
             rowVar: 'attending_provider',
             columns: [
+              {
+                colVar: 'death',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Deaths',
+              },
               {
                 colVar: 'drg_weight',
                 aggregation: 'none',
@@ -80,8 +187,10 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'avg',
                 type: 'heatmap',
                 title: '≥5 RBC',
-              }],
+              },
+            ],
             twoValsPerRow: false,
+            sort: { colVar: 'percent_above_5_rbc', direction: 'desc' },
           },
           {
             chartId: 'preset-scatter-prevent-anemia',
@@ -111,7 +220,7 @@ export const presetStateCards: PresetGroup[] = [
         },
       },
       {
-        question: 'What were the pre-op and post-op HGB levels of cases per surgeon?',
+        question: 'What is the postoperative hemoglobin value among patients transfused during surgery?',
         Icon: IconTestPipe2,
         chartConfigs: [
           {
@@ -296,7 +405,7 @@ export const presetStateCards: PresetGroup[] = [
         },
       },
       {
-        question: 'What are the outcomes of using cell salvage, for each anesthesiologist?',
+        question: 'How often do patients undergoing surgery receive 1+ allogeneic RBC transfusion but no cell salvage?',
         Icon: IconRecycle,
         chartConfigs: [
           {

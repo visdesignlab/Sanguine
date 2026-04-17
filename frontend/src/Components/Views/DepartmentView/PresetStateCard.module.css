@@ -30,9 +30,17 @@
 /* Hover states */
 .presetStateCard:hover .arrow,
 .presetStateCard:hover .question,
+.presetStateCard.active .arrow,
+.presetStateCard.active .question,
 .title.active {
     color: var(--mantine-color-blue-6);
 }
 .presetStateCard:hover .arrow {
     transform: translateY(-8px);
+}
+
+/* Active / selected question: light yellow fill */
+.presetStateCard.active,
+.presetStateCard.flash {
+    background-color: #f5faff;
 }
