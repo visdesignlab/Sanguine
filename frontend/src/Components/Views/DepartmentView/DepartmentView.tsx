@@ -40,6 +40,8 @@ import { DepartmentStatsGrid } from './DepartmentStatsGrid';
 
 export function DepartmentView() {
   const store = useContext(Store);
+  const selectedDept = store.selectedDepartmentId
+    && store.procedureHierarchy?.departments.find((d) => d.id === store.selectedDepartmentId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive) as any, []);
@@ -306,17 +308,9 @@ export function DepartmentView() {
       {/* Title, Add Chart Button */}
       <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
         <Flex align="center" gap="xs">
-          <Title order={3}>Department</Title>
-          {(() => {
-            if (!store.selectedDepartmentId || !store.procedureHierarchy) return null;
-            const dept = store.procedureHierarchy.departments.find((d) => d.id === store.selectedDepartmentId);
-            if (!dept) return null;
-            return (
-              <Text size="lg" fw={300} c="dimmed">
-                {`- ${dept.name}`}
-              </Text>
-            );
-          })()}
+          <Title order={3}>
+            {selectedDept ? `Department of ${selectedDept.name}` : 'Department'}
+          </Title>
         </Flex>
 
         <Flex direction="row" align="center" gap="md">
