@@ -146,3 +146,9 @@
   pointer-events: none;
   color: #fff;
 }
+
+/* Highlight sort icon in blue when its column is active */
+.explore-table-data-table .active-sort-icon.active-sort-icon {
+  color: #1770B8;
+  stroke: #1770B8;
+}
