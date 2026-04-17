@@ -967,14 +967,6 @@ export class RootStore {
         if (yAxisVar === 'case_mix_index') {
           return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`;
         }
-        // Special case: Overall adherence – return raw numerator & denominator sums
-        if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
-          const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
-          return [
-            `SUM(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
-            `SUM(${baseSum}) AS ${aggregation}_${yAxisVar}_den`,
-          ];
-        }
         // Average adherence – return raw numerator & denominator sums
         if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
           const baseUnit = yAxisVar.replace('_adherent', '');
@@ -1176,20 +1168,6 @@ export class RootStore {
                   THEN ms_drg_weight ELSE NULL END) / visit_count_comparison_sum AS case_mix_index_comparison_${aggregation}
               `;
         }
-        // Special case: Overall adherence (avg. adherent units as percentage of total units)
-        if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
-          const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
-          return `
-                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN (${baseSum}) ELSE 0 END) > 0
-                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) /
-                       SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN (${baseSum}) ELSE 0 END)
-                  ELSE NULL END AS ${yAxisVar}_current_${aggregation},
-                CASE WHEN SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN (${baseSum}) ELSE 0 END) > 0
-                  THEN CAST(SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS DOUBLE) /
-                       SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN (${baseSum}) ELSE 0 END)
-                  ELSE NULL END AS ${yAxisVar}_comparison_${aggregation}
-              `;
-        }
         // Avg. adherent units as percentage of total units
         if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
           const baseUnit = yAxisVar.replace('_adherent', '');
@@ -1256,14 +1234,6 @@ export class RootStore {
       if (yAxisVar === 'case_mix_index') {
         sparklineSelects.push(
           `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`,
-        );
-        return;
-      }
-      // Special case: Overall Adherence (Avg. adherent units as percentage of total units)
-      if (yAxisVar === 'overall_units_adherent' && aggregation === 'avg') {
-        const baseSum = 'rbc_units + ffp_units + plt_units + cryo_units';
-        sparklineSelects.push(
-          `CASE WHEN SUM(${baseSum}) > 0 THEN CAST(SUM(${yAxisVar}) AS DOUBLE) / SUM(${baseSum}) ELSE NULL END AS ${aggregation}_${yAxisVar}`,
         );
         return;
       }
@@ -1874,12 +1844,72 @@ export class RootStore {
         ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY anesth_prov_name)'
         : 'anesth_prov_name';
 
+      const attendingNameExpr = this.uiState.isInPrivateMode
+        ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY attending_provider)'
+        : 'attending_provider';
+
       if (config.chartType === 'exploreTable') {
         // Configuration of table (rowVar, columns, aggregation, etc.)
         const tableConfig = config as ExploreTableConfig;
+        const internalRowKeyExpr = tableConfig.rowVar === 'attending_provider'
+          ? 'v.attending_provider_id'
+          : `v.${tableConfig.rowVar}`;
+
+        // --- Build JOIN for surgery case counts (only if cases column is requested) ---
+        const needsCaseJoin = tableConfig.columns.some((c) => c.colVar === 'cases');
+        let caseJoinClause = '';
+        let caseCountExpr = '0';
+
+        if (needsCaseJoin) {
+          const needsVisitCaseJoin = tableConfig.rowVar !== 'attending_provider' || Boolean(tableConfig.groupByVar);
+          const caseRowExpr = tableConfig.rowVar === 'attending_provider'
+            ? 'provider_cases.prov_id'
+            : `visit_cases.${tableConfig.rowVar}`;
+          const caseIdExpr = tableConfig.rowVar === 'attending_provider'
+            ? 'provider_cases.case_id'
+            : 'surgery_cases.case_id';
+          const caseSource = tableConfig.rowVar === 'attending_provider'
+            ? `${needsVisitCaseJoin ? `(
+              SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id, visit_no
+              FROM filteredSurgeryCases
+            ) provider_cases
+            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = provider_cases.visit_no` : `(
+              SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id
+              FROM filteredSurgeryCases
+            ) provider_cases`}`
+            : `filteredSurgeryCases surgery_cases
+            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = surgery_cases.visit_no`;
+          const caseWhereClause = tableConfig.rowVar === 'attending_provider'
+            ? 'WHERE provider_cases.prov_id IS NOT NULL'
+            : '';
+          const caseGroupExpr = tableConfig.groupByVar
+            ? `visit_cases.${tableConfig.groupByVar}`
+            : null;
+          const caseSelects = [`${caseRowExpr} AS row_key`];
+          const caseGroupBys = [caseRowExpr];
+          const caseJoinConditions = [tableConfig.rowVar === 'attending_provider'
+            ? 'pc.row_key = v.attending_provider_id'
+            : `pc.row_key = v.${tableConfig.rowVar}`];
+
+          if (caseGroupExpr) {
+            caseSelects.push(`${caseGroupExpr} AS group_key`);
+            caseGroupBys.push(caseGroupExpr);
+            caseJoinConditions.push(`pc.group_key = v.${tableConfig.groupByVar}`);
+          }
+
+          caseCountExpr = 'COALESCE(MAX(pc.case_count), 0)';
+          caseJoinClause = `LEFT JOIN (
+            SELECT
+              ${caseSelects.join(',\n              ')},
+              COUNT(DISTINCT ${caseIdExpr}) AS case_count
+            FROM ${caseSource}
+            ${caseWhereClause}
+            GROUP BY ${caseGroupBys.join(', ')}
+          ) pc ON ${caseJoinConditions.join(' AND ')}`;
+        }
 
         // Build column selection clauses based on config.columns
-        const columnClauses: string[] = [];
+        const columnClauses: string[] = [`${internalRowKeyExpr} AS _row_key`];
 
         // Iterate over the columns and build the column selection clauses
         tableConfig.columns.forEach((col) => {
@@ -1892,15 +1922,13 @@ export class RootStore {
 
           const aggFn = colAggregation.toUpperCase();
 
-          // If this column is the grouping variable, select it directly
+          // If this column is the row variable, select it directly
           if (colVar === tableConfig.rowVar) {
             if (colVar === 'attending_provider') {
-              if (this.uiState.isInPrivateMode) {
-                columnClauses.push(`'Provider ' || ROW_NUMBER() OVER (ORDER BY ${colVar}) AS ${colVar}`);
-                return;
-              }
+              columnClauses.push(`${attendingNameExpr} AS ${colVar}`);
+            } else {
+              columnClauses.push(`v.${colVar} AS ${colVar}`);
             }
-            columnClauses.push(colVar);
             return;
           }
 
@@ -1920,36 +1948,24 @@ export class RootStore {
             return;
           }
 
-          // Special case: cases (visit count)
+          // Special case: cases (count from CTE)
           if (colVar === 'cases') {
-            columnClauses.push(`COUNT(*) AS ${colVar}`);
+            columnClauses.push(`${caseCountExpr} AS ${colVar}`);
             return;
           }
 
-          // Special case: identity columns (attending_provider, year, quarter) - return strings (e.g. Dr. Provider)
+          // Special case: attending_provider as non-row column
           if (colVar === 'attending_provider') {
-            const isRowVar = colVar === tableConfig.rowVar;
-
-            if (isRowVar) {
-              const expr = this.uiState.isInPrivateMode
-                ? `'Provider ' || ROW_NUMBER() OVER (ORDER BY ${colVar})`
-                : colVar;
-              columnClauses.push(`${expr} AS ${colVar}`);
-            } else {
-              const expr = this.uiState.isInPrivateMode
-                ? 'string_agg(DISTINCT \'Provider\', \', \')'
-                : `string_agg(DISTINCT CAST(${colVar} AS VARCHAR), ', ')`;
-              columnClauses.push(`${expr} AS ${colVar}`);
-            }
+            const expr = this.uiState.isInPrivateMode
+              ? 'string_agg(DISTINCT \'Provider\', \', \')'
+              : 'string_agg(DISTINCT CAST(v.attending_provider AS VARCHAR), \', \')';
+            columnClauses.push(`${expr} AS ${colVar}`);
             return;
           }
 
-          if (['year', 'quarter'].includes(colVar)) {
-            if (colVar === tableConfig.rowVar) {
-              columnClauses.push(`${colVar}`);
-            } else {
-              columnClauses.push(`string_agg(DISTINCT CAST(${colVar} AS VARCHAR), ', ') AS ${colVar}`);
-            }
+          // Special case: time columns as non-row columns
+          if (['year', 'quarter', 'month'].includes(colVar)) {
+            columnClauses.push(`string_agg(DISTINCT CAST(v.${colVar} AS VARCHAR), ', ') AS ${colVar}`);
             return;
           }
 
@@ -1973,40 +1989,95 @@ export class RootStore {
           const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
           if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
             if (colAggregation === 'avg') {
-              // Calculate percentage: AVG(1|0) * 100
-              columnClauses.push(`AVG(CAST(${colVar} AS INT)) * 100.0 AS ${colVar}`);
+              // Percentage: SUM of true values / COUNT of non-NULL values
+              // Outcomes (death etc.) are NULL for non-admitting lines, so COUNT excludes them
+              // Medications (b12 etc.) are never NULL, so COUNT covers all lines
+              columnClauses.push(`SUM(CAST(v.${colVar} AS INT)) * 100.0 / NULLIF(COUNT(v.${colVar}), 0) AS ${colVar}`);
             } else {
-              // Count occurrences: SUM(1|0)
-              columnClauses.push(`SUM(CAST(${colVar} AS INT)) AS ${colVar}`);
+              // Count of lines where this boolean is true
+              columnClauses.push(`SUM(CAST(v.${colVar} AS INT)) AS ${colVar}`);
             }
           } else if (col.type === 'violin') {
-            // Special case for violin: fetch all values as a list for distribution
-            // We use apr_drg_weight specifically for drg_weight colVar
             const dbCol = colVar === 'drg_weight' ? 'apr_drg_weight' : colVar;
-            columnClauses.push(`list(CAST(${dbCol} AS DOUBLE)) AS ${colVar}`);
+            const filterClause = tableConfig.rowVar !== 'attending_provider'
+              ? ' FILTER (WHERE is_admitting_attending)'
+              : '';
+            columnClauses.push(`list(CAST(${dbCol} AS DOUBLE))${filterClause} AS ${colVar}`);
           } else {
             // Standard numeric aggregation
             columnClauses.push(`${aggFn}(${colVar}) AS ${colVar}`);
           }
         });
 
-        // Ensure the grouping variable is selected
-        if (!columnClauses.some((clause) => clause.includes(tableConfig.rowVar) && !clause.includes('STRING_AGG'))) {
-          columnClauses.unshift(tableConfig.rowVar);
+        // Build GROUP BY and ORDER BY with explicit columns
+        const groupByParts: string[] = [];
+        const orderByParts: string[] = [];
+
+        if (tableConfig.rowVar === 'attending_provider') {
+          groupByParts.push('v.attending_provider_id', 'v.attending_provider');
+          orderByParts.push('v.attending_provider');
+        } else {
+          groupByParts.push(`v.${tableConfig.rowVar}`);
+          orderByParts.push(`v.${tableConfig.rowVar}`);
         }
 
-        // Build the query
+        // Ensure the primary grouping variable is the FIRST column selected
+        const rowVarIndex = columnClauses.findIndex((clause) => clause.trim().endsWith(`AS ${tableConfig.rowVar}`));
+        if (rowVarIndex > 0) {
+          const [rowVarClause] = columnClauses.splice(rowVarIndex, 1);
+          columnClauses.unshift(rowVarClause);
+        } else if (rowVarIndex === -1) {
+          if (tableConfig.rowVar === 'attending_provider') {
+            columnClauses.unshift(`${attendingNameExpr} AS ${tableConfig.rowVar}`);
+          } else {
+            columnClauses.unshift(`v.${tableConfig.rowVar} AS ${tableConfig.rowVar}`);
+          }
+        }
+
+        // Add secondary grouping variable if present
+        if (tableConfig.groupByVar) {
+          const secondaryGroupCol = `v.${tableConfig.groupByVar}`;
+          groupByParts.push(secondaryGroupCol);
+          orderByParts.push(secondaryGroupCol);
+          columnClauses.splice(1, 0, `${secondaryGroupCol} AS _group_val`);
+        }
+
+        const groupByClause = groupByParts.join(', ');
+        const orderByClause = orderByParts.join(', ');
+
+        // Build the query - Visit-centric with pre-materialized case counts
         const query = `
           SELECT
             ${columnClauses.join(',\n            ')}
-          FROM filteredVisits
-          GROUP BY ${tableConfig.rowVar}
-          ORDER BY ${tableConfig.rowVar};
+          FROM filteredVisits v
+          ${caseJoinClause}
+          GROUP BY ${groupByClause}
+          ORDER BY ${orderByClause};
         `;
 
         try {
           const queryResult = await this.duckDB!.query(query);
-          const rows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as ExploreTableRow);
+          const rawRows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as ExploreTableRow);
+
+          let rows = rawRows;
+          if (tableConfig.groupByVar) {
+            // Transform flat rows into grouped rows
+            const groupedMap = new Map<string | number, ExploreTableRow>();
+
+            rawRows.forEach((r) => {
+              const rowKey = String(r._row_key ?? r[tableConfig.rowVar] ?? 'Unknown');
+              if (!groupedMap.has(rowKey)) {
+                groupedMap.set(rowKey, {
+                  ...r,
+                  _groups: [],
+                });
+              }
+              const rowObj = groupedMap.get(rowKey)!;
+              (rowObj._groups as ExploreTableRow[]).push(r);
+            });
+
+            rows = Array.from(groupedMap.values());
+          }
 
           if (tableConfig.twoValsPerRow) {
             console.warn('twoValsPerRow is not yet fully implemented, using basic data');
@@ -2018,6 +2089,7 @@ export class RootStore {
           return { id: config.chartId, data: [] };
         }
       }
+      // DUMBBELL CHART -------------------------------
       if (config.chartType === 'dumbbell') {
       // TODO: Don't limit to only 10,000 surgeries.
         const query = `
@@ -2046,7 +2118,6 @@ export class RootStore {
              (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
           FROM filteredSurgeryCases
           ORDER BY surgery_start_dtm
-          LIMIT 10000
         `;
         try {
           const result = await this.duckDB!.query(query);
@@ -2089,9 +2160,10 @@ export class RootStore {
              pre_inr, post_inr,
 
              total_cost,
-             rbc_cost
+             rbc_cost,
+             (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
            FROM filteredSurgeryCases
-           LIMIT 10000
+           ORDER BY surgery_start_dtm
         `;
         try {
           const result = await this.duckDB!.query(query);

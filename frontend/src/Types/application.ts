@@ -782,7 +782,7 @@ const RBC_COUNTS = ['0', '1', '2', '3', '4', 'above_5'] as const;
 const RBC_PERCENT_OPTIONS = RBC_COUNTS.map((count) => ({
   value: `percent_${count}_rbc`,
   label: count === 'above_5' ? '≥5 RBC' : `${count} RBC`,
-  units: { sum: 'cases', avg: '% of cases' },
+  units: { sum: 'visits', avg: '% of visits' },
   decimals: 1,
 }));
 
@@ -931,6 +931,18 @@ export const ExploreTableRowOptions: { value: string; label: string }[] = [
   { value: 'quarter', label: 'Quarter' },
 ];
 
+export const ExploreTableGroupByOptions = [
+  { value: 'death', label: 'Death' },
+  { value: 'stroke', label: 'Stroke' },
+  { value: 'vent', label: 'Ventilator >24hr' },
+  { value: 'ecmo', label: 'ECMO' },
+  { value: 'b12', label: 'B12 Used' },
+  { value: 'iron', label: 'Iron Used' },
+  { value: 'antifibrinolytic', label: 'Antifibrinolytics' },
+  { value: 'overall_units_adherent', label: 'Guideline Adherent' },
+  { value: 'year', label: 'Year' },
+];
+
 // Variables
 export const ExploreTableColumnVars = ExploreTableColumnOptions.map((opt) => opt.value);
 export const ExploreTableRowVars = ExploreTableRowOptions.map((opt) => opt.value);
@@ -953,10 +965,17 @@ export type ExploreTableConfig = {
   columns: ExploreTableColumn[];
   aggregation?: 'sum' | 'avg';
   twoValsPerRow?: boolean;
+  groupByVar?: string;
 };
 
 // Explore Table Data
-export type ExploreTableRow = Record<typeof ExploreTableRowVars[number], string | number | number[] | number[][]>;
+export type ExploreTableRow = {
+  [key: string]: string | number | number[] | number[][] | unknown[] | undefined;
+} & {
+  _row_key?: string | number;
+  _groups?: ExploreTableRow[];
+  _case_ids?: string[];
+};
 export type ExploreTableData = ExploreTableRow[]; // E.g. [{ attending_provider: 'Dr. Smith', cases: 100}, { attending_provider: 'Dr. Johnson', cases: 200}]
 
 // --- Explore Chart ---

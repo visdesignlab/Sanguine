@@ -5,6 +5,7 @@ import React, {
 import { area, curveCatmullRom } from 'd3-shape';
 import { scaleLinear, scaleLog } from 'd3-scale';
 import { max as d3Max, ticks as d3Ticks } from 'd3-array';
+import { interpolateReds } from 'd3';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import {
   MultiSelect,
@@ -18,19 +19,21 @@ import {
   TextInput,
   Select,
   Text,
+  LoadingOverlay,
+  Loader,
 } from '@mantine/core';
 import {
-  IconGripVertical, IconMathGreater, IconMathLower, IconPercentage,
+  IconGripVertical, IconMathGreater, IconMathLower, IconPercentage, IconColumns3, IconCircles,
 } from '@tabler/icons-react';
 import {
   DataTable, DataTableColumn, useDataTableColumns, type DataTableSortStatus,
 } from 'mantine-datatable';
 import { BarChart } from '@mantine/charts';
-import { interpolateReds } from 'd3';
+
 import { Store } from '../../../../Store/Store';
 import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3Utils';
 import {
-  ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions, ExploreTableColumnOptionsGrouped, ExploreTableRowOptions,
+  ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions, ExploreTableColumnOptionsGrouped, ExploreTableRowOptions, ExploreTableGroupByOptions,
 } from '../../../../Types/application';
 import { backgroundHoverColor, smallHoverColor } from '../../../../Theme/mantineTheme';
 import './ExploreTable.css';
@@ -40,6 +43,92 @@ type NumericFilter = { query: string; cmp: '>' | '<' };
 type HoveredValue = { col: string; value: number } | null;
 type HistogramBin = { binMin: number; binMax: number; count: number };
 type SetHoveredValue = (val: HoveredValue) => void;
+
+const ROW_H_GROUPED = 60;
+const SUB_ROW_H = 26;
+const ROW_GAP = 12;
+
+const GROUP_COLORS = ['#D81B60', '#1E88E5', '#40c057', '#fd7e14', '#be4bdb', '#1098ad', '#868e96'];
+
+export const getGroupColor = (groupByVar: string | undefined, groupVal: string, index: number) => {
+  if (!groupByVar) return GROUP_COLORS[index % GROUP_COLORS.length];
+
+  const outcomes = ['death', 'stroke', 'vent', 'ecmo'];
+  const nonOutcomes = ['b12', 'iron', 'antifibrinolytic'];
+
+  if (outcomes.includes(groupByVar)) {
+    if (groupVal === '1' || groupVal === 'true') return '#D81B60'; // Red
+    if (groupVal === '0' || groupVal === 'false') return '#1E88E5'; // Blue
+  }
+
+  if (nonOutcomes.includes(groupByVar)) {
+    if (groupVal === '1' || groupVal === 'true') return '#762A83'; // Purple
+    if (groupVal === '0' || groupVal === 'false') return '#0d9488'; // Darker Teal
+  }
+
+  return GROUP_COLORS[index % GROUP_COLORS.length];
+};
+
+export const getGroupLabel = (groupByVar: string | undefined, val: string) => {
+  if (!groupByVar) return val;
+  if (['death', 'stroke', 'vent', 'ecmo', 'b12', 'iron', 'antifibrinolytic'].includes(groupByVar)) {
+    const label = ExploreTableGroupByOptions.find((o) => o.value === groupByVar)?.label || val;
+    if (val === '1' || val === 'true') return label;
+    return `No ${label}`;
+  }
+  return val;
+};
+
+function ExploreTableLegend({
+  groupByVar,
+  groupValues,
+  hoveredLegendGroup,
+  setHoveredLegendGroup,
+  selectedLegendGroup,
+  setSelectedLegendGroup,
+}: {
+  groupByVar?: string;
+  groupValues: string[];
+  hoveredLegendGroup: string | null;
+  setHoveredLegendGroup: (v: string | null) => void;
+  selectedLegendGroup: string | null;
+  setSelectedLegendGroup: (v: string | null) => void;
+}) {
+  if (!groupByVar) return null;
+  if (groupValues.length === 0) return null;
+
+  return (
+    <Flex gap={12} align="center" mr={16}>
+      {groupValues.map((v, i) => {
+        const isDimmed = (selectedLegendGroup !== null && selectedLegendGroup !== v) || (hoveredLegendGroup !== null && hoveredLegendGroup !== v && selectedLegendGroup === null);
+        return (
+          <Flex
+            key={v}
+            align="center"
+            gap={4}
+            style={{
+              cursor: 'pointer',
+              opacity: isDimmed ? 0.25 : 1,
+              transition: 'opacity 0.2s',
+            }}
+            onMouseEnter={() => setHoveredLegendGroup(v)}
+            onMouseLeave={() => setHoveredLegendGroup(null)}
+            onClick={() => {
+              if (selectedLegendGroup === v) {
+                setSelectedLegendGroup(null);
+              } else {
+                setSelectedLegendGroup(v);
+              }
+            }}
+          >
+            <Box w={8} h={8} style={{ borderRadius: '50%', background: getGroupColor(groupByVar, v, i) }} />
+            <Text size="xs" fw={500} c="dimmed" style={{ whiteSpace: 'nowrap' }}>{getGroupLabel(groupByVar, v)}</Text>
+          </Flex>
+        );
+      })}
+    </Flex>
+  );
+}
 
 // Helper to get decimals
 const getDecimals = (colVar: string, agg: string = 'sum'): number => {
@@ -115,8 +204,8 @@ function computeMedian(arr: number[]) {
 }
 
 function ViolinCell({
-  samples: rawSamples, domain, height = 25, padding = 0,
-}: { samples: number[] | Iterable<number>; domain?: [number, number]; height?: number; padding?: number }) {
+  samples: rawSamples, domain, height = 25, padding = 0, groupFilter,
+}: { samples: number[] | Iterable<number>; domain?: [number, number]; height?: number; padding?: number; groupFilter?: { label: string; color: string } }) {
   const internalWidth = 120;
 
   // Normalize to a plain number[] — DuckDB list() may return typed arrays or proxy objects
@@ -124,12 +213,31 @@ function ViolinCell({
 
   if (samples.length === 0) {
     return (
-      <div style={{ width: '100%', height }}>
+      <Tooltip
+        label={groupFilter ? (
+          <Stack gap={4} align="center">
+            <Text size="sm">No data</Text>
+            <Text size="xs" fs="italic" c={groupFilter.color}>
+              (Filter:
+              {' '}
+              {groupFilter.label}
+              )
+            </Text>
+          </Stack>
+        ) : 'No data'}
+        withArrow
+        position="top"
+      >
         <div style={{
-          width: '30%', height: 6, background: '#ddd', margin: '0 auto', borderRadius: 3,
+          width: '100%', height, display: 'flex', alignItems: 'center',
         }}
-        />
-      </div>
+        >
+          <div style={{
+            width: '30%', height: 6, background: '#ddd', margin: '0 auto', borderRadius: 3,
+          }}
+          />
+        </div>
+      </Tooltip>
     );
   }
 
@@ -163,18 +271,26 @@ function ViolinCell({
 
   const d = path(density as [number, number][]) ?? '';
 
-  const median = (() => {
-    const sorted = [...samples].sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-  })();
+  const median = computeMedian(samples);
 
   const medianX = xScale(median);
   const medianHalfH = yDensityScale(maxDens);
 
   return (
     <Tooltip
-      label={`Min ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(sampleMin)} • Median ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(median)} • Max ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(sampleMax)}`}
+      label={(
+        <Stack gap={4} align="center">
+          <Text size="sm">{`Min ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(sampleMin)} • Median ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(median)} • Max ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(sampleMax)}`}</Text>
+          {groupFilter && (
+            <Text size="xs" fs="italic" c={groupFilter.color}>
+              (Filter:
+              {' '}
+              {groupFilter.label}
+              )
+            </Text>
+          )}
+        </Stack>
+      )}
       position="top"
       withArrow
     >
@@ -188,7 +304,7 @@ function ViolinCell({
       }}
       >
         <svg viewBox={`0 0 ${internalWidth} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }} aria-hidden>
-          <path d={d} fill="#d9d9d9" stroke="#8c8c8c" strokeWidth={1} opacity={0.95} />
+          <path d={d} fill="#a6a6a6" stroke="#8c8c8c" strokeWidth={1} opacity={0.95} />
         </svg>
 
         <div
@@ -282,27 +398,22 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
 // 5. Deep Maroon (Peak/Maximum, Cryo)
 const chartColors = ['#fdf5e6', '#ffb366', '#fb7e07', '#d0021b', '#67000d'];
 
-// Helper to format histogram labels: max 1 decimal, 0.0 -> 0
-const formatHistogramLabel = (val: number): string => {
-  if (val === 0) return '0';
-  const formatted = parseFloat(val.toFixed(1));
-  return formatted === 0 ? '0' : String(formatted);
-};
-
 function NumericBarCell({
-  value, max, colVar, opts = {}, setHoveredValue, agg,
+  value, max, colVar, opts = {}, setHoveredValue, agg, rowLabel, columnLabel,
 }: {
   value: number | null | undefined;
   max: number;
   colVar: string;
   setHoveredValue: SetHoveredValue;
-  opts?: { padding?: string; cellHeight?: number; fillColor?: string; isSavings?: boolean };
+  opts?: { padding?: string; cellHeight?: number; fillColor?: string; isSavings?: boolean; groupFilter?: { label: string; color: string } };
   agg?: string;
+  rowLabel?: string;
+  columnLabel?: string;
 }) {
   // Default Options
   const {
     cellHeight = 21,
-    fillColor = opts?.isSavings ? '#c7e9c0' : '#8c8c8c',
+    fillColor = opts?.isSavings ? '#ffd43b' : '#8c8c8c',
     padding = '1px 1px 1px 1px',
     isSavings = false,
   } = opts || {};
@@ -325,7 +436,22 @@ function NumericBarCell({
 
   return (
     <Tooltip
-      label={hasValue ? tooltipTextValue : 'No data'}
+      label={(
+        <Stack gap={2} align="center">
+          {columnLabel && <Text size="xs" fw={600}>{hasValue ? `${columnLabel}: ${tooltipTextValue}` : columnLabel}</Text>}
+          {!columnLabel && <Text size="sm">{hasValue ? tooltipTextValue : 'No data'}</Text>}
+          {!hasValue && <Text size="xs" c="dimmed">No data</Text>}
+          {rowLabel && <Text size="xs" c="dimmed" fs="italic">{rowLabel}</Text>}
+          {opts?.groupFilter && (
+            <Text size="xs" fs="italic" c={opts.groupFilter.color}>
+              (Filter:
+              {' '}
+              {opts.groupFilter.label}
+              )
+            </Text>
+          )}
+        </Stack>
+      )}
       position="top"
       withArrow
     >
@@ -398,12 +524,15 @@ function NumericBarCell({
 }
 
 function StackedBarCell({
-  row, max, colVar, agg,
+  row, max, colVar, agg, groupFilter, rowLabel, columnLabel,
 }: {
   row: ExploreTableRow;
   max: number;
   colVar: string;
   agg?: string;
+  groupFilter?: { label: string; color: string };
+  rowLabel?: string;
+  columnLabel?: string;
 }) {
   const parts = [
     {
@@ -431,6 +560,7 @@ function StackedBarCell({
     <Tooltip
       label={(
         <Stack gap={4}>
+          {columnLabel && <Text fz="xs" fw={700}>{columnLabel}</Text>}
           {parts.map((p) => (
             <Flex key={p.key} align="center" gap={6}>
               <div style={{
@@ -450,6 +580,19 @@ function StackedBarCell({
               {tooltipTextValue}
             </Text>
           </Box>
+          {rowLabel && (
+            <Text size="xs" c="dimmed" fs="italic">{rowLabel}</Text>
+          )}
+          {groupFilter && (
+            <Box pt={0} style={{ display: 'flex', justifyContent: 'center' }}>
+              <Text size="xs" fs="italic" c={groupFilter.color} ta="center">
+                (Filter:
+                {' '}
+                {groupFilter.label}
+                )
+              </Text>
+            </Box>
+          )}
         </Stack>
       )}
       position="top"
@@ -516,10 +659,13 @@ function NumericFilterInput({
 }
 
 const HistogramFooter = observer(({
-  values, colVar, hoverState,
+  values, colVar, agg, colorScale: _colorScale, hoverState,
 }: {
   values: number[];
   colVar: string;
+  agg?: string;
+  type?: string;
+  colorScale?: (val: number) => string;
   hoverState: { current: HoveredValue };
 }) => {
   if (values.length === 0) return null;
@@ -533,7 +679,7 @@ const HistogramFooter = observer(({
   const isHoveredCol = hoveredValStr?.col === colVar;
   const hoveredVal = hoveredValStr?.value;
 
-  // Base colors - Standardized to grey for all histograms
+  // Base colors
   const baseColors = bins.map(() => '#8c8c8c');
 
   // Final colors
@@ -569,10 +715,10 @@ const HistogramFooter = observer(({
       <div className="histogram-footer-line" style={{ borderTop: '1px solid #6f6f6f' }} />
       <div className="histogram-footer-ticks">
         <div className="histogram-footer-tick-min" style={{ color: themeColor }}>
-          {formatHistogramLabel(histogramMinVal)}
+          {colVar ? histogramMinVal.toFixed(getDecimals(colVar, agg)) : histogramMinVal}
         </div>
         <div className="histogram-footer-tick-max" style={{ color: themeColor }}>
-          {formatHistogramLabel(histogramMaxVal)}
+          {colVar ? histogramMaxVal.toFixed(getDecimals(colVar, agg)) : histogramMaxVal}
         </div>
       </div>
     </div>
@@ -593,6 +739,41 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   // Interaction
   const hoverState = useLocalObservable(() => ({ current: null as HoveredValue }));
   const setHoveredValue = useCallback((val: HoveredValue) => { hoverState.current = val; }, [hoverState]);
+  const [hoveredLegendGroup, setHoveredLegendGroup] = useState<string | null>(null);
+  const [selectedLegendGroup, setSelectedLegendGroup] = useState<string | null>(null);
+
+  // Syncing layout state
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    setIsSyncing(true);
+    const timeout = setTimeout(() => setIsSyncing(false), 2000);
+    return () => clearTimeout(timeout);
+  }, [chartConfig.groupByVar]);
+
+  useEffect(() => {
+    if (isSyncing) {
+      const timeout = setTimeout(() => setIsSyncing(false), 300);
+      return () => clearTimeout(timeout);
+    }
+    return undefined;
+  }, [isSyncing, chartData]);
+
+  // Reset legend selections when groupByVar changes
+  useEffect(() => {
+    setHoveredLegendGroup(null);
+    setSelectedLegendGroup(null);
+  }, [chartConfig.groupByVar]);
+
+  const getSubRowOpacity = useCallback((gVal: string) => {
+    if (selectedLegendGroup !== null) {
+      return String(selectedLegendGroup) === String(gVal) ? 1 : 0.25;
+    }
+    if (hoveredLegendGroup !== null) {
+      return String(hoveredLegendGroup) === String(gVal) ? 1 : 0.25;
+    }
+    return 1;
+  }, [hoveredLegendGroup, selectedLegendGroup]);
 
   // Sorting
   const defaultSortCol = chartConfig.columns[0]?.colVar || 'surgeon_prov_id';
@@ -668,6 +849,52 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     chartConfig.columns,
   ]);
 
+  // Derive unique group values from data for both Legend and columns
+  const groupValues = useMemo(() => {
+    const { groupByVar } = chartConfig;
+    if (!groupByVar) return [];
+    const values = new Set<string>();
+    rows.forEach((r) => {
+      if (r._groups) {
+        r._groups.forEach((g) => {
+          const val = g._group_val;
+          if (val !== undefined && val !== null && val !== '') {
+            values.add(String(val));
+          }
+        });
+      }
+    });
+
+    // Filter noise for boolean vars: keep only '0' and '1' or 'true' and 'false'
+    let result = Array.from(values);
+    if (groupByVar && ['death', 'stroke', 'vent', 'ecmo', 'b12', 'iron', 'antifibrinolytic'].includes(groupByVar)) {
+      result = result.filter((v) => ['0', '1', 'true', 'false'].includes(v));
+    }
+    return result.sort().reverse(); // Show '1'/'true' on top, '0'/'false' on bottom
+  }, [rows, chartConfig]);
+
+  // Precompute filtered+sorted groups per row so column renderers don't repeat this work per cell
+  const getFilteredGroups = useCallback((row: ExploreTableRow): ExploreTableRow[] => {
+    if (!row._groups || row._groups.length === 0) return [];
+    return row._groups
+      .filter((g) => g._group_val !== undefined && g._group_val !== null && g._group_val !== '' && groupValues.includes(String(g._group_val)))
+      .sort((a, b) => String(b._group_val).localeCompare(String(a._group_val)));
+  }, [groupValues]);
+
+  const buildGroupFilter = useCallback((filterValue: string, index: number) => ({
+    label: getGroupLabel(chartConfig.groupByVar, filterValue),
+    color: getGroupColor(chartConfig.groupByVar, filterValue, groupValues.indexOf(filterValue) !== -1 ? groupValues.indexOf(filterValue) : index),
+  }), [chartConfig.groupByVar, groupValues]);
+
+  // Cache filtered groups on each row so it's computed once per row instead of once per cell
+  const rowsWithGroups = useMemo(() => {
+    if (!chartConfig.groupByVar) return rows;
+    return rows.map((row) => ({
+      ...row,
+      _filteredGroups: getFilteredGroups(row),
+    }));
+  }, [rows, chartConfig.groupByVar, getFilteredGroups]);
+
   const handleRowChange = (value: string | null) => {
     if (!value) return;
 
@@ -697,11 +924,17 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     const aggLabel = chartConfig.aggregation === 'avg' ? 'Average' : 'Total';
     const newTitle = `${aggLabel} RBC Transfusions per ${groupLabel}`;
 
+    let { groupByVar } = chartConfig;
+    if (['year', 'quarter'].includes(value) && groupByVar === 'year') {
+      groupByVar = undefined;
+    }
+
     const updatedConfig: ExploreTableConfig = {
       ...chartConfig,
       rowVar: value,
       columns: newColumns,
       title: newTitle,
+      groupByVar,
     };
     store.updateExploreChartConfig(updatedConfig);
 
@@ -774,7 +1007,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     const heatmapCols = colConfigs.filter((c) => c.type === 'heatmap');
 
     if (heatmapCols.length > 0) {
-      rows.forEach((r: ExploreTableRow) => {
+      rowsWithGroups.forEach((r: ExploreTableRow) => {
         heatmapCols.forEach((c) => {
           const val = r[c.colVar];
           const values = Array.isArray(val) ? val : [val];
@@ -798,13 +1031,13 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     };
     const getHeatmapColor = (val: number) => interpolateReds(getNormalizedValue(val));
 
-    return colConfigs.map((colConfig) => {
+    const resultColumns = colConfigs.map((colConfig) => {
       const {
         colVar, type, title, numericTextVisible, aggregation: agg,
       } = colConfig;
 
       // Extract values for footer
-      const rawValues = rows.map((r: ExploreTableRow) => r[colVar]);
+      const rawValues = rowsWithGroups.map((r: ExploreTableRow) => r[colVar]);
       const values = chartConfig.twoValsPerRow
         ? rawValues.flat().map((v: unknown) => Number(v ?? 0))
         : rawValues.map((r: unknown) => Number(r ?? 0));
@@ -813,7 +1046,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Compute violin aggregate for footer when violin columns exist
       const violinAggregate = (() => {
         if (type !== 'violin') return null;
-        const perRow = rows.map((r: ExploreTableRow) => {
+        const perRow = rowsWithGroups.map((r: ExploreTableRow) => {
           const raw = r[colVar];
           return raw ? Array.from(raw as Iterable<number>, Number) : [] as number[];
         });
@@ -916,6 +1149,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           <HistogramFooter
             values={values}
             colVar={colVar}
+            agg={agg}
+            type={type}
+            colorScale={type === 'heatmap' ? getHeatmapColor : undefined}
             hoverState={hoverState}
           />
         ) : undefined,
@@ -923,9 +1159,54 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
       // Custom Render Logic
       if (type === 'stackedBar') {
-        column.render = (row: ExploreTableRow) => <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} />;
+        column.render = (row: ExploreTableRow) => {
+          const rowLabel = String(row[chartConfig.rowVar] ?? '');
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
+            return (
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
+                {filteredGroups.map((g, i) => {
+                  const filterValue = String(g._group_val);
+                  const groupFilter = buildGroupFilter(filterValue, i);
+                  return (
+                    <Box key={i} h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
+                      <StackedBarCell row={g} max={maxVal} colVar={colVar} agg={agg} groupFilter={groupFilter} rowLabel={rowLabel} columnLabel={displayTitle} />
+                    </Box>
+                  );
+                })}
+              </Stack>
+            );
+          }
+          return <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />;
+        };
       } else if (type === 'numericBar') {
         column.render = (row: ExploreTableRow) => {
+          const rowLabel = String(row[chartConfig.rowVar] ?? '');
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
+            return (
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
+                {filteredGroups.map((g, i) => {
+                  const filterValue = String(g._group_val);
+                  const groupFilter = buildGroupFilter(filterValue, i);
+                  return (
+                    <Box key={i} h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
+                      <NumericBarCell
+                        value={Number(g[colVar] ?? 0)}
+                        max={maxVal}
+                        colVar={colVar}
+                        setHoveredValue={setHoveredValue}
+                        agg={agg}
+                        opts={{ isSavings: colVar === 'salvage_savings', cellHeight: 22, groupFilter }}
+                        rowLabel={rowLabel}
+                        columnLabel={displayTitle}
+                      />
+                    </Box>
+                  );
+                })}
+              </Stack>
+            );
+          }
           const val = Number(row[colVar]);
           return (
             <NumericBarCell
@@ -935,24 +1216,45 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               setHoveredValue={setHoveredValue}
               agg={agg}
               opts={{ isSavings: colVar === 'salvage_savings' }}
+              rowLabel={rowLabel}
+              columnLabel={displayTitle}
             />
           );
         };
       } else if (type === 'heatmap') {
         column.render = (row: ExploreTableRow) => {
-          const renderHeatmapCell = (val: number, padding: string) => {
+          const rowLabel = String(row[chartConfig.rowVar] ?? '');
+          const renderHeatmapCell = (val: number, padding: string, height: number | string = '100%', groupFilter?: { label: string; color: string }) => {
             const normalizedVal = getNormalizedValue(val);
             const textVal = getFormattedValue(val, colVar, agg, false);
             const tooltipText = getFormattedValue(val, colVar, agg, true);
 
+            const tooltipContent = (
+              <Stack gap={2} align="center">
+                {val === 0
+                  ? <Text size="xs" fw={600}>{displayTitle}</Text>
+                  : <Text size="xs" fw={600}>{`${displayTitle}: ${tooltipText}`}</Text>}
+                {val === 0 && <Text size="xs" c="dimmed">No data</Text>}
+                {rowLabel && <Text size="xs" c="dimmed" fs="italic">{rowLabel}</Text>}
+                {groupFilter && (
+                  <Text size="xs" fs="italic" c={groupFilter.color}>
+                    (Filter:
+                    {' '}
+                    {groupFilter.label}
+                    )
+                  </Text>
+                )}
+              </Stack>
+            );
+
             if (val === 0) {
               return (
-                <Tooltip label={tooltipText} withArrow>
+                <Tooltip label={tooltipContent} withArrow position="top">
                   <div
                     onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
                     onMouseLeave={() => setHoveredValue(null)}
                     style={{
-                      padding, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#8c8c8c',
+                      padding, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', height, color: '#8c8c8c',
                     }}
                   >
                     &mdash;
@@ -962,11 +1264,11 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             }
 
             return (
-              <Tooltip label={tooltipText} withArrow>
+              <Tooltip label={tooltipContent} withArrow position="top">
                 <div
                   onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
                   onMouseLeave={() => setHoveredValue(null)}
-                  style={{ padding, width: '100%' }}
+                  style={{ padding, width: '100%', height }}
                 >
                   <div
                     className="heatmap-cell"
@@ -974,6 +1276,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                     style={{
                       backgroundColor: getHeatmapColor(val),
                       '--heatmap-text-color': normalizedVal > 0.5 ? 'white' : 'black',
+                      height: '100%',
                     } as CSSProperties}
                   >
                     {textVal}
@@ -983,12 +1286,29 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             );
           };
 
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
+            return (
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
+                {filteredGroups.map((g, i) => {
+                  const filterValue = String(g._group_val);
+                  const groupFilter = buildGroupFilter(filterValue, i);
+                  return (
+                    <Box key={i} h={SUB_ROW_H} style={{ opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
+                      {renderHeatmapCell(Number(g[colVar] ?? 0), '0px', '100%', groupFilter)}
+                    </Box>
+                  );
+                })}
+              </Stack>
+            );
+          }
+
           if (chartConfig.twoValsPerRow) {
             const val = row[colVar] as [number, number] | undefined;
             return (
-              <Stack gap={0} p={0}>
-                {renderHeatmapCell(val?.[0] ?? 0, '1.5px 1px 0.5px 1px')}
-                {renderHeatmapCell(val?.[1] ?? 0, '0.5px 1px 1.5px 1px')}
+              <Stack gap={0} p={0} h={ROW_H_GROUPED}>
+                <Box h={SUB_ROW_H}>{renderHeatmapCell(val?.[0] ?? 0, '1.5px 1px 0.5px 1px', '100%')}</Box>
+                <Box h={SUB_ROW_H}>{renderHeatmapCell(val?.[1] ?? 0, '0.5px 1px 1.5px 1px', '100%')}</Box>
               </Stack>
             );
           }
@@ -997,34 +1317,149 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       } else if (type === 'violin') {
         column.textAlign = 'center';
         column.render = (row: ExploreTableRow) => {
-          const samples = row[colVar] as number[];
           const domain: [number, number] = violinAggregate
             ? [violinAggregate.minAll, violinAggregate.maxAll]
-            : [Math.min(...samples), Math.max(...samples)];
-          return <ViolinCell samples={samples} domain={domain} />;
-        };
-      } else if (type === 'numeric') {
-        column.render = (row: ExploreTableRow) => {
-          if (chartConfig.twoValsPerRow) {
-            const val = row[colVar] as [number, number] | undefined;
+            : [0, 1];
+
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
             return (
-              <Stack gap={0} p={0}>
-                <NumericBarCell value={val?.[0]} max={maxVal} colVar={colVar} opts={{ padding: '1px 1px 0.5px 1px' }} setHoveredValue={setHoveredValue} agg={agg} />
-                <NumericBarCell value={val?.[1]} max={maxVal} colVar={colVar} opts={{ padding: '0.5px 1px 1px 1px' }} setHoveredValue={setHoveredValue} agg={agg} />
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
+                {filteredGroups.map((g, i) => {
+                  const raw = g[colVar];
+                  const samples = raw ? Array.from(raw as Iterable<number>, Number) : [];
+                  const filterValue = String(g._group_val);
+                  const groupFilter = buildGroupFilter(filterValue, i);
+                  return (
+                    <Box key={i} h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
+                      <ViolinCell samples={samples} domain={domain} height={22} padding={0} groupFilter={groupFilter} />
+                    </Box>
+                  );
+                })}
               </Stack>
             );
           }
-          return <NumericBarCell value={row[colVar] as number} max={maxVal} colVar={colVar} setHoveredValue={setHoveredValue} agg={agg} />;
+          const raw = row[colVar];
+          const samples = raw ? Array.from(raw as Iterable<number>, Number) : [];
+          return <ViolinCell samples={samples} domain={domain} height={24} padding={0} />;
+        };
+      } else if (type === 'numeric') {
+        column.render = (row: ExploreTableRow) => {
+          const rowLabel = String(row[chartConfig.rowVar] ?? '');
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
+            return (
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
+                {filteredGroups.map((g, i) => {
+                  const filterValue = String(g._group_val);
+                  const groupFilter = buildGroupFilter(filterValue, i);
+                  return (
+                    <Box key={i} h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
+                      <NumericBarCell
+                        value={Number(g[colVar] ?? 0)}
+                        max={maxVal}
+                        colVar={colVar}
+                        setHoveredValue={setHoveredValue}
+                        agg={agg}
+                        opts={{ cellHeight: 22, groupFilter }}
+                        rowLabel={rowLabel}
+                        columnLabel={displayTitle}
+                      />
+                    </Box>
+                  );
+                })}
+              </Stack>
+            );
+          }
+          if (chartConfig.twoValsPerRow) {
+            const val = row[colVar] as [number, number] | undefined;
+            return (
+              <Stack gap={0} p={0} h={ROW_H_GROUPED}>
+                <Box h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10 }}>
+                  <NumericBarCell value={val?.[0]} max={maxVal} colVar={colVar} opts={{ padding: '0px', cellHeight: 20 }} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />
+                </Box>
+                <Box h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10 }}>
+                  <NumericBarCell value={val?.[1]} max={maxVal} colVar={colVar} opts={{ padding: '0px', cellHeight: 20 }} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />
+                </Box>
+              </Stack>
+            );
+          }
+          return <NumericBarCell value={row[colVar] as number} max={maxVal} colVar={colVar} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />;
         };
       } else {
-        column.render = (row: ExploreTableRow) => (
-          <div style={{ marginRight: '10px', textAlign: 'right' }}>{String(row[colVar] ?? '')}</div>
-        );
+        column.render = (row: ExploreTableRow) => {
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
+            return (
+              <Box h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} py={ROW_GAP / 2} display="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10 }}>
+                <div>{String(row[colVar] ?? '')}</div>
+              </Box>
+            );
+          }
+          return (
+            <div style={{ marginRight: '10px', textAlign: 'right' }}>{String(row[colVar] ?? '')}</div>
+          );
+        };
       }
 
       return column;
     });
-  }, [rows, chartConfig.twoValsPerRow, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue]);
+
+    if (chartConfig.groupByVar) {
+      const groupOption = ExploreTableGroupByOptions.find((o) => o.value === chartConfig.groupByVar);
+
+      resultColumns.unshift({
+        accessor: '_group_val',
+        title: groupOption?.label || 'Group',
+        draggable: false,
+        resizable: false,
+        sortable: false,
+        noWrap: true,
+        width: 140,
+        render: (row: ExploreTableRow) => {
+          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          if (filteredGroups.length > 0) {
+            return (
+              <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center" w="100%">
+                {filteredGroups.map((g, i) => {
+                  const val = String(g._group_val);
+                  const colorIndex = groupValues.indexOf(val);
+                  const color = getGroupColor(chartConfig.groupByVar, val, colorIndex !== -1 ? colorIndex : i);
+                  return (
+                    <Box
+                      key={i}
+                      h={SUB_ROW_H}
+                      display="flex"
+                      w="100%"
+                      style={{
+                        alignItems: 'center',
+                        paddingLeft: 0,
+                        paddingRight: 10,
+                        gap: 12,
+                        backgroundColor: `${color}1A`,
+                        opacity: getSubRowOpacity(val),
+                        transition: 'opacity 0.2s',
+                      }}
+                    >
+                      <svg width="6" height={SUB_ROW_H} viewBox={`0 0 6 ${SUB_ROW_H}`} style={{ flexShrink: 0 }}>
+                        <polygon points={`0,0 6,${SUB_ROW_H / 2} 0,${SUB_ROW_H}`} fill={color} />
+                      </svg>
+                      <Text size="xs" fw={600} style={{ whiteSpace: 'nowrap', color }}>
+                        {getGroupLabel(chartConfig.groupByVar, val)}
+                      </Text>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            );
+          }
+          return null;
+        },
+      });
+    }
+
+    return resultColumns;
+  }, [rowsWithGroups, chartConfig.twoValsPerRow, chartConfig.rowVar, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues]);
 
   // Data Table Columns -------
   const columnDefs = useMemo(
@@ -1037,7 +1472,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   });
 
   // Reset column order when columns change
-  const columnVars = chartConfig.columns.map((c) => c.colVar).join(',');
+  const columnVars = `${chartConfig.columns.map((c) => c.colVar).join(',')}|${chartConfig.groupByVar || ''}`;
   const prevColumnVars = useRef(columnVars);
 
   useEffect(() => {
@@ -1047,6 +1482,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     }
   }, [columnVars, resetColumnsOrder]);
 
+  // -------------------------------------------------------
   // Data Table -------
   return (
     <Stack style={{ height: '100%', width: '100%' }}>
@@ -1060,6 +1496,14 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
         <Flex direction="row" align="center" gap="sm">
           {/** Aggregation Toggle */}
+          <ExploreTableLegend
+            groupByVar={chartConfig.groupByVar}
+            groupValues={groupValues}
+            hoveredLegendGroup={hoveredLegendGroup}
+            setHoveredLegendGroup={setHoveredLegendGroup}
+            selectedLegendGroup={selectedLegendGroup}
+            setSelectedLegendGroup={setSelectedLegendGroup}
+          />
           <Tooltip label={`Change values to ${chartConfig.aggregation === 'sum' ? 'average' : 'sum'}`}>
             <ActionIcon
               variant="subtle"
@@ -1080,26 +1524,61 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               <IconPercentage size={18} />
             </ActionIcon>
           </Tooltip>
+          {/** Group By Selection */}
+          <Select
+            leftSection={(
+              <Tooltip label="Sub-group comparison" position="top" withArrow>
+                <IconCircles size={18} style={{ opacity: 0.6 }} />
+              </Tooltip>
+            )}
+            searchable
+            placeholder="Group by"
+            data={['year', 'quarter'].includes(chartConfig.rowVar) ? ExploreTableGroupByOptions.filter((o) => o.value !== 'year') : ExploreTableGroupByOptions}
+            value={chartConfig.groupByVar || null}
+            onChange={(val) => {
+              store.updateExploreChartConfig({
+                ...chartConfig,
+                groupByVar: val || undefined,
+              });
+            }}
+            w={140}
+            clearable
+          />
           {/** Row Selection */}
           <Select
-            placeholder="Rows"
+            leftSection={(
+              <Tooltip label="Row grouping variable" position="top" withArrow>
+                <IconColumns3 size={18} style={{ transform: 'rotate(90deg)', opacity: 0.6 }} />
+              </Tooltip>
+            )}
+            leftSectionWidth={40}
             data={ExploreTableRowOptions}
             value={chartConfig.rowVar}
             onChange={handleRowChange}
             allowDeselect={false}
-            w={120}
+            w={140}
           />
           {/** Add Column */}
           <MultiSelect
-            placeholder="Columns"
+            leftSection={(
+              <Flex gap={8} ml={8} align="center" style={{ whiteSpace: 'nowrap' }}>
+                <Tooltip label="Measures for columns" position="top" withArrow>
+                  <IconColumns3 size={18} style={{ opacity: 0.6 }} />
+                </Tooltip>
+                <Text size="sm">{`${chartConfig.columns.length} Selected`}</Text>
+              </Flex>
+            )}
+            leftSectionWidth={100}
             searchable
             clearable={false}
             nothingFoundMessage="No options"
             data={availableColumnOptions}
             onChange={handleColumnsChange}
             value={chartConfig.columns.map((c) => c.colVar)}
+            w={160}
             styles={{
               pill: { display: 'none' },
+              input: { paddingLeft: 100 },
             }}
           />
           {/** Close Chart */}
@@ -1108,16 +1587,32 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       </Flex>
 
       {/** Data Table */}
-      <Box style={{ minHeight: 0, width: '100%' }}>
+      <Box style={{ minHeight: 0, width: '100%', position: 'relative' }}>
+        <LoadingOverlay
+          visible={isSyncing}
+          zIndex={100}
+          overlayProps={{ radius: 'sm', blur: 3 }}
+          loaderProps={{
+            children: (
+              <Stack align="center" gap={8} mt={100}>
+                <Loader color="blue" size="md" />
+                <Text size="sm" fw={600} c="dimmed">Restructuring table...</Text>
+              </Stack>
+            ),
+          }}
+        />
         <DataTable<ExploreTableRow>
           className="explore-table-data-table"
+          rowClassName={() => (chartConfig.groupByVar ? 'fat-row' : '')}
           borderRadius="sm"
+          pinFirstColumn
           striped
           withTableBorder={false}
           highlightOnHover
           withRowBorders={false}
           highlightOnHoverColor={backgroundHoverColor}
-          records={rows}
+          records={rowsWithGroups}
+          idAccessor="_row_key"
           sortStatus={sortStatus}
           onSortStatusChange={setSortStatus}
           storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
