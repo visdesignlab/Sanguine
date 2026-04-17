@@ -1825,25 +1825,6 @@ export class RootStore {
         ;
     `);
 
-    // Refresh materialized surgery case count tables
-    await this.duckDB.query(`
-      TRUNCATE TABLE filteredProviderCases;
-      INSERT INTO filteredProviderCases
-        SELECT prov_id, COUNT(DISTINCT case_id) AS case_count
-        FROM (
-          SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id
-          FROM filteredSurgeryCases
-        ) sub
-        WHERE prov_id IS NOT NULL
-        GROUP BY prov_id;
-
-      TRUNCATE TABLE filteredPeriodCases;
-      INSERT INTO filteredPeriodCases
-        SELECT year, quarter, COUNT(DISTINCT case_id) AS case_count
-        FROM filteredSurgeryCases
-        GROUP BY year, quarter;
-    `);
-
     // Update all the data retrievers
     await this.updateFilteredVisitsLength();
     await this.computeDashboardChartData();
@@ -1877,17 +1858,51 @@ export class RootStore {
         let caseCountExpr = '0';
 
         if (needsCaseJoin) {
-          caseCountExpr = 'COALESCE(MAX(pc.case_count), 0)';
+          const needsVisitCaseJoin = tableConfig.rowVar !== 'attending_provider' || Boolean(tableConfig.groupByVar);
+          const caseRowExpr = tableConfig.rowVar === 'attending_provider'
+            ? 'provider_cases.prov_id'
+            : `visit_cases.${tableConfig.rowVar}`;
+          const caseIdExpr = tableConfig.rowVar === 'attending_provider'
+            ? 'provider_cases.case_id'
+            : 'surgery_cases.case_id';
+          const caseSource = tableConfig.rowVar === 'attending_provider'
+            ? `${needsVisitCaseJoin ? `(
+              SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id, visit_no
+              FROM filteredSurgeryCases
+            ) provider_cases
+            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = provider_cases.visit_no` : `(
+              SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id
+              FROM filteredSurgeryCases
+            ) provider_cases`}`
+            : `filteredSurgeryCases surgery_cases
+            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = surgery_cases.visit_no`;
+          const caseWhereClause = tableConfig.rowVar === 'attending_provider'
+            ? 'WHERE provider_cases.prov_id IS NOT NULL'
+            : '';
+          const caseGroupExpr = tableConfig.groupByVar
+            ? `visit_cases.${tableConfig.groupByVar}`
+            : null;
+          const caseSelects = [`${caseRowExpr} AS row_key`];
+          const caseGroupBys = [caseRowExpr];
+          const caseJoinConditions = [tableConfig.rowVar === 'attending_provider'
+            ? 'pc.row_key = v.attending_provider_id'
+            : `pc.row_key = v.${tableConfig.rowVar}`];
 
-          if (tableConfig.rowVar === 'attending_provider') {
-            caseJoinClause = 'LEFT JOIN filteredProviderCases pc ON pc.prov_id = v.attending_provider_id';
-          } else {
-            caseJoinClause = `LEFT JOIN (
-              SELECT ${tableConfig.rowVar}, SUM(case_count) AS case_count
-              FROM filteredPeriodCases
-              GROUP BY ${tableConfig.rowVar}
-            ) pc ON pc.${tableConfig.rowVar} = v.${tableConfig.rowVar}`;
+          if (caseGroupExpr) {
+            caseSelects.push(`${caseGroupExpr} AS group_key`);
+            caseGroupBys.push(caseGroupExpr);
+            caseJoinConditions.push(`pc.group_key = v.${tableConfig.groupByVar}`);
           }
+
+          caseCountExpr = 'COALESCE(MAX(pc.case_count), 0)';
+          caseJoinClause = `LEFT JOIN (
+            SELECT
+              ${caseSelects.join(',\n              ')},
+              COUNT(DISTINCT ${caseIdExpr}) AS case_count
+            FROM ${caseSource}
+            ${caseWhereClause}
+            GROUP BY ${caseGroupBys.join(', ')}
+          ) pc ON ${caseJoinConditions.join(' AND ')}`;
         }
 
         // Build column selection clauses based on config.columns
