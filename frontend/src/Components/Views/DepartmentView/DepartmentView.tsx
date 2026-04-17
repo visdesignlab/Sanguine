@@ -1,5 +1,5 @@
 import {
-  useContext, useEffect, useMemo, useState,
+  useCallback, useContext, useEffect, useMemo, useState,
 } from 'react';
 import {
   ActionIcon,
@@ -75,7 +75,7 @@ export function DepartmentView() {
   const [scatterXVar, setScatterXVar] = useState<string>('');
   const [scatterYVar, setScatterYVar] = useState<string>('');
 
-  const resetModal = () => {
+  const resetModal = useCallback(() => {
     setChartType('cost');
     setAggregation('sum');
     setCostGroupVar('');
@@ -84,7 +84,7 @@ export function DepartmentView() {
     setDumbbellYVar('hgb');
     setScatterXVar('surgeon');
     setScatterYVar('pre_fibrinogen');
-  };
+  }, []);
 
   const handleOpenAdd = () => {
     resetModal();
@@ -96,7 +96,7 @@ export function DepartmentView() {
   const [statAggregation, setStatAggregation] = useState<'sum' | 'avg'>('avg');
   const [statYAxisVar, setStatYAxisVar] = useState<string>('');
 
-  const handleAddStat = () => {
+  const handleAddStat = useCallback(() => {
     if (!statYAxisVar) return;
     const option = exploreStatYAxisOptions.find((o) => o.value === statYAxisVar);
     const aggLabel = statAggregation === 'sum' ? option?.label.sum : option?.label.avg;
@@ -107,13 +107,13 @@ export function DepartmentView() {
       title: aggLabel || statYAxisVar,
     });
     closeStatModal();
-  };
+  }, [statYAxisVar, statAggregation, store, closeStatModal]);
 
-  const handleOpenStatModal = () => {
+  const handleOpenStatModal = useCallback(() => {
     setStatAggregation('avg');
     setStatYAxisVar('');
     openStatModal();
-  };
+  }, [openStatModal]);
 
   const handleAddChart = () => {
     const id = `explore-${Date.now()}`;
@@ -269,7 +269,7 @@ export function DepartmentView() {
       .sort((a, b) => (store.departmentVisitCounts[b.value] || 0) - (store.departmentVisitCounts[a.value] || 0));
   }, [store.procedureHierarchy, store.departmentVisitCounts]);
 
-  const renderDeptOption = ({ option }: { option: { value: string; label: string } }) => {
+  const renderDeptOption = useCallback(({ option }: { option: { value: string; label: string } }) => {
     const filteredCount = store.departmentVisitCounts[option.value] ?? 0;
     const totalCount = store.procedureHierarchy?.departments.find((dept) => dept.id === option.value)?.visit_count ?? filteredCount;
     const isAfterFilters = filteredCount < totalCount;
@@ -298,7 +298,7 @@ export function DepartmentView() {
         </Tooltip>
       </Flex>
     );
-  };
+  }, [store.departmentVisitCounts, store.procedureHierarchy]);
 
   // -------------------------------------------------------
   return useObserver(() => (
