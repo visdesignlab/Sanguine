@@ -24,6 +24,7 @@ import {
 } from '@mantine/core';
 import {
   IconGripVertical, IconMathGreater, IconMathLower, IconPercentage, IconColumns3, IconCircles,
+  IconChevronUp, IconSelector,
 } from '@tabler/icons-react';
 import {
   DataTable, DataTableColumn, useDataTableColumns, type DataTableSortStatus,
@@ -1642,8 +1643,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           sortStatus={sortStatus}
           onSortStatusChange={setSortStatus}
           sortIcons={{
-            sorted: <IconArrowUp size={14} color="#1770B8" stroke={3} style={{ fill: 'none' }} className="active-sort-icon" />,
-            unsorted: <IconSelector size={14} color="gray" opacity={0.5} className="inactive-sort-icon" />,
+            sorted: <IconChevronUp size={14} className="active-sort-icon" />,
+            unsorted: <IconSelector size={14} />,
           }}
           storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
           columns={effectiveColumns}
