@@ -1,5 +1,5 @@
 import {
-  useCallback, useContext, useState, useRef,
+  useContext, useState, useRef,
 } from 'react';
 import {
   Card, Group, Box, Text, Stack, TextInput, ScrollArea,
@@ -26,7 +26,7 @@ export function DepartmentViewQuestions() {
     toolbarWidth,
   } = useThemeConstants();
 
-  const startResizing = useCallback((e: React.MouseEvent) => {
+  const startResizing = (e: React.MouseEvent) => {
     e.preventDefault();
     const startX = e.clientX;
     const startWidth = store.departmentViewQuestionsWidth;
@@ -39,13 +39,13 @@ export function DepartmentViewQuestions() {
     };
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
-  }, [store]);
+  };
 
-  const resolveQuestion = useCallback((q: string) => {
+  const resolveQuestion = (q: string) => {
     if (!q.includes('[department]')) return q;
     const deptName = store.procedureHierarchy?.departments.find((d) => d.id === store.selectedDepartmentId)?.name || 'Department';
     return q.replace('[department]', deptName);
-  }, [store.procedureHierarchy, store.selectedDepartmentId]);
+  };
 
   const handlePresetClick = (groupIdx: number, cardIdx: number) => {
     const {

@@ -1,4 +1,4 @@
-import { useContext, useState, useCallback } from 'react';
+import { useContext, useState } from 'react';
 import {
   Card, CloseButton, Group, SimpleGrid, Text, Title,
 } from '@mantine/core';
@@ -14,9 +14,9 @@ export function DepartmentStatsGrid() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const { cardIconSize, cardIconStroke } = useThemeConstants();
 
-  const handleRemove = useCallback((statId: string) => {
+  const handleRemove = (statId: string) => {
     store.removeExploreStat(statId);
-  }, [store]);
+  };
 
   return useObserver(() => {
     if (store.exploreStatConfigs.length === 0) return null;
