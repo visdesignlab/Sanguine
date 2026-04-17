@@ -14,10 +14,6 @@ export function DepartmentStatsGrid() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const { cardIconSize, cardIconStroke } = useThemeConstants();
 
-  const handleRemove = (statId: string) => {
-    store.removeExploreStat(statId);
-  };
-
   return useObserver(() => {
     if (store.exploreStatConfigs.length === 0) return null;
 
@@ -54,7 +50,7 @@ export function DepartmentStatsGrid() {
               </div>
             </Group>
             {isHovered && (
-              <CloseButton size="xs" onClick={() => handleRemove(statConfig.statId)} />
+              <CloseButton size="xs" onClick={() => store.removeExploreStat(statConfig.statId)} />
             )}
           </Group>
         </Card>
