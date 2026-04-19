@@ -33,7 +33,7 @@ export function FilterHistogramWithSliderComponent({
   }
 
   const bandScale = useCallback(() => {
-    const maxUnit = store.initialFilterValues[unitName][1];
+    const maxUnit = store.clampedMax[unitName];
     const dataBins = range(
       store.initialFilterValues[unitName][0],
       maxUnit + 1,
@@ -41,7 +41,7 @@ export function FilterHistogramWithSliderComponent({
     ).map(String);
     const svgWidth = svgRef.current ? svgRef.current.clientWidth : 0;
     return scaleBand(dataBins, [0, svgWidth]);
-  }, [store.initialFilterValues, unitName]);
+  }, [store.clampedMax, store.initialFilterValues, unitName]);
 
   //   special handling to exclude zero unit when calculating max count for better visualization, since zero unit count is usually much higher than non-zero units and will make the bars for non-zero units too short to see
   const maxCountExcludeZeroUnit = useMemo(

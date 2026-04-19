@@ -38,6 +38,8 @@ import {
   CELL_SAVER_ML, PLT_UNITS, RBC_UNITS,
 } from '../Types/bloodProducts';
 
+export const DEFAULT_CLAMP_PERCENTILE = 0.99;
+
 export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
@@ -124,6 +126,7 @@ export interface ApplicationState {
   };
   settings: {
     unitCosts: Record<Cost, number>;
+    clampPercentile: number;
   };
   ui: {
     activeTab: string;
@@ -188,6 +191,15 @@ export class RootStore {
   };
 
   histogramData: Record<string, HistogramData> = {};
+
+  clampedMax: Record<BloodComponent|'los', number> = {
+    rbc_units: 0,
+    ffp_units: 0,
+    plt_units: 0,
+    cryo_units: 0,
+    cell_saver_ml: 0,
+    los: 0,
+  };
 
   getHistogramData(bloodProduct: BloodComponent | 'los') {
     return this.histogramData[bloodProduct];
@@ -452,6 +464,7 @@ export class RootStore {
       },
       settings: {
         unitCosts: { ...DEFAULT_UNIT_COSTS },
+        clampPercentile: DEFAULT_CLAMP_PERCENTILE,
       },
       ui: {
         activeTab: 'Hospital',
@@ -1420,6 +1433,7 @@ export class RootStore {
 
   async calculateDefaultFilterValues() {
     if (!this.duckDB) return;
+    const percentileClamp = this.state.settings.clampPercentile || DEFAULT_CLAMP_PERCENTILE;
     // Default filter values based on visit-level min and max values
     const result = await this.duckDB.query(`
       WITH visit_rollups AS (
@@ -1439,18 +1453,31 @@ export class RootStore {
       SELECT
         MIN(min_adm_dtm) AS min_adm,
         MAX(max_dsch_dtm) AS max_dsch,
+
         MIN(rbc_units) AS min_rbc,
         MAX(rbc_units) AS max_rbc,
+        approx_quantile(rbc_units, ${percentileClamp}) AS stats_max_rbc,
+
         MIN(ffp_units) AS min_ffp,
         MAX(ffp_units) AS max_ffp,
+        approx_quantile(ffp_units, ${percentileClamp}) AS stats_max_ffp,
+
         MIN(plt_units) AS min_plt,
         MAX(plt_units) AS max_plt,
+        approx_quantile(plt_units, ${percentileClamp}) AS stats_max_plt,
+
         MIN(cryo_units) AS min_cryo,
         MAX(cryo_units) AS max_cryo,
+        approx_quantile(cryo_units, ${percentileClamp}) AS stats_max_cryo,
+
         MIN(cell_saver_ml) AS min_cell_saver,
         MAX(cell_saver_ml) AS max_cell_saver,
+       CEIL(approx_quantile(cell_saver_ml, ${percentileClamp}) / 50.0) * 50
+  AS stats_max_cell_saver,
+
         MIN(los) AS min_los,
-        MAX(los) AS max_los
+        MAX(los) AS max_los,
+        approx_quantile(los, ${percentileClamp}) AS stats_max_los
       FROM visit_rollups;
     `);
     const row = result.toArray()[0].toJSON();
@@ -1467,6 +1494,15 @@ export class RootStore {
       cryo_units: [Number(row.min_cryo), Number(row.max_cryo)],
       cell_saver_ml: [Number(row.min_cell_saver), Number(row.max_cell_saver)],
       los: [Number(row.min_los), Number(row.max_los)],
+    };
+
+    this.clampedMax = {
+      rbc_units: Number(row.stats_max_rbc),
+      ffp_units: Number(row.stats_max_ffp),
+      plt_units: Number(row.stats_max_plt),
+      cryo_units: Number(row.stats_max_cryo),
+      cell_saver_ml: Number(row.stats_max_cell_saver),
+      los: Number(row.stats_max_los),
     };
   }
 
@@ -1617,7 +1653,7 @@ export class RootStore {
    */
   async generateHistogramData() {
     if (!this.duckDB) return;
-    const components = [...BLOOD_PRODUCTS_ARRAY, 'los'];
+    const components = [...BLOOD_PRODUCTS_ARRAY, 'los'] as const;
     const histogramData: Record<string, { units: string, count: number }[]> = {};
     // For each component, generate histogram data
     await Promise.all(components.map(async (component) => {
@@ -1635,15 +1671,18 @@ export class RootStore {
         ),
         histogram_bins AS (
           SELECT
-            CASE
-              WHEN '${component}' = 'cell_saver_ml' THEN
-                CASE
-                  WHEN visit_value = 0 THEN 0
-                  ELSE CEIL(visit_value / 50.0) * 50
-                END
-              ELSE
-                visit_value
-            END AS bin_value
+            LEAST(
+              CASE
+                WHEN '${component}' = 'cell_saver_ml' THEN
+                  CASE
+                    WHEN visit_value = 0 THEN 0
+                    ELSE CEIL(visit_value / 50.0) * 50
+                  END
+                ELSE
+                  visit_value
+              END,
+              ${this.clampedMax[component]}
+            ) AS bin_value
           FROM visit_values
           WHERE visit_value IS NOT NULL
         )
