@@ -1,0 +1,101 @@
+prov_id,department_id,department_name,prov_name
+2746317213,DEPT111,Labor & Delivery,Dr. Angel N. Hill
+958682846,DEPT109,PACU,Dr. Jill T. Rhodes
+8963334018,DEPT105,Orthopedics,Dr. Robert K. Johnson
+939042955,DEPT112,Medical/Surgical Floor,Dr. William H. Johnson
+9443935785,DEPT101,Emergency Department,Dr. Debra W. Gardner
+5241752544,DEPT107,Medical ICU (MICU),Dr. Bridget L. Pacheco
+3460967357,DEPT101,Emergency Department,Dr. Helen L. Peterson
+667779376,DEPT101,Emergency Department,Dr. Susan D. Rogers
+4693307665,DEPT104,Cardiology,Dr. Colin Q. Abbott
+6887950851,DEPT109,PACU,Dr. Lindsay W. Blair
+2303082117,DEPT104,Cardiology,Dr. Teresa O. Gray
+6665963761,DEPT104,Cardiology,Dr. Maria F. Montgomery
+7995970241,DEPT112,Medical/Surgical Floor,Dr. Barbara W. Bush
+8786748825,DEPT110,General Surgery Floor,Dr. Jeremy K. Roberts
+4728765136,DEPT101,Emergency Department,Dr. Joshua O. Reid
+1566942273,DEPT109,PACU,Dr. Mitchell S. Clark
+9736595589,DEPT109,PACU,Dr. Sharon K. Wong
+9324969473,DEPT109,PACU,Dr. Jessica D. Martin
+5924716023,DEPT107,Medical ICU (MICU),Dr. Veronica I. Bowman
+2392080953,DEPT109,PACU,Dr. Gabrielle R. Cameron
+3332894265,DEPT106,Surgical ICU (SICU),Dr. Jeremy P. Johnson
+5649827836,DEPT106,Surgical ICU (SICU),Dr. Joseph F. Clark
+1351531223,DEPT103,Hematology/Oncology,Dr. Diana J. Foster
+1970753705,DEPT111,Labor & Delivery,Dr. Joseph U. Wright
+9718401212,DEPT112,Medical/Surgical Floor,Dr. Brenda T. Hurst
+6010379415,DEPT112,Medical/Surgical Floor,Dr. Jeffrey Y. Bright
+6483366056,DEPT112,Medical/Surgical Floor,Dr. Christopher T. Williams
+470939445,DEPT105,Orthopedics,Dr. Courtney K. Conner
+4567816720,DEPT112,Medical/Surgical Floor,Dr. Patrick T. Ferrell
+6567496105,DEPT107,Medical ICU (MICU),Dr. Tasha J. Valencia
+8639245200,DEPT112,Medical/Surgical Floor,Dr. Jennifer I. Maldonado
+7047877267,DEPT105,Orthopedics,Dr. Daniel V. Graham
+1948728483,DEPT108,Operating Room,Dr. Stephanie I. Liu
+9357238580,DEPT105,Orthopedics,Dr. Rita P. Harrell
+2615507143,DEPT112,Medical/Surgical Floor,Dr. Eric R. Farmer
+8592390865,DEPT112,Medical/Surgical Floor,Dr. Mario C. Smith
+8285415473,DEPT105,Orthopedics,Dr. Natasha H. Decker
+1320763135,DEPT112,Medical/Surgical Floor,Dr. Brian H. Humphrey
+4067116918,DEPT107,Medical ICU (MICU),Dr. Christopher M. Tucker
+3289233844,DEPT102,Radiology,Dr. David S. Alvarez
+2361388464,DEPT106,Surgical ICU (SICU),Dr. Joseph W. Brennan
+9453871839,DEPT108,Operating Room,Dr. Larry S. Carney
+7086172302,DEPT105,Orthopedics,Dr. Samuel A. Holmes
+519709079,DEPT110,General Surgery Floor,Dr. Jeffrey E. Morgan
+9578269843,DEPT108,Operating Room,Dr. Jeffrey K. Jones
+2710566582,DEPT112,Medical/Surgical Floor,Dr. Jeremy H. Whitehead
+7987073217,DEPT101,Emergency Department,Dr. Chad I. Young
+7168204967,DEPT104,Cardiology,Dr. Jason R. Anderson
+2030106617,DEPT110,General Surgery Floor,Dr. Kristen T. Aguirre
+817804383,DEPT106,Surgical ICU (SICU),Dr. Collin K. Jordan
+6114223633,DEPT112,Medical/Surgical Floor,Dr. Stuart Q. Daniel
+422701550,DEPT108,Operating Room,Dr. Richard P. Morgan
+3700855390,DEPT108,Operating Room,Dr. John N. Lee
+1926780541,DEPT104,Cardiology,Dr. Robert T. Ramirez
+3965395580,DEPT111,Labor & Delivery,Dr. Scott F. Callahan
+2363629219,DEPT104,Cardiology,Dr. Brent E. Kidd
+3590711152,DEPT111,Labor & Delivery,Dr. Tanya F. House
+3645120421,DEPT109,PACU,Dr. Gabriel I. Tucker
+251837136,DEPT106,Surgical ICU (SICU),Dr. Nicholas L. Galloway
+6249213370,DEPT104,Cardiology,Dr. Rodney Y. Bernard
+7380507338,DEPT110,General Surgery Floor,Dr. Eric T. Phillips
+4160575046,DEPT106,Surgical ICU (SICU),Dr. Beth N. Daniels
+7507497883,DEPT111,Labor & Delivery,Dr. Brian I. Silva
+676168421,DEPT109,PACU,Dr. Susan Q. Miller
+798112150,DEPT105,Orthopedics,Dr. Brooke G. Leonard
+5305160342,DEPT105,Orthopedics,Dr. David E. Zamora
+9647421460,DEPT112,Medical/Surgical Floor,Dr. Brooke W. Harvey
+6540301973,DEPT112,Medical/Surgical Floor,Dr. Sarah G. Harris
+7370987661,DEPT110,General Surgery Floor,Dr. John Q. Foster
+5583444930,DEPT110,General Surgery Floor,Dr. Leslie V. Walton
+311570307,DEPT105,Orthopedics,Dr. Stephen F. Murillo
+4278201677,DEPT105,Orthopedics,Dr. Charles Y. Lewis
+1139027119,DEPT108,Operating Room,Dr. Sarah N. Ibarra
+3776436931,DEPT101,Emergency Department,Dr. Mike S. Moore
+7316648259,DEPT110,General Surgery Floor,Dr. Cheryl C. Archer
+8623534576,DEPT112,Medical/Surgical Floor,Dr. Lisa H. Evans
+2849232839,DEPT109,PACU,Dr. Sheila E. Taylor
+9049650601,DEPT112,Medical/Surgical Floor,Dr. Angela A. Nelson
+2597724331,DEPT107,Medical ICU (MICU),Dr. Jennifer V. Harris
+9723736806,DEPT111,Labor & Delivery,Dr. Tracy R. Whitehead
+3633987776,DEPT104,Cardiology,Dr. Christopher J. Henderson
+1188332531,DEPT110,General Surgery Floor,Dr. Adam U. Wise
+1125089309,DEPT105,Orthopedics,Dr. Joyce I. Arnold
+41531046,DEPT101,Emergency Department,Dr. Charles I. Ware
+3882343658,DEPT104,Cardiology,Dr. Amy M. Davenport
+4931025271,DEPT111,Labor & Delivery,Dr. David H. Parker
+3696689457,DEPT101,Emergency Department,Dr. Rachel C. Clark
+9661656647,DEPT104,Cardiology,Dr. Curtis W. Deleon
+3993808565,DEPT103,Hematology/Oncology,Dr. Michelle I. Cherry
+3482238042,DEPT105,Orthopedics,Dr. Nicole I. Johnson
+8292791081,DEPT106,Surgical ICU (SICU),Dr. Leah C. Shields
+3482141802,DEPT101,Emergency Department,Dr. Joseph G. Cobb
+4759234471,DEPT108,Operating Room,Dr. Monica H. Garrison
+955345537,DEPT107,Medical ICU (MICU),Dr. Lisa H. Stevens
+977515194,DEPT102,Radiology,Dr. Andrew J. Lee
+5704841644,DEPT110,General Surgery Floor,Dr. Michelle I. Rasmussen
+5493800024,DEPT105,Orthopedics,Dr. Darlene G. Ross
+6597996327,DEPT111,Labor & Delivery,Dr. Sheila Y. Wilson
+8462806178,DEPT103,Hematology/Oncology,Dr. Gregory Z. Estes
+1140169349,DEPT104,Cardiology,Dr. Daniel Z. Hamilton

@@ -39,7 +39,9 @@ INSERT INTO SurgeryCaseAttributes (
     cryo_cost,
     whole_cost,
     cell_saver_cost,
-    total_cost
+    total_cost,
+    department_id,
+    department_name
 )
 SELECT
     sc.case_id,
@@ -141,9 +143,17 @@ SELECT
      (COALESCE(intra.sum_plt, 0) * 500.00) +
      (COALESCE(intra.sum_cryo, 0) * 30.00) +
      (COALESCE(intra.sum_whole, 0) * 300.00) +
-     (CASE WHEN COALESCE(intra.sum_cs, 0) > 0 THEN 225.00 ELSE 0.00 END)) AS total_cost
+     (CASE WHEN COALESCE(intra.sum_cs, 0) > 0 THEN 225.00 ELSE 0.00 END)) AS total_cost,
+    visit_dept.department_id,
+    visit_dept.department_name
 FROM SurgeryCase sc
 JOIN Visit v ON sc.visit_no = v.visit_no
+LEFT JOIN (
+    SELECT ap.visit_no, pdm.department_id, pdm.department_name
+    FROM AttendingProvider ap
+    JOIN ProviderDepartmentMapping pdm ON ap.prov_id = pdm.prov_id
+    WHERE ap.attend_prov_line = 1
+) visit_dept ON sc.visit_no = visit_dept.visit_no
 LEFT JOIN (
     SELECT
         sc.case_id AS case_id_ref,

@@ -2,6 +2,8 @@ import os
 import csv
 from collections import OrderedDict
 from datetime import datetime, timedelta
+from pathlib import Path
+from django.conf import settings
 from django.db import connection, transaction
 from django.core.management.base import BaseCommand
 from django.utils.timezone import make_aware
@@ -1189,6 +1191,35 @@ class Command(BaseCommand):
         dept_names = [d[0] for d in dept_choices]
         dept_weights = [d[1] for d in dept_choices]
         dept_info = {d[0]: {"id": d[2], "svc_code": d[3], "svc_desc": d[4]} for d in dept_choices}
+
+        # Generate Provider-Department Mapping
+        # Assign each unique attending provider one department from dept_choices
+        provider_pool = surgeons + anests
+        provider_dept_map: dict[str, tuple[str, str, str]] = {}
+        for prov_id, prov_name in provider_pool:
+            if prov_id not in provider_dept_map:
+                dept = random.choices(dept_choices, weights=dept_weights, k=1)[0]
+                provider_dept_map[prov_id] = (dept[2], dept[0], prov_name)  # (dept_id, dept_name, prov_name)
+
+        provider_dept_fieldnames = ["prov_id", "department_id", "department_name", "prov_name"]
+
+        def gen_provider_dept_rows():
+            for prov_id, (dept_id, dept_name, prov_name) in provider_dept_map.items():
+                yield {
+                    "prov_id": prov_id,
+                    "department_id": dept_id,
+                    "department_name": dept_name,
+                    "prov_name": prov_name,
+                }
+
+        # Write CSV file so load_provider_department_mapping can re-seed from it if needed
+        csv_path = Path(settings.BASE_DIR) / "provider_department_mapping.csv"
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=provider_dept_fieldnames)
+            writer.writeheader()
+            writer.writerows(gen_provider_dept_rows())
+
+        self.send_csv_to_db(gen_provider_dept_rows(), fieldnames=provider_dept_fieldnames, table_name="ProviderDepartmentMapping")
 
         # Build a lookup from visit_no -> (adm_dtm, dsch_dtm) for RoomTrace timestamps
         visit_dates = {}

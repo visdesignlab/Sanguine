@@ -1794,7 +1794,7 @@ export class RootStore {
       const safeDepartmentIds = filterValues.departmentIds.filter((id) => safeIdPattern.test(id));
       if (safeDepartmentIds.length > 0) {
         const departmentIdList = safeDepartmentIds.map(sqlString).join(', ');
-        visitFilterConditions.push(`BOOL_OR(list_has_any(department_ids, [${departmentIdList}]::VARCHAR[]))`);
+        visitFilterConditions.push(`BOOL_OR(is_admitting_attending AND department_id IN (${departmentIdList}))`);
       }
     }
 

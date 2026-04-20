@@ -34,7 +34,9 @@ INSERT INTO VisitAttributes (
     attending_provider,
     attending_provider_id,
     attending_provider_line,
-    is_admitting_attending
+    is_admitting_attending,
+    department_id,
+    department_name
 )
 -- Visit Attributes has one row per (visit-no + attending_provider_line_number) combination
 SELECT
@@ -76,7 +78,10 @@ SELECT
     ap.prov_name,
     ap.prov_id,
     ap.attend_prov_line,
-    CASE WHEN ap.attend_prov_line = 1 THEN TRUE ELSE FALSE END AS is_admitting_attending
+    CASE WHEN ap.attend_prov_line = 1 THEN TRUE ELSE FALSE END AS is_admitting_attending,
+
+    pdm.department_id,
+    pdm.department_name
 
 FROM (
     SELECT DISTINCT
@@ -99,6 +104,8 @@ FROM (
     GROUP BY ap_null.visit_no
 ) ap
 JOIN Visit v ON ap.visit_no = v.visit_no
+
+LEFT JOIN ProviderDepartmentMapping pdm ON ap.prov_id = pdm.prov_id
 
 LEFT JOIN (
     SELECT

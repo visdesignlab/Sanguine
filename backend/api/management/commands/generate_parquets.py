@@ -65,7 +65,8 @@ def get_visit_attributes_schema() -> pa.Schema:
         pa.field("attending_provider_id", pa.string(), nullable=True),
         pa.field("attending_provider_line", pa.uint16(), nullable=False),
         pa.field("is_admitting_attending", pa.bool_(), nullable=False),
-        pa.field("department_ids", pa.list_(pa.string()), nullable=False),
+        pa.field("department_id", pa.string(), nullable=True),
+        pa.field("department_name", pa.string(), nullable=True),
         pa.field("procedure_ids", pa.list_(pa.string()), nullable=False),
     ])
 
@@ -112,7 +113,7 @@ def get_visit_attributes_select_columns() -> list[str]:
     return [
         field.name
         for field in get_visit_attributes_schema()
-        if field.name not in ("department_ids", "procedure_ids")
+        if field.name not in ("procedure_ids",)
     ]
 
 
@@ -157,14 +158,16 @@ def get_surgery_case_attributes_schema() -> pa.Schema:
         pa.field("whole_cost", pa.float32(), nullable=True),
         pa.field("cell_saver_cost", pa.float32(), nullable=True),
         pa.field("total_cost", pa.float32(), nullable=True),
+        pa.field("department_id", pa.string(), nullable=True),
+        pa.field("department_name", pa.string(), nullable=True),
     ])
 
 
-def build_visit_cpt_dimensions(
+def build_visit_procedures(
     code_map: dict[str, tuple[str, str, str, str]],
     billing_fetch_batch_size: int = 50000,
-) -> tuple[dict[int, list[str]], dict[int, list[str]]]:
-    visit_departments: dict[int, set[str]] = defaultdict(set)
+) -> dict[int, list[str]]:
+    """Build a mapping of visit_no -> sorted list of CPT-taxonomy procedure IDs."""
     visit_procedures: dict[int, set[str]] = defaultdict(set)
     with connection.cursor() as cursor:
         cursor.execute(
@@ -188,27 +191,90 @@ def build_visit_cpt_dimensions(
                 if not mapped:
                     continue
 
-                department_id, _department_name, procedure_id, _procedure_name = mapped
-                visit_departments[visit_no].add(department_id)
+                _department_id, _department_name, procedure_id, _procedure_name = mapped
                 visit_procedures[visit_no].add(procedure_id)
 
+    return {visit_no: sorted(procedure_ids) for visit_no, procedure_ids in visit_procedures.items()}
+
+
+# Keep the old name as an alias so existing test imports don't break.
+def build_visit_cpt_dimensions(
+    code_map: dict[str, tuple[str, str, str, str]],
+    billing_fetch_batch_size: int = 50000,
+) -> tuple[dict[int, list[str]], dict[int, list[str]]]:
+    """Deprecated: use build_visit_procedures. Returns (visit_departments, visit_procedures) for
+    backward compatibility with existing tests."""
+    visit_departments: dict[int, set[str]] = defaultdict(set)
+    visit_procs: dict[int, set[str]] = defaultdict(set)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT visit_no, cpt_code
+            FROM BillingCode
+            WHERE cpt_code IS NOT NULL AND cpt_code <> ''
+            """
+        )
+        while True:
+            billing_rows = cursor.fetchmany(billing_fetch_batch_size)
+            if not billing_rows:
+                break
+            for visit_no, raw_cpt_code in billing_rows:
+                normalized_cpt_code = normalize_cpt_code(raw_cpt_code)
+                if not normalized_cpt_code:
+                    continue
+                mapped = code_map.get(normalized_cpt_code)
+                if not mapped:
+                    continue
+                department_id, _department_name, procedure_id, _procedure_name = mapped
+                visit_departments[visit_no].add(department_id)
+                visit_procs[visit_no].add(procedure_id)
     return (
-        {visit_no: sorted(department_ids) for visit_no, department_ids in visit_departments.items()},
-        {visit_no: sorted(procedure_ids) for visit_no, procedure_ids in visit_procedures.items()},
+        {visit_no: sorted(depts) for visit_no, depts in visit_departments.items()},
+        {visit_no: sorted(procs) for visit_no, procs in visit_procs.items()},
     )
 
 
-def build_visit_counts(
-    visit_dimensions: dict[int, list[str]],
-    eligible_visit_numbers: set[int] | None = None,
-) -> dict[str, int]:
-    dimension_visit_counts: dict[str, int] = defaultdict(int)
-    for visit_no, dimension_ids in visit_dimensions.items():
-        if eligible_visit_numbers is not None and visit_no not in eligible_visit_numbers:
-            continue
-        for dimension_id in dimension_ids:
-            dimension_visit_counts[dimension_id] += 1
-    return dict(dimension_visit_counts)
+def fetch_provider_departments(fetch_batch_size: int = 10000) -> list[dict]:
+    """Return [{id, name}, ...] for all departments in ProviderDepartmentMapping, ordered by name."""
+    departments = []
+    seen_ids: set[str] = set()
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT DISTINCT department_id, department_name
+            FROM ProviderDepartmentMapping
+            ORDER BY department_name
+            """
+        )
+        while True:
+            rows = cursor.fetchmany(fetch_batch_size)
+            if not rows:
+                break
+            for dept_id, dept_name in rows:
+                if dept_id not in seen_ids:
+                    seen_ids.add(dept_id)
+                    departments.append({"id": dept_id, "name": dept_name})
+    return departments
+
+
+def build_official_visit_departments(fetch_batch_size: int = 50000) -> dict[int, str]:
+    """Return {visit_no: department_id} for the admitting attending's department of each visit."""
+    official: dict[int, str] = {}
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT DISTINCT visit_no, department_id
+            FROM VisitAttributes
+            WHERE is_admitting_attending = TRUE AND department_id IS NOT NULL
+            """
+        )
+        while True:
+            rows = cursor.fetchmany(fetch_batch_size)
+            if not rows:
+                break
+            for visit_no, dept_id in rows:
+                official[visit_no] = dept_id
+    return official
 
 
 def fetch_materialized_visit_numbers(fetch_batch_size: int) -> set[int]:
@@ -224,46 +290,77 @@ def fetch_materialized_visit_numbers(fetch_batch_size: int) -> set[int]:
     return visit_numbers
 
 
+def build_cpt_procedure_details(hierarchy_departments) -> dict[str, dict]:
+    """Return {procedure_id: {name, cpt_codes}} for all CPT-taxonomy procedures."""
+    details: dict[str, dict] = {}
+    for department in hierarchy_departments:
+        for procedure in department.procedures:
+            details[procedure.id] = {
+                "name": procedure.name,
+                "cpt_codes": list(procedure.cpt_codes),
+            }
+    return details
+
+
 def build_procedure_hierarchy_payload(
-    hierarchy_departments,
-    visit_departments: dict[int, list[str]],
+    provider_departments: list[dict],
+    official_visit_departments: dict[int, str],
     visit_procedures: dict[int, list[str]],
+    cpt_procedure_details: dict[str, dict],
     eligible_visit_numbers: set[int] | None = None,
 ) -> dict:
-    department_visit_counts = build_visit_counts(visit_departments, eligible_visit_numbers)
-    procedure_visit_counts = build_visit_counts(visit_procedures, eligible_visit_numbers)
+    """Build the procedure hierarchy JSON using provider-based departments.
+
+    For each provider department, collects the CPT procedures that appear in visits
+    whose official department (admitting attending's dept) is that department.
+    """
+    dept_visit_counts: dict[str, int] = defaultdict(int)
+    dept_procedure_visit_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+
+    for visit_no, dept_id in official_visit_departments.items():
+        if eligible_visit_numbers is not None and visit_no not in eligible_visit_numbers:
+            continue
+        dept_visit_counts[dept_id] += 1
+        for proc_id in visit_procedures.get(visit_no, []):
+            dept_procedure_visit_counts[dept_id][proc_id] += 1
 
     procedure_hierarchy_departments = []
-    for department in hierarchy_departments:
+    for department in provider_departments:
+        dept_id = department["id"]
+        dept_name = department["name"]
+        dept_visit_count = dept_visit_counts.get(dept_id, 0)
+        if dept_visit_count == 0:
+            continue
+
         procedure_payload = []
-        for procedure in department.procedures:
-            procedure_visit_count = procedure_visit_counts.get(procedure.id, 0)
-            if procedure_visit_count == 0:
+        for proc_id, proc_visit_count in sorted(
+            dept_procedure_visit_counts[dept_id].items(),
+            key=lambda item: item[0],
+        ):
+            proc_detail = cpt_procedure_details.get(proc_id)
+            if proc_detail is None:
                 continue
             procedure_payload.append(
                 {
-                    "id": procedure.id,
-                    "name": procedure.name,
-                    "visit_count": procedure_visit_count,
-                    "cpt_codes": list(procedure.cpt_codes),
+                    "id": proc_id,
+                    "name": proc_detail["name"],
+                    "visit_count": proc_visit_count,
+                    "cpt_codes": proc_detail["cpt_codes"],
                 }
             )
 
-        if not procedure_payload:
-            continue
-
         procedure_hierarchy_departments.append(
             {
-                "id": department.id,
-                "name": department.name,
-                "visit_count": department_visit_counts.get(department.id, 0),
+                "id": dept_id,
+                "name": dept_name,
+                "visit_count": dept_visit_count,
                 "procedures": procedure_payload,
             }
         )
 
     return {
         "version": datetime.now(timezone.utc).strftime("%Y-%m-%d.%H%M%S"),
-        "source": "cpt-code-mapping.csv",
+        "source": "provider_department_mapping.csv",
         "department_level": "department",
         "procedure_level": "procedure",
         "departments": procedure_hierarchy_departments,
@@ -286,7 +383,6 @@ def normalize_visit_attributes_row(
 
 def write_visit_attributes_parquet(
     file_path: Path,
-    visit_departments: dict[int, list[str]],
     visit_procedures: dict[int, list[str]],
     fetch_batch_size: int,
     nullable_bool_fields: tuple[str, ...],
@@ -314,7 +410,6 @@ def write_visit_attributes_parquet(
                         required_bool_fields=required_bool_fields,
                     )
                     visit_no = visit["visit_no"]
-                    visit["department_ids"] = visit_departments.get(visit_no, [])
                     visit["procedure_ids"] = visit_procedures.get(visit_no, [])
                     visits.append(visit)
 
@@ -441,23 +536,27 @@ class Command(BaseCommand):
         surgery_file_path = cache_dir / "surgery_case_attributes.parquet"
         temp_surgery_file_path = cache_dir / "surgery_case_attributes.parquet.tmp"
 
-        hierarchy = None
-        visit_departments: dict[int, list[str]] = {}
         visit_procedures: dict[int, list[str]] = {}
         if should_generate_visit_attributes or should_generate_procedure_hierarchy:
             hierarchy = get_cpt_hierarchy()
-            visit_departments, visit_procedures = build_visit_cpt_dimensions(
+            visit_procedures = build_visit_procedures(
                 code_map=hierarchy.code_map,
                 billing_fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
             )
 
         procedure_hierarchy_payload = None
         if should_generate_procedure_hierarchy:
+            provider_departments = fetch_provider_departments()
+            official_visit_departments = build_official_visit_departments(
+                fetch_batch_size=self.VISIT_FETCH_BATCH_SIZE
+            )
+            cpt_procedure_details = build_cpt_procedure_details(hierarchy.departments)
             eligible_visit_numbers = fetch_materialized_visit_numbers(self.VISIT_FETCH_BATCH_SIZE)
             procedure_hierarchy_payload = build_procedure_hierarchy_payload(
-                hierarchy_departments=hierarchy.departments,
-                visit_departments=visit_departments,
+                provider_departments=provider_departments,
+                official_visit_departments=official_visit_departments,
                 visit_procedures=visit_procedures,
+                cpt_procedure_details=cpt_procedure_details,
                 eligible_visit_numbers=eligible_visit_numbers,
             )
 
@@ -465,7 +564,6 @@ class Command(BaseCommand):
             if should_generate_visit_attributes:
                 write_visit_attributes_parquet(
                     file_path=temp_visit_file_path,
-                    visit_departments=visit_departments,
                     visit_procedures=visit_procedures,
                     fetch_batch_size=self.VISIT_FETCH_BATCH_SIZE,
                     nullable_bool_fields=self.NULLABLE_BOOL_FIELDS,

@@ -84,7 +84,6 @@ function App() {
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
           SELECT * REPLACE (
-            COALESCE(CAST(department_ids AS VARCHAR[]), []::VARCHAR[]) AS department_ids,
             COALESCE(CAST(procedure_ids AS VARCHAR[]), []::VARCHAR[]) AS procedure_ids
           )
           FROM read_parquet('visit_attributes.parquet');

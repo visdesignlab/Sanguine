@@ -10,6 +10,7 @@ from api.models.intelvia import (
     Lab,
     Medication,
     Patient,
+    ProviderDepartmentMapping,
     SurgeryCase,
     Transfusion,
     Visit,
@@ -29,6 +30,7 @@ TABLES_TO_TRUNCATE = [
     "SurgeryCase",
     "Visit",
     "Patient",
+    "ProviderDepartmentMapping",
 ]
 
 
@@ -258,6 +260,21 @@ def add_medication(
         dose_unit_desc="mg",
         med_start_dtm=admin_dtm,
         med_end_dtm=admin_dtm,
+    )
+
+
+def add_provider_department_mapping(
+    *,
+    prov_id: str,
+    department_id: str,
+    department_name: str,
+    prov_name: str | None = None,
+) -> ProviderDepartmentMapping:
+    return ProviderDepartmentMapping.objects.create(
+        prov_id=prov_id,
+        department_id=department_id,
+        department_name=department_name,
+        prov_name=prov_name or f"Provider {prov_id}",
     )
 
 

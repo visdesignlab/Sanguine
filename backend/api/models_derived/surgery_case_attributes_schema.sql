@@ -40,6 +40,8 @@ CREATE TABLE SurgeryCaseAttributes (
     whole_cost DECIMAL(8,2),
     cell_saver_cost DECIMAL(8,2),
     total_cost DECIMAL(10,2),
+    department_id VARCHAR(200),
+    department_name VARCHAR(200),
     FOREIGN KEY (visit_no) REFERENCES Visit(visit_no) ON DELETE CASCADE,
     FOREIGN KEY (mrn) REFERENCES Patient(mrn) ON DELETE CASCADE
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
