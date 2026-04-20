@@ -2209,30 +2209,29 @@ export class RootStore {
         // TODO: Don't limit to only 10,000 surgeries.
         const query = `
           SELECT
-             CAST(case_id AS VARCHAR) as case_id,
-             surgeon_prov_id,
+             CAST(sc.case_id AS VARCHAR) as case_id,
+             sc.surgeon_prov_id,
              ${surgeonNameExpr} AS surgeon_prov_name,
-             CAST(visit_no AS VARCHAR) as visit_no,
-             pre_hgb,
-             post_hgb,
+             CAST(sc.visit_no AS VARCHAR) as visit_no,
+             sc.pre_hgb,
+             sc.post_hgb,
 
-             pre_plt,
-             post_plt,
-             pre_fibrinogen,
-             post_fibrinogen,
-             pre_inr,
-             post_inr,
-             anesth_prov_id,
+             sc.pre_plt,
+             sc.post_plt,
+             sc.pre_fibrinogen,
+             sc.post_fibrinogen,
+             sc.pre_inr,
+             sc.post_inr,
+             sc.anesth_prov_id,
              ${anesthNameExpr} AS anesth_prov_name,
-             intraop_rbc_units,
-             intraop_plt_units,
-             intraop_cryo_units,
-             intraop_ffp_units,
-             intraop_whole_units,
-             intraop_cell_saver_ml,
-             (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
+             sc.intraop_rbc_units,
+             sc.intraop_plt_units,
+             sc.intraop_cryo_units,
+             sc.intraop_ffp_units,
+             sc.intraop_whole_units,
+             sc.intraop_cell_saver_ml,
+             (CAST(epoch(sc.surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
           FROM filteredSurgeryCases sc
-          ${deptSurgeryJoin}
           ORDER BY surgery_start_dtm
         `;
         try {
@@ -2248,38 +2247,39 @@ export class RootStore {
         // TODO: Don't limit to only 10,000 surgeries.
         const query = `
            SELECT
-             CAST(case_id AS VARCHAR) as case_id,
-             surgeon_prov_id,
+             CAST(sc.case_id AS VARCHAR) as case_id,
+             sc.surgeon_prov_id,
              ${surgeonNameExpr} AS surgeon_prov_name,
-             anesth_prov_id,
+             sc.anesth_prov_id,
              ${anesthNameExpr} AS anesth_prov_name,
-             year,
-             quarter,
-             month,
+             sc.year,
+             sc.quarter,
+             sc.month,
 
-             intraop_rbc_units AS rbc_units,
-             intraop_ffp_units AS ffp_units,
-             intraop_plt_units AS plt_units,
-             intraop_cryo_units AS cryo_units,
-             intraop_whole_units AS whole_units,
-             intraop_cell_saver_ml AS cell_saver_ml,
+             sc.intraop_rbc_units AS rbc_units,
+             sc.intraop_ffp_units AS ffp_units,
+             sc.intraop_plt_units AS plt_units,
+             sc.intraop_cryo_units AS cryo_units,
+             sc.intraop_whole_units AS whole_units,
+             sc.intraop_cell_saver_ml AS cell_saver_ml,
 
-             los,
-             death,
-             vent,
-             stroke,
-             ecmo,
+             sc.los,
+             sc.death,
+             sc.vent,
+             sc.stroke,
+             sc.ecmo,
 
-             pre_hgb, post_hgb,
-             pre_plt, post_plt,
-             pre_fibrinogen, post_fibrinogen,
-             pre_inr, post_inr,
+             sc.pre_hgb, sc.post_hgb,
+             sc.pre_plt, sc.post_plt,
+             sc.pre_fibrinogen, sc.post_fibrinogen,
+             sc.pre_inr, sc.post_inr,
 
-             total_cost,
-             rbc_cost,
-             (CAST(epoch(surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
-           FROM filteredSurgeryCases
-           ORDER BY surgery_start_dtm
+             sc.total_cost,
+             sc.rbc_cost,
+             (CAST(epoch(sc.surgery_start_dtm) AS DOUBLE) * 1000) as surgery_start_dtm
+          FROM filteredSurgeryCases sc
+          ORDER BY surgery_start_dtm
+          LIMIT 10000
         `;
         try {
           const result = await this.duckDB!.query(query);
