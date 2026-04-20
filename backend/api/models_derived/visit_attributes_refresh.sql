@@ -36,6 +36,7 @@ INSERT INTO VisitAttributes (
     attending_provider_line,
     is_admitting_attending
 )
+-- Visit Attributes has one row per (visit-no + attending_provider_line_number) combination
 SELECT
     CONCAT(v.visit_no, '-', ap.attend_prov_line) AS id,
     v.visit_no,
