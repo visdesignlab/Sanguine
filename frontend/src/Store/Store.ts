@@ -1623,6 +1623,10 @@ export class RootStore {
     });
   }
 
+  resetDepartmentsFilter() {
+    this.setProcedureFilters([], this.filterValues.procedureIds);
+  }
+
   resetProcedureIdsFilter() {
     this.setProcedureFilters(this.filterValues.departments, []);
   }
@@ -1806,11 +1810,8 @@ export class RootStore {
     const safeIdPattern = /^[A-Za-z0-9_-]+$/;
 
     if (filterValues.departments.length > 0) {
-      const safeDepartments = filterValues.departments;
-      if (safeDepartments.length > 0) {
-        const departmentIdList = safeDepartments.map(sqlString).join(', ');
-        visitFilterConditions.push(`BOOL_OR(attending_provider_department IN (${departmentIdList}))`);
-      }
+      const departmentIdList = filterValues.departments.map(sqlString).join(', ');
+      visitFilterConditions.push(`BOOL_OR(attending_provider_department IN (${departmentIdList}))`);
     }
 
     if (filterValues.procedureIds.length > 0) {
