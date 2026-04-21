@@ -1,13 +1,14 @@
 import { DepartmentHierarchyResponse } from '../Types/application';
 
 /**
- * Converts a raw department name (e.g. "general-surgery" or "cardiac_icu")
- * into normal Title Case (e.g. "General Surgery" / "Cardiac Icu").
- * Handles both dash-separated and underscore-separated slugs.
+ * Converts a raw department name (e.g. "general-surgery", "cardiac_icu", or
+ * "Critical Care") into normal Title Case (e.g. "General Surgery" / "Cardiac Icu").
+ * Handles dash-separated slugs, underscore-separated slugs, and already
+ * human-readable names with spaces without degrading mixed-case words.
  */
 export function formatDepartmentName(name: string): string {
   return name
-    .split(/[-_]/)
+    .split(/[-_\s]+/)
     .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''))
     .join(' ')
     .trim();
