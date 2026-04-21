@@ -37,6 +37,7 @@ import {
   BLOOD_PRODUCT_COLOR_THEME,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
+import { formatDepartmentFilter } from '../../../Utils/departmentLabel';
 
 /**
  * @returns Patient Blood Management Hospital view - Stats and Charts
@@ -111,6 +112,10 @@ export function HospitalView() {
   // --- Render Dashboard ---
   return useObserver(() => {
     const chartRowHeight = 300;
+    const departmentLabel = formatDepartmentFilter(
+      store.filterValues.departmentIds,
+      store.departmentHierarchy,
+    );
     return (
       <Stack mb="xl" gap="lg">
         <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
@@ -365,6 +370,7 @@ export function HospitalView() {
                                   xAxisVar={label}
                                   yAxisVar={yAxisVar}
                                   aggregation={aggregation}
+                                  departmentLabel={departmentLabel}
                                 />
                               ),
                             }
@@ -446,6 +452,7 @@ export function HospitalView() {
                                   xAxisVar={label}
                                   yAxisVar={yAxisVar}
                                   aggregation={aggregation}
+                                  departmentLabel={departmentLabel}
                                 />
                               ),
                             }

@@ -10,6 +10,7 @@ import { observer, useLocalObservable } from 'mobx-react-lite';
 import {
   MultiSelect,
   CloseButton,
+  Divider,
   Flex,
   Title,
   Stack,
@@ -23,7 +24,7 @@ import {
   Loader,
 } from '@mantine/core';
 import {
-  IconGripVertical, IconMathGreater, IconMathLower, IconPercentage, IconColumns3, IconCircles,
+  IconGripVertical, IconMathGreater, IconMathLower, IconPercentage, IconColumns3, IconCircles, IconFilter,
 } from '@tabler/icons-react';
 import {
   DataTable, DataTableColumn, useDataTableColumns, type DataTableSortStatus,
@@ -36,6 +37,7 @@ import {
   ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions, ExploreTableColumnOptionsGrouped, ExploreTableRowOptions, ExploreTableGroupByOptions,
 } from '../../../../Types/application';
 import { backgroundHoverColor, smallHoverColor } from '../../../../Theme/mantineTheme';
+import { formatDepartmentFilter } from '../../../../Utils/departmentLabel';
 import './ExploreTable.css';
 
 // Types
@@ -204,8 +206,8 @@ function computeMedian(arr: number[]) {
 }
 
 function ViolinCell({
-  samples: rawSamples, domain, height = 25, padding = 0, groupFilter,
-}: { samples: number[] | Iterable<number>; domain?: [number, number]; height?: number; padding?: number; groupFilter?: { label: string; color: string } }) {
+  samples: rawSamples, domain, height = 25, padding = 0, groupFilter, departmentLabel,
+}: { samples: number[] | Iterable<number>; domain?: [number, number]; height?: number; padding?: number; groupFilter?: { label: string; color: string }; departmentLabel?: string | null }) {
   const internalWidth = 120;
 
   // Normalize to a plain number[] — DuckDB list() may return typed arrays or proxy objects
@@ -214,15 +216,26 @@ function ViolinCell({
   if (samples.length === 0) {
     return (
       <Tooltip
-        label={groupFilter ? (
+        label={groupFilter || departmentLabel ? (
           <Stack gap={4} align="center">
             <Text size="sm">No data</Text>
-            <Text size="xs" fs="italic" c={groupFilter.color}>
-              (Filter:
-              {' '}
-              {groupFilter.label}
-              )
-            </Text>
+            {groupFilter && (
+              <Text size="xs" fs="italic" c={groupFilter.color}>
+                (Filter:
+                {' '}
+                {groupFilter.label}
+                )
+              </Text>
+            )}
+            {departmentLabel && (
+              <>
+                <Divider my={2} />
+                <Flex align="center" gap={4}>
+                  <IconFilter size={9} style={{ opacity: 0.5, flexShrink: 0 }} />
+                  <Text size="xs" c="dimmed">{departmentLabel}</Text>
+                </Flex>
+              </>
+            )}
           </Stack>
         ) : 'No data'}
         withArrow
@@ -288,6 +301,15 @@ function ViolinCell({
               {groupFilter.label}
               )
             </Text>
+          )}
+          {departmentLabel && (
+            <>
+              <Divider my={2} />
+              <Flex align="center" gap={4}>
+                <IconFilter size={9} style={{ opacity: 0.5, flexShrink: 0 }} />
+                <Text size="xs" c="dimmed">{departmentLabel}</Text>
+              </Flex>
+            </>
           )}
         </Stack>
       )}
@@ -399,7 +421,7 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
 const chartColors = ['#fdf5e6', '#ffb366', '#fb7e07', '#d0021b', '#67000d'];
 
 function NumericBarCell({
-  value, max, colVar, opts = {}, setHoveredValue, agg, rowLabel, columnLabel,
+  value, max, colVar, opts = {}, setHoveredValue, agg, rowLabel, columnLabel, departmentLabel,
 }: {
   value: number | null | undefined;
   max: number;
@@ -409,6 +431,7 @@ function NumericBarCell({
   agg?: string;
   rowLabel?: string;
   columnLabel?: string;
+  departmentLabel?: string | null;
 }) {
   // Default Options
   const {
@@ -449,6 +472,15 @@ function NumericBarCell({
               {opts.groupFilter.label}
               )
             </Text>
+          )}
+          {departmentLabel && (
+            <>
+              <Divider my={2} />
+              <Flex align="center" gap={4}>
+                <IconFilter size={9} style={{ opacity: 0.5, flexShrink: 0 }} />
+                <Text size="xs" c="dimmed">{departmentLabel}</Text>
+              </Flex>
+            </>
           )}
         </Stack>
       )}
@@ -524,7 +556,7 @@ function NumericBarCell({
 }
 
 function StackedBarCell({
-  row, max, colVar, agg, groupFilter, rowLabel, columnLabel,
+  row, max, colVar, agg, groupFilter, rowLabel, columnLabel, departmentLabel,
 }: {
   row: ExploreTableRow;
   max: number;
@@ -533,6 +565,7 @@ function StackedBarCell({
   groupFilter?: { label: string; color: string };
   rowLabel?: string;
   columnLabel?: string;
+  departmentLabel?: string | null;
 }) {
   const parts = [
     {
@@ -592,6 +625,15 @@ function StackedBarCell({
                 )
               </Text>
             </Box>
+          )}
+          {departmentLabel && (
+            <>
+              <Divider my={2} />
+              <Flex align="center" gap={4} justify="center">
+                <IconFilter size={9} style={{ opacity: 0.5, flexShrink: 0 }} />
+                <Text size="xs" c="dimmed">{departmentLabel}</Text>
+              </Flex>
+            </>
           )}
         </Stack>
       )}
@@ -730,6 +772,14 @@ const HistogramFooter = observer(({
 const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfig }) => {
   const store = useContext(Store);
   const chartData = store.exploreChartData[chartConfig.chartId] as ExploreTableData;
+
+  // Department filter label for tooltips
+  const isOutcomeTable = ['death', 'stroke', 'vent', 'ecmo'].includes(chartConfig.rowVar);
+  const departmentLabel = formatDepartmentFilter(
+    store.filterValues.departmentIds,
+    store.departmentHierarchy,
+    isOutcomeTable ? 'From' : 'Within',
+  );
 
   // Filters
   const defaultNumericFilter: NumericFilter = useMemo(() => ({ query: '', cmp: '>' }), []);
@@ -1170,14 +1220,14 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                   const groupFilter = buildGroupFilter(filterValue, i);
                   return (
                     <Box key={i} h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
-                      <StackedBarCell row={g} max={maxVal} colVar={colVar} agg={agg} groupFilter={groupFilter} rowLabel={rowLabel} columnLabel={displayTitle} />
+                      <StackedBarCell row={g} max={maxVal} colVar={colVar} agg={agg} groupFilter={groupFilter} rowLabel={rowLabel} columnLabel={displayTitle} departmentLabel={departmentLabel} />
                     </Box>
                   );
                 })}
               </Stack>
             );
           }
-          return <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />;
+          return <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} departmentLabel={departmentLabel} />;
         };
       } else if (type === 'numericBar') {
         column.render = (row: ExploreTableRow) => {
@@ -1200,6 +1250,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                         opts={{ isSavings: colVar === 'salvage_savings', cellHeight: 22, groupFilter }}
                         rowLabel={rowLabel}
                         columnLabel={displayTitle}
+                        departmentLabel={departmentLabel}
                       />
                     </Box>
                   );
@@ -1218,6 +1269,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               opts={{ isSavings: colVar === 'salvage_savings' }}
               rowLabel={rowLabel}
               columnLabel={displayTitle}
+              departmentLabel={departmentLabel}
             />
           );
         };
@@ -1243,6 +1295,15 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                     {groupFilter.label}
                     )
                   </Text>
+                )}
+                {departmentLabel && (
+                  <>
+                    <Divider my={2} />
+                    <Flex align="center" gap={4}>
+                      <IconFilter size={9} style={{ opacity: 0.5, flexShrink: 0 }} />
+                      <Text size="xs" c="dimmed">{departmentLabel}</Text>
+                    </Flex>
+                  </>
                 )}
               </Stack>
             );
@@ -1332,7 +1393,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                   const groupFilter = buildGroupFilter(filterValue, i);
                   return (
                     <Box key={i} h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', opacity: getSubRowOpacity(filterValue), transition: 'opacity 0.2s' }}>
-                      <ViolinCell samples={samples} domain={domain} height={22} padding={0} groupFilter={groupFilter} />
+                      <ViolinCell samples={samples} domain={domain} height={22} padding={0} groupFilter={groupFilter} departmentLabel={departmentLabel} />
                     </Box>
                   );
                 })}
@@ -1341,7 +1402,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           }
           const raw = row[colVar];
           const samples = raw ? Array.from(raw as Iterable<number>, Number) : [];
-          return <ViolinCell samples={samples} domain={domain} height={24} padding={0} />;
+          return <ViolinCell samples={samples} domain={domain} height={24} padding={0} departmentLabel={departmentLabel} />;
         };
       } else if (type === 'numeric') {
         column.render = (row: ExploreTableRow) => {
@@ -1364,6 +1425,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                         opts={{ cellHeight: 22, groupFilter }}
                         rowLabel={rowLabel}
                         columnLabel={displayTitle}
+                        departmentLabel={departmentLabel}
                       />
                     </Box>
                   );
@@ -1376,15 +1438,15 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             return (
               <Stack gap={0} p={0} h={ROW_H_GROUPED}>
                 <Box h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10 }}>
-                  <NumericBarCell value={val?.[0]} max={maxVal} colVar={colVar} opts={{ padding: '0px', cellHeight: 20 }} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />
+                  <NumericBarCell value={val?.[0]} max={maxVal} colVar={colVar} opts={{ padding: '0px', cellHeight: 20 }} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} departmentLabel={departmentLabel} />
                 </Box>
                 <Box h={SUB_ROW_H} display="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10 }}>
-                  <NumericBarCell value={val?.[1]} max={maxVal} colVar={colVar} opts={{ padding: '0px', cellHeight: 20 }} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />
+                  <NumericBarCell value={val?.[1]} max={maxVal} colVar={colVar} opts={{ padding: '0px', cellHeight: 20 }} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} departmentLabel={departmentLabel} />
                 </Box>
               </Stack>
             );
           }
-          return <NumericBarCell value={row[colVar] as number} max={maxVal} colVar={colVar} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} />;
+          return <NumericBarCell value={row[colVar] as number} max={maxVal} colVar={colVar} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} departmentLabel={departmentLabel} />;
         };
       } else {
         column.render = (row: ExploreTableRow) => {
@@ -1459,7 +1521,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     }
 
     return resultColumns;
-  }, [rowsWithGroups, chartConfig.twoValsPerRow, chartConfig.rowVar, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues]);
+  }, [rowsWithGroups, chartConfig.twoValsPerRow, chartConfig.rowVar, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues, departmentLabel]);
 
   // Data Table Columns -------
   const columnDefs = useMemo(

@@ -1,11 +1,14 @@
-import { Title, Paper } from '@mantine/core';
+import {
+  Title, Paper, Text, Divider, Flex,
+} from '@mantine/core';
+import { IconFilter } from '@tabler/icons-react';
 import { dashboardYAxisVars } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 
 // --- Custom tooltip component ---
 export function DashboardChartTooltip({
-  active, payload, xAxisVar, yAxisVar, aggregation,
+  active, payload, xAxisVar, yAxisVar, aggregation, departmentLabel,
 }: {
   active?: boolean;
   payload?: Array<{
@@ -16,6 +19,7 @@ export function DashboardChartTooltip({
   xAxisVar?: string;
   yAxisVar: typeof dashboardYAxisVars[number];
   aggregation: 'sum' | 'avg';
+  departmentLabel?: string | null;
 }) {
   const { tooltipStyles } = useThemeConstants();
 
@@ -33,6 +37,15 @@ export function DashboardChartTooltip({
       <Title order={5} c="dimmed">
         {xAxisVar}
       </Title>
+      {departmentLabel && (
+        <>
+          <Divider mt={6} mb={4} />
+          <Flex align="center" gap={4}>
+            <IconFilter size={10} style={{ opacity: 0.5, flexShrink: 0 }} />
+            <Text size="xs" c="dimmed">{departmentLabel}</Text>
+          </Flex>
+        </>
+      )}
     </Paper>
   );
 }

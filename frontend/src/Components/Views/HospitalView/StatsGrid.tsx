@@ -1,12 +1,15 @@
 import {
   IconArrowDownRight,
   IconArrowUpRight,
+  IconFilter,
 } from '@tabler/icons-react';
 import {
   Card,
   CloseButton,
+  Flex,
   Group, LoadingOverlay, SimpleGrid, Text,
   Title,
+  Tooltip,
 } from '@mantine/core';
 import { useState, useContext, useCallback } from 'react';
 import { useObserver } from 'mobx-react-lite';
@@ -16,6 +19,7 @@ import gridItemStyles from '../GridLayoutItem.module.css';
 import statsGridStyles from './StatsGrid.module.css';
 import { Store } from '../../../Store/Store';
 import { isMetricChangeGood } from '../../../Utils/dashboard';
+import { formatDepartmentFilter } from '../../../Utils/departmentLabel';
 import { DashboardAggYAxisVar, DashboardStatData } from '../../../Types/application';
 import { getIconForVar } from '../../../Utils/icons';
 
@@ -37,6 +41,10 @@ export function StatsGrid() {
   }, [store]);
 
   return useObserver(() => {
+    const departmentLabel = formatDepartmentFilter(
+      store.filterValues.departmentIds,
+      store.departmentHierarchy,
+    );
     // For every stat config, create a card describing it.
     const statCards = store.dashboardStatConfigs.map((statConfig, idx) => {
       // Get the stat value from statData
@@ -63,71 +71,83 @@ export function StatsGrid() {
       const isHovered = hoveredIdx === idx;
 
       return (
-        <Card
+        <Tooltip
           key={statConfig.statId}
-          className={`${gridItemStyles.gridItem} ${isHovered ? gridItemStyles.gridItemHovered : ''}`.trim()}
-          onMouseEnter={() => setHoveredIdx(idx)}
-          onMouseLeave={() => setHoveredIdx(null)}
+          label={(
+            <Flex align="center" gap={4}>
+              <IconFilter size={10} style={{ opacity: 0.5, flexShrink: 0 }} />
+              <Text size="xs">{departmentLabel}</Text>
+            </Flex>
+          )}
+          disabled={!departmentLabel}
+          position="bottom"
+          openDelay={300}
         >
-          <LoadingOverlay visible={statData?.value === undefined} zIndex={1} overlayProps={{ radius: 'sm', blur: 2 }} />
-          <Group justify="space-between" align="center">
-            {/** Stat Title */}
-            <Text
-              className={`${gridItemStyles.variableTitle} ${isHovered ? gridItemStyles.active : ''}`.trim()}
-              style={{ flex: 1, textAlign: 'left' }}
-            >
-              {statConfig.title}
-            </Text>
-            <Group gap={4} align="center" style={{ justifyContent: 'flex-end' }}>
-              {/** Stat Icon */}
-              <Icon
-                className={`${statsGridStyles.icon} ${isHovered ? statsGridStyles.iconHovered : ''}`.trim()}
-                size={cardIconSize}
-                stroke={cardIconStroke}
-              />
-              {/** Stat Close / Delete Button */}
-              {isHovered && (
-              <CloseButton size="xs" onClick={() => handleRemoveStat(statConfig.statId)} />
-              )}
+          <Card
+            className={`${gridItemStyles.gridItem} ${isHovered ? gridItemStyles.gridItemHovered : ''}`.trim()}
+            onMouseEnter={() => setHoveredIdx(idx)}
+            onMouseLeave={() => setHoveredIdx(null)}
+          >
+            <LoadingOverlay visible={statData?.value === undefined} zIndex={1} overlayProps={{ radius: 'sm', blur: 2 }} />
+            <Group justify="space-between" align="center">
+              {/** Stat Title */}
+              <Text
+                className={`${gridItemStyles.variableTitle} ${isHovered ? gridItemStyles.active : ''}`.trim()}
+                style={{ flex: 1, textAlign: 'left' }}
+              >
+                {statConfig.title}
+              </Text>
+              <Group gap={4} align="center" style={{ justifyContent: 'flex-end' }}>
+                {/** Stat Icon */}
+                <Icon
+                  className={`${statsGridStyles.icon} ${isHovered ? statsGridStyles.iconHovered : ''}`.trim()}
+                  size={cardIconSize}
+                  stroke={cardIconStroke}
+                />
+                {/** Stat Close / Delete Button */}
+                {isHovered && (
+                <CloseButton size="xs" onClick={() => handleRemoveStat(statConfig.statId)} />
+                )}
+              </Group>
             </Group>
-          </Group>
-          <Group align="center" gap={5} mt="sm">
-            {/** Stat Value */}
-            <Title order={2}>{statValue}</Title>
-            {/** Stat Sparkline */}
-            <Sparkline
-              w={60}
-              h={25}
-              data={statSparklineData}
-              curveType="linear"
-              fillOpacity={0.4}
-              strokeWidth={0.6}
-              color={statColor}
-              mb={-4}
-            />
-          </Group>
-          {/* Comparison Text */}
-          {/** Stat % Change in Value */}
-          <Group align="center" mt="sm" gap={2}>
-            <DiffIcon size={spacingPx.md} stroke={cardIconStroke} color={statColor} />
-            <Text
-              size="xs"
-              component="span"
-              color={statColor}
-            >
-              {diff}
-              %
-            </Text>
-            {/** Comparison Text */}
-            <Text
-              size="xs"
-              ml={2}
-              className={`${statsGridStyles.comparisonText} ${isHovered ? statsGridStyles.comparisonTextHovered : ''}`.trim()}
-            >
-              {`last 30 days vs. ${statData?.comparedTo || 'previous period'}`}
-            </Text>
-          </Group>
-        </Card>
+            <Group align="center" gap={5} mt="sm">
+              {/** Stat Value */}
+              <Title order={2}>{statValue}</Title>
+              {/** Stat Sparkline */}
+              <Sparkline
+                w={60}
+                h={25}
+                data={statSparklineData}
+                curveType="linear"
+                fillOpacity={0.4}
+                strokeWidth={0.6}
+                color={statColor}
+                mb={-4}
+              />
+            </Group>
+            {/* Comparison Text */}
+            {/** Stat % Change in Value */}
+            <Group align="center" mt="sm" gap={2}>
+              <DiffIcon size={spacingPx.md} stroke={cardIconStroke} color={statColor} />
+              <Text
+                size="xs"
+                component="span"
+                color={statColor}
+              >
+                {diff}
+                %
+              </Text>
+              {/** Comparison Text */}
+              <Text
+                size="xs"
+                ml={2}
+                className={`${statsGridStyles.comparisonText} ${isHovered ? statsGridStyles.comparisonTextHovered : ''}`.trim()}
+              >
+                {`last 30 days vs. ${statData?.comparedTo || 'previous period'}`}
+              </Text>
+            </Group>
+          </Card>
+        </Tooltip>
       );
     });
 
