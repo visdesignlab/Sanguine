@@ -21,6 +21,7 @@ import { useThemeConstants } from '../../../Theme/mantineTheme';
 import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
 import { DepartmentProcedureFilter } from './DepartmentProcedureFilter';
+import { ProcedureFilter } from './ProcedureFilter';
 import classes from '../../../Shell/Shell.module.css';
 import { FilterHistogramWithSliderComponent } from './FilterHistogramWithSliderComponent';
 import { BLOOD_PRODUCTS_ARRAY } from '../../../Types/bloodProducts';
@@ -251,6 +252,19 @@ export function FilterPanel() {
             />
             <Accordion.Panel styles={{ content: { paddingLeft: 8, paddingRight: 8 } }}>
               <DepartmentProcedureFilter />
+            </Accordion.Panel>
+          </Accordion.Item>
+
+          {/* Procedure Filters */}
+          <Accordion.Item value="procedure-filters" key="procedure-filters">
+            <FilterHeader
+              countName="procedureGroupsAppliedCount"
+              title="Procedure"
+              tooltipLabel="Number of procedure groups with active filters"
+              resetFunc={() => store.resetProcedureIdsFilter()}
+            />
+            <Accordion.Panel styles={{ content: { paddingLeft: 8, paddingRight: 8 } }}>
+              <ProcedureFilter />
             </Accordion.Panel>
           </Accordion.Item>
         </Accordion>

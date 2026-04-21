@@ -1555,6 +1555,18 @@ export class RootStore {
   }
 
   /**
+   * Returns the number of CPT procedure hierarchy groups with at least one selected procedure.
+   */
+  get procedureGroupsAppliedCount(): number {
+    const hierarchy = this.procedureHierarchy;
+    if (!hierarchy || this.filterValues.procedureIds.length === 0) return 0;
+    const selectedIds = new Set(this.filterValues.procedureIds);
+    return hierarchy.departments.filter(
+      (dept) => dept.procedures.some((proc) => selectedIds.has(proc.id)),
+    ).length;
+  }
+
+  /**
    * Returns the total number of filters that are applied
    */
   get totalFiltersAppliedCount(): number {
@@ -1609,6 +1621,10 @@ export class RootStore {
       departments: [...this._initialFilterValues.departments],
       procedureIds: [...this._initialFilterValues.procedureIds],
     });
+  }
+
+  resetProcedureIdsFilter() {
+    this.setProcedureFilters(this.filterValues.departments, []);
   }
 
   /**

@@ -1025,4 +1025,5 @@ export type FilterCountKey =
   | 'medicationsFiltersAppliedCount'
   | 'outcomeFiltersAppliedCount'
   | 'procedureDepartmentsAppliedCount'
-  | 'procedureFiltersAppliedCount';
+  | 'procedureFiltersAppliedCount'
+  | 'procedureGroupsAppliedCount';

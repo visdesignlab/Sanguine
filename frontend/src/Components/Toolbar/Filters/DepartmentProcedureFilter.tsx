@@ -92,7 +92,7 @@ export function DepartmentProcedureFilter() {
 
       store.setProcedureFilters(
         Array.from(selectedDepartmentsSet).sort(),
-        [],
+        store.filterValues.procedureIds,
       );
     };
 
