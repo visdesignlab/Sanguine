@@ -1826,7 +1826,16 @@ export class RootStore {
     booleanFilterKeys.forEach((key) => {
       const value = filterValues[key];
       if (typeof value === 'boolean') {
-        visitFilterConditions.push(`BOOL_OR(CAST(COALESCE(${key}, 0) AS INTEGER) = ${value ? 1 : 0})`);
+        // value=true: visit must have at least one row where field=1.
+        // value=false: visit must have NO rows where field=1.
+        // We cannot use BOOL_OR(field = 0) for the false case because:
+        //   - outcome fields (death, vent, etc.) are NULL (not 0) on non-admitting-attending rows,
+        //     so COALESCE(NULL, 0) = 0 would cause multi-provider visits to pass even if the
+        //     admitting-attending row has field=1.
+        //   - medication fields (b12, iron, antifibrinolytic) are FALSE (not NULL) on
+        //     non-attributed provider lines, so any visit with ≥2 providers would pass.
+        const condition = `BOOL_OR(CAST(COALESCE(${key}, 0) AS INTEGER) = 1)`;
+        visitFilterConditions.push(value ? condition : `NOT ${condition}`);
       }
     });
 
@@ -2030,15 +2039,22 @@ export class RootStore {
           }
 
           // Standard numeric & boolean fields
-          const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
+          const medicationFields = ['b12', 'iron', 'antifibrinolytic'];
+          const booleanFields = ['death', 'vent', 'stroke', 'ecmo', ...medicationFields];
           if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
             if (colAggregation === 'avg') {
-              // Percentage: SUM of true values / COUNT of non-NULL values
-              // Outcomes (death etc.) are NULL for non-admitting lines, so COUNT excludes them
-              // Medications (b12 etc.) are never NULL, so COUNT covers all lines
-              columnClauses.push(`SUM(CAST(v.${colVar} AS INT)) * 100.0 / NULLIF(COUNT(v.${colVar}), 0) AS ${colVar}`);
+              if (medicationFields.includes(colVar)) {
+                // Medications (b12, iron, antifibrinolytic) are TRUE/FALSE on every provider-line
+                // row — never NULL. COUNT(colVar) would count all provider-line rows, not visits,
+                // inflating the denominator for multi-provider visits. Use DISTINCT visit count.
+                columnClauses.push(`SUM(CAST(v.${colVar} AS INT)) * 100.0 / NULLIF(COUNT(DISTINCT v.visit_no), 0) AS ${colVar}`);
+              } else {
+                // Outcomes (death, vent, stroke, ecmo) are NULL on non-admitting-attending rows,
+                // so COUNT(colVar) only counts the one non-NULL row per visit — correct denominator.
+                columnClauses.push(`SUM(CAST(v.${colVar} AS INT)) * 100.0 / NULLIF(COUNT(v.${colVar}), 0) AS ${colVar}`);
+              }
             } else {
-              // Count of lines where this boolean is true
+              // Count of events where this boolean is true
               columnClauses.push(`SUM(CAST(v.${colVar} AS INT)) AS ${colVar}`);
             }
           } else if (col.type === 'violin') {
