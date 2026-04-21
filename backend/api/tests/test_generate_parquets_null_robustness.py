@@ -1,7 +1,5 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from types import SimpleNamespace
-from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test import TransactionTestCase, override_settings
@@ -173,38 +171,26 @@ class GenerateParquetsNullRobustnessTests(TransactionTestCase):
             "all": "all",
             "visit_attributes": "visit_attributes",
             "surgery_cases": "surgery_case_attributes",
+            "department_encounter_attributes": "department_encounter_attributes",
         }
-        refresh_derived_tables(target=refresh_target_by_mode[generate_mode])
+        if generate_mode in refresh_target_by_mode:
+            refresh_derived_tables(target=refresh_target_by_mode[generate_mode])
 
     def _run_generate_and_assert_artifacts(self, *, generate_mode: str) -> None:
         self._refresh_derived_tables_for_generate_mode(generate_mode)
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
-            mock_hierarchy = SimpleNamespace(
-                code_map={
-                    "99291": (
-                        "critical-care",
-                        "Critical Care",
-                        "critical-care__stroke",
-                        "Stroke",
-                    ),
-                },
-                departments=(),
-            )
-
-            with patch(
-                "api.management.commands.generate_parquets.get_cpt_hierarchy",
-                return_value=mock_hierarchy,
-            ):
-                call_command("generate_parquets", generate=generate_mode)
+            call_command("generate_parquets", generate=generate_mode)
 
             cache_dir = Path(base_dir) / "parquet_cache"
             expected_artifacts = []
             if generate_mode in ("all", "visit_attributes"):
                 expected_artifacts.append(cache_dir / "visit_attributes.parquet")
-            if generate_mode in ("all", "procedure_hierarchy"):
-                expected_artifacts.append(cache_dir / "procedure_hierarchy.json")
+            if generate_mode in ("all", "department_hierarchy"):
+                expected_artifacts.append(cache_dir / "department_hierarchy.json")
             if generate_mode in ("all", "surgery_cases"):
                 expected_artifacts.append(cache_dir / "surgery_case_attributes.parquet")
+            if generate_mode in ("all", "department_encounter_attributes"):
+                expected_artifacts.append(cache_dir / "department_encounter_attributes.parquet")
 
             for artifact_path in expected_artifacts:
                 self.assertTrue(

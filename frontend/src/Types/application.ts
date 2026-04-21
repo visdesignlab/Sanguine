@@ -983,26 +983,21 @@ export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | Ex
 export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig | DumbbellChartConfig;
 
 // Procedure hierarchy ---------------------------------------------------
-export type ProcedureHierarchyProcedure = {
+export type DepartmentHierarchyDepartment = {
   id: string;
   name: string;
   visit_count: number;
-  cpt_codes: string[];
 };
 
-export type ProcedureHierarchyDepartment = {
-  id: string;
-  name: string;
-  visit_count: number;
-  procedures: ProcedureHierarchyProcedure[];
-};
-
-export type ProcedureHierarchyResponse = {
+export type DepartmentHierarchyResponse = {
   version: string;
   source: string;
-  department_level: 'department';
-  procedure_level: 'procedure';
-  departments: ProcedureHierarchyDepartment[];
+  departments: DepartmentHierarchyDepartment[];
+};
+
+export type ProviderDepartmentEntry = {
+  departmentId: string;
+  departmentName: string;
 };
 
 // Filter Counts ---------------------------------------------------
@@ -1011,5 +1006,4 @@ export type FilterCountKey =
   | 'bloodComponentFiltersAppliedCount'
   | 'medicationsFiltersAppliedCount'
   | 'outcomeFiltersAppliedCount'
-  | 'procedureDepartmentsAppliedCount'
-  | 'procedureFiltersAppliedCount';
+  | 'departmentFiltersAppliedCount';

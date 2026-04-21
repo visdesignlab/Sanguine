@@ -20,4 +20,7 @@ urlpatterns = [
     path("api/get_visit_attributes", views.get_visit_attributes, name="get_visit_attributes"),
     path("api/get_surgery_case_attributes", views.get_surgery_case_attributes, name="get_surgery_case_attributes"),
     path("api/get_procedure_hierarchy", views.get_procedure_hierarchy, name="get_procedure_hierarchy"),
+    path("api/get_department_hierarchy", views.get_department_hierarchy, name="get_department_hierarchy"),
+    path("api/get_department_encounter_attributes", views.get_department_encounter_attributes, name="get_department_encounter_attributes"),
+    path("api/get_provider_departments", views.get_provider_departments, name="get_provider_departments"),
 ]

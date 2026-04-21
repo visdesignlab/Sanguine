@@ -203,3 +203,18 @@ class RoomTrace(models.Model):
 
     class Meta:
         db_table = "RoomTrace"
+        indexes = [
+            models.Index(fields=["visit_no", "in_dtm", "out_dtm"], name="roomtrace_visit_window_idx"),
+        ]
+
+
+class ProviderDepartment(models.Model):
+    prov_id = models.CharField(max_length=25, primary_key=True)
+    department_name = models.CharField(max_length=100)
+    department_id = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "ProviderDepartment"
+        indexes = [
+            models.Index(fields=["department_id"], name="provdept_dept_id_idx"),
+        ]

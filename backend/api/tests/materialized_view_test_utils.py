@@ -10,6 +10,8 @@ from api.models.intelvia import (
     Lab,
     Medication,
     Patient,
+    ProviderDepartment,
+    RoomTrace,
     SurgeryCase,
     Transfusion,
     Visit,
@@ -19,6 +21,7 @@ from api.models.intelvia import (
 TABLES_TO_TRUNCATE = [
     "VisitAttributes",
     "GuidelineAdherence",
+    "DepartmentEncounterAttributes",
     "DerivedArtifactRefresh",
     "BillingCode",
     "Medication",
@@ -29,6 +32,7 @@ TABLES_TO_TRUNCATE = [
     "SurgeryCase",
     "Visit",
     "Patient",
+    "ProviderDepartment",
 ]
 
 
@@ -96,6 +100,53 @@ def count_visit_attributes_rows(visit_no: int) -> int:
             [visit_no],
         )
         return cursor.fetchone()[0]
+
+
+def materialize_department_encounter_attributes() -> None:
+    refresh_derived_tables(target="department_encounter_attributes")
+
+
+def fetch_department_encounter_attributes_rows(visit_no: int) -> list[dict]:
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT *
+            FROM DepartmentEncounterAttributes
+            WHERE visit_no = %s
+            ORDER BY attend_prov_line, department_id
+            """,
+            [visit_no],
+        )
+        columns = [column[0] for column in cursor.description]
+        return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+
+def add_room_trace(
+    *,
+    visit: Visit,
+    service_in_desc: str,
+    in_dtm: datetime,
+    out_dtm: datetime,
+) -> RoomTrace:
+    return RoomTrace.objects.create(
+        visit_no=visit,
+        service_in_desc=service_in_desc,
+        in_dtm=in_dtm,
+        out_dtm=out_dtm,
+    )
+
+
+def add_provider_department(
+    *,
+    prov_id: str,
+    department_name: str,
+    department_id: str,
+) -> ProviderDepartment:
+    return ProviderDepartment.objects.create(
+        prov_id=prov_id,
+        department_name=department_name,
+        department_id=department_id,
+    )
 
 
 def create_empty_visit_fixture(

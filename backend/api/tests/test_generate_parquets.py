@@ -4,8 +4,6 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from types import SimpleNamespace
-from unittest.mock import patch
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -13,16 +11,17 @@ from django.core.management import call_command
 from django.test import TransactionTestCase, override_settings
 
 from api.management.commands.generate_parquets import (
-    build_visit_cpt_dimensions,
+    build_visit_roomtrace_departments,
     build_visit_attributes_table,
     coerce_temporal_value_to_utc,
+    get_department_encounter_attributes_schema,
     get_surgery_case_attributes_schema,
     get_visit_attributes_schema,
 )
-from api.views.utils.cpt_hierarchy import DepartmentTaxonomy, ProcedureTaxonomy
 
 from .materialized_view_test_utils import (
-    add_billing_code,
+    add_provider_department,
+    add_room_trace,
     create_empty_visit_fixture,
     create_visit_fixture,
     materialize_visit_attributes,
@@ -73,42 +72,7 @@ def valid_visit_attributes_row() -> dict:
         "attending_provider_line": 1,
         "is_admitting_attending": True,
         "department_ids": ["critical-care"],
-        "procedure_ids": ["critical-care__stroke"],
     }
-
-
-def mock_hierarchy(
-    code_map: dict[str, tuple[str, str, str, str]],
-    departments=(),
-):
-    return SimpleNamespace(code_map=code_map, departments=departments)
-
-
-def hierarchy_departments() -> tuple[DepartmentTaxonomy, ...]:
-    return (
-        DepartmentTaxonomy(
-            id="critical-care",
-            name="Critical Care",
-            procedures=(
-                ProcedureTaxonomy(
-                    id="critical-care__stroke",
-                    name="Stroke",
-                    cpt_codes=("99291",),
-                ),
-            ),
-        ),
-        DepartmentTaxonomy(
-            id="ecmo",
-            name="ECMO",
-            procedures=(
-                ProcedureTaxonomy(
-                    id="ecmo__initiation",
-                    name="ECMO Initiation",
-                    cpt_codes=("33946",),
-                ),
-            ),
-        ),
-    )
 
 
 class GenerateParquetsTests(TransactionTestCase):
@@ -125,34 +89,32 @@ class GenerateParquetsTests(TransactionTestCase):
             plt_result=Decimal("20000"),
             fibrinogen_result=Decimal("220"),
         )
-        code_map = {
-            "99291": (
-                "critical-care",
-                "Critical Care",
-                "critical-care__stroke",
-                "Stroke",
-            ),
-            "33946": (
-                "ecmo",
-                "ECMO",
-                "ecmo__initiation",
-                "ECMO Initiation",
-            ),
-        }
-        departments = hierarchy_departments()
+        add_room_trace(
+            visit=visit,
+            service_in_desc="Critical Care",
+            in_dtm=utc_dt(2024, 1, 1, 0, 0),
+            out_dtm=utc_dt(2024, 1, 3, 0, 0),
+        )
+        add_room_trace(
+            visit=visit,
+            service_in_desc="Surgical ICU",
+            in_dtm=utc_dt(2024, 1, 3, 0, 0),
+            out_dtm=utc_dt(2024, 1, 5, 0, 0),
+        )
+        add_provider_department(
+            prov_id="PROV-PQ",
+            department_name="Critical Care",
+            department_id="critical-care",
+        )
         materialize_visit_attributes()
 
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
-            with patch(
-                "api.management.commands.generate_parquets.get_cpt_hierarchy",
-                return_value=mock_hierarchy(code_map=code_map, departments=departments),
-            ):
-                call_command("generate_parquets")
+            call_command("generate_parquets")
 
             parquet_path = Path(base_dir) / "parquet_cache" / "visit_attributes.parquet"
             self.assertTrue(parquet_path.exists())
-            procedure_hierarchy_path = Path(base_dir) / "parquet_cache" / "procedure_hierarchy.json"
-            self.assertTrue(procedure_hierarchy_path.exists())
+            dept_hierarchy_path = Path(base_dir) / "parquet_cache" / "department_hierarchy.json"
+            self.assertTrue(dept_hierarchy_path.exists())
 
             table = pq.read_table(parquet_path)
             expected_schema = get_visit_attributes_schema()
@@ -181,32 +143,18 @@ class GenerateParquetsTests(TransactionTestCase):
             self.assertEqual(row["plt_units_adherent"], 0)
             self.assertEqual(row["cryo_units_adherent"], 0)
             self.assertEqual(row["overall_units_adherent"], 2)
-            self.assertEqual(sorted(row["department_ids"]), ["critical-care", "ecmo"])
             self.assertEqual(
-                sorted(row["procedure_ids"]),
-                ["critical-care__stroke", "ecmo__initiation"],
+                sorted(row["department_ids"]),
+                ["critical-care", "surgical-icu"],
             )
 
-            hierarchy_payload = json.loads(procedure_hierarchy_path.read_text(encoding="utf-8"))
-            self.assertEqual(hierarchy_payload["source"], "cpt-code-mapping.csv")
-            self.assertEqual(hierarchy_payload["department_level"], "department")
-            self.assertEqual(hierarchy_payload["procedure_level"], "procedure")
-            self.assertEqual(len(hierarchy_payload["departments"]), 2)
-            by_department_id = {
-                department["id"]: department
-                for department in hierarchy_payload["departments"]
-            }
-
-            self.assertEqual(by_department_id["critical-care"]["visit_count"], 1)
-            self.assertEqual(by_department_id["ecmo"]["visit_count"], 1)
-            self.assertEqual(
-                by_department_id["critical-care"]["procedures"][0]["visit_count"],
-                1,
-            )
-            self.assertEqual(
-                by_department_id["ecmo"]["procedures"][0]["visit_count"],
-                1,
-            )
+            hierarchy_payload = json.loads(dept_hierarchy_path.read_text(encoding="utf-8"))
+            self.assertEqual(hierarchy_payload["source"], "roomtrace")
+            self.assertIn("departments", hierarchy_payload)
+            dept_by_id = {d["id"]: d for d in hierarchy_payload["departments"]}
+            self.assertEqual(dept_by_id["critical-care"]["visit_count"], 1)
+            self.assertEqual(dept_by_id["critical-care"]["name"], "Critical Care")
+            self.assertEqual(dept_by_id["surgical-icu"]["visit_count"], 1)
 
     def test_generate_parquets_can_generate_only_visit_attributes(self):
         create_visit_fixture(
@@ -218,27 +166,15 @@ class GenerateParquetsTests(TransactionTestCase):
             plt_result=Decimal("20000"),
             fibrinogen_result=Decimal("220"),
         )
-        code_map = {
-            "99291": (
-                "critical-care",
-                "Critical Care",
-                "critical-care__stroke",
-                "Stroke",
-            ),
-        }
         materialize_visit_attributes()
 
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
-            with patch(
-                "api.management.commands.generate_parquets.get_cpt_hierarchy",
-                return_value=mock_hierarchy(code_map=code_map),
-            ):
-                call_command("generate_parquets", generate="visit_attributes")
+            call_command("generate_parquets", generate="visit_attributes")
 
             parquet_path = Path(base_dir) / "parquet_cache" / "visit_attributes.parquet"
-            procedure_hierarchy_path = Path(base_dir) / "parquet_cache" / "procedure_hierarchy.json"
+            dept_hierarchy_path = Path(base_dir) / "parquet_cache" / "department_hierarchy.json"
             self.assertTrue(parquet_path.exists())
-            self.assertFalse(procedure_hierarchy_path.exists())
+            self.assertFalse(dept_hierarchy_path.exists())
 
     def test_generate_parquets_does_not_refresh_derived_tables(self):
         create_visit_fixture(
@@ -252,18 +188,14 @@ class GenerateParquetsTests(TransactionTestCase):
         )
 
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
-            with patch(
-                "api.management.commands.generate_parquets.get_cpt_hierarchy",
-                return_value=mock_hierarchy(code_map={}),
-            ):
-                call_command("generate_parquets", generate="visit_attributes")
+            call_command("generate_parquets", generate="visit_attributes")
 
             parquet_path = Path(base_dir) / "parquet_cache" / "visit_attributes.parquet"
             self.assertTrue(parquet_path.exists())
             self.assertEqual(pq.read_table(parquet_path).num_rows, 0)
 
-    def test_generate_parquets_can_generate_only_procedure_hierarchy(self):
-        create_visit_fixture(
+    def test_generate_parquets_can_generate_only_department_hierarchy(self):
+        visit = create_visit_fixture(
             visit_no=2112,
             mrn="MRN-2112",
             provider_ids=("PROV-PH",),
@@ -272,87 +204,31 @@ class GenerateParquetsTests(TransactionTestCase):
             plt_result=Decimal("20000"),
             fibrinogen_result=Decimal("220"),
         )
-        code_map = {
-            "99291": (
-                "critical-care",
-                "Critical Care",
-                "critical-care__stroke",
-                "Stroke",
-            ),
-            "33946": (
-                "ecmo",
-                "ECMO",
-                "ecmo__initiation",
-                "ECMO Initiation",
-            ),
-        }
+        add_room_trace(
+            visit=visit,
+            service_in_desc="Critical Care",
+            in_dtm=utc_dt(2024, 1, 1, 0, 0),
+            out_dtm=utc_dt(2024, 1, 5, 0, 0),
+        )
+        add_room_trace(
+            visit=visit,
+            service_in_desc="Surgical ICU",
+            in_dtm=utc_dt(2024, 1, 1, 8, 0),
+            out_dtm=utc_dt(2024, 1, 2, 8, 0),
+        )
         materialize_visit_attributes()
 
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
-            with patch(
-                "api.management.commands.generate_parquets.get_cpt_hierarchy",
-                return_value=mock_hierarchy(code_map=code_map, departments=hierarchy_departments()),
-            ):
-                call_command("generate_parquets", generate="procedure_hierarchy")
+            call_command("generate_parquets", generate="department_hierarchy")
 
             parquet_path = Path(base_dir) / "parquet_cache" / "visit_attributes.parquet"
-            procedure_hierarchy_path = Path(base_dir) / "parquet_cache" / "procedure_hierarchy.json"
+            dept_hierarchy_path = Path(base_dir) / "parquet_cache" / "department_hierarchy.json"
             self.assertFalse(parquet_path.exists())
-            self.assertTrue(procedure_hierarchy_path.exists())
+            self.assertTrue(dept_hierarchy_path.exists())
 
-            hierarchy_payload = json.loads(procedure_hierarchy_path.read_text(encoding="utf-8"))
-            department_ids = {department["id"] for department in hierarchy_payload["departments"]}
-            self.assertEqual(department_ids, {"critical-care", "ecmo"})
-
-    def test_generate_parquets_cpt_enrichment_ignores_blank_and_unmapped_codes(self):
-        visit = create_empty_visit_fixture(
-            visit_no=2002,
-            mrn="MRN-2002",
-            provider_ids=("PROV-CPT",),
-        )
-        add_billing_code(
-            visit=visit,
-            cpt_code=" 99291-26 ",
-            proc_dtm=utc_dt(2024, 1, 2, 9, 0),
-            provider_id="PROV-CPT",
-            code_rank=1,
-        )
-        add_billing_code(
-            visit=visit,
-            cpt_code="",
-            proc_dtm=utc_dt(2024, 1, 2, 9, 5),
-            provider_id="PROV-CPT",
-            code_rank=2,
-        )
-        add_billing_code(
-            visit=visit,
-            cpt_code="XXXXX",
-            proc_dtm=utc_dt(2024, 1, 2, 9, 10),
-            provider_id="PROV-CPT",
-            code_rank=3,
-        )
-
-        code_map = {
-            "99291": (
-                "critical-care",
-                "Critical Care",
-                "critical-care__stroke",
-                "Stroke",
-            ),
-        }
-        materialize_visit_attributes()
-
-        with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
-            with patch(
-                "api.management.commands.generate_parquets.get_cpt_hierarchy",
-                return_value=mock_hierarchy(code_map=code_map),
-            ):
-                call_command("generate_parquets")
-
-            parquet_path = Path(base_dir) / "parquet_cache" / "visit_attributes.parquet"
-            row = pq.read_table(parquet_path).to_pylist()[0]
-            self.assertEqual(row["department_ids"], ["critical-care"])
-            self.assertEqual(row["procedure_ids"], ["critical-care__stroke"])
+            hierarchy_payload = json.loads(dept_hierarchy_path.read_text(encoding="utf-8"))
+            department_ids = {dept["id"] for dept in hierarchy_payload["departments"]}
+            self.assertEqual(department_ids, {"critical-care", "surgical-icu"})
 
     def test_build_visit_attributes_table_enforces_nullability_for_every_column(self):
         schema = get_visit_attributes_schema()
@@ -418,7 +294,6 @@ class GenerateParquetsTests(TransactionTestCase):
             "attending_provider_line": {"bad": "uint16"},
             "is_admitting_attending": {"bad": "bool"},
             "department_ids": [{"bad": "string-list"}],
-            "procedure_ids": [{"bad": "string-list"}],
         }
 
         self.assertEqual(set(bogus_values.keys()), set(schema.names))
@@ -475,128 +350,100 @@ class GenerateParquetsTests(TransactionTestCase):
             sentinel = b"existing-sentinel-data"
             parquet_path.write_bytes(sentinel)
 
+            from unittest.mock import patch
             with patch(
-                "api.management.commands.generate_parquets.get_cpt_hierarchy",
-                return_value=mock_hierarchy(code_map={}),
+                "api.management.commands.generate_parquets.build_visit_attributes_table",
+                side_effect=ValueError("forced schema failure"),
             ):
-                with patch(
-                    "api.management.commands.generate_parquets.build_visit_attributes_table",
-                    side_effect=ValueError("forced schema failure"),
-                ):
-                    with self.assertRaises(ValueError):
-                        call_command("generate_parquets")
+                with self.assertRaises(ValueError):
+                    call_command("generate_parquets")
 
             self.assertEqual(parquet_path.read_bytes(), sentinel)
 
-    def test_build_visit_cpt_dimensions_returns_sorted_dimension_ids(self):
-        code_map = {
-            "99291": ("critical-care", "Critical Care", "critical-care__stroke", "Stroke"),
-            "33946": ("ecmo", "ECMO", "ecmo__initiation", "ECMO Initiation"),
-        }
-
+    def test_build_visit_roomtrace_departments_returns_sorted_department_ids(self):
         visit = create_empty_visit_fixture(
             visit_no=3003,
             mrn="MRN-3003",
             provider_ids=("P3",),
         )
-        add_billing_code(
+        add_room_trace(
             visit=visit,
-            cpt_code="99291",
-            proc_dtm=utc_dt(2024, 1, 2, 9, 0),
-            provider_id="P3",
-            code_rank=1,
+            service_in_desc="Surgical Critical Care",
+            in_dtm=utc_dt(2024, 1, 1, 0, 0),
+            out_dtm=utc_dt(2024, 1, 2, 0, 0),
         )
-        add_billing_code(
+        add_room_trace(
             visit=visit,
-            cpt_code="33946",
-            proc_dtm=utc_dt(2024, 1, 2, 9, 5),
-            provider_id="P3",
-            code_rank=2,
+            service_in_desc="ECMO",
+            in_dtm=utc_dt(2024, 1, 2, 0, 0),
+            out_dtm=utc_dt(2024, 1, 3, 0, 0),
         )
 
-        visit_departments, visit_procedures = build_visit_cpt_dimensions(
-            code_map=code_map,
-            billing_fetch_batch_size=2,
-        )
-        self.assertEqual(visit_departments[3003], ["critical-care", "ecmo"])
-        self.assertEqual(
-            visit_procedures[3003],
-            ["critical-care__stroke", "ecmo__initiation"],
-        )
+        visit_departments = build_visit_roomtrace_departments(fetch_batch_size=2)
+        self.assertEqual(visit_departments[3003], ["ecmo", "surgical-critical-care"])
 
-    def test_build_visit_cpt_dimensions_handles_multiple_fetch_batches(self):
-        code_map = {
-            "99291": ("critical-care", "Critical Care", "critical-care__stroke", "Stroke"),
-            "33946": ("ecmo", "ECMO", "ecmo__initiation", "ECMO Initiation"),
-        }
-
+    def test_build_visit_roomtrace_departments_handles_multiple_fetch_batches(self):
         visit = create_empty_visit_fixture(
             visit_no=3004,
             mrn="MRN-3004",
             provider_ids=("P4",),
         )
-        add_billing_code(
+        add_room_trace(
             visit=visit,
-            cpt_code="99291",
-            proc_dtm=utc_dt(2024, 1, 2, 9, 0),
-            provider_id="P4",
-            code_rank=1,
+            service_in_desc="Surgical Critical Care",
+            in_dtm=utc_dt(2024, 1, 1, 0, 0),
+            out_dtm=utc_dt(2024, 1, 2, 0, 0),
         )
-        add_billing_code(
+        add_room_trace(
             visit=visit,
-            cpt_code="33946",
-            proc_dtm=utc_dt(2024, 1, 2, 9, 1),
-            provider_id="P4",
-            code_rank=2,
+            service_in_desc="ECMO",
+            in_dtm=utc_dt(2024, 1, 2, 0, 0),
+            out_dtm=utc_dt(2024, 1, 3, 0, 0),
         )
-        add_billing_code(
+        # Duplicate department — should be deduplicated
+        add_room_trace(
             visit=visit,
-            cpt_code="99291-26",
-            proc_dtm=utc_dt(2024, 1, 2, 9, 2),
-            provider_id="P4",
-            code_rank=3,
-        )
-        add_billing_code(
-            visit=visit,
-            cpt_code="XXXXX",
-            proc_dtm=utc_dt(2024, 1, 2, 9, 3),
-            provider_id="P4",
-            code_rank=4,
-        )
-        add_billing_code(
-            visit=visit,
-            cpt_code="   ",
-            proc_dtm=utc_dt(2024, 1, 2, 9, 4),
-            provider_id="P4",
-            code_rank=5,
+            service_in_desc="Surgical Critical Care",
+            in_dtm=utc_dt(2024, 1, 3, 0, 0),
+            out_dtm=utc_dt(2024, 1, 4, 0, 0),
         )
 
-        visit_departments, visit_procedures = build_visit_cpt_dimensions(
-            code_map=code_map,
-            billing_fetch_batch_size=1,
+        visit_departments = build_visit_roomtrace_departments(fetch_batch_size=1)
+        self.assertEqual(visit_departments[3004], ["ecmo", "surgical-critical-care"])
+
+    def test_build_visit_roomtrace_departments_ignores_null_and_empty_service_desc(self):
+        from api.models.intelvia import RoomTrace
+        visit = create_empty_visit_fixture(
+            visit_no=3005,
+            mrn="MRN-3005",
+            provider_ids=("P5",),
         )
-        self.assertEqual(visit_departments[3004], ["critical-care", "ecmo"])
-        self.assertEqual(
-            visit_procedures[3004],
-            ["critical-care__stroke", "ecmo__initiation"],
+        # Null service_in_desc
+        RoomTrace.objects.create(
+            visit_no=visit,
+            service_in_desc=None,
+            in_dtm=utc_dt(2024, 1, 1, 0, 0),
+            out_dtm=utc_dt(2024, 1, 2, 0, 0),
         )
+        # Empty string service_in_desc
+        RoomTrace.objects.create(
+            visit_no=visit,
+            service_in_desc="",
+            in_dtm=utc_dt(2024, 1, 2, 0, 0),
+            out_dtm=utc_dt(2024, 1, 3, 0, 0),
+        )
+        # Valid entry
+        add_room_trace(
+            visit=visit,
+            service_in_desc="Cardiac ICU",
+            in_dtm=utc_dt(2024, 1, 3, 0, 0),
+            out_dtm=utc_dt(2024, 1, 4, 0, 0),
+        )
+
+        visit_departments = build_visit_roomtrace_departments()
+        self.assertEqual(visit_departments[3005], ["cardiac-icu"])
 
     def test_generate_parquets_emits_expected_success_messages_by_generate_mode(self):
-        code_map = {
-            "99291": (
-                "critical-care",
-                "Critical Care",
-                "critical-care__stroke",
-                "Stroke",
-            ),
-            "33946": (
-                "ecmo",
-                "ECMO",
-                "ecmo__initiation",
-                "ECMO Initiation",
-            ),
-        }
-
         cases = [
             {
                 "mode": "all",
@@ -609,7 +456,7 @@ class GenerateParquetsTests(TransactionTestCase):
                 "expect_hierarchy_msg": False,
             },
             {
-                "mode": "procedure_hierarchy",
+                "mode": "department_hierarchy",
                 "expect_visit_msg": False,
                 "expect_hierarchy_msg": True,
             },
@@ -628,16 +475,9 @@ class GenerateParquetsTests(TransactionTestCase):
                 )
 
                 with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
-                    with patch(
-                        "api.management.commands.generate_parquets.get_cpt_hierarchy",
-                        return_value=mock_hierarchy(
-                            code_map=code_map,
-                            departments=hierarchy_departments(),
-                        ),
-                    ):
-                        out = io.StringIO()
-                        call_command("generate_parquets", generate=case["mode"], stdout=out)
-                        output = out.getvalue()
+                    out = io.StringIO()
+                    call_command("generate_parquets", generate=case["mode"], stdout=out)
+                    output = out.getvalue()
 
                 if case["expect_visit_msg"]:
                     self.assertIn("Parquet file generated at", output)
@@ -645,43 +485,18 @@ class GenerateParquetsTests(TransactionTestCase):
                     self.assertNotIn("Parquet file generated at", output)
 
                 if case["expect_hierarchy_msg"]:
-                    self.assertIn("Procedure hierarchy cache generated at", output)
+                    self.assertIn("Department hierarchy cache generated at", output)
                 else:
-                    self.assertNotIn("Procedure hierarchy cache generated at", output)
+                    self.assertNotIn("Department hierarchy cache generated at", output)
 
     def test_generate_parquets_has_no_skip_materialization_flag(self):
-        visit = create_empty_visit_fixture(
-            visit_no=3301,
-            mrn="MRN-3301",
-            provider_ids=("PROV-3301",),
-        )
-        add_billing_code(
-            visit=visit,
-            cpt_code="99291",
-            proc_dtm=utc_dt(2024, 1, 2, 9, 0),
-            provider_id="PROV-3301",
-            code_rank=1,
-        )
-        code_map = {
-            "99291": (
-                "critical-care",
-                "Critical Care",
-                "critical-care__stroke",
-                "Stroke",
-            ),
-        }
-
         with TemporaryDirectory() as base_dir, override_settings(BASE_DIR=base_dir):
-            with patch(
-                "api.management.commands.generate_parquets.get_cpt_hierarchy",
-                return_value=mock_hierarchy(code_map=code_map, departments=hierarchy_departments()),
-            ):
-                with self.assertRaises(TypeError):
-                    call_command(
-                        "generate_parquets",
-                        generate="procedure_hierarchy",
-                        skip_materialize=True,
-                    )
+            with self.assertRaises(TypeError):
+                call_command(
+                    "generate_parquets",
+                    generate="department_hierarchy",
+                    skip_materialize=True,
+                )
 
     def test_surgery_case_attributes_schema_has_utc_timestamps(self):
         schema = get_surgery_case_attributes_schema()

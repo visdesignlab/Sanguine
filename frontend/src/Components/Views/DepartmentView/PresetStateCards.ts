@@ -2,13 +2,14 @@ import {
   IconDropletHalf2Filled, IconTestPipe2, IconVaccineBottle, IconRecycle, IconCoin, IconProps,
 } from '@tabler/icons-react';
 import { Layout } from 'react-grid-layout';
-import { ExploreChartConfig } from '../../../Types/application';
+import { DashboardStatConfig, ExploreChartConfig } from '../../../Types/application';
 
 export type PresetOption = {
   question: string;
   Icon: React.ComponentType<IconProps>;
   chartConfigs: ExploreChartConfig[];
   chartLayouts: { [key: string]: Layout[] };
+  statConfigs?: DashboardStatConfig[];
 };
 export type PresetGroup = { groupLabel: string; options: PresetOption[] };
 

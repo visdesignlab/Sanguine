@@ -21,7 +21,8 @@ import {
   ExploreChartData,
   ExploreTableConfig,
   ExploreTableRow,
-  ProcedureHierarchyResponse,
+  DepartmentHierarchyResponse,
+  ProviderDepartmentEntry,
   TimeAggregation,
   TimePeriod,
   dashboardXAxisVars,
@@ -108,7 +109,6 @@ export interface ApplicationState {
     stroke: boolean | null;
     ecmo: boolean | null;
     departmentIds: string[];
-    procedureIds: string[];
   };
   selections: {
     selectedTimePeriods: string[];
@@ -148,7 +148,9 @@ export class RootStore {
 
   duckDB: AsyncDuckDBConnection | null = null;
 
-  procedureHierarchy: ProcedureHierarchyResponse | null = null;
+  departmentHierarchy: DepartmentHierarchyResponse | null = null;
+
+  providerDepartmentMap: Map<string, ProviderDepartmentEntry> = new Map();
 
   // --- Dashboard State ---
   _baseDashboardLayouts: { [key: string]: Layout[] } | null = null;
@@ -165,6 +167,15 @@ export class RootStore {
   _transientExploreLayouts: { [key: string]: Layout[] } | null = null;
 
   exploreChartData: ExploreChartData = {};
+
+  // --- Department View Questions Panel State ---
+  departmentViewQuestionsWidth: number = 320;
+
+  departmentViewQuestionsOpened: boolean = true;
+
+  selectedDepartmentId: string | null = null;
+
+  activeDepartmentViewQuestion: string | null = null;
 
   // --- Filters State ---
   _initialFilterValues = {
@@ -184,7 +195,6 @@ export class RootStore {
     stroke: null as boolean | null,
     ecmo: null as boolean | null,
     departmentIds: [] as string[],
-    procedureIds: [] as string[],
   };
 
   histogramData: Record<string, HistogramData> = {};
@@ -230,7 +240,7 @@ export class RootStore {
       uiState: computed,
       dashboardChartData: observable.ref,
       exploreChartData: observable.ref,
-      procedureHierarchy: observable.ref,
+      departmentHierarchy: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
     });
@@ -265,8 +275,8 @@ export class RootStore {
         },
       }), { [filterKey]: value });
     },
-    updateProcedureFilters: (filters: Pick<ApplicationState['filterValues'], 'departmentIds' | 'procedureIds'>) => {
-      this.applyAction('Update Department and Procedure Filters', (state, nextFilters) => ({
+    updateDepartmentFilters: (filters: Pick<ApplicationState['filterValues'], 'departmentIds'>) => {
+      this.applyAction('Update Department Filters', (state, nextFilters) => ({
         ...state,
         filterValues: {
           ...state.filterValues,
@@ -296,7 +306,6 @@ export class RootStore {
           stroke: initial.stroke,
           ecmo: initial.ecmo,
           departmentIds: initial.departmentIds,
-          procedureIds: initial.procedureIds,
         }));
 
         return {
@@ -387,8 +396,8 @@ export class RootStore {
         },
       }), initialFilters);
     },
-    resetProcedureFilters: (initialFilters: Pick<ApplicationState['filterValues'], 'departmentIds' | 'procedureIds'>) => {
-      this.applyAction('Reset Department and Procedure Filters', (state, filters) => ({
+    resetDepartmentFilters: (initialFilters: Pick<ApplicationState['filterValues'], 'departmentIds'>) => {
+      this.applyAction('Reset Department Filters', (state, filters) => ({
         ...state,
         filterValues: {
           ...state.filterValues,
@@ -436,7 +445,6 @@ export class RootStore {
         stroke: this.initialFilterValues.stroke,
         ecmo: this.initialFilterValues.ecmo,
         departmentIds: [...this.initialFilterValues.departmentIds],
-        procedureIds: [...this.initialFilterValues.procedureIds],
       },
       selections: {
         selectedTimePeriods: [],
@@ -1328,9 +1336,26 @@ export class RootStore {
     this.actions.updateExploreState({ chartConfigs: input }, 'Update Explore Config');
   }
 
-  loadExplorePreset(configs: ExploreChartConfig[], layouts: { [key: string]: Layout[] }) {
+  loadExplorePreset(
+    configs: ExploreChartConfig[],
+    layouts: { [key: string]: Layout[] },
+    question?: string,
+    statConfigs?: DashboardStatConfig[],
+  ) {
     this.actions.updateExploreState({ chartConfigs: configs, chartLayouts: layouts }, 'Load Explore Preset');
     this._transientExploreLayouts = null;
+    this.activeDepartmentViewQuestion = question ?? null;
+    if (statConfigs) {
+      this.actions.updateDashboardState({ statConfigs }, 'Load Preset Stat Configs');
+    }
+  }
+
+  setDepartmentViewQuestionsWidth(width: number) {
+    this.departmentViewQuestionsWidth = Math.max(200, Math.min(600, width));
+  }
+
+  toggleDepartmentViewQuestions() {
+    this.departmentViewQuestionsOpened = !this.departmentViewQuestionsOpened;
   }
 
   addExploreChart(config: ExploreChartConfig) {
@@ -1380,7 +1405,6 @@ export class RootStore {
       ...this._initialFilterValues,
       ...rawFilters,
       departmentIds: Array.isArray(rawFilters.departmentIds) ? rawFilters.departmentIds : this._initialFilterValues.departmentIds,
-      procedureIds: Array.isArray(rawFilters.procedureIds) ? rawFilters.procedureIds : this._initialFilterValues.procedureIds,
     };
 
     return {
@@ -1411,10 +1435,9 @@ export class RootStore {
     this.actions.updateFilter(key as keyof ApplicationState['filterValues'], val as ApplicationState['filterValues'][keyof ApplicationState['filterValues']]);
   }
 
-  setProcedureFilters(departmentIds: string[], procedureIds: string[]) {
-    this.actions.updateProcedureFilters({
+  setDepartmentFilters(departmentIds: string[]) {
+    this.actions.updateDepartmentFilters({
       departmentIds: [...departmentIds],
-      procedureIds: [...procedureIds],
     });
   }
 
@@ -1526,33 +1549,11 @@ export class RootStore {
   }
 
   /**
-   * Returns the number of department/procedure filters that are applied
+   * Returns the number of department filters that are applied
    */
-  get procedureFiltersAppliedCount(): number {
-    let count = 0;
-    const { departmentIds, procedureIds } = this.filterValues;
-    if (departmentIds.length > 0) count += 1;
-    if (procedureIds.length > 0) count += 1;
-    return count;
-  }
-
-  /**
-   * Returns number of departments represented by current department/procedure filters.
-   */
-  get procedureDepartmentsAppliedCount(): number {
-    const { departmentIds, procedureIds } = this.filterValues;
-    const involvedDepartmentIds = new Set(departmentIds);
-
-    for (const procedureId of procedureIds) {
-      if (procedureId) {
-        const separatorIndex = procedureId.indexOf('__');
-        if (separatorIndex > 0) {
-          involvedDepartmentIds.add(procedureId.slice(0, separatorIndex));
-        }
-      }
-    }
-
-    return involvedDepartmentIds.size;
+  get departmentFiltersAppliedCount(): number {
+    const { departmentIds } = this.filterValues;
+    return departmentIds.length > 0 ? 1 : 0;
   }
 
   /**
@@ -1563,7 +1564,7 @@ export class RootStore {
       + this.bloodComponentFiltersAppliedCount
       + this.medicationsFiltersAppliedCount
       + this.outcomeFiltersAppliedCount
-      + this.procedureFiltersAppliedCount;
+      + this.departmentFiltersAppliedCount;
   }
 
   resetAllFilters() {
@@ -1605,10 +1606,9 @@ export class RootStore {
     });
   }
 
-  resetProcedureFilters() {
-    this.actions.resetProcedureFilters({
+  resetDepartmentFilters() {
+    this.actions.resetDepartmentFilters({
       departmentIds: [...this._initialFilterValues.departmentIds],
-      procedureIds: [...this._initialFilterValues.procedureIds],
     });
   }
 
@@ -1795,14 +1795,6 @@ export class RootStore {
       if (safeDepartmentIds.length > 0) {
         const departmentIdList = safeDepartmentIds.map(sqlString).join(', ');
         visitFilterConditions.push(`BOOL_OR(list_has_any(department_ids, [${departmentIdList}]::VARCHAR[]))`);
-      }
-    }
-
-    if (filterValues.procedureIds.length > 0) {
-      const safeProcedureIds = filterValues.procedureIds.filter((id) => safeIdPattern.test(id));
-      if (safeProcedureIds.length > 0) {
-        const procedureIdList = safeProcedureIds.map(sqlString).join(', ');
-        visitFilterConditions.push(`BOOL_OR(list_has_any(procedure_ids, [${procedureIdList}]::VARCHAR[]))`);
       }
     }
 

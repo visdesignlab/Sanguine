@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import connection
 
-from api.views.utils.cpt_hierarchy import get_cpt_hierarchy, normalize_cpt_code
+from django.utils.text import slugify
 
 
 def coerce_temporal_value_to_utc(value):
@@ -66,7 +66,6 @@ def get_visit_attributes_schema() -> pa.Schema:
         pa.field("attending_provider_line", pa.uint16(), nullable=False),
         pa.field("is_admitting_attending", pa.bool_(), nullable=False),
         pa.field("department_ids", pa.list_(pa.string()), nullable=False),
-        pa.field("procedure_ids", pa.list_(pa.string()), nullable=False),
     ])
 
 
@@ -112,8 +111,27 @@ def get_visit_attributes_select_columns() -> list[str]:
     return [
         field.name
         for field in get_visit_attributes_schema()
-        if field.name not in ("department_ids", "procedure_ids")
+        if field.name != "department_ids"
     ]
+
+
+def get_department_encounter_attributes_schema() -> pa.Schema:
+    return pa.schema([
+        pa.field("visit_no",            pa.int64(),  nullable=False),
+        pa.field("attend_prov_line",    pa.uint16(), nullable=False),
+        pa.field("department_id",       pa.string(), nullable=False),
+        pa.field("department_name",     pa.string(), nullable=False),
+        pa.field("rbc_units",           pa.uint16(), nullable=False),
+        pa.field("ffp_units",           pa.uint16(), nullable=False),
+        pa.field("plt_units",           pa.uint16(), nullable=False),
+        pa.field("cryo_units",          pa.uint16(), nullable=False),
+        pa.field("whole_units",         pa.uint16(), nullable=False),
+        pa.field("cell_saver_ml",       pa.uint32(), nullable=False),
+        pa.field("rbc_units_adherent",  pa.uint16(), nullable=False),
+        pa.field("ffp_units_adherent",  pa.uint16(), nullable=False),
+        pa.field("plt_units_adherent",  pa.uint16(), nullable=False),
+        pa.field("cryo_units_adherent", pa.uint16(), nullable=False),
+    ])
 
 
 def get_surgery_case_attributes_schema() -> pa.Schema:
@@ -160,42 +178,29 @@ def get_surgery_case_attributes_schema() -> pa.Schema:
     ])
 
 
-def build_visit_cpt_dimensions(
-    code_map: dict[str, tuple[str, str, str, str]],
-    billing_fetch_batch_size: int = 50000,
-) -> tuple[dict[int, list[str]], dict[int, list[str]]]:
+def build_visit_roomtrace_departments(
+    fetch_batch_size: int = 50000,
+) -> dict[int, list[str]]:
+    """Return visit_departments: dict[visit_no -> sorted list of slugified service_in_desc].
+    Each entry represents the real hospital departments a patient passed through."""
     visit_departments: dict[int, set[str]] = defaultdict(set)
-    visit_procedures: dict[int, set[str]] = defaultdict(set)
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT visit_no, cpt_code
-            FROM BillingCode
-            WHERE cpt_code IS NOT NULL AND cpt_code <> ''
+            SELECT DISTINCT visit_no, service_in_desc
+            FROM RoomTrace
+            WHERE service_in_desc IS NOT NULL AND service_in_desc <> ''
             """
         )
-
         while True:
-            billing_rows = cursor.fetchmany(billing_fetch_batch_size)
-            if not billing_rows:
+            rows = cursor.fetchmany(fetch_batch_size)
+            if not rows:
                 break
-
-            for visit_no, raw_cpt_code in billing_rows:
-                normalized_cpt_code = normalize_cpt_code(raw_cpt_code)
-                if not normalized_cpt_code:
-                    continue
-                mapped = code_map.get(normalized_cpt_code)
-                if not mapped:
-                    continue
-
-                department_id, _department_name, procedure_id, _procedure_name = mapped
-                visit_departments[visit_no].add(department_id)
-                visit_procedures[visit_no].add(procedure_id)
-
-    return (
-        {visit_no: sorted(department_ids) for visit_no, department_ids in visit_departments.items()},
-        {visit_no: sorted(procedure_ids) for visit_no, procedure_ids in visit_procedures.items()},
-    )
+            for visit_no, service_in_desc in rows:
+                dept_id = slugify(service_in_desc)
+                if dept_id:
+                    visit_departments[visit_no].add(dept_id)
+    return {visit_no: sorted(dept_ids) for visit_no, dept_ids in visit_departments.items()}
 
 
 def build_visit_counts(
@@ -224,49 +229,36 @@ def fetch_materialized_visit_numbers(fetch_batch_size: int) -> set[int]:
     return visit_numbers
 
 
-def build_procedure_hierarchy_payload(
-    hierarchy_departments,
+def build_department_hierarchy_payload(
     visit_departments: dict[int, list[str]],
-    visit_procedures: dict[int, list[str]],
     eligible_visit_numbers: set[int] | None = None,
 ) -> dict:
+    """Return a flat list of real hospital departments with visit counts, sourced from RoomTrace."""
     department_visit_counts = build_visit_counts(visit_departments, eligible_visit_numbers)
-    procedure_visit_counts = build_visit_counts(visit_procedures, eligible_visit_numbers)
 
-    procedure_hierarchy_departments = []
-    for department in hierarchy_departments:
-        procedure_payload = []
-        for procedure in department.procedures:
-            procedure_visit_count = procedure_visit_counts.get(procedure.id, 0)
-            if procedure_visit_count == 0:
-                continue
-            procedure_payload.append(
-                {
-                    "id": procedure.id,
-                    "name": procedure.name,
-                    "visit_count": procedure_visit_count,
-                    "cpt_codes": list(procedure.cpt_codes),
-                }
-            )
-
-        if not procedure_payload:
-            continue
-
-        procedure_hierarchy_departments.append(
-            {
-                "id": department.id,
-                "name": department.name,
-                "visit_count": department_visit_counts.get(department.id, 0),
-                "procedures": procedure_payload,
-            }
+    # Fetch canonical display names from ProviderDepartment (each dept_id maps to one name).
+    dept_names: dict[str, str] = {}
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT DISTINCT department_id, department_name FROM ProviderDepartment"
         )
+        for dept_id, dept_name in cursor.fetchall():
+            dept_names[dept_id] = dept_name
+
+    departments = []
+    for dept_id, visit_count in sorted(department_visit_counts.items(), key=lambda x: -x[1]):
+        if visit_count == 0:
+            continue
+        departments.append({
+            "id": dept_id,
+            "name": dept_names.get(dept_id, dept_id),
+            "visit_count": visit_count,
+        })
 
     return {
         "version": datetime.now(timezone.utc).strftime("%Y-%m-%d.%H%M%S"),
-        "source": "cpt-code-mapping.csv",
-        "department_level": "department",
-        "procedure_level": "procedure",
-        "departments": procedure_hierarchy_departments,
+        "source": "roomtrace",
+        "departments": departments,
     }
 
 
@@ -287,7 +279,6 @@ def normalize_visit_attributes_row(
 def write_visit_attributes_parquet(
     file_path: Path,
     visit_departments: dict[int, list[str]],
-    visit_procedures: dict[int, list[str]],
     fetch_batch_size: int,
     nullable_bool_fields: tuple[str, ...],
     required_bool_fields: tuple[str, ...],
@@ -315,12 +306,45 @@ def write_visit_attributes_parquet(
                     )
                     visit_no = visit["visit_no"]
                     visit["department_ids"] = visit_departments.get(visit_no, [])
-                    visit["procedure_ids"] = visit_procedures.get(visit_no, [])
                     visits.append(visit)
 
                 if visits:
                     visit_table = build_visit_attributes_table(visits)
                     writer.write_table(visit_table)
+    finally:
+        writer.close()
+
+
+def write_department_encounter_attributes_parquet(
+    file_path: Path,
+    fetch_batch_size: int,
+) -> None:
+    schema = get_department_encounter_attributes_schema()
+    select_cols = [f.name for f in schema]
+    writer = pq.ParquetWriter(file_path, schema=schema)
+    uint_fields = (
+        "rbc_units", "ffp_units", "plt_units", "cryo_units", "whole_units",
+        "rbc_units_adherent", "ffp_units_adherent", "plt_units_adherent", "cryo_units_adherent",
+    )
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT {', '.join(select_cols)} FROM DepartmentEncounterAttributes")
+            columns = [col[0] for col in cursor.description]
+            while True:
+                rows = cursor.fetchmany(fetch_batch_size)
+                if not rows:
+                    break
+                records = []
+                for row in rows:
+                    rec = dict(zip(columns, row))
+                    for field_name in uint_fields:
+                        rec[field_name] = int(rec[field_name]) if rec[field_name] is not None else 0
+                    rec["cell_saver_ml"] = int(rec["cell_saver_ml"]) if rec["cell_saver_ml"] is not None else 0
+                    rec["visit_no"] = int(rec["visit_no"])
+                    rec["attend_prov_line"] = int(rec["attend_prov_line"])
+                    records.append(rec)
+                if records:
+                    writer.write_table(pa.Table.from_pylist(records, schema=schema))
     finally:
         writer.close()
 
@@ -380,7 +404,7 @@ def write_surgery_case_attributes_parquet(
 
 class Command(BaseCommand):
     help = "Generate a Parquet cache of the database data"
-    GENERATE_CHOICES = ("all", "visit_attributes", "procedure_hierarchy", "surgery_cases")
+    GENERATE_CHOICES = ("all", "visit_attributes", "department_hierarchy", "surgery_cases", "department_encounter_attributes")
     BILLING_FETCH_BATCH_SIZE = 50000
     VISIT_FETCH_BATCH_SIZE = 50000
     SURGERY_FETCH_BATCH_SIZE = 50000
@@ -421,43 +445,41 @@ class Command(BaseCommand):
             default="all",
             help=(
                 "Select which cache artifacts to generate: "
-                "all, visit_attributes, procedure_hierarchy."
+                "all, visit_attributes, department_hierarchy, surgery_cases, department_encounter_attributes."
             ),
         )
 
     def handle(self, *args, **kwargs):
         generate_target = kwargs["generate"]
         should_generate_visit_attributes = generate_target in ("all", "visit_attributes")
-        should_generate_procedure_hierarchy = generate_target in ("all", "procedure_hierarchy")
+        should_generate_department_hierarchy = generate_target in ("all", "department_hierarchy")
         should_generate_surgery_cases = generate_target in ("all", "surgery_cases")
+        should_generate_department_encounter_attributes = generate_target in (
+            "all", "department_encounter_attributes"
+        )
 
         cache_dir = Path(settings.BASE_DIR) / "parquet_cache"
         cache_dir.mkdir(exist_ok=True)
         visit_file_path = cache_dir / "visit_attributes.parquet"
         temp_visit_file_path = cache_dir / "visit_attributes.parquet.tmp"
-        procedure_hierarchy_file_path = cache_dir / "procedure_hierarchy.json"
-        temp_procedure_hierarchy_file_path = cache_dir / "procedure_hierarchy.json.tmp"
-
+        department_hierarchy_file_path = cache_dir / "department_hierarchy.json"
+        temp_department_hierarchy_file_path = cache_dir / "department_hierarchy.json.tmp"
         surgery_file_path = cache_dir / "surgery_case_attributes.parquet"
         temp_surgery_file_path = cache_dir / "surgery_case_attributes.parquet.tmp"
+        dept_enc_file_path = cache_dir / "department_encounter_attributes.parquet"
+        temp_dept_enc_file_path = cache_dir / "department_encounter_attributes.parquet.tmp"
 
-        hierarchy = None
         visit_departments: dict[int, list[str]] = {}
-        visit_procedures: dict[int, list[str]] = {}
-        if should_generate_visit_attributes or should_generate_procedure_hierarchy:
-            hierarchy = get_cpt_hierarchy()
-            visit_departments, visit_procedures = build_visit_cpt_dimensions(
-                code_map=hierarchy.code_map,
-                billing_fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
+        if should_generate_visit_attributes or should_generate_department_hierarchy:
+            visit_departments = build_visit_roomtrace_departments(
+                fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
             )
 
-        procedure_hierarchy_payload = None
-        if should_generate_procedure_hierarchy:
+        department_hierarchy_payload = None
+        if should_generate_department_hierarchy:
             eligible_visit_numbers = fetch_materialized_visit_numbers(self.VISIT_FETCH_BATCH_SIZE)
-            procedure_hierarchy_payload = build_procedure_hierarchy_payload(
-                hierarchy_departments=hierarchy.departments,
+            department_hierarchy_payload = build_department_hierarchy_payload(
                 visit_departments=visit_departments,
-                visit_procedures=visit_procedures,
                 eligible_visit_numbers=eligible_visit_numbers,
             )
 
@@ -466,14 +488,13 @@ class Command(BaseCommand):
                 write_visit_attributes_parquet(
                     file_path=temp_visit_file_path,
                     visit_departments=visit_departments,
-                    visit_procedures=visit_procedures,
                     fetch_batch_size=self.VISIT_FETCH_BATCH_SIZE,
                     nullable_bool_fields=self.NULLABLE_BOOL_FIELDS,
                     required_bool_fields=self.REQUIRED_BOOL_FIELDS,
                 )
-            if should_generate_procedure_hierarchy:
-                temp_procedure_hierarchy_file_path.write_text(
-                    json.dumps(procedure_hierarchy_payload, separators=(",", ":")),
+            if should_generate_department_hierarchy:
+                temp_department_hierarchy_file_path.write_text(
+                    json.dumps(department_hierarchy_payload, separators=(",", ":")),
                     encoding="utf-8",
                 )
             if should_generate_surgery_cases:
@@ -484,28 +505,39 @@ class Command(BaseCommand):
                     nullable_bool_fields=self.SURGERY_NULLABLE_BOOL_FIELDS,
                     temporal_fields=self.SURGERY_TEMPORAL_FIELDS,
                 )
+            if should_generate_department_encounter_attributes:
+                write_department_encounter_attributes_parquet(
+                    file_path=temp_dept_enc_file_path,
+                    fetch_batch_size=self.VISIT_FETCH_BATCH_SIZE,
+                )
 
             if should_generate_visit_attributes:
                 temp_visit_file_path.replace(visit_file_path)
-            if should_generate_procedure_hierarchy:
-                temp_procedure_hierarchy_file_path.replace(procedure_hierarchy_file_path)
+            if should_generate_department_hierarchy:
+                temp_department_hierarchy_file_path.replace(department_hierarchy_file_path)
             if should_generate_surgery_cases:
                 temp_surgery_file_path.replace(surgery_file_path)
+            if should_generate_department_encounter_attributes:
+                temp_dept_enc_file_path.replace(dept_enc_file_path)
         finally:
-            if temp_visit_file_path.exists():
-                temp_visit_file_path.unlink()
-            if temp_procedure_hierarchy_file_path.exists():
-                temp_procedure_hierarchy_file_path.unlink()
-            if temp_surgery_file_path.exists():
-                temp_surgery_file_path.unlink()
+            for tmp in (
+                temp_visit_file_path,
+                temp_department_hierarchy_file_path,
+                temp_surgery_file_path,
+                temp_dept_enc_file_path,
+            ):
+                if tmp.exists():
+                    tmp.unlink()
 
         if should_generate_visit_attributes:
             self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {visit_file_path}"))
-        if should_generate_procedure_hierarchy:
+        if should_generate_department_hierarchy:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Procedure hierarchy cache generated at {procedure_hierarchy_file_path}"
+                    f"Department hierarchy cache generated at {department_hierarchy_file_path}"
                 )
             )
         if should_generate_surgery_cases:
             self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {surgery_file_path}"))
+        if should_generate_department_encounter_attributes:
+            self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {dept_enc_file_path}"))

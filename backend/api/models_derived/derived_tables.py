@@ -46,18 +46,26 @@ DERIVED_ARTIFACTS = {
         schema_file_name="surgery_case_attributes_schema.sql",
         refresh_file_name="surgery_case_attributes_refresh.sql",
     ),
+    "department_encounter_attributes": DerivedArtifact(
+        artifact_name="department_encounter_attributes",
+        table_name="DepartmentEncounterAttributes",
+        schema_file_name="department_encounter_attributes_schema.sql",
+        refresh_file_name="department_encounter_attributes_refresh.sql",
+    ),
 }
 
 DERIVED_MIGRATE_ORDER = (
     "guideline_adherence",
     "visit_attributes",
     "surgery_case_attributes",
+    "department_encounter_attributes",
 )
 
 DERIVED_REFRESH_ORDER = (
     "guideline_adherence",
     "visit_attributes",
     "surgery_case_attributes",
+    "department_encounter_attributes",
 )
 
 
@@ -78,6 +86,8 @@ def get_refresh_targets(target: str) -> list[str]:
         return ["guideline_adherence", "visit_attributes"]
     if target == "surgery_case_attributes":
         return ["surgery_case_attributes"]
+    if target == "department_encounter_attributes":
+        return ["department_encounter_attributes"]
     raise ValueError(f"Unsupported derived table refresh target: {target}")
 
 

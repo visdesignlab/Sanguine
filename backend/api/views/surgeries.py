@@ -165,3 +165,39 @@ def get_procedure_hierarchy(request):
             "Procedure hierarchy cache could not be read.",
             status=503,
         )
+
+
+@never_cache
+@require_http_methods(["GET"])
+@conditional_login_required
+def get_department_hierarchy(request):
+    log_request(request)
+    file_path = Path(settings.BASE_DIR) / "parquet_cache" / "department_hierarchy.json"
+    if not file_path.exists():
+        return HttpResponse("Department hierarchy cache not found.", status=404)
+    try:
+        with file_path.open("r", encoding="utf-8") as f:
+            return JsonResponse(json.load(f))
+    except Exception:
+        logger.exception("Failed to read department hierarchy cache")
+        return HttpResponse("Department hierarchy cache could not be read.", status=503)
+
+
+@never_cache
+@require_http_methods(["HEAD", "GET"])
+@conditional_login_required
+def get_department_encounter_attributes(request):
+    log_request(request)
+    file_path = Path(settings.BASE_DIR) / "parquet_cache" / "department_encounter_attributes.parquet"
+    if not file_path.exists():
+        return HttpResponse("Parquet file not found. Please generate it first.", status=404)
+    return FileResponse(open(file_path, 'rb'), content_type='application/vnd.apache.arrow.file')
+
+
+@never_cache
+@require_http_methods(["GET"])
+@conditional_login_required
+def get_provider_departments(request):
+    from api.models.intelvia import ProviderDepartment
+    data = list(ProviderDepartment.objects.values("prov_id", "department_id", "department_name"))
+    return JsonResponse({"providers": data})

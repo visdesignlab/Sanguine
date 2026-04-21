@@ -1232,6 +1232,39 @@ class Command(BaseCommand):
                 }
         self.send_csv_to_db(gen_room_traces(), fieldnames=room_trace_fieldnames, table_name="RoomTrace")
 
+        # Generate provider-department-mapping.csv
+        # Every department_name value must exactly match a service_in_desc from dept_choices.
+        from django.conf import settings
+        provider_dept_csv_path = os.path.join(settings.BASE_DIR, "provider-department-mapping.csv")
+
+        # Collect all unique prov_ids from AttendingProvider that were just loaded.
+        with connection.cursor() as prov_cursor:
+            prov_cursor.execute("SELECT DISTINCT prov_id FROM AttendingProvider WHERE prov_id IS NOT NULL")
+            all_prov_ids = [row[0] for row in prov_cursor.fetchall()]
+
+        # Also include surgeons and anesthesiologists from SurgeryCase.
+        surgeon_prov_ids = [str(s[0]) for s in surgeons]
+        anesth_prov_ids = [str(a[0]) for a in anests]
+        all_prov_ids = list(set(str(p) for p in all_prov_ids) | set(surgeon_prov_ids) | set(anesth_prov_ids))
+
+        # svc_desc values (index 4) are the canonical service_in_desc stored in RoomTrace.
+        svc_descs = [d[4] for d in dept_choices]
+
+        with open(provider_dept_csv_path, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["prov_id", "department_name"])
+            for prov_id in sorted(all_prov_ids):
+                # Deterministically assign one department per provider using hash.
+                svc_desc = svc_descs[hash(str(prov_id)) % len(svc_descs)]
+                writer.writerow([prov_id, svc_desc])
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Generated provider-department-mapping.csv with {len(all_prov_ids)} providers "
+                f"at {provider_dept_csv_path}"
+            )
+        )
+
         self._report_counts()
 
         generation_end_time = time.time()

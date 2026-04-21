@@ -13,7 +13,7 @@ import {
 } from './Components/Onboarding/EmailGate';
 import { initDuckDB } from './duckdb';
 import { apiPath } from './Utils/api';
-import type { ProcedureHierarchyResponse } from './Types/application';
+import type { DepartmentHierarchyResponse } from './Types/application';
 
 function App() {
   // Data Loading states
@@ -42,23 +42,36 @@ function App() {
     async function fetchAllVisits() {
       setDataLoading(true);
       try {
-        const fetchProcedureHierarchy = async () => {
+        const fetchDepartmentHierarchy = async () => {
           try {
-            const hierarchyRes = await fetch(apiPath('get_procedure_hierarchy'));
+            const hierarchyRes = await fetch(apiPath('get_department_hierarchy'));
             if (!hierarchyRes.ok) {
               throw new Error(`HTTP error! status: ${hierarchyRes.status}`);
             }
-            store.procedureHierarchy = (await hierarchyRes.json()) as ProcedureHierarchyResponse;
+            store.departmentHierarchy = (await hierarchyRes.json()) as DepartmentHierarchyResponse;
           } catch (hierarchyError) {
-            console.error('Error fetching procedure hierarchy:', hierarchyError);
-            store.procedureHierarchy = null;
+            console.error('Error fetching department hierarchy:', hierarchyError);
+            store.departmentHierarchy = null;
+          }
+        };
+
+        const fetchProviderDepartments = async () => {
+          try {
+            const provRes = await fetch(apiPath('get_provider_departments'));
+            if (!provRes.ok) return;
+            const entries: { prov_id: string; department_id: string; department_name: string }[] = await provRes.json();
+            store.providerDepartmentMap = new Map(
+              entries.map((e) => [e.prov_id, { departmentId: e.department_id, departmentName: e.department_name }]),
+            );
+          } catch (err) {
+            console.error('Error fetching provider departments:', err);
           }
         };
 
         if (store.duckDB) {
           // DuckDB is already initialized so don't re-initialize.
-          if (!store.procedureHierarchy) {
-            await fetchProcedureHierarchy();
+          if (!store.departmentHierarchy) {
+            await fetchDepartmentHierarchy();
           }
           setDataLoading(false);
           return;
@@ -81,16 +94,24 @@ function App() {
         }
         await db.registerFileBuffer('surgery_case_attributes.parquet', new Uint8Array(await resSurgery.arrayBuffer()));
 
+        const resDeptEnc = await fetch(apiPath('get_department_encounter_attributes'));
+        if (!resDeptEnc.ok) {
+          throw new Error(`Failed to fetch department encounter attributes. Status: ${resDeptEnc.status}`);
+        }
+        await db.registerFileBuffer('department_encounter_attributes.parquet', new Uint8Array(await resDeptEnc.arrayBuffer()));
+
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
           SELECT * REPLACE (
-            COALESCE(CAST(department_ids AS VARCHAR[]), []::VARCHAR[]) AS department_ids,
-            COALESCE(CAST(procedure_ids AS VARCHAR[]), []::VARCHAR[]) AS procedure_ids
+            COALESCE(CAST(department_ids AS VARCHAR[]), []::VARCHAR[]) AS department_ids
           )
           FROM read_parquet('visit_attributes.parquet');
 
           CREATE TABLE IF NOT EXISTS surgery_cases AS
           SELECT * FROM read_parquet('surgery_case_attributes.parquet');
+
+          CREATE TABLE IF NOT EXISTS dept_enc AS
+          SELECT * FROM read_parquet('department_encounter_attributes.parquet');
 
           CREATE TABLE IF NOT EXISTS costs (
             rbc_units_cost DOUBLE,
@@ -130,6 +151,11 @@ function App() {
             sc.*
           FROM surgery_cases sc
           INNER JOIN filteredVisitIds fvi ON sc.visit_no = fvi.visit_no;
+
+          CREATE VIEW IF NOT EXISTS filteredDeptEncounters AS
+          SELECT de.*
+          FROM dept_enc de
+          INNER JOIN filteredVisitIds fvi ON de.visit_no = fvi.visit_no;
 
           CREATE VIEW IF NOT EXISTS aggregatedVisits AS
           SELECT
@@ -174,7 +200,8 @@ function App() {
           GROUP BY visit_no, month, quarter, year, dsch_dtm;
         `);
 
-        await fetchProcedureHierarchy();
+        await fetchDepartmentHierarchy();
+        await fetchProviderDepartments();
 
         // Update all stores
         await store.updateAllVisitsLength();
