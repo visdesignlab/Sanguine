@@ -1,5 +1,5 @@
 import {
-  useCallback, useContext, useState, useRef,
+  useCallback, useContext, useEffect, useState, useRef,
 } from 'react';
 import {
   Card, Group, Box, Text, Stack, TextInput, ScrollArea,
@@ -19,6 +19,14 @@ export function DepartmentViewQuestions() {
   const [hoveredIdx, setHoveredIdx] = useState<{ group: number; card: number } | null>(null);
   const [flashKey, setFlashKey] = useState<string | null>(null);
   const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeMoveRef = useRef<((e: MouseEvent) => void) | null>(null);
+  const activeUpRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => () => {
+    if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+    if (activeMoveRef.current) document.removeEventListener('mousemove', activeMoveRef.current);
+    if (activeUpRef.current) document.removeEventListener('mouseup', activeUpRef.current);
+  }, []);
 
   const {
     cardIconSize,
@@ -36,7 +44,11 @@ export function DepartmentViewQuestions() {
     const onMouseUp = () => {
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
+      activeMoveRef.current = null;
+      activeUpRef.current = null;
     };
+    activeMoveRef.current = onMouseMove;
+    activeUpRef.current = onMouseUp;
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   }, [store]);
