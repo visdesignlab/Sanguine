@@ -227,6 +227,11 @@ def build_procedure_hierarchy_payload(
     eligible_visit_numbers: set[int] | None = None,
 ) -> dict:
     procedure_visit_counts = build_visit_counts(visit_procedures, eligible_visit_numbers)
+    visit_departments = {
+        visit_no: list({pid.split('__')[0] for pid in proc_ids if '__' in pid})
+        for visit_no, proc_ids in visit_procedures.items()
+    }
+    department_visit_counts = build_visit_counts(visit_departments, eligible_visit_numbers)
 
     procedure_hierarchy_departments = []
     for department in hierarchy_departments:
