@@ -173,7 +173,7 @@ AdherenceByDept AS (
 SELECT
     a.visit_no,
     a.attend_prov_line,
-    pd.department_id,
+    COALESCE(pd.department_id, LOWER(REPLACE(a.department_name, ' ', '-'))) AS department_id,
     a.department_name,
     SUM(a.rbc_units)            AS rbc_units,
     SUM(a.ffp_units)            AS ffp_units,
@@ -186,8 +186,8 @@ SELECT
     SUM(a.plt_units_adherent)   AS plt_units_adherent,
     SUM(a.cryo_units_adherent)  AS cryo_units_adherent
 FROM AdherenceByDept a
-JOIN (
+LEFT JOIN (
     SELECT DISTINCT department_name, department_id
     FROM ProviderDepartment
 ) pd ON pd.department_name = a.department_name
-GROUP BY a.visit_no, a.attend_prov_line, pd.department_id, a.department_name;
+GROUP BY a.visit_no, a.attend_prov_line, COALESCE(pd.department_id, LOWER(REPLACE(a.department_name, ' ', '-'))), a.department_name;
