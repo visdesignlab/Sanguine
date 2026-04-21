@@ -241,11 +241,11 @@ export function FilterPanel() {
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* Department & Procedure Filters */}
+          {/* Department Filters */}
           <Accordion.Item value="department-procedure-filters" key="department-procedure-filters">
             <FilterHeader
               countName="procedureDepartmentsAppliedCount"
-              title="Department & Procedure"
+              title="Department"
               tooltipLabel="Number of involved departments"
               resetFunc={() => store.resetProcedureFilters()}
             />

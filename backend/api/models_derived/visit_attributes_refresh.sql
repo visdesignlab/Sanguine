@@ -34,6 +34,7 @@ INSERT INTO VisitAttributes (
     attending_provider,
     attending_provider_id,
     attending_provider_line,
+    attending_provider_department,
     is_admitting_attending
 )
 SELECT
@@ -75,6 +76,7 @@ SELECT
     ap.prov_name,
     ap.prov_id,
     ap.attend_prov_line,
+    ap.department_name,
     CASE WHEN ap.attend_prov_line = 1 THEN TRUE ELSE FALSE END AS is_admitting_attending
 
 FROM (
@@ -82,8 +84,10 @@ FROM (
         ap_non_null.visit_no,
         ap_non_null.prov_id,
         ap_non_null.prov_name,
-        ap_non_null.attend_prov_line
+        ap_non_null.attend_prov_line,
+        pdm.department_name
     FROM AttendingProvider ap_non_null
+    LEFT JOIN ProviderDepartmentMapping pdm ON ap_non_null.prov_id = pdm.prov_id
     WHERE ap_non_null.attend_prov_line IS NOT NULL
 
     UNION ALL
@@ -92,7 +96,8 @@ FROM (
         ap_null.visit_no,
         NULL AS prov_id,
         NULL AS prov_name,
-        0 AS attend_prov_line
+        0 AS attend_prov_line,
+        NULL AS department_name
     FROM AttendingProvider ap_null
     WHERE ap_null.attend_prov_line IS NULL
     GROUP BY ap_null.visit_no

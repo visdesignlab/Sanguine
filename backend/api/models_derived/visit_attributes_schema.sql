@@ -42,6 +42,7 @@ CREATE TABLE VisitAttributes (
     attending_provider VARCHAR(100),
     attending_provider_id VARCHAR(25),
     attending_provider_line SMALLINT UNSIGNED DEFAULT 0,
+    attending_provider_department VARCHAR(100),
     is_admitting_attending BOOLEAN,
     PRIMARY KEY (id),
     FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),

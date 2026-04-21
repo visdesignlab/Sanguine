@@ -983,6 +983,19 @@ export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | Ex
 export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig | DumbbellChartConfig;
 
 // Procedure hierarchy ---------------------------------------------------
+
+export type Department = {
+  id: string;
+  name: string;
+  visit_count: number;
+};
+
+export type DepartmentResponse = {
+  version: string;
+  source: string;
+  departments: Department[];
+};
+
 export type ProcedureHierarchyProcedure = {
   id: string;
   name: string;

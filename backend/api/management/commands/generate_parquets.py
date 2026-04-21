@@ -64,8 +64,8 @@ def get_visit_attributes_schema() -> pa.Schema:
         pa.field("attending_provider", pa.string(), nullable=True),
         pa.field("attending_provider_id", pa.string(), nullable=True),
         pa.field("attending_provider_line", pa.uint16(), nullable=False),
+        pa.field("attending_provider_department", pa.string(), nullable=True),
         pa.field("is_admitting_attending", pa.bool_(), nullable=False),
-        pa.field("department_ids", pa.list_(pa.string()), nullable=False),
         pa.field("procedure_ids", pa.list_(pa.string()), nullable=False),
     ])
 
@@ -112,7 +112,7 @@ def get_visit_attributes_select_columns() -> list[str]:
     return [
         field.name
         for field in get_visit_attributes_schema()
-        if field.name not in ("department_ids", "procedure_ids")
+        if field.name not in ("procedure_ids")
     ]
 
 
@@ -164,7 +164,6 @@ def build_visit_cpt_dimensions(
     code_map: dict[str, tuple[str, str, str, str]],
     billing_fetch_batch_size: int = 50000,
 ) -> tuple[dict[int, list[str]], dict[int, list[str]]]:
-    visit_departments: dict[int, set[str]] = defaultdict(set)
     visit_procedures: dict[int, set[str]] = defaultdict(set)
     with connection.cursor() as cursor:
         cursor.execute(
@@ -188,12 +187,10 @@ def build_visit_cpt_dimensions(
                 if not mapped:
                     continue
 
-                department_id, _department_name, procedure_id, _procedure_name = mapped
-                visit_departments[visit_no].add(department_id)
+                _, _, procedure_id, _procedure_name = mapped
                 visit_procedures[visit_no].add(procedure_id)
 
     return (
-        {visit_no: sorted(department_ids) for visit_no, department_ids in visit_departments.items()},
         {visit_no: sorted(procedure_ids) for visit_no, procedure_ids in visit_procedures.items()},
     )
 
@@ -226,11 +223,9 @@ def fetch_materialized_visit_numbers(fetch_batch_size: int) -> set[int]:
 
 def build_procedure_hierarchy_payload(
     hierarchy_departments,
-    visit_departments: dict[int, list[str]],
     visit_procedures: dict[int, list[str]],
     eligible_visit_numbers: set[int] | None = None,
 ) -> dict:
-    department_visit_counts = build_visit_counts(visit_departments, eligible_visit_numbers)
     procedure_visit_counts = build_visit_counts(visit_procedures, eligible_visit_numbers)
 
     procedure_hierarchy_departments = []
@@ -286,7 +281,6 @@ def normalize_visit_attributes_row(
 
 def write_visit_attributes_parquet(
     file_path: Path,
-    visit_departments: dict[int, list[str]],
     visit_procedures: dict[int, list[str]],
     fetch_batch_size: int,
     nullable_bool_fields: tuple[str, ...],
@@ -314,7 +308,6 @@ def write_visit_attributes_parquet(
                         required_bool_fields=required_bool_fields,
                     )
                     visit_no = visit["visit_no"]
-                    visit["department_ids"] = visit_departments.get(visit_no, [])
                     visit["procedure_ids"] = visit_procedures.get(visit_no, [])
                     visits.append(visit)
 
@@ -442,11 +435,10 @@ class Command(BaseCommand):
         temp_surgery_file_path = cache_dir / "surgery_case_attributes.parquet.tmp"
 
         hierarchy = None
-        visit_departments: dict[int, list[str]] = {}
         visit_procedures: dict[int, list[str]] = {}
         if should_generate_visit_attributes or should_generate_procedure_hierarchy:
             hierarchy = get_cpt_hierarchy()
-            visit_departments, visit_procedures = build_visit_cpt_dimensions(
+            visit_procedures = build_visit_cpt_dimensions(
                 code_map=hierarchy.code_map,
                 billing_fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
             )
@@ -456,7 +448,6 @@ class Command(BaseCommand):
             eligible_visit_numbers = fetch_materialized_visit_numbers(self.VISIT_FETCH_BATCH_SIZE)
             procedure_hierarchy_payload = build_procedure_hierarchy_payload(
                 hierarchy_departments=hierarchy.departments,
-                visit_departments=visit_departments,
                 visit_procedures=visit_procedures,
                 eligible_visit_numbers=eligible_visit_numbers,
             )
@@ -465,7 +456,6 @@ class Command(BaseCommand):
             if should_generate_visit_attributes:
                 write_visit_attributes_parquet(
                     file_path=temp_visit_file_path,
-                    visit_departments=visit_departments,
                     visit_procedures=visit_procedures,
                     fetch_batch_size=self.VISIT_FETCH_BATCH_SIZE,
                     nullable_bool_fields=self.NULLABLE_BOOL_FIELDS,

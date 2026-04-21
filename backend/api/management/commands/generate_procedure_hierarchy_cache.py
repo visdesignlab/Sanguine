@@ -48,13 +48,7 @@ class Command(BaseCommand):
                         continue
 
                     department_id, _department_name, procedure_id, _procedure_name = mapped
-                    visit_departments[visit_no].add(department_id)
                     visit_procedures[visit_no].add(procedure_id)
-
-        department_visit_counts: dict[str, int] = defaultdict(int)
-        for department_ids in visit_departments.values():
-            for department_id in department_ids:
-                department_visit_counts[department_id] += 1
 
         procedure_visit_counts: dict[str, int] = defaultdict(int)
         for procedure_ids in visit_procedures.values():
@@ -84,7 +78,7 @@ class Command(BaseCommand):
                 {
                     "id": department.id,
                     "name": department.name,
-                    "visit_count": department_visit_counts.get(department.id, 0),
+                    "visit_count": 0,
                     "procedures": procedure_payload,
                 }
             )
