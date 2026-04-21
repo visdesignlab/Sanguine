@@ -198,6 +198,7 @@ def get_department_encounter_attributes(request):
 @require_http_methods(["GET"])
 @conditional_login_required
 def get_provider_departments(request):
+    log_request(request)
     from api.models.intelvia import ProviderDepartment
     data = list(ProviderDepartment.objects.values("prov_id", "department_id", "department_name"))
-    return JsonResponse({"providers": data})
+    return JsonResponse(data, safe=False)
