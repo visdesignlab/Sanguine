@@ -13,7 +13,7 @@ import {
 } from './Components/Onboarding/EmailGate';
 import { initDuckDB } from './duckdb';
 import { apiPath } from './Utils/api';
-import type { DepartmentHierarchyResponse } from './Types/application';
+import type { DepartmentHierarchyResponse, ProcedureHierarchyResponse } from './Types/application';
 
 function App() {
   // Data Loading states
@@ -55,6 +55,19 @@ function App() {
           }
         };
 
+        const fetchProcedureHierarchy = async () => {
+          try {
+            const res = await fetch(apiPath('get_procedure_hierarchy'));
+            if (!res.ok) {
+              throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            store.procedureHierarchy = (await res.json()) as ProcedureHierarchyResponse;
+          } catch (err) {
+            console.error('Error fetching procedure hierarchy:', err);
+            store.procedureHierarchy = null;
+          }
+        };
+
         const fetchProviderDepartments = async () => {
           try {
             const provRes = await fetch(apiPath('get_provider_departments'));
@@ -72,6 +85,9 @@ function App() {
           // DuckDB is already initialized so don't re-initialize.
           if (!store.departmentHierarchy) {
             await fetchDepartmentHierarchy();
+          }
+          if (!store.procedureHierarchy) {
+            await fetchProcedureHierarchy();
           }
           setDataLoading(false);
           return;
@@ -103,7 +119,8 @@ function App() {
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
           SELECT * REPLACE (
-            COALESCE(CAST(department_ids AS VARCHAR[]), []::VARCHAR[]) AS department_ids
+            COALESCE(CAST(department_ids AS VARCHAR[]), []::VARCHAR[]) AS department_ids,
+            COALESCE(CAST(procedure_ids AS VARCHAR[]), []::VARCHAR[]) AS procedure_ids
           )
           FROM read_parquet('visit_attributes.parquet');
 
@@ -201,6 +218,7 @@ function App() {
         `);
 
         await fetchDepartmentHierarchy();
+        await fetchProcedureHierarchy();
         await fetchProviderDepartments();
 
         // Update all stores

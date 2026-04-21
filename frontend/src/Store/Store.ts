@@ -23,6 +23,7 @@ import {
   ExploreTableRow,
   DepartmentHierarchyResponse,
   ProviderDepartmentEntry,
+  ProcedureHierarchyResponse,
   TimeAggregation,
   TimePeriod,
   dashboardXAxisVars,
@@ -109,6 +110,7 @@ export interface ApplicationState {
     stroke: boolean | null;
     ecmo: boolean | null;
     departmentIds: string[];
+    procedureIds: string[];
   };
   selections: {
     selectedTimePeriods: string[];
@@ -149,6 +151,8 @@ export class RootStore {
   duckDB: AsyncDuckDBConnection | null = null;
 
   departmentHierarchy: DepartmentHierarchyResponse | null = null;
+
+  procedureHierarchy: ProcedureHierarchyResponse | null = null;
 
   providerDepartmentMap: Map<string, ProviderDepartmentEntry> = new Map();
 
@@ -195,6 +199,7 @@ export class RootStore {
     stroke: null as boolean | null,
     ecmo: null as boolean | null,
     departmentIds: [] as string[],
+    procedureIds: [] as string[],
   };
 
   histogramData: Record<string, HistogramData> = {};
@@ -241,6 +246,7 @@ export class RootStore {
       dashboardChartData: observable.ref,
       exploreChartData: observable.ref,
       departmentHierarchy: observable.ref,
+      procedureHierarchy: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
     });
@@ -284,6 +290,15 @@ export class RootStore {
         },
       }), filters);
     },
+    updateProcedureFilters: (filters: Pick<ApplicationState['filterValues'], 'procedureIds'>) => {
+      this.applyAction('Update Procedure Filters', (state, nextFilters) => ({
+        ...state,
+        filterValues: {
+          ...state.filterValues,
+          ...nextFilters,
+        },
+      }), filters);
+    },
     resetAllFilters: () => {
       this.applyAction('Reset All Filters', (state) => {
         const initial = this.initialFilterValues;
@@ -306,6 +321,7 @@ export class RootStore {
           stroke: initial.stroke,
           ecmo: initial.ecmo,
           departmentIds: initial.departmentIds,
+          procedureIds: initial.procedureIds,
         }));
 
         return {
@@ -405,6 +421,15 @@ export class RootStore {
         },
       }), initialFilters);
     },
+    resetProcedureFilters: (initialFilters: Pick<ApplicationState['filterValues'], 'procedureIds'>) => {
+      this.applyAction('Reset Procedure Filters', (state, filters) => ({
+        ...state,
+        filterValues: {
+          ...state.filterValues,
+          ...filters,
+        },
+      }), initialFilters);
+    },
     clearSelection: () => {
       this.applyAction('Clear Selected Visits', (state) => ({
         ...state,
@@ -445,6 +470,7 @@ export class RootStore {
         stroke: this.initialFilterValues.stroke,
         ecmo: this.initialFilterValues.ecmo,
         departmentIds: [...this.initialFilterValues.departmentIds],
+        procedureIds: [...this.initialFilterValues.procedureIds],
       },
       selections: {
         selectedTimePeriods: [],
@@ -1441,6 +1467,12 @@ export class RootStore {
     });
   }
 
+  setProcedureFilters(procedureIds: string[]) {
+    this.actions.updateProcedureFilters({
+      procedureIds: [...procedureIds],
+    });
+  }
+
   async calculateDefaultFilterValues() {
     if (!this.duckDB) return;
     // Default filter values based on visit-level min and max values
@@ -1556,6 +1588,11 @@ export class RootStore {
     return departmentIds.length > 0 ? 1 : 0;
   }
 
+  get procedureFiltersAppliedCount(): number {
+    const { procedureIds } = this.filterValues;
+    return procedureIds.length > 0 ? 1 : 0;
+  }
+
   /**
    * Returns the total number of filters that are applied
    */
@@ -1564,7 +1601,8 @@ export class RootStore {
       + this.bloodComponentFiltersAppliedCount
       + this.medicationsFiltersAppliedCount
       + this.outcomeFiltersAppliedCount
-      + this.departmentFiltersAppliedCount;
+      + this.departmentFiltersAppliedCount
+      + this.procedureFiltersAppliedCount;
   }
 
   resetAllFilters() {
@@ -1609,6 +1647,12 @@ export class RootStore {
   resetDepartmentFilters() {
     this.actions.resetDepartmentFilters({
       departmentIds: [...this._initialFilterValues.departmentIds],
+    });
+  }
+
+  resetProcedureFilters() {
+    this.actions.resetProcedureFilters({
+      procedureIds: [...this._initialFilterValues.procedureIds],
     });
   }
 
@@ -1795,6 +1839,14 @@ export class RootStore {
       if (safeDepartmentIds.length > 0) {
         const departmentIdList = safeDepartmentIds.map(sqlString).join(', ');
         visitFilterConditions.push(`BOOL_OR(list_has_any(department_ids, [${departmentIdList}]::VARCHAR[]))`);
+      }
+    }
+
+    if (filterValues.procedureIds.length > 0) {
+      const safeProcedureIds = filterValues.procedureIds.filter((id) => safeIdPattern.test(id));
+      if (safeProcedureIds.length > 0) {
+        const procedureIdList = safeProcedureIds.map(sqlString).join(', ');
+        visitFilterConditions.push(`BOOL_OR(list_has_any(procedure_ids, [${procedureIdList}]::VARCHAR[]))`);
       }
     }
 

@@ -995,6 +995,25 @@ export type DepartmentHierarchyResponse = {
   departments: DepartmentHierarchyDepartment[];
 };
 
+export type ProcedureHierarchyProcedure = {
+  id: string;
+  name: string;
+  visit_count: number;
+  cpt_codes: string[];
+};
+
+export type ProcedureHierarchyDepartment = {
+  id: string;
+  name: string;
+  procedures: ProcedureHierarchyProcedure[];
+};
+
+export type ProcedureHierarchyResponse = {
+  version: string;
+  source: string;
+  departments: ProcedureHierarchyDepartment[];
+};
+
 export type ProviderDepartmentEntry = {
   departmentId: string;
   departmentName: string;
@@ -1006,4 +1025,5 @@ export type FilterCountKey =
   | 'bloodComponentFiltersAppliedCount'
   | 'medicationsFiltersAppliedCount'
   | 'outcomeFiltersAppliedCount'
-  | 'departmentFiltersAppliedCount';
+  | 'departmentFiltersAppliedCount'
+  | 'procedureFiltersAppliedCount';

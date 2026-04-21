@@ -187,6 +187,8 @@ class GenerateParquetsNullRobustnessTests(TransactionTestCase):
                 expected_artifacts.append(cache_dir / "visit_attributes.parquet")
             if generate_mode in ("all", "department_hierarchy"):
                 expected_artifacts.append(cache_dir / "department_hierarchy.json")
+            if generate_mode in ("all", "procedure_hierarchy"):
+                expected_artifacts.append(cache_dir / "procedure_hierarchy.json")
             if generate_mode in ("all", "surgery_cases"):
                 expected_artifacts.append(cache_dir / "surgery_case_attributes.parquet")
             if generate_mode in ("all", "department_encounter_attributes"):

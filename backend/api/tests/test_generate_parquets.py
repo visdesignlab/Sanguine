@@ -11,6 +11,7 @@ from django.core.management import call_command
 from django.test import TransactionTestCase, override_settings
 
 from api.management.commands.generate_parquets import (
+    build_visit_billing_code_procedures,
     build_visit_roomtrace_departments,
     build_visit_attributes_table,
     coerce_temporal_value_to_utc,
@@ -72,6 +73,7 @@ def valid_visit_attributes_row() -> dict:
         "attending_provider_line": 1,
         "is_admitting_attending": True,
         "department_ids": ["critical-care"],
+        "procedure_ids": ["anesthesia__critical-care-services"],
     }
 
 
@@ -115,6 +117,8 @@ class GenerateParquetsTests(TransactionTestCase):
             self.assertTrue(parquet_path.exists())
             dept_hierarchy_path = Path(base_dir) / "parquet_cache" / "department_hierarchy.json"
             self.assertTrue(dept_hierarchy_path.exists())
+            proc_hierarchy_path = Path(base_dir) / "parquet_cache" / "procedure_hierarchy.json"
+            self.assertTrue(proc_hierarchy_path.exists())
 
             table = pq.read_table(parquet_path)
             expected_schema = get_visit_attributes_schema()
@@ -147,6 +151,10 @@ class GenerateParquetsTests(TransactionTestCase):
                 sorted(row["department_ids"]),
                 ["critical-care", "surgical-icu"],
             )
+            self.assertEqual(
+                sorted(row["procedure_ids"]),
+                ["anesthesia__critical-care-services", "surgery__surgical-procedures-on-the-cardiovascular-system"],
+            )
 
             hierarchy_payload = json.loads(dept_hierarchy_path.read_text(encoding="utf-8"))
             self.assertEqual(hierarchy_payload["source"], "roomtrace")
@@ -155,6 +163,16 @@ class GenerateParquetsTests(TransactionTestCase):
             self.assertEqual(dept_by_id["critical-care"]["visit_count"], 1)
             self.assertEqual(dept_by_id["critical-care"]["name"], "Critical Care")
             self.assertEqual(dept_by_id["surgical-icu"]["visit_count"], 1)
+
+            proc_hierarchy_payload = json.loads(proc_hierarchy_path.read_text(encoding="utf-8"))
+            self.assertEqual(proc_hierarchy_payload["source"], "cpt-code-mapping.csv")
+            proc_by_id = {
+                proc["id"]: proc
+                for dept in proc_hierarchy_payload["departments"]
+                for proc in dept["procedures"]
+            }
+            self.assertIn("anesthesia__critical-care-services", proc_by_id)
+            self.assertEqual(proc_by_id["anesthesia__critical-care-services"]["visit_count"], 1)
 
     def test_generate_parquets_can_generate_only_visit_attributes(self):
         create_visit_fixture(
@@ -294,6 +312,7 @@ class GenerateParquetsTests(TransactionTestCase):
             "attending_provider_line": {"bad": "uint16"},
             "is_admitting_attending": {"bad": "bool"},
             "department_ids": [{"bad": "string-list"}],
+            "procedure_ids": [{"bad": "string-list"}],
         }
 
         self.assertEqual(set(bogus_values.keys()), set(schema.names))

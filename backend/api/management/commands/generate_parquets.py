@@ -12,6 +12,8 @@ from django.db import connection
 
 from django.utils.text import slugify
 
+from api.views.utils.cpt_hierarchy import get_cpt_hierarchy, normalize_cpt_code
+
 
 def coerce_temporal_value_to_utc(value):
     if value is None:
@@ -66,6 +68,7 @@ def get_visit_attributes_schema() -> pa.Schema:
         pa.field("attending_provider_line", pa.uint16(), nullable=False),
         pa.field("is_admitting_attending", pa.bool_(), nullable=False),
         pa.field("department_ids", pa.list_(pa.string()), nullable=False),
+        pa.field("procedure_ids", pa.list_(pa.string()), nullable=False),
     ])
 
 
@@ -108,10 +111,11 @@ def build_visit_attributes_table(rows: list[dict]) -> pa.Table:
 
 
 def get_visit_attributes_select_columns() -> list[str]:
+    _BOLTED_ON_COLUMNS = {"department_ids", "procedure_ids"}
     return [
         field.name
         for field in get_visit_attributes_schema()
-        if field.name != "department_ids"
+        if field.name not in _BOLTED_ON_COLUMNS
     ]
 
 
@@ -203,6 +207,38 @@ def build_visit_roomtrace_departments(
     return {visit_no: sorted(dept_ids) for visit_no, dept_ids in visit_departments.items()}
 
 
+def build_visit_billing_code_procedures(
+    fetch_batch_size: int = 50000,
+) -> dict[int, list[str]]:
+    """Return visit_procedures: dict[visit_no -> sorted list of procedure_ids from CPT billing codes]."""
+    hierarchy = get_cpt_hierarchy()
+    code_map = hierarchy.code_map
+
+    visit_procedures: dict[int, set[str]] = defaultdict(set)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT DISTINCT visit_no, cpt_code
+            FROM BillingCode
+            WHERE cpt_code IS NOT NULL AND cpt_code <> ''
+            """
+        )
+        while True:
+            rows = cursor.fetchmany(fetch_batch_size)
+            if not rows:
+                break
+            for visit_no, raw_cpt_code in rows:
+                normalized = normalize_cpt_code(raw_cpt_code)
+                if not normalized:
+                    continue
+                mapped = code_map.get(normalized)
+                if not mapped:
+                    continue
+                _dept_id, _dept_name, procedure_id, _proc_name = mapped
+                visit_procedures[visit_no].add(procedure_id)
+    return {visit_no: sorted(proc_ids) for visit_no, proc_ids in visit_procedures.items()}
+
+
 def build_visit_counts(
     visit_dimensions: dict[int, list[str]],
     eligible_visit_numbers: set[int] | None = None,
@@ -227,6 +263,42 @@ def fetch_materialized_visit_numbers(fetch_batch_size: int) -> set[int]:
             for row in rows:
                 visit_numbers.add(row[0])
     return visit_numbers
+
+
+def build_procedure_hierarchy_payload(
+    visit_procedures: dict[int, list[str]],
+    eligible_visit_numbers: set[int] | None = None,
+) -> dict:
+    """Return the procedure hierarchy with visit counts per procedure, sourced from BillingCode CPT mapping."""
+    procedure_visit_counts = build_visit_counts(visit_procedures, eligible_visit_numbers)
+    hierarchy = get_cpt_hierarchy()
+
+    departments = []
+    for department in hierarchy.departments:
+        procedures = []
+        for procedure in department.procedures:
+            visit_count = procedure_visit_counts.get(procedure.id, 0)
+            if visit_count == 0:
+                continue
+            procedures.append({
+                "id": procedure.id,
+                "name": procedure.name,
+                "visit_count": visit_count,
+                "cpt_codes": list(procedure.cpt_codes),
+            })
+        if not procedures:
+            continue
+        departments.append({
+            "id": department.id,
+            "name": department.name,
+            "procedures": procedures,
+        })
+
+    return {
+        "version": datetime.now(timezone.utc).strftime("%Y-%m-%d.%H%M%S"),
+        "source": "cpt-code-mapping.csv",
+        "departments": departments,
+    }
 
 
 def build_department_hierarchy_payload(
@@ -279,6 +351,7 @@ def normalize_visit_attributes_row(
 def write_visit_attributes_parquet(
     file_path: Path,
     visit_departments: dict[int, list[str]],
+    visit_procedures: dict[int, list[str]],
     fetch_batch_size: int,
     nullable_bool_fields: tuple[str, ...],
     required_bool_fields: tuple[str, ...],
@@ -306,6 +379,7 @@ def write_visit_attributes_parquet(
                     )
                     visit_no = visit["visit_no"]
                     visit["department_ids"] = visit_departments.get(visit_no, [])
+                    visit["procedure_ids"] = visit_procedures.get(visit_no, [])
                     visits.append(visit)
 
                 if visits:
@@ -404,7 +478,7 @@ def write_surgery_case_attributes_parquet(
 
 class Command(BaseCommand):
     help = "Generate a Parquet cache of the database data"
-    GENERATE_CHOICES = ("all", "visit_attributes", "department_hierarchy", "surgery_cases", "department_encounter_attributes")
+    GENERATE_CHOICES = ("all", "visit_attributes", "department_hierarchy", "procedure_hierarchy", "surgery_cases", "department_encounter_attributes")
     BILLING_FETCH_BATCH_SIZE = 50000
     VISIT_FETCH_BATCH_SIZE = 50000
     SURGERY_FETCH_BATCH_SIZE = 50000
@@ -453,6 +527,7 @@ class Command(BaseCommand):
         generate_target = kwargs["generate"]
         should_generate_visit_attributes = generate_target in ("all", "visit_attributes")
         should_generate_department_hierarchy = generate_target in ("all", "department_hierarchy")
+        should_generate_procedure_hierarchy = generate_target in ("all", "procedure_hierarchy")
         should_generate_surgery_cases = generate_target in ("all", "surgery_cases")
         should_generate_department_encounter_attributes = generate_target in (
             "all", "department_encounter_attributes"
@@ -464,6 +539,8 @@ class Command(BaseCommand):
         temp_visit_file_path = cache_dir / "visit_attributes.parquet.tmp"
         department_hierarchy_file_path = cache_dir / "department_hierarchy.json"
         temp_department_hierarchy_file_path = cache_dir / "department_hierarchy.json.tmp"
+        procedure_hierarchy_file_path = cache_dir / "procedure_hierarchy.json"
+        temp_procedure_hierarchy_file_path = cache_dir / "procedure_hierarchy.json.tmp"
         surgery_file_path = cache_dir / "surgery_case_attributes.parquet"
         temp_surgery_file_path = cache_dir / "surgery_case_attributes.parquet.tmp"
         dept_enc_file_path = cache_dir / "department_encounter_attributes.parquet"
@@ -475,11 +552,27 @@ class Command(BaseCommand):
                 fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
             )
 
+        visit_procedures: dict[int, list[str]] = {}
+        if should_generate_visit_attributes or should_generate_procedure_hierarchy:
+            visit_procedures = build_visit_billing_code_procedures(
+                fetch_batch_size=self.BILLING_FETCH_BATCH_SIZE,
+            )
+
+        eligible_visit_numbers: set[int] | None = None
+        if should_generate_department_hierarchy or should_generate_procedure_hierarchy:
+            eligible_visit_numbers = fetch_materialized_visit_numbers(self.VISIT_FETCH_BATCH_SIZE)
+
         department_hierarchy_payload = None
         if should_generate_department_hierarchy:
-            eligible_visit_numbers = fetch_materialized_visit_numbers(self.VISIT_FETCH_BATCH_SIZE)
             department_hierarchy_payload = build_department_hierarchy_payload(
                 visit_departments=visit_departments,
+                eligible_visit_numbers=eligible_visit_numbers,
+            )
+
+        procedure_hierarchy_payload = None
+        if should_generate_procedure_hierarchy:
+            procedure_hierarchy_payload = build_procedure_hierarchy_payload(
+                visit_procedures=visit_procedures,
                 eligible_visit_numbers=eligible_visit_numbers,
             )
 
@@ -488,6 +581,7 @@ class Command(BaseCommand):
                 write_visit_attributes_parquet(
                     file_path=temp_visit_file_path,
                     visit_departments=visit_departments,
+                    visit_procedures=visit_procedures,
                     fetch_batch_size=self.VISIT_FETCH_BATCH_SIZE,
                     nullable_bool_fields=self.NULLABLE_BOOL_FIELDS,
                     required_bool_fields=self.REQUIRED_BOOL_FIELDS,
@@ -495,6 +589,11 @@ class Command(BaseCommand):
             if should_generate_department_hierarchy:
                 temp_department_hierarchy_file_path.write_text(
                     json.dumps(department_hierarchy_payload, separators=(",", ":")),
+                    encoding="utf-8",
+                )
+            if should_generate_procedure_hierarchy:
+                temp_procedure_hierarchy_file_path.write_text(
+                    json.dumps(procedure_hierarchy_payload, separators=(",", ":")),
                     encoding="utf-8",
                 )
             if should_generate_surgery_cases:
@@ -515,6 +614,8 @@ class Command(BaseCommand):
                 temp_visit_file_path.replace(visit_file_path)
             if should_generate_department_hierarchy:
                 temp_department_hierarchy_file_path.replace(department_hierarchy_file_path)
+            if should_generate_procedure_hierarchy:
+                temp_procedure_hierarchy_file_path.replace(procedure_hierarchy_file_path)
             if should_generate_surgery_cases:
                 temp_surgery_file_path.replace(surgery_file_path)
             if should_generate_department_encounter_attributes:
@@ -523,6 +624,7 @@ class Command(BaseCommand):
             for tmp in (
                 temp_visit_file_path,
                 temp_department_hierarchy_file_path,
+                temp_procedure_hierarchy_file_path,
                 temp_surgery_file_path,
                 temp_dept_enc_file_path,
             ):
@@ -535,6 +637,12 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Department hierarchy cache generated at {department_hierarchy_file_path}"
+                )
+            )
+        if should_generate_procedure_hierarchy:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Procedure hierarchy cache generated at {procedure_hierarchy_file_path}"
                 )
             )
         if should_generate_surgery_cases:
