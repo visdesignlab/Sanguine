@@ -248,7 +248,7 @@ export function FilterPanel() {
               countName="procedureDepartmentsAppliedCount"
               title="Department"
               tooltipLabel="Number of involved departments"
-              resetFunc={() => store.resetProcedureFilters()}
+              resetFunc={() => store.resetDepartmentsFilter()}
             />
             <Accordion.Panel styles={{ content: { paddingLeft: 8, paddingRight: 8 } }}>
               <DepartmentProcedureFilter />
