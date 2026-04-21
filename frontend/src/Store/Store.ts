@@ -1431,6 +1431,7 @@ export class RootStore {
       ...this._initialFilterValues,
       ...rawFilters,
       departmentIds: Array.isArray(rawFilters.departmentIds) ? rawFilters.departmentIds : this._initialFilterValues.departmentIds,
+      procedureIds: Array.isArray(rawFilters.procedureIds) ? rawFilters.procedureIds : this._initialFilterValues.procedureIds,
     };
 
     return {
