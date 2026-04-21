@@ -984,18 +984,6 @@ export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTa
 
 // Procedure hierarchy ---------------------------------------------------
 
-export type Department = {
-  id: string;
-  name: string;
-  visit_count: number;
-};
-
-export type DepartmentResponse = {
-  version: string;
-  source: string;
-  departments: Department[];
-};
-
 export type ProcedureHierarchyProcedure = {
   id: string;
   name: string;
@@ -1025,5 +1013,4 @@ export type FilterCountKey =
   | 'medicationsFiltersAppliedCount'
   | 'outcomeFiltersAppliedCount'
   | 'procedureDepartmentsAppliedCount'
-  | 'procedureFiltersAppliedCount'
   | 'procedureGroupsAppliedCount';
