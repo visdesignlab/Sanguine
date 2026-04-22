@@ -85,7 +85,7 @@ FROM (
         ap_non_null.prov_id,
         ap_non_null.prov_name,
         ap_non_null.attend_prov_line,
-        pdm.department_name
+        COALESCE(NULLIF(TRIM(pdm.department_name), ''), 'No Department') AS department_name
     FROM AttendingProvider ap_non_null
     LEFT JOIN ProviderDepartmentMapping pdm ON ap_non_null.prov_id = pdm.prov_id
     WHERE ap_non_null.attend_prov_line IS NOT NULL
@@ -94,10 +94,10 @@ FROM (
 
     SELECT
         ap_null.visit_no,
-        NULL AS prov_id,
-        NULL AS prov_name,
+        'No Provider' AS prov_id,
+        'No Provider' AS prov_name,
         0 AS attend_prov_line,
-        NULL AS department_name
+        'No Department' AS department_name
     FROM AttendingProvider ap_null
     WHERE ap_null.attend_prov_line IS NULL
     GROUP BY ap_null.visit_no
