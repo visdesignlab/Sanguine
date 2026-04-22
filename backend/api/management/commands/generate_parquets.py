@@ -163,7 +163,7 @@ def get_surgery_case_attributes_schema() -> pa.Schema:
 def build_visit_cpt_dimensions(
     code_map: dict[str, tuple[str, str, str, str]],
     billing_fetch_batch_size: int = 50000,
-) -> tuple[dict[int, list[str]], dict[int, list[str]]]:
+) -> dict[int, list[str]]:
     visit_procedures: dict[int, set[str]] = defaultdict(set)
     with connection.cursor() as cursor:
         cursor.execute(
@@ -190,9 +190,7 @@ def build_visit_cpt_dimensions(
                 _, _, procedure_id, _procedure_name = mapped
                 visit_procedures[visit_no].add(procedure_id)
 
-    return (
-        {visit_no: sorted(procedure_ids) for visit_no, procedure_ids in visit_procedures.items()},
-    )
+    return {visit_no: sorted(procedure_ids) for visit_no, procedure_ids in visit_procedures.items()}
 
 
 def build_visit_counts(
