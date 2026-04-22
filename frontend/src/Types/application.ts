@@ -983,6 +983,7 @@ export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | Ex
 export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig | DumbbellChartConfig;
 
 // Procedure hierarchy ---------------------------------------------------
+
 export type ProcedureHierarchyProcedure = {
   id: string;
   name: string;
@@ -1011,5 +1012,5 @@ export type FilterCountKey =
   | 'bloodComponentFiltersAppliedCount'
   | 'medicationsFiltersAppliedCount'
   | 'outcomeFiltersAppliedCount'
-  | 'procedureDepartmentsAppliedCount'
-  | 'procedureFiltersAppliedCount';
+  | 'providerDepartmentAppliedCount'
+  | 'procedureGroupsAppliedCount';

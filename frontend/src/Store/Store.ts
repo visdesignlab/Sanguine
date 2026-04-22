@@ -107,7 +107,7 @@ export interface ApplicationState {
     vent: boolean | null;
     stroke: boolean | null;
     ecmo: boolean | null;
-    departmentIds: string[];
+    departments: string[];
     procedureIds: string[];
   };
   selections: {
@@ -183,7 +183,7 @@ export class RootStore {
     vent: null as boolean | null,
     stroke: null as boolean | null,
     ecmo: null as boolean | null,
-    departmentIds: [] as string[],
+    departments: [] as string[],
     procedureIds: [] as string[],
   };
 
@@ -246,7 +246,6 @@ export class RootStore {
 
   // region Actions ---
   actions = {
-
     togglePrivateMode: () => {
       this.applyAction('Toggle Private Mode', (state) => ({
         ...state,
@@ -265,7 +264,7 @@ export class RootStore {
         },
       }), { [filterKey]: value });
     },
-    updateProcedureFilters: (filters: Pick<ApplicationState['filterValues'], 'departmentIds' | 'procedureIds'>) => {
+    updateProcedureFilters: (filters: Pick<ApplicationState['filterValues'], 'departments' | 'procedureIds'>) => {
       this.applyAction('Update Department and Procedure Filters', (state, nextFilters) => ({
         ...state,
         filterValues: {
@@ -295,7 +294,7 @@ export class RootStore {
           vent: initial.vent,
           stroke: initial.stroke,
           ecmo: initial.ecmo,
-          departmentIds: initial.departmentIds,
+          departments: initial.departments,
           procedureIds: initial.procedureIds,
         }));
 
@@ -387,7 +386,7 @@ export class RootStore {
         },
       }), initialFilters);
     },
-    resetProcedureFilters: (initialFilters: Pick<ApplicationState['filterValues'], 'departmentIds' | 'procedureIds'>) => {
+    resetProcedureFilters: (initialFilters: Pick<ApplicationState['filterValues'], 'departments' | 'procedureIds'>) => {
       this.applyAction('Reset Department and Procedure Filters', (state, filters) => ({
         ...state,
         filterValues: {
@@ -435,7 +434,7 @@ export class RootStore {
         vent: this.initialFilterValues.vent,
         stroke: this.initialFilterValues.stroke,
         ecmo: this.initialFilterValues.ecmo,
-        departmentIds: [...this.initialFilterValues.departmentIds],
+        departments: [...this.initialFilterValues.departments],
         procedureIds: [...this.initialFilterValues.procedureIds],
       },
       selections: {
@@ -1379,7 +1378,7 @@ export class RootStore {
     const mergedFilters = {
       ...this._initialFilterValues,
       ...rawFilters,
-      departmentIds: Array.isArray(rawFilters.departmentIds) ? rawFilters.departmentIds : this._initialFilterValues.departmentIds,
+      departments: Array.isArray(rawFilters.departments) ? rawFilters.departments : this._initialFilterValues.departments,
       procedureIds: Array.isArray(rawFilters.procedureIds) ? rawFilters.procedureIds : this._initialFilterValues.procedureIds,
     };
 
@@ -1411,9 +1410,9 @@ export class RootStore {
     this.actions.updateFilter(key as keyof ApplicationState['filterValues'], val as ApplicationState['filterValues'][keyof ApplicationState['filterValues']]);
   }
 
-  setProcedureFilters(departmentIds: string[], procedureIds: string[]) {
+  setProcedureFilters(departments: string[], procedureIds: string[]) {
     this.actions.updateProcedureFilters({
-      departmentIds: [...departmentIds],
+      departments: [...departments],
       procedureIds: [...procedureIds],
     });
   }
@@ -1530,8 +1529,8 @@ export class RootStore {
    */
   get procedureFiltersAppliedCount(): number {
     let count = 0;
-    const { departmentIds, procedureIds } = this.filterValues;
-    if (departmentIds.length > 0) count += 1;
+    const { departments, procedureIds } = this.filterValues;
+    if (departments.length > 0) count += 1;
     if (procedureIds.length > 0) count += 1;
     return count;
   }
@@ -1539,20 +1538,32 @@ export class RootStore {
   /**
    * Returns number of departments represented by current department/procedure filters.
    */
-  get procedureDepartmentsAppliedCount(): number {
-    const { departmentIds, procedureIds } = this.filterValues;
-    const involvedDepartmentIds = new Set(departmentIds);
+  get providerDepartmentAppliedCount(): number {
+    const { departments, procedureIds } = this.filterValues;
+    const involvedDepartments = new Set(departments);
 
     for (const procedureId of procedureIds) {
       if (procedureId) {
         const separatorIndex = procedureId.indexOf('__');
         if (separatorIndex > 0) {
-          involvedDepartmentIds.add(procedureId.slice(0, separatorIndex));
+          involvedDepartments.add(procedureId.slice(0, separatorIndex));
         }
       }
     }
 
-    return involvedDepartmentIds.size;
+    return involvedDepartments.size;
+  }
+
+  /**
+   * Returns the number of CPT procedure hierarchy groups with at least one selected procedure.
+   */
+  get procedureGroupsAppliedCount(): number {
+    const hierarchy = this.procedureHierarchy;
+    if (!hierarchy || this.filterValues.procedureIds.length === 0) return 0;
+    const selectedIds = new Set(this.filterValues.procedureIds);
+    return hierarchy.departments.filter(
+      (dept) => dept.procedures.some((proc) => selectedIds.has(proc.id)),
+    ).length;
   }
 
   /**
@@ -1607,9 +1618,17 @@ export class RootStore {
 
   resetProcedureFilters() {
     this.actions.resetProcedureFilters({
-      departmentIds: [...this._initialFilterValues.departmentIds],
+      departments: [...this._initialFilterValues.departments],
       procedureIds: [...this._initialFilterValues.procedureIds],
     });
+  }
+
+  resetDepartmentsFilter() {
+    this.setProcedureFilters([], this.filterValues.procedureIds);
+  }
+
+  resetProcedureIdsFilter() {
+    this.setProcedureFilters(this.filterValues.departments, []);
   }
 
   /**
@@ -1790,12 +1809,9 @@ export class RootStore {
     // Only allow slug-like IDs (alphanumeric, underscore, hyphen) to be interpolated into SQL.
     const safeIdPattern = /^[A-Za-z0-9_-]+$/;
 
-    if (filterValues.departmentIds.length > 0) {
-      const safeDepartmentIds = filterValues.departmentIds.filter((id) => safeIdPattern.test(id));
-      if (safeDepartmentIds.length > 0) {
-        const departmentIdList = safeDepartmentIds.map(sqlString).join(', ');
-        visitFilterConditions.push(`BOOL_OR(list_has_any(department_ids, [${departmentIdList}]::VARCHAR[]))`);
-      }
+    if (filterValues.departments.length > 0) {
+      const departmentIdList = filterValues.departments.map(sqlString).join(', ');
+      visitFilterConditions.push(`BOOL_OR(attending_provider_department IN (${departmentIdList}))`);
     }
 
     if (filterValues.procedureIds.length > 0) {
@@ -1813,6 +1829,13 @@ export class RootStore {
 
     // Join the visit-level filter conditions with AND
     const visitFiltersToApply = visitFilterConditions.join(' AND ');
+
+    // Sync row-level department filter (used by filteredVisits VIEW WHERE clause)
+    const deptRows = filterValues.departments.map(sqlString).map((d) => `(${d})`).join(', ');
+    await this.duckDB.query(`
+      TRUNCATE TABLE filteredDepartments;
+      ${filterValues.departments.length > 0 ? `INSERT INTO filteredDepartments VALUES ${deptRows};` : ''}
+    `);
 
     // Query to filter the filteredVisitIds table at visit level --------
     await this.duckDB.query(`

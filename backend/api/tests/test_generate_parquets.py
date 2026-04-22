@@ -72,7 +72,6 @@ def valid_visit_attributes_row() -> dict:
         "attending_provider_id": "PROV-A",
         "attending_provider_line": 1,
         "is_admitting_attending": True,
-        "department_ids": ["critical-care"],
         "procedure_ids": ["critical-care__stroke"],
     }
 
@@ -181,7 +180,6 @@ class GenerateParquetsTests(TransactionTestCase):
             self.assertEqual(row["plt_units_adherent"], 0)
             self.assertEqual(row["cryo_units_adherent"], 0)
             self.assertEqual(row["overall_units_adherent"], 2)
-            self.assertEqual(sorted(row["department_ids"]), ["critical-care", "ecmo"])
             self.assertEqual(
                 sorted(row["procedure_ids"]),
                 ["critical-care__stroke", "ecmo__initiation"],
@@ -301,8 +299,6 @@ class GenerateParquetsTests(TransactionTestCase):
             self.assertTrue(procedure_hierarchy_path.exists())
 
             hierarchy_payload = json.loads(procedure_hierarchy_path.read_text(encoding="utf-8"))
-            department_ids = {department["id"] for department in hierarchy_payload["departments"]}
-            self.assertEqual(department_ids, {"critical-care", "ecmo"})
 
     def test_generate_parquets_cpt_enrichment_ignores_blank_and_unmapped_codes(self):
         visit = create_empty_visit_fixture(
@@ -351,7 +347,6 @@ class GenerateParquetsTests(TransactionTestCase):
 
             parquet_path = Path(base_dir) / "parquet_cache" / "visit_attributes.parquet"
             row = pq.read_table(parquet_path).to_pylist()[0]
-            self.assertEqual(row["department_ids"], ["critical-care"])
             self.assertEqual(row["procedure_ids"], ["critical-care__stroke"])
 
     def test_build_visit_attributes_table_enforces_nullability_for_every_column(self):
@@ -416,8 +411,8 @@ class GenerateParquetsTests(TransactionTestCase):
             "attending_provider": {"bad": "string"},
             "attending_provider_id": {"bad": "string"},
             "attending_provider_line": {"bad": "uint16"},
+            "attending_provider_department": {"bad": "string"},
             "is_admitting_attending": {"bad": "bool"},
-            "department_ids": [{"bad": "string-list"}],
             "procedure_ids": [{"bad": "string-list"}],
         }
 
@@ -488,7 +483,7 @@ class GenerateParquetsTests(TransactionTestCase):
 
             self.assertEqual(parquet_path.read_bytes(), sentinel)
 
-    def test_build_visit_cpt_dimensions_returns_sorted_dimension_ids(self):
+    def test_build_visit_cpt_dimensions_returns_sorted_procedure_ids(self):
         code_map = {
             "99291": ("critical-care", "Critical Care", "critical-care__stroke", "Stroke"),
             "33946": ("ecmo", "ECMO", "ecmo__initiation", "ECMO Initiation"),
@@ -514,11 +509,10 @@ class GenerateParquetsTests(TransactionTestCase):
             code_rank=2,
         )
 
-        visit_departments, visit_procedures = build_visit_cpt_dimensions(
+        visit_procedures = build_visit_cpt_dimensions(
             code_map=code_map,
             billing_fetch_batch_size=2,
         )
-        self.assertEqual(visit_departments[3003], ["critical-care", "ecmo"])
         self.assertEqual(
             visit_procedures[3003],
             ["critical-care__stroke", "ecmo__initiation"],
@@ -571,11 +565,10 @@ class GenerateParquetsTests(TransactionTestCase):
             code_rank=5,
         )
 
-        visit_departments, visit_procedures = build_visit_cpt_dimensions(
+        visit_procedures = build_visit_cpt_dimensions(
             code_map=code_map,
             billing_fetch_batch_size=1,
         )
-        self.assertEqual(visit_departments[3004], ["critical-care", "ecmo"])
         self.assertEqual(
             visit_procedures[3004],
             ["critical-care__stroke", "ecmo__initiation"],

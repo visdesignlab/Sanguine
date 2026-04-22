@@ -21,6 +21,7 @@ class Command(BaseCommand):
             ["python", "manage.py", "destroydata"],
             ["python", "manage.py", "migrate_derived_tables"],
             ["python", "manage.py", "mockdata", "--size", size],
+            ["python", "manage.py", "load_provider_departments"],
             ["python", "manage.py", "refresh_derived_tables"],
             ["python", "manage.py", "generate_parquets"],
         ]

@@ -203,3 +203,10 @@ class RoomTrace(models.Model):
 
     class Meta:
         db_table = "RoomTrace"
+
+class ProviderDepartmentMapping(models.Model):
+    prov_id = models.CharField(max_length=25, primary_key=True)
+    department_name = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "ProviderDepartmentMapping"

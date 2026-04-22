@@ -84,7 +84,6 @@ function App() {
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
           SELECT * REPLACE (
-            COALESCE(CAST(department_ids AS VARCHAR[]), []::VARCHAR[]) AS department_ids,
             COALESCE(CAST(procedure_ids AS VARCHAR[]), []::VARCHAR[]) AS procedure_ids
           )
           FROM read_parquet('visit_attributes.parquet');
@@ -109,6 +108,8 @@ function App() {
             ${store.unitCosts.cell_saver_cost}
           );
           
+          CREATE TABLE IF NOT EXISTS filteredDepartments (department VARCHAR);
+
           CREATE TABLE IF NOT EXISTS filteredVisitIds AS
           SELECT DISTINCT visit_no FROM visits;
 
@@ -123,7 +124,9 @@ function App() {
             CASE WHEN COALESCE(v.cell_saver_ml, 0) > 0 THEN c.cell_saver_cost ELSE 0 END AS cell_saver_cost
           FROM visits v
           INNER JOIN filteredVisitIds fvi ON v.visit_no = fvi.visit_no
-          CROSS JOIN costs c;
+          CROSS JOIN costs c
+          WHERE (NOT EXISTS (SELECT 1 FROM filteredDepartments)) -- Checking if filteredDepartments is empty - if it is, don't filter on department
+             OR v.attending_provider_department IN (SELECT department FROM filteredDepartments); -- If filteredDepartments is not empty, filter on department
 
           CREATE VIEW IF NOT EXISTS filteredSurgeryCases AS
           SELECT 
@@ -168,7 +171,12 @@ function App() {
             MAX(ecmo) as ecmo,
             
             MAX(ms_drg_weight) as ms_drg_weight,
-            MAX(age_at_adm) as age_at_adm
+            MAX(age_at_adm) as age_at_adm,
+
+            -- List of departments that this visit ever saw (from all providers)
+            LIST(attending_provider_department) as departments
+            -- List of procedures for this visit (from the cpt hierarchy)
+
 
           FROM filteredVisits
           GROUP BY visit_no, month, quarter, year, dsch_dtm;

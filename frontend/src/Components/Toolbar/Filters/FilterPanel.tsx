@@ -20,7 +20,8 @@ import { useObserver } from 'mobx-react-lite';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
-import { DepartmentProcedureFilter } from './DepartmentProcedureFilter';
+import { ProviderDepartmentFilter } from './ProviderDepartmentFilter';
+import { ProcedureFilter } from './ProcedureFilter';
 import classes from '../../../Shell/Shell.module.css';
 import { FilterHistogramWithSliderComponent } from './FilterHistogramWithSliderComponent';
 import { BLOOD_PRODUCTS_ARRAY } from '../../../Types/bloodProducts';
@@ -241,16 +242,29 @@ export function FilterPanel() {
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* Department & Procedure Filters */}
-          <Accordion.Item value="department-procedure-filters" key="department-procedure-filters">
+          {/* Department Filters */}
+          <Accordion.Item value="provider-department-filters" key="department-procedure-filters">
             <FilterHeader
-              countName="procedureDepartmentsAppliedCount"
-              title="Department & Procedure"
+              countName="providerDepartmentAppliedCount"
+              title="Provider Department"
               tooltipLabel="Number of involved departments"
-              resetFunc={() => store.resetProcedureFilters()}
+              resetFunc={() => store.resetDepartmentsFilter()}
             />
             <Accordion.Panel styles={{ content: { paddingLeft: 8, paddingRight: 8 } }}>
-              <DepartmentProcedureFilter />
+              <ProviderDepartmentFilter />
+            </Accordion.Panel>
+          </Accordion.Item>
+
+          {/* Procedure Filters */}
+          <Accordion.Item value="procedure-filters" key="procedure-filters">
+            <FilterHeader
+              countName="procedureGroupsAppliedCount"
+              title="Procedure"
+              tooltipLabel="Number of procedure groups with active filters"
+              resetFunc={() => store.resetProcedureIdsFilter()}
+            />
+            <Accordion.Panel styles={{ content: { paddingLeft: 8, paddingRight: 8 } }}>
+              <ProcedureFilter />
             </Accordion.Panel>
           </Accordion.Item>
         </Accordion>
