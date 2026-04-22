@@ -7,6 +7,7 @@ import {
   Stack,
   Text,
   TextInput,
+  Tooltip,
 } from '@mantine/core';
 import { useContext, useEffect, useState } from 'react';
 import { IconSearch } from '@tabler/icons-react';
@@ -38,19 +39,24 @@ function DepartmentOption({
           aria-label={`Toggle ${department.name}`}
         />
         <Box style={{ flex: 1, minWidth: 0 }}>
-          <Text size="sm" fw={checked ? 700 : 600}>
-            {department.name}
-          </Text>
-          <Badge
-            size="xs"
-            variant={checked ? 'light' : 'outline'}
-            color={checked ? 'blue' : 'gray'}
-            mt={2}
-          >
-            {department.visit_count.toLocaleString()}
-            {' '}
-            visits
-          </Badge>
+          <Tooltip label={`Filter to only encounters in ${department.name}`} position="right" withArrow openDelay={300}>
+            <Text size="sm" fw={checked ? 700 : 600}>
+              {department.name}
+            </Text>
+          </Tooltip>
+          <Tooltip label={`${department.visit_count.toLocaleString()} Visits saw ${department.name} at least once during Visit`} position="right" withArrow openDelay={300}>
+            <Badge
+              size="xs"
+              variant={checked ? 'light' : 'outline'}
+              color={checked ? 'blue' : 'gray'}
+              mt={2}
+              style={{ cursor: 'default' }}
+            >
+              {department.visit_count.toLocaleString()}
+              {' '}
+              visits
+            </Badge>
+          </Tooltip>
         </Box>
       </Flex>
     </Paper>

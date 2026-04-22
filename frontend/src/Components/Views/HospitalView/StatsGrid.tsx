@@ -7,6 +7,7 @@ import {
   CloseButton,
   Group, LoadingOverlay, SimpleGrid, Text,
   Title,
+  Tooltip,
 } from '@mantine/core';
 import { useState, useContext, useCallback } from 'react';
 import { useObserver } from 'mobx-react-lite';
@@ -18,6 +19,7 @@ import { Store } from '../../../Store/Store';
 import { isMetricChangeGood } from '../../../Utils/dashboard';
 import { DashboardAggYAxisVar, DashboardStatData } from '../../../Types/application';
 import { getIconForVar } from '../../../Utils/icons';
+import { getDepartmentContextLabel } from '../../../Utils/departmentContext';
 
 export function StatsGrid() {
   // Icon styles
@@ -37,6 +39,12 @@ export function StatsGrid() {
   }, [store]);
 
   return useObserver(() => {
+    // Compute department context label for tooltips
+    const departmentLabel = getDepartmentContextLabel(
+      store.filterValues.departments,
+      store.procedureHierarchy?.departments,
+    );
+
     // For every stat config, create a card describing it.
     const statCards = store.dashboardStatConfigs.map((statConfig, idx) => {
       // Get the stat value from statData
@@ -62,7 +70,7 @@ export function StatsGrid() {
       // Determine if this card is currently hovered
       const isHovered = hoveredIdx === idx;
 
-      return (
+      const statCard = (
         <Card
           key={statConfig.statId}
           className={`${gridItemStyles.gridItem} ${isHovered ? gridItemStyles.gridItemHovered : ''}`.trim()}
@@ -129,6 +137,17 @@ export function StatsGrid() {
           </Group>
         </Card>
       );
+
+      // Wrap in a Tooltip if departments are filtered
+      if (departmentLabel) {
+        return (
+          <Tooltip key={statConfig.statId} label={departmentLabel} position="bottom" withArrow openDelay={400}>
+            {statCard}
+          </Tooltip>
+        );
+      }
+
+      return statCard;
     });
 
     return (

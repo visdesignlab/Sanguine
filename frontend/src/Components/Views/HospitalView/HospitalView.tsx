@@ -37,6 +37,7 @@ import {
   BLOOD_PRODUCT_COLOR_THEME,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
+import { getDepartmentContextLabel } from '../../../Utils/departmentContext';
 
 /**
  * @returns Patient Blood Management Hospital view - Stats and Charts
@@ -111,6 +112,13 @@ export function HospitalView() {
   // --- Render Dashboard ---
   return useObserver(() => {
     const chartRowHeight = 300;
+
+    // Compute department context label for tooltips
+    const departmentLabel = getDepartmentContextLabel(
+      store.filterValues.departments,
+      store.procedureHierarchy?.departments,
+    );
+
     return (
       <Stack mb="xl" gap="lg">
         <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
@@ -355,21 +363,18 @@ export function HospitalView() {
                         type="stacked"
                         withLegend
                         tooltipAnimationDuration={200}
-                        tooltipProps={
-                          chartDataKeys.length === 1
-                            ? {
-                              content: ({ active, payload, label }) => (
-                                <DashboardChartTooltip
-                                  active={active}
-                                  payload={payload}
-                                  xAxisVar={label}
-                                  yAxisVar={yAxisVar}
-                                  aggregation={aggregation}
-                                />
-                              ),
-                            }
-                            : {}
-                        }
+                        tooltipProps={{
+                          content: ({ active, payload, label }) => (
+                            <DashboardChartTooltip
+                              active={active}
+                              payload={payload}
+                              xAxisVar={label}
+                              yAxisVar={yAxisVar}
+                              aggregation={aggregation}
+                              departmentLabel={departmentLabel}
+                            />
+                          ),
+                        }}
                         valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
                         barProps={{
                           onClick: (data: { payload?: { timePeriod?: string } }) => {
