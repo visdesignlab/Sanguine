@@ -108,6 +108,8 @@ function App() {
             ${store.unitCosts.cell_saver_cost}
           );
           
+          CREATE TABLE IF NOT EXISTS filteredDepartments (department VARCHAR);
+
           CREATE TABLE IF NOT EXISTS filteredVisitIds AS
           SELECT DISTINCT visit_no FROM visits;
 
@@ -122,7 +124,9 @@ function App() {
             CASE WHEN COALESCE(v.cell_saver_ml, 0) > 0 THEN c.cell_saver_cost ELSE 0 END AS cell_saver_cost
           FROM visits v
           INNER JOIN filteredVisitIds fvi ON v.visit_no = fvi.visit_no
-          CROSS JOIN costs c;
+          CROSS JOIN costs c
+          WHERE NOT EXISTS (SELECT 1 FROM filteredDepartments)
+             OR v.attending_provider_department IN (SELECT department FROM filteredDepartments);
 
           CREATE VIEW IF NOT EXISTS filteredSurgeryCases AS
           SELECT 

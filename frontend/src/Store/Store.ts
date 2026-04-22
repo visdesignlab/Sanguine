@@ -1830,6 +1830,13 @@ export class RootStore {
     // Join the visit-level filter conditions with AND
     const visitFiltersToApply = visitFilterConditions.join(' AND ');
 
+    // Sync row-level department filter (used by filteredVisits VIEW WHERE clause)
+    const deptRows = filterValues.departments.map(sqlString).map((d) => `(${d})`).join(', ');
+    await this.duckDB.query(`
+      TRUNCATE TABLE filteredDepartments;
+      ${filterValues.departments.length > 0 ? `INSERT INTO filteredDepartments VALUES ${deptRows};` : ''}
+    `);
+
     // Query to filter the filteredVisitIds table at visit level --------
     await this.duckDB.query(`
       TRUNCATE TABLE filteredVisitIds;
