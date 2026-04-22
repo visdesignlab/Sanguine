@@ -483,7 +483,7 @@ class GenerateParquetsTests(TransactionTestCase):
 
             self.assertEqual(parquet_path.read_bytes(), sentinel)
 
-    def test_build_visit_cpt_dimensions_returns_sorted_dimension_ids(self):
+    def test_build_visit_cpt_dimensions_returns_sorted_procedure_ids(self):
         code_map = {
             "99291": ("critical-care", "Critical Care", "critical-care__stroke", "Stroke"),
             "33946": ("ecmo", "ECMO", "ecmo__initiation", "ECMO Initiation"),
@@ -509,11 +509,10 @@ class GenerateParquetsTests(TransactionTestCase):
             code_rank=2,
         )
 
-        visit_departments, visit_procedures = build_visit_cpt_dimensions(
+        visit_procedures = build_visit_cpt_dimensions(
             code_map=code_map,
             billing_fetch_batch_size=2,
         )
-        self.assertEqual(visit_departments[3003], ["critical-care", "ecmo"])
         self.assertEqual(
             visit_procedures[3003],
             ["critical-care__stroke", "ecmo__initiation"],
@@ -566,11 +565,10 @@ class GenerateParquetsTests(TransactionTestCase):
             code_rank=5,
         )
 
-        visit_departments, visit_procedures = build_visit_cpt_dimensions(
+        visit_procedures = build_visit_cpt_dimensions(
             code_map=code_map,
             billing_fetch_batch_size=1,
         )
-        self.assertEqual(visit_departments[3004], ["critical-care", "ecmo"])
         self.assertEqual(
             visit_procedures[3004],
             ["critical-care__stroke", "ecmo__initiation"],

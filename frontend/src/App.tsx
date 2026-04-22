@@ -125,8 +125,8 @@ function App() {
           FROM visits v
           INNER JOIN filteredVisitIds fvi ON v.visit_no = fvi.visit_no
           CROSS JOIN costs c
-          WHERE NOT EXISTS (SELECT 1 FROM filteredDepartments)
-             OR v.attending_provider_department IN (SELECT department FROM filteredDepartments);
+          WHERE (NOT EXISTS (SELECT 1 FROM filteredDepartments)) -- Checking if filteredDepartments is empty - if it is, don't filter on department
+             OR v.attending_provider_department IN (SELECT department FROM filteredDepartments); -- If filteredDepartments is not empty, filter on department
 
           CREATE VIEW IF NOT EXISTS filteredSurgeryCases AS
           SELECT 

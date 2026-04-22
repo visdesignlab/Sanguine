@@ -20,7 +20,7 @@ import { useObserver } from 'mobx-react-lite';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
-import { DepartmentProcedureFilter } from './DepartmentProcedureFilter';
+import { ProviderDepartmentFilter } from './ProviderDepartmentFilter';
 import { ProcedureFilter } from './ProcedureFilter';
 import classes from '../../../Shell/Shell.module.css';
 import { FilterHistogramWithSliderComponent } from './FilterHistogramWithSliderComponent';
@@ -243,15 +243,15 @@ export function FilterPanel() {
           </Accordion.Item>
 
           {/* Department Filters */}
-          <Accordion.Item value="department-procedure-filters" key="department-procedure-filters">
+          <Accordion.Item value="provider-department-filters" key="department-procedure-filters">
             <FilterHeader
-              countName="procedureDepartmentsAppliedCount"
+              countName="providerDepartmentAppliedCount"
               title="Provider Department"
               tooltipLabel="Number of involved departments"
               resetFunc={() => store.resetDepartmentsFilter()}
             />
             <Accordion.Panel styles={{ content: { paddingLeft: 8, paddingRight: 8 } }}>
-              <DepartmentProcedureFilter />
+              <ProviderDepartmentFilter />
             </Accordion.Panel>
           </Accordion.Item>
 

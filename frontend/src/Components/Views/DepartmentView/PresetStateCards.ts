@@ -23,7 +23,7 @@ export const presetStateCards: PresetGroup[] = [
         chartConfigs: [
           {
             chartId: 'preset-explore-table-preop-anemia',
-            title: 'RBC Transfusions per Surgeon',
+            title: 'RBC Transfusions per Provider',
             chartType: 'exploreTable',
             rowVar: 'attending_provider',
             columns: [
@@ -37,7 +37,7 @@ export const presetStateCards: PresetGroup[] = [
                 colVar: 'attending_provider',
                 aggregation: 'none',
                 type: 'text',
-                title: 'Surgeon',
+                title: 'Provider',
               },
               {
                 colVar: 'cases',
@@ -123,7 +123,7 @@ export const presetStateCards: PresetGroup[] = [
           },
           {
             chartId: 'preset-explore-table-hgb',
-            title: 'Transfusions per Surgeon',
+            title: 'Transfusions per Provider',
             chartType: 'exploreTable',
             rowVar: 'attending_provider',
             columns: [
@@ -137,7 +137,7 @@ export const presetStateCards: PresetGroup[] = [
                 colVar: 'attending_provider',
                 aggregation: 'none',
                 type: 'text',
-                title: 'Surgeon',
+                title: 'Provider',
               },
               {
                 colVar: 'cases',
@@ -215,7 +215,7 @@ export const presetStateCards: PresetGroup[] = [
         chartConfigs: [
           {
             chartId: 'preset-explore-table-antifib',
-            title: 'Antifibrinolytic Usage & Outcomes per Surgeon',
+            title: 'Antifibrinolytic Usage & Outcomes per Provider',
             chartType: 'exploreTable',
             rowVar: 'attending_provider',
             columns: [
@@ -235,7 +235,7 @@ export const presetStateCards: PresetGroup[] = [
                 colVar: 'attending_provider',
                 aggregation: 'none',
                 type: 'text',
-                title: 'Surgeon',
+                title: 'Provider',
               },
               {
                 colVar: 'death',
@@ -354,7 +354,7 @@ export const presetStateCards: PresetGroup[] = [
         chartConfigs: [
           {
             chartId: 'preset-cost-savings-table',
-            title: 'Intraoperative Blood Product Costs per Surgeon',
+            title: 'Intraoperative Blood Product Costs per Provider',
             chartType: 'exploreTable',
             rowVar: 'attending_provider',
             columns: [
@@ -368,7 +368,7 @@ export const presetStateCards: PresetGroup[] = [
                 colVar: 'attending_provider',
                 aggregation: 'none',
                 type: 'text',
-                title: 'Surgeon',
+                title: 'Provider',
               },
               {
                 colVar: 'cases',

@@ -68,7 +68,7 @@ function DepartmentOption({
   );
 }
 
-export function DepartmentProcedureFilter() {
+export function ProviderDepartmentFilter() {
   const store = useContext(Store);
   const [searchTerm, setSearchTerm] = useState('');
   const [visibleDepartments, setVisibleDepartments] = useState<VisibleDepartment[]>([]);

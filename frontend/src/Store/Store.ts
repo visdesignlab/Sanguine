@@ -1538,7 +1538,7 @@ export class RootStore {
   /**
    * Returns number of departments represented by current department/procedure filters.
    */
-  get procedureDepartmentsAppliedCount(): number {
+  get providerDepartmentAppliedCount(): number {
     const { departments, procedureIds } = this.filterValues;
     const involvedDepartments = new Set(departments);
 
