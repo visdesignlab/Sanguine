@@ -117,6 +117,7 @@ export function HospitalView() {
     const departmentLabel = getDepartmentContextLabel(
       store.filterValues.departments,
       store.procedureHierarchy?.departments,
+      'From',
     );
 
     return (

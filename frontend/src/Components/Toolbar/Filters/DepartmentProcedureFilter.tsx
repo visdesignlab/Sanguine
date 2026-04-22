@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useContext, useEffect, useState } from 'react';
-import { IconSearch } from '@tabler/icons-react';
+import { IconSearch, IconStethoscope } from '@tabler/icons-react';
 import { useObserver } from 'mobx-react-lite';
 import { Store } from '../../../Store/Store';
 
@@ -19,6 +19,10 @@ type VisibleDepartment = {
   name: string;
   visit_count: number;
 };
+
+function StethoscopeCheckIcon({ className }: { className: string }) {
+  return <IconStethoscope className={className} size={14} />;
+}
 
 function DepartmentOption({
   department,
@@ -31,34 +35,35 @@ function DepartmentOption({
 }) {
   return (
     <Paper withBorder p="xs" radius="md">
-      <Flex gap="xs" align="flex-start">
-        <Checkbox
-          checked={checked}
-          onChange={onToggleDepartment}
-          mt={2}
-          aria-label={`Toggle ${department.name}`}
-        />
-        <Box style={{ flex: 1, minWidth: 0 }}>
-          <Tooltip label={`Filter to only encounters in ${department.name}`} position="right" withArrow openDelay={300}>
+      <Tooltip label={`Filter to interactions from ${department.name} based providers`} position="right" withArrow openDelay={300}>
+        <Flex gap="xs" align="flex-start">
+          <Checkbox
+            checked={checked}
+            onChange={onToggleDepartment}
+            mt={2}
+            aria-label={`Toggle ${department.name}`}
+            icon={StethoscopeCheckIcon}
+          />
+          <Box style={{ flex: 1, minWidth: 0 }}>
             <Text size="sm" fw={checked ? 700 : 600}>
               {department.name}
             </Text>
-          </Tooltip>
-          <Tooltip label={`${department.visit_count.toLocaleString()} Visits saw ${department.name} at least once during Visit`} position="right" withArrow openDelay={300}>
-            <Badge
-              size="xs"
-              variant={checked ? 'light' : 'outline'}
-              color={checked ? 'blue' : 'gray'}
-              mt={2}
-              style={{ cursor: 'default' }}
-            >
-              {department.visit_count.toLocaleString()}
-              {' '}
-              visits
-            </Badge>
-          </Tooltip>
-        </Box>
-      </Flex>
+            <Tooltip label={`${department.visit_count.toLocaleString()} Visits saw ${department.name} based providers at least once during Visit`} position="right" withArrow openDelay={300}>
+              <Badge
+                size="xs"
+                variant={checked ? 'light' : 'outline'}
+                color={checked ? 'blue' : 'gray'}
+                mt={2}
+                style={{ cursor: 'default' }}
+              >
+                {department.visit_count.toLocaleString()}
+                {' '}
+                visits
+              </Badge>
+            </Tooltip>
+          </Box>
+        </Flex>
+      </Tooltip>
     </Paper>
   );
 }

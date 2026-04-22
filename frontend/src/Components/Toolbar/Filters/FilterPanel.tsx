@@ -246,7 +246,7 @@ export function FilterPanel() {
           <Accordion.Item value="department-procedure-filters" key="department-procedure-filters">
             <FilterHeader
               countName="procedureDepartmentsAppliedCount"
-              title="Department"
+              title="Provider Department"
               tooltipLabel="Number of involved departments"
               resetFunc={() => store.resetDepartmentsFilter()}
             />

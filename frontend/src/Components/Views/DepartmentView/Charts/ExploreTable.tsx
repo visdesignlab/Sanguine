@@ -33,7 +33,7 @@ import { BarChart } from '@mantine/charts';
 import { Store } from '../../../../Store/Store';
 import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3Utils';
 import {
-  ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions, ExploreTableColumnOptionsGrouped, ExploreTableRowOptions, ExploreTableGroupByOptions, OUTCOMES,
+  ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions, ExploreTableColumnOptionsGrouped, ExploreTableRowOptions, ExploreTableGroupByOptions,
 } from '../../../../Types/application';
 import { backgroundHoverColor, smallHoverColor } from '../../../../Theme/mantineTheme';
 import { getDepartmentContextLabel } from '../../../../Utils/departmentContext';
@@ -741,11 +741,6 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   const chartData = store.exploreChartData[chartConfig.chartId] as ExploreTableData;
 
   // Compute department context labels for tooltips
-  const outcomeValues = useMemo(() => new Set(OUTCOMES.map((o) => o.value as string)), []);
-  const withinLabel = useMemo(
-    () => getDepartmentContextLabel(store.filterValues.departments, store.procedureHierarchy?.departments, 'Within'),
-    [store.filterValues.departments, store.procedureHierarchy?.departments],
-  );
   const fromLabel = useMemo(
     () => getDepartmentContextLabel(store.filterValues.departments, store.procedureHierarchy?.departments, 'From'),
     [store.filterValues.departments, store.procedureHierarchy?.departments],
@@ -1056,8 +1051,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         colVar, type, title, numericTextVisible, aggregation: agg,
       } = colConfig;
 
-      // Determine the department context label based on column type
-      const deptLabel = outcomeValues.has(colVar) ? fromLabel : withinLabel;
+      // All explore table department context tooltips should use provider-based phrasing.
+      const deptLabel = fromLabel;
 
       // Extract values for footer
       const rawValues = rowsWithGroups.map((r: ExploreTableRow) => r[colVar]);
@@ -1486,7 +1481,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     }
 
     return resultColumns;
-  }, [rowsWithGroups, chartConfig.twoValsPerRow, chartConfig.rowVar, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues, withinLabel, fromLabel, outcomeValues]);
+  }, [rowsWithGroups, chartConfig.twoValsPerRow, chartConfig.rowVar, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues, fromLabel]);
 
   // Data Table Columns -------
   const columnDefs = useMemo(

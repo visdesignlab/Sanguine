@@ -7,27 +7,27 @@ import { ProcedureHierarchyDepartment } from '../Types/application';
  * Rules:
  *  - 0 filtered departments (all visible): returns null (no label)
  *  - 1 department: "Within Oncology" (or "From Oncology")
- *  - 2 departments: "Within Oncology, Radiology" (or "From ...")
- *  - 3+ departments: "Within Oncology + 2 more…" where Oncology is the
+ *  - 2 departments: "From Oncology, Radiology"
+ *  - 3+ departments: "From Oncology + 2 more…" where Oncology is the
  *    largest by visit_count from the hierarchy
  *
  * @param departments  Currently filtered department names
  * @param allDepartments  Full hierarchy departments (for visit_count lookup)
- * @param prefix  "Within" (default) or "From" — used for outcomes
+ * @param prefix  "From" — used for outcomes
  */
 export function getDepartmentContextLabel(
   departments: string[],
   allDepartments: ProcedureHierarchyDepartment[] | undefined,
-  prefix: 'Within' | 'From' = 'Within',
+  prefix: 'From' = 'From',
 ): string | null {
   if (!departments || departments.length === 0) return null;
 
   if (departments.length === 1) {
-    return `${prefix} ${departments[0]}`;
+    return `${prefix} ${departments[0]} Providers`;
   }
 
   if (departments.length === 2) {
-    return `${prefix} ${departments[0]}, ${departments[1]}`;
+    return `${prefix} ${departments[0]}, ${departments[1]} Providers`;
   }
 
   // 3+ departments — find the largest by visit_count
@@ -46,5 +46,5 @@ export function getDepartmentContextLabel(
   const largest = sorted[0];
   const remaining = departments.length - 1;
 
-  return `${prefix} ${largest} + ${remaining} more\u2026`;
+  return `${prefix} Providers in ${largest} + ${remaining} more\u2026`;
 }
