@@ -987,7 +987,7 @@ export class RootStore {
         ? `
         SELECT
           ${xAxisVar} AS timePeriod,
-          attending_provider_department AS dept_id,
+          attending_provider_department,
           COUNT(DISTINCT visit_no) AS visit_count,
           ${selectClauses.join(',\n')}
         FROM filteredVisits
@@ -998,7 +998,7 @@ export class RootStore {
         : `
         SELECT
           ${xAxisVar} AS timePeriod,
-          NULL as dept_id,
+          NULL as attending_provider_department,
           COUNT(DISTINCT visit_no) AS visit_count,
           ${selectClauses.join(',\n')}
         FROM filteredVisits
@@ -1021,8 +1021,8 @@ export class RootStore {
             const timePeriod = row.timePeriod as TimePeriod;
             if (timePeriod === null || timePeriod === undefined) return acc;
 
-            // dept_id comes from unnest(a.departments) which is attending_provider_department — the name IS the identifier
-            const deptName = (row.dept_id as string | null) || undefined;
+            // attending_provider_department comes from unnest(a.departments) which is attending_provider_department — the name IS the identifier
+            const deptName = (row.attending_provider_department as string | null) || undefined;
 
             let rowData: number | Record<string, number> = 0;
 
@@ -2088,7 +2088,7 @@ export class RootStore {
       }
       // DUMBBELL CHART -------------------------------
       if (config.chartType === 'dumbbell') {
-      // TODO: Don't limit to only 10,000 surgeries.
+        // TODO: Don't limit to only 10,000 surgeries.
         const query = `
           SELECT
              CAST(case_id AS VARCHAR) as case_id,
