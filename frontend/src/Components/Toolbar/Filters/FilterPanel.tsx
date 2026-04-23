@@ -243,7 +243,14 @@ export function FilterPanel() {
           </Accordion.Item>
 
           {/* Department Filters */}
-          <Accordion.Item value="provider-department-filters" key="department-procedure-filters">
+          <Accordion.Item
+            value="provider-department-filters"
+            key="department-procedure-filters"
+            style={{
+              opacity: store.state.ui.activeTab === 'Department' ? 0.5 : 1,
+              pointerEvents: store.state.ui.activeTab === 'Department' ? 'none' : 'auto',
+            }}
+          >
             <FilterHeader
               countName="providerDepartmentAppliedCount"
               title="Provider Department"
