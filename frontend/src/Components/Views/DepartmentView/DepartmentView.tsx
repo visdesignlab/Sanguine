@@ -275,12 +275,12 @@ export function DepartmentView() {
       setDepartmentOptions(opts);
 
       // Auto-select the largest department if none is currently selected
-      if (opts.length > 0 && store.filterValues.departments.length === 0) {
-        store.setProcedureFilters([opts[0].value], store.filterValues.procedureIds);
+      if (opts.length > 0 && !store.state.ui.departmentViewDepartment) {
+        store.actions.setUiState({ departmentViewDepartment: opts[0].value });
       }
     }
     loadDepartments();
-  }, [store.duckDB]);
+  }, [store.duckDB, store.actions, store.state.ui.departmentViewDepartment]);
 
   const renderDeptOption = useCallback(({ option }: { option: { value: string; label: string } }) => {
     const dept = departmentOptions.find((d) => d.value === option.value);
@@ -295,7 +295,7 @@ export function DepartmentView() {
   }, [departmentOptions]);
 
   return useObserver(() => {
-    const selectedDepartment = store.filterValues.departments[0] || null;
+    const selectedDepartment = store.state.ui.departmentViewDepartment;
     return (
       <Stack>
         {/* Title, Add Chart Button */}
@@ -321,11 +321,7 @@ export function DepartmentView() {
               placeholder="Select department"
               value={selectedDepartment}
               onChange={(value) => {
-                if (value) {
-                  store.setProcedureFilters([value], store.filterValues.procedureIds);
-                } else {
-                  store.setProcedureFilters([], store.filterValues.procedureIds);
-                }
+                store.actions.setUiState({ departmentViewDepartment: value || null });
               }}
               data={departmentOptions}
               renderOption={renderDeptOption}

@@ -1486,7 +1486,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     }
 
     return resultColumns;
-  }, [rowsWithGroups, chartConfig.twoValsPerRow, chartConfig.rowVar, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues]);
+  }, [rowsWithGroups, chartConfig.twoValsPerRow, chartConfig.rowVar, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues, fromLabel, sortStatus.columnAccessor]);
 
   // Data Table Columns -------
   const columnDefs = useMemo(

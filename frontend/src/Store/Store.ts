@@ -133,6 +133,7 @@ export interface ApplicationState {
   };
   ui: {
     activeTab: string;
+    departmentViewDepartment: string | null;
     leftToolbarOpened: boolean;
     activeLeftPanel: number | null;
     selectedVisitNo: number | null;
@@ -463,6 +464,7 @@ export class RootStore {
       },
       ui: {
         activeTab: 'Hospital',
+        departmentViewDepartment: null,
         leftToolbarOpened: true,
         activeLeftPanel: null,
         selectedVisitNo: null,
@@ -1765,9 +1767,19 @@ export class RootStore {
   // React to filter, selection, and configuration changes by updating the data
   initReactions() {
     reaction(
-      () => this.state.filterValues,
+      () => [this.state.filterValues, this.state.ui.activeTab, this.state.ui.departmentViewDepartment],
       async () => { await this.updateFilteredData(); },
       { fireImmediately: false },
+    );
+    reaction(
+      () => this.state.ui.activeTab,
+      (activeTab) => {
+        if (activeTab === 'Department' && this.state.ui.filterPanelExpandedItems.includes('provider-department-filters')) {
+          this.actions.setUiState({
+            filterPanelExpandedItems: this.state.ui.filterPanelExpandedItems.filter((i) => i !== 'provider-department-filters'),
+          });
+        }
+      },
     );
     reaction(
       () => [this.state.dashboard.chartConfigs, this.state.dashboard.statConfigs],
@@ -1834,8 +1846,13 @@ export class RootStore {
     // Use list-native predicates to avoid UNNEST/CTE rescans on each filter update.
     // Only allow slug-like IDs (alphanumeric, underscore, hyphen) to be interpolated into SQL.
 
-    if (filterValues.departments.length > 0) {
-      const departmentIdList = filterValues.departments.map(sqlString).join(', ');
+    const { activeTab } = this.uiState;
+    const activeDepartments = activeTab === 'Department'
+      ? (this.uiState.departmentViewDepartment ? [this.uiState.departmentViewDepartment] : [])
+      : filterValues.departments;
+
+    if (activeDepartments.length > 0) {
+      const departmentIdList = activeDepartments.map(sqlString).join(', ');
       visitFilterConditions.push(`BOOL_OR(attending_provider_department IN (${departmentIdList}))`);
     }
 
@@ -1856,10 +1873,10 @@ export class RootStore {
     const visitFiltersToApply = visitFilterConditions.join(' AND ');
 
     // Sync row-level department filter (used by filteredVisits VIEW WHERE clause)
-    const deptRows = filterValues.departments.map(sqlString).map((d) => `(${d})`).join(', ');
+    const deptRows = activeDepartments.map(sqlString).map((d) => `(${d})`).join(', ');
     await this.duckDB.query(`
       TRUNCATE TABLE filteredDepartments;
-      ${filterValues.departments.length > 0 ? `INSERT INTO filteredDepartments VALUES ${deptRows};` : ''}
+      ${activeDepartments.length > 0 ? `INSERT INTO filteredDepartments VALUES ${deptRows};` : ''}
     `);
 
     // Query to filter the filteredVisitIds table at visit level --------
