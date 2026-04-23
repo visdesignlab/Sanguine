@@ -244,12 +244,20 @@ export function HospitalView() {
               return { timePeriod: d.timePeriod, [yAxisVar]: d.data };
             });
 
-            const chartDataKeys = chartData.length > 0
-              ? Object.keys(chartData[0]).filter((k) => !['timePeriod', 'deptName', 'counts_per_period', 'data_per_period', '_adherence_den'].includes(k))
-              : [];
-
             const selectedDepts = store.filterValues.departments || [];
             const isMultiDept = selectedDepts.length > 1;
+            const excludedChartDataKeys = new Set(['timePeriod', 'deptName', 'counts_per_period', 'data_per_period', '_adherence_den']);
+            const chartDataKeySet = chartData.reduce((acc, datum) => {
+              Object.keys(datum).forEach((key) => {
+                if (!excludedChartDataKeys.has(key)) {
+                  acc.add(key);
+                }
+              });
+              return acc;
+            }, new Set<string>());
+            const chartDataKeys = isMultiDept
+              ? selectedDepts.filter((dept) => chartDataKeySet.has(dept))
+              : Array.from(chartDataKeySet);
 
             const series = chartDataKeys.map((name, idx) => {
               let label = name;
