@@ -172,10 +172,10 @@ class MaterializedViewTests(TransactionTestCase):
                 "mrn": "MRN-1001",
                 "adm_dtm": date(2024, 1, 1),
                 "dsch_dtm": date(2024, 1, 5),
-                "age_at_adm": 64,
+                "age_at_adm": None,
                 "pat_class_desc": "Inpatient",
-                "apr_drg_weight": 1.4,
-                "ms_drg_weight": 2.1,
+                "apr_drg_weight": None,
+                "ms_drg_weight": None,
                 "month": "2024-Jan",
                 "quarter": "2024-Q1",
                 "year": "2024",
@@ -330,8 +330,8 @@ class MaterializedViewTests(TransactionTestCase):
 
         self.assertEqual(row["id"], "1010-0")
         self.assertEqual(row["attending_provider_line"], 0)
-        self.assertIsNone(row["attending_provider"])
-        self.assertIsNone(row["attending_provider_id"])
+        self.assertEqual(row["attending_provider"], "No Provider")
+        self.assertEqual(row["attending_provider_id"], "No Provider")
         self.assertEqual(row["is_admitting_attending"], 0)
         self.assertEqual(row["rbc_units"], 3)
         self.assertEqual(row["overall_units"], 3)
