@@ -939,15 +939,9 @@ export class RootStore {
     if (!this.duckDB) return;
     const result = {} as DashboardChartData;
 
-    // Get selected department IDs and check if multiple departments are selected ---
-    const selectedDeptIds = this.state.filterValues.departmentIds || [];
-    const multiDept = selectedDeptIds.length > 1;
-    const deptMap = new Map<string, string>();
-    if (multiDept && this.procedureHierarchy) {
-      this.procedureHierarchy.departments.forEach((d) => {
-        deptMap.set(d.id, d.name);
-      });
-    }
+    // Get selected departments and check if multiple departments are selected ---
+    const selectedDepts = this.state.filterValues.departments || [];
+    const multiDept = selectedDepts.length > 1;
 
     // BUILD QUERY: For each chart, build the 'select' clauses for all y-axis variables and their aggregations (sum, avg) ---
     const selectClauses = this.dashboardChartConfigs.flatMap(({ yAxisVar }) => (
@@ -985,10 +979,10 @@ export class RootStore {
     for (const xAxisVar of dashboardXAxisVars) {
       // FINAL QUERY: Get the visit count, time period, department id, and aggregated values for each y-axis variable ---
       const query = multiDept
-        // If multiple departments are selected, unnest the department_ids and group by department_id and x-axis (month, quarter, year)
+        // If multiple departments are selected, unnest the departments list and group by department and x-axis (month, quarter, year)
         ? `
         WITH unnested AS (
-          SELECT a.*, unnest(a.department_ids) as dept_id
+          SELECT a.*, unnest(a.departments) as dept_id
           FROM aggregatedVisits a
         )
         SELECT
@@ -997,7 +991,7 @@ export class RootStore {
           COUNT(visit_no) AS visit_count,
           ${selectClauses.join(',\n')}
         FROM unnested
-        WHERE dept_id IN (${selectedDeptIds.filter((id) => safeIdPattern.test(id)).map(sqlString).join(', ')})
+        WHERE dept_id IN (${selectedDepts.map(sqlString).join(', ')})
         GROUP BY ${xAxisVar}, dept_id;
       `
         // If no departments are selected, just group by x-axis (month, quarter, year)
@@ -1027,8 +1021,8 @@ export class RootStore {
             const timePeriod = row.timePeriod as TimePeriod;
             if (timePeriod === null || timePeriod === undefined) return acc;
 
-            const deptId = row.dept_id as string | null;
-            const deptName = deptId ? deptMap.get(deptId) || deptId : undefined;
+            // dept_id comes from unnest(a.departments) which is attending_provider_department — the name IS the identifier
+            const deptName = (row.dept_id as string | null) || undefined;
 
             let rowData: number | Record<string, number> = 0;
 

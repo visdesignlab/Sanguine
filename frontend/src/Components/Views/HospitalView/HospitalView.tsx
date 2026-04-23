@@ -248,19 +248,19 @@ export function HospitalView() {
               ? Object.keys(chartData[0]).filter((k) => !['timePeriod', 'deptName', 'counts_per_period', 'data_per_period', '_adherence_den'].includes(k))
               : [];
 
-            const isMultiDept = (store.state.filterValues.departmentIds?.length || 0) > 1;
+            const selectedDepts = store.filterValues.departments || [];
+            const isMultiDept = selectedDepts.length > 1;
 
             const series = chartDataKeys.map((name, idx) => {
               let label = name;
               if (isMultiDept) {
                 label = name;
               } else if (chartDataKeys.length === 1) {
-                const selectedDeptIds = store.state.filterValues.departmentIds || [];
-                if (selectedDeptIds.length === 0) {
+                if (selectedDepts.length === 0) {
                   label = 'All Departments';
-                } else if (selectedDeptIds.length === 1 && store.procedureHierarchy) {
-                  const dept = store.procedureHierarchy.departments.find((d) => d.id === selectedDeptIds[0]);
-                  label = dept ? dept.name : 'Total';
+                } else if (selectedDepts.length === 1) {
+                  // departments values are department name strings
+                  label = selectedDepts[0];
                 } else {
                   label = 'Total';
                 }

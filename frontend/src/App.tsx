@@ -141,7 +141,6 @@ function App() {
             quarter,
             year,
             dsch_dtm,
-            ANY_VALUE(department_ids) AS department_ids,
             ANY_VALUE(procedure_ids) AS procedure_ids,
             
             -- Sum granular metrics across providers for the visit
