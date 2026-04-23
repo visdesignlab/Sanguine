@@ -222,10 +222,6 @@ export class RootStore {
 
   activeDepartmentViewQuestion: string | null = null;
 
-  selectedDepartmentId: string | null = null;
-
-  departmentVisitCounts: Record<string, number> = {};
-
   // --- Common ---
   allVisitsLength = 0;
 
@@ -248,7 +244,6 @@ export class RootStore {
       exploreChartData: observable.ref,
       exploreStatData: observable.ref,
       procedureHierarchy: observable.ref,
-      departmentVisitCounts: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
     });
@@ -841,29 +836,6 @@ export class RootStore {
     this.departmentViewQuestionsWidth = Math.max(250, Math.min(800, width));
   }
 
-  setSelectedDepartment(departmentId: string | null) {
-    this.selectedDepartmentId = departmentId;
-  }
-
-  /**
-   * Returns the DuckDB WHERE clause to filter by the selected department.
-   * For filteredVisits (which has department_ids as a list column).
-   */
-  get departmentWhereClause(): string {
-    if (!this.selectedDepartmentId) return '';
-    const safeId = this.selectedDepartmentId.replace(/[^A-Za-z0-9_-]/g, '');
-    return `WHERE list_has(department_ids, '${safeId}')`;
-  }
-
-  /**
-   * Returns the DuckDB join + where clause to filter surgery cases by department.
-   * filteredSurgeryCases doesn't have department_ids, so we join through visits.
-   */
-  get departmentSurgeryJoinClause(): string {
-    if (!this.selectedDepartmentId) return '';
-    const safeId = this.selectedDepartmentId.replace(/[^A-Za-z0-9_-]/g, '');
-    return `JOIN visits v ON sc.visit_no = v.visit_no WHERE list_has(v.department_ids, '${safeId}')`;
-  }
   // endregion
 
   // region Dashboard
@@ -1844,13 +1816,6 @@ export class RootStore {
       () => this.state.explore.statConfigs,
       async () => { await this.computeExploreStatData(); },
     );
-    reaction(
-      () => this.selectedDepartmentId,
-      async () => {
-        await this.computeExploreChartData();
-        await this.computeExploreStatData();
-      },
-    );
   }
 
   // endregion
@@ -1936,7 +1901,6 @@ export class RootStore {
 
     // Update all the data retrievers
     await this.updateFilteredVisitsLength();
-    await this.updateDepartmentVisitCounts();
     await this.computeDashboardChartData();
     await this.computeDashboardStatData();
     await this.computeExploreChartData();
@@ -1946,10 +1910,6 @@ export class RootStore {
   }
 
   async computeExploreChartData(): Promise<void> {
-    // Build department filter clauses
-    const deptWhere = this.departmentWhereClause;
-    const deptSurgeryJoin = this.departmentSurgeryJoinClause;
-
     const promises = this.exploreChartConfigs.map(async (config) => {
       const surgeonNameExpr = this.uiState.isInPrivateMode
         ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY surgeon_prov_name)'
@@ -2325,7 +2285,6 @@ export class RootStore {
       return;
     }
 
-    const deptWhere = this.departmentWhereClause;
     const result: ExploreStatData = {};
 
     const statSelects: string[] = [];
@@ -2373,8 +2332,7 @@ export class RootStore {
     try {
       const query = `
         SELECT ${statSelects.join(',\n')}
-        FROM filteredVisits
-        ${deptWhere};
+        FROM filteredVisits;
       `;
       const queryResult = await this.duckDB.query(query);
       const row = queryResult.toArray()[0]?.toJSON();
@@ -2400,49 +2358,6 @@ export class RootStore {
     if (!this.duckDB) return;
     const result = await this.duckDB.query('SELECT COUNT(DISTINCT visit_no) AS count FROM filteredVisitIds;');
     this.filteredVisitsLength = Number(result.toArray()[0].toJSON().count);
-  }
-
-  /**
-   * Query filteredVisits to get visit counts per department.
-   * Auto-selects the largest department if none is currently selected
-   * or if the current selection has 0 visits.
-   */
-  async updateDepartmentVisitCounts() {
-    if (!this.duckDB) return;
-    try {
-      const query = `
-        SELECT dept_id, COUNT(DISTINCT visit_no) AS visit_count
-        FROM (
-          SELECT UNNEST(department_ids) AS dept_id, visit_no
-          FROM filteredVisits
-        )
-        GROUP BY dept_id;
-      `;
-      const result = await this.duckDB.query(query);
-      const counts: Record<string, number> = {};
-      for (const row of result.toArray()) {
-        const { dept_id: deptId, visit_count: visitCount } = row.toJSON();
-        counts[String(deptId)] = Number(visitCount);
-      }
-
-      runInAction(() => {
-        this.departmentVisitCounts = counts;
-
-        // Auto-select the largest department if none selected or current has 0 visits
-        const currentCount = this.selectedDepartmentId ? (counts[this.selectedDepartmentId] || 0) : 0;
-        if (!this.selectedDepartmentId || currentCount === 0) {
-          const largest = Object.entries(counts).reduce<[string, number] | null>(
-            (best, [id, count]) => (!best || count > best[1] ? [id, count] : best),
-            null,
-          );
-          if (largest) {
-            this.selectedDepartmentId = largest[0];
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error calculating department visit counts:', error);
-    }
   }
 
   async updateAllVisitsLength() {

@@ -43,9 +43,9 @@ export function DepartmentViewQuestions() {
 
   const resolveQuestion = useCallback((q: string) => {
     if (!q.includes('[department]')) return q;
-    const deptName = store.procedureHierarchy?.departments.find((d) => d.id === store.selectedDepartmentId)?.name || 'Department';
+    const deptName = store.filterValues.departments[0] || 'Department';
     return q.replace('[department]', deptName);
-  }, [store.procedureHierarchy, store.selectedDepartmentId]);
+  }, [store.filterValues.departments]);
 
   const handlePresetClick = (groupIdx: number, cardIdx: number) => {
     const {
