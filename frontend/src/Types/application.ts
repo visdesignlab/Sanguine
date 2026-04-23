@@ -599,8 +599,20 @@ export type DashboardChartConfig = ChartConfig<typeof dashboardXAxisVars[number]
 // Dashboard chart configuration key type
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
 
+/**
+ * Dashboard chart data point.
+ * The 'data' property can be:
+ * - number: Standard single-series metric
+ * - Record<Cost, number>: Cost breakdown (RBC, FFP, etc.)
+ * - Record<string, number>: Multi-department comparison (DeptName -> Value)
+ */
+export type DashboardChartDatum = {
+  timePeriod: TimePeriod;
+  data: number | Record<Cost, number> | Record<string, number>;
+};
+
 // Dashboard chart data type (key, value)
-export type DashboardChartData = Record<DashboardChartConfigKey, ({ timePeriod: TimePeriod, [key: string]: string | number | Record<Cost, number> })[]>;
+export type DashboardChartData = Record<DashboardChartConfigKey, DashboardChartDatum[]>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {
@@ -612,13 +624,20 @@ export type DashboardStatConfig = {
 
 export type DashboardStatData = Record<DashboardAggYAxisVar, { value: string, diff: number, comparedTo?: string, sparklineData: number[] }>;
 
-// Chart colors (for up to 5 lines/bars)
+// Chart colors (12-color categorical palette, professional and distinct)
 export const chartColors = [
-  '#1770B8',
-  '#EF2026',
-  '#897BD3',
-  '#FFD13C',
-  '#73C3C5',
+  '#4E79A7', // Blue
+  '#E15759', // Red
+  '#76B7B2', // Teal
+  '#B07AA1', // Purple
+  '#59A14F', // Green (Moved to 5th)
+  '#FF9DA7', // Pink
+  '#9C755F', // Brown
+  '#BAB0AC', // Gray
+  '#D37295', // Rose
+  '#86BCB6', // Light Teal
+  '#6388B4', // Denim
+  '#A0CBE8', // Light Blue
 ];
 
 export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {

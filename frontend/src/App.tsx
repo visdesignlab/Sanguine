@@ -133,53 +133,6 @@ function App() {
             sc.*
           FROM surgery_cases sc
           INNER JOIN filteredVisitIds fvi ON sc.visit_no = fvi.visit_no;
-
-          CREATE VIEW IF NOT EXISTS aggregatedVisits AS
-          SELECT
-            visit_no,
-            month,
-            quarter,
-            year,
-            dsch_dtm,
-            
-            -- Sum granular metrics across providers for the visit
-            SUM(rbc_units) as rbc_units,
-            SUM(ffp_units) as ffp_units,
-            SUM(plt_units) as plt_units,
-            SUM(cryo_units) as cryo_units,
-            SUM(whole_units) as whole_units,
-            SUM(cell_saver_ml) as cell_saver_ml,
-
-            SUM(rbc_units_cost) as rbc_units_cost,
-            SUM(ffp_units_cost) as ffp_units_cost,
-            SUM(plt_units_cost) as plt_units_cost,
-            SUM(cryo_units_cost) as cryo_units_cost,
-            SUM(whole_cost) as whole_cost,
-            SUM(cell_saver_cost) as cell_saver_cost,
-            
-            SUM(rbc_units_adherent) as rbc_units_adherent,
-            SUM(ffp_units_adherent) as ffp_units_adherent,
-            SUM(plt_units_adherent) as plt_units_adherent,
-            SUM(cryo_units_adherent) as cryo_units_adherent,
-            SUM(overall_units_adherent) as overall_units_adherent,
-            
-            -- Max visit-level attributes
-            MAX(los) as los,
-            MAX(death) as death,
-            MAX(vent) as vent,
-            MAX(stroke) as stroke,
-            MAX(ecmo) as ecmo,
-            
-            MAX(ms_drg_weight) as ms_drg_weight,
-            MAX(age_at_adm) as age_at_adm,
-
-            -- List of departments that this visit ever saw (from all providers)
-            LIST(attending_provider_department) as departments
-            -- List of procedures for this visit (from the cpt hierarchy)
-
-
-          FROM filteredVisits
-          GROUP BY visit_no, month, quarter, year, dsch_dtm;
         `);
 
         await fetchProcedureHierarchy();

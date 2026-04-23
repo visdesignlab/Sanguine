@@ -15,6 +15,7 @@ import {
   DashboardAggYAxisVar,
   DashboardChartConfig,
   DashboardChartData,
+  DashboardChartDatum,
   DashboardStatConfig,
   DashboardStatData,
   ExploreChartConfig,
@@ -22,7 +23,6 @@ import {
   ExploreTableConfig,
   ExploreTableRow,
   ProcedureHierarchyResponse,
-  TimeAggregation,
   TimePeriod,
   dashboardXAxisVars,
   dashboardYAxisOptions,
@@ -39,6 +39,9 @@ import {
 } from '../Types/bloodProducts';
 
 export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
+
+const sqlString = (value: string) => `'${value.replace(/'/g, "''")}'`;
+const safeIdPattern = /^[A-Za-z0-9_-]+$/;
 
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
@@ -408,16 +411,8 @@ export class RootStore {
   // endregion
 
   // region Provenance
-  /**
-   * Initialize the provenance store with current store values.
-   * This should be called after data is loaded and default filter values are calculated.
-   */
-  init() {
-    if (this.provenance) {
-      console.warn('ProvenanceStore already initialized');
-      return;
-    }
-    const rawInitialState: ApplicationState = {
+  getBaseInitialState(): ApplicationState {
+    return {
       filterValues: {
         dateFrom: this.initialFilterValues.dateFrom.toISOString(),
         dateTo: this.initialFilterValues.dateTo.toISOString(),
@@ -462,6 +457,18 @@ export class RootStore {
         isInPrivateMode: false,
       },
     };
+  }
+
+  /**
+   * Initialize the provenance store with current store values.
+   * This should be called after data is loaded and default filter values are calculated.
+   */
+  init() {
+    if (this.provenance) {
+      console.warn('ProvenanceStore already initialized');
+      return;
+    }
+    const rawInitialState = this.getBaseInitialState();
 
     const initialState = JSON.parse(JSON.stringify(rawInitialState));
 
@@ -748,24 +755,7 @@ export class RootStore {
 
     if (!this.provenance) {
       // Return default/empty state if not initialized
-      return {
-        filterValues: {},
-        selections: {
-          selectedTimePeriods: [],
-        },
-        dashboard: {},
-        explore: {},
-        settings: {},
-        ui: {
-          activeTab: 'Hospital',
-          leftToolbarOpened: true,
-          activeLeftPanel: null,
-          selectedVisitNo: null,
-          filterPanelExpandedItems: [],
-          showFilterHistograms: false,
-          isInPrivateMode: false,
-        },
-      } as unknown as ApplicationState;
+      return this.getBaseInitialState();
     }
     return this.provenance.getState(this.provenance.current);
   }
@@ -949,10 +939,15 @@ export class RootStore {
     if (!this.duckDB) return;
     const result = {} as DashboardChartData;
 
-    // For each chart, build the 'select' clauses
+    // Get selected departments and check if multiple departments are selected ---
+    const selectedDepts = this.state.filterValues.departments || [];
+    const multiDept = selectedDepts.length > 1;
+
+    // BUILD QUERY: For each chart, build the 'select' clauses for all y-axis variables and their aggregations (sum, avg) ---
     const selectClauses = this.dashboardChartConfigs.flatMap(({ yAxisVar }) => (
       Object.keys(AGGREGATION_OPTIONS).flatMap((aggregation) => {
         const aggFn = aggregation.toUpperCase();
+        // Special case: total blood product cost
         if (yAxisVar === 'total_blood_product_cost') {
           return [
             `${aggFn}(rbc_units_cost) AS ${aggregation}_rbc_units_cost`,
@@ -961,10 +956,16 @@ export class RootStore {
             `${aggFn}(cryo_units_cost) AS ${aggregation}_cryo_units_cost`,
             `${aggFn}(whole_cost) AS ${aggregation}_whole_cost`,
             `${aggFn}(cell_saver_cost) AS ${aggregation}_cell_saver_cost`,
+            `${aggFn}(COALESCE(rbc_units_cost, 0) + COALESCE(plt_units_cost, 0) + COALESCE(ffp_units_cost, 0) + COALESCE(cryo_units_cost, 0) + COALESCE(whole_cost, 0) + COALESCE(cell_saver_cost, 0)) AS ${aggregation}_total_blood_product_cost`,
           ];
         }
+        // Special case: case mix index
         if (yAxisVar === 'case_mix_index') {
-          return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`;
+          return `AVG(ms_drg_weight) AS ${aggregation}_case_mix_index`;
+        }
+        // Special case: visit count
+        if (yAxisVar === 'visit_count') {
+          return `COUNT(DISTINCT visit_no) AS ${aggregation}_visit_count`;
         }
         // Average adherence – return raw numerator & denominator sums
         if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
@@ -978,136 +979,104 @@ export class RootStore {
       })
     ));
 
-    // Get the data from each chart, grouped by month, quarter, and year
-    const query = `
-      SELECT
-        month,
-        quarter,
-        year,
-        COUNT(visit_no) AS visit_count,
-        ${selectClauses.join(',\n')}
-      FROM aggregatedVisits
-      GROUP BY month, quarter, year
-      ORDER BY year, quarter, month;
-    `;
-    const queryResult = await this.duckDB.query(query);
-    const rows = queryResult.toArray().map((row) => row.toJSON());
+    // RUN QUERY: For each x-axis grouping possible (e.g. month, quarter, year), get data ---
+    for (const xAxisVar of dashboardXAxisVars) {
+      // FINAL QUERY: Get the visit count, time period, department id, and aggregated values for each y-axis variable ---
+      const query = multiDept
+        // If multiple departments are selected, group by department and x-axis (month, quarter, year)
+        ? `
+        SELECT
+          ${xAxisVar} AS timePeriod,
+          attending_provider_department,
+          COUNT(DISTINCT visit_no) AS visit_count,
+          ${selectClauses.join(',\n')}
+        FROM filteredVisits
+        WHERE attending_provider_department IN (${selectedDepts.map(sqlString).join(', ')})
+        GROUP BY ${xAxisVar}, attending_provider_department;
+      `
+        // If no departments are selected, just group by x-axis (month, quarter, year)
+        : `
+        SELECT
+          ${xAxisVar} AS timePeriod,
+          NULL as attending_provider_department,
+          COUNT(DISTINCT visit_no) AS visit_count,
+          ${selectClauses.join(',\n')}
+        FROM filteredVisits
+        GROUP BY ${xAxisVar};
+      `;
 
-    // For each x-axis variable (month, quarter, year)...
-    dashboardXAxisVars.forEach((xAxisVar) => {
-      const timeAggregation = xAxisVar as TimeAggregation;
-      // For each y-axis variable (e.g. rbc_units)...
+      // eslint-disable-next-line no-await-in-loop
+      const queryResult = await this.duckDB.query(query);
+      const rows = queryResult.toArray().map((row) => row.toJSON());
+
+      // For each y-axis variable and aggregation (sum, avg, etc), add to result ---
       this.dashboardChartConfigs.forEach(({ yAxisVar }) => {
-        // For each aggregation (sum, avg)
         Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
+          // Sum or average
           const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
-          // Get the data for this chart
-          const chartDatum = rows
-            .map((row) => {
-              // Special case for total blood product cost
-              if (yAxisVar === 'total_blood_product_cost') {
-                return {
-                  timePeriod: row[timeAggregation] as TimePeriod,
-                  data: {
-                    rbc_units_cost: Number(row[`${aggType}_rbc_units_cost`] || 0),
-                    plt_units_cost: Number(row[`${aggType}_plt_units_cost`] || 0),
-                    ffp_units_cost: Number(row[`${aggType}_ffp_units_cost`] || 0),
-                    cryo_units_cost: Number(row[`${aggType}_cryo_units_cost`] || 0),
-                    whole_cost: Number(row[`${aggType}_whole_cost`] || 0),
-                    cell_saver_cost: Number(row[`${aggType}_cell_saver_cost`] || 0),
-                  },
-                  counts_per_period: Number(row.visit_count || 0),
-                };
-              }
-              // Adherence avg: pass through raw numerator + denominator for correct aggregation
-              if (yAxisVar.endsWith('_adherent') && aggType === 'avg') {
-                return {
-                  timePeriod: row[timeAggregation] as TimePeriod,
-                  data: Number(row[aggVar] || 0),
-                  counts_per_period: Number(row.visit_count || 0),
-                  _adherence_den: Number(row[`${aggVar}_den`] || 0),
-                };
-              }
-              // Otherwise, return the data for this chart
-              return {
-                timePeriod: row[timeAggregation] as TimePeriod,
-                data: Number(row[aggVar] || 0),
-                counts_per_period: Number(row.visit_count || 0),
-              };
-            })
-            // Filter out null and undefined time periods
-            .filter((entry) => entry.timePeriod !== null && entry.timePeriod !== undefined && !Number.isNaN(entry.data))
-            // Reduce the data to a single array of objects
-            .reduce((acc, curr) => {
-              const existing = acc.find((item) => item.timePeriod === curr.timePeriod);
 
-              if (existing) {
-                // SUM: Accumulate values directly
-                if (aggType === 'sum') {
-                  if (typeof existing.data === 'object' && typeof curr.data === 'object') {
-                    existing.data = {
-                      rbc_units_cost: existing.data.rbc_units_cost + curr.data.rbc_units_cost,
-                      plt_units_cost: existing.data.plt_units_cost + curr.data.plt_units_cost,
-                      ffp_units_cost: existing.data.ffp_units_cost + curr.data.ffp_units_cost,
-                      cryo_units_cost: existing.data.cryo_units_cost + curr.data.cryo_units_cost,
-                      whole_cost: existing.data.whole_cost + curr.data.whole_cost,
-                      cell_saver_cost: existing.data.cell_saver_cost + curr.data.cell_saver_cost,
-                    };
-                  } else {
-                    (existing.data as number) += curr.data as number;
-                  }
-                  // AVG: Track raw data to re-calculate weighted average
-                } else if (aggType === 'avg') {
-                  // Adherence avg: accumulate raw numerator & denominator sums
-                  if (curr._adherence_den !== undefined) {
-                    (existing.data as number) += curr.data as number;
-                    existing._adherence_den = (existing._adherence_den || 0) + curr._adherence_den;
-                  } else {
-                    existing.counts_per_period!.push(curr.counts_per_period || 0);
-                    existing.data_per_period!.push(curr.data);
-                    const totalCount = existing.counts_per_period!.reduce((a, b) => a + b, 0);
+          // Reduce the rows to a single object (time period & data) with time periods as keys
+          const reducedObj: Record<string, DashboardChartDatum> = rows.reduce((acc, row) => {
+            const timePeriod = row.timePeriod as TimePeriod;
+            if (timePeriod === null || timePeriod === undefined) return acc;
 
-                    if (typeof existing.data === 'object' && typeof curr.data === 'object') {
-                      const costKeys = Object.keys(existing.data) as (keyof typeof existing.data)[];
-                      const avgObj: Record<string, number> = {};
-                      for (const key of costKeys) {
-                        const values = existing.data_per_period!.map((d) => (typeof d === 'object' ? d[key] : 0));
-                        const weighted = existing.counts_per_period!.map((count, idx) => (count * (values[idx] || 0)) / (totalCount || 1));
-                        avgObj[key] = weighted.reduce((a, b) => a + b, 0);
-                      }
-                      existing.data = avgObj;
-                    } else {
-                      const terms = existing.counts_per_period!.map((count, idx) => (count * (existing.data_per_period ? (existing.data_per_period[idx] as number) : 0)) / (totalCount || 1));
-                      existing.data = terms.reduce((a, b) => a + b, 0);
-                    }
-                  }
-                }
+            // attending_provider_department comes from unnest(a.departments) which is attending_provider_department — the name IS the identifier
+            const deptName = (row.attending_provider_department as string | null) || undefined;
+
+            let rowData: number | Record<string, number> = 0;
+
+            // Special case: blood product costs
+            if (yAxisVar === 'total_blood_product_cost') {
+              // If multiple departments are selected, get total costs per department
+              if (multiDept) {
+                rowData = Number(row[aggVar] || 0);
               } else {
-                // If new time period: Initialize tracking arrays
-                acc.push({ ...curr, counts_per_period: curr.counts_per_period ? [curr.counts_per_period] : [], data_per_period: [curr.data] });
+                // Otherwise, show the costs for each blood product
+                rowData = {
+                  rbc_units_cost: Number(row[`${aggType}_rbc_units_cost`] || 0),
+                  plt_units_cost: Number(row[`${aggType}_plt_units_cost`] || 0),
+                  ffp_units_cost: Number(row[`${aggType}_ffp_units_cost`] || 0),
+                  cryo_units_cost: Number(row[`${aggType}_cryo_units_cost`] || 0),
+                  whole_cost: Number(row[`${aggType}_whole_cost`] || 0),
+                  cell_saver_cost: Number(row[`${aggType}_cell_saver_cost`] || 0),
+                };
               }
-              return acc;
-            }, [] as { timePeriod: TimePeriod; data: number | Record<Cost, number>, counts_per_period?: number[], data_per_period?: (number | Record<Cost, number>)[], _adherence_den?: number }[])
-            // Compute final values and clean up tracking fields
-            .map((entry) => {
-              // Adherence avg: compute the ratio from accumulated numerator / denominator
-              if (entry._adherence_den !== undefined) {
-                entry.data = entry._adherence_den > 0 ? (entry.data as number) / entry._adherence_den : 0;
-              }
-              delete entry.counts_per_period;
-              delete entry.data_per_period;
-              delete entry._adherence_den;
-              return entry as { timePeriod: TimePeriod; data: number | Record<Cost, number> };
-            })
-            // Sort the data by time period
-            .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
+            } else if (yAxisVar.endsWith('_adherent') && aggType === 'avg') {
+              // If calculating adherence, we find the number of adherent units divided by the total number of units
+              const num = Number(row[aggVar] || 0);
+              const den = Number(row[`${aggVar}_den`] || 0);
+              rowData = den > 0 ? num / den : 0;
+            } else {
+              rowData = Number(row[aggVar] || 0);
+            }
 
+            if (Number.isNaN(rowData as number)) return acc;
+
+            // Initialize accumulator if it doesn't exist
+            if (!acc[timePeriod]) {
+              acc[timePeriod] = {
+                timePeriod,
+                data: (multiDept && deptName) ? { [deptName]: rowData } : rowData,
+              };
+            } else if (multiDept && deptName) {
+              // If multiple departments are selected, add the data to the accumulator
+              if (typeof acc[timePeriod].data !== 'object') {
+                acc[timePeriod].data = { [deptName]: acc[timePeriod].data } as Record<string, number>;
+              }
+              (acc[timePeriod].data as Record<string, number>)[deptName] = rowData as number;
+            }
+            return acc;
+          }, {} as Record<string, DashboardChartDatum>);
+
+          // Sort the data by time period, and add to result
+          const chartDatum = Object.values(reducedObj).sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
           const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
           result[compositeKey] = chartDatum;
         });
       });
-    });
+    }
+    // Commit result to store
     this.dashboardChartData = result;
   }
 
@@ -1137,13 +1106,13 @@ export class RootStore {
     const statSelects = [
       // Visit counts
       `
-      COUNT(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+      COUNT(DISTINCT CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
         THEN visit_no ELSE NULL END) AS visit_count_current_sum,
-      COUNT(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+      COUNT(DISTINCT CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
         THEN visit_no ELSE NULL END) AS visit_count_comparison_sum,
-      COUNT(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+      COUNT(DISTINCT CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
         THEN visit_no ELSE NULL END) AS visit_count_current_avg,
-      COUNT(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+      COUNT(DISTINCT CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
         THEN visit_no ELSE NULL END) AS visit_count_comparison_avg
       `,
       // For each stat, add the appropriate select statement
@@ -1161,10 +1130,19 @@ export class RootStore {
         // Exception: Case mix index
         if (yAxisVar === 'case_mix_index') {
           return `
-                SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
-                  THEN ms_drg_weight ELSE NULL END) / visit_count_current_sum AS case_mix_index_current_${aggregation},
-                SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
-                  THEN ms_drg_weight ELSE NULL END) / visit_count_comparison_sum AS case_mix_index_comparison_${aggregation}
+                AVG(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+                  THEN ms_drg_weight ELSE NULL END) AS case_mix_index_current_${aggregation},
+                AVG(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+                  THEN ms_drg_weight ELSE NULL END) AS case_mix_index_comparison_${aggregation}
+              `;
+        }
+        // Exception: Visit count
+        if (yAxisVar === 'visit_count') {
+          return `
+                COUNT(DISTINCT CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+                  THEN visit_no ELSE NULL END) AS visit_count_current_${aggregation},
+                COUNT(DISTINCT CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+                  THEN visit_no ELSE NULL END) AS visit_count_comparison_${aggregation}
               `;
         }
         // Avg. adherent units as percentage of total units
@@ -1195,7 +1173,7 @@ export class RootStore {
     const mainStatsQuery = `
     SELECT
       ${statSelects}
-      FROM aggregatedVisits
+      FROM filteredVisits
       WHERE dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}';
     `;
     const mainStatsResult = await this.duckDB!.query(mainStatsQuery);
@@ -1222,17 +1200,17 @@ export class RootStore {
         );
         return;
       }
-      // Exception: Case mix index
-      if (yAxisVar === 'dsch_dtm') {
+      // Exception: Visit count
+      if (yAxisVar === 'visit_count') {
         sparklineSelects.push(
-          `COUNT(dsch_dtm) AS ${aggregation}_dsch_dtm`,
+          `COUNT(DISTINCT visit_no) AS ${aggregation}_visit_count`,
         );
         return;
       }
       // Exception: Case mix index
       if (yAxisVar === 'case_mix_index') {
         sparklineSelects.push(
-          `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`,
+          `AVG(ms_drg_weight) AS ${aggregation}_case_mix_index`,
         );
         return;
       }
@@ -1255,8 +1233,8 @@ export class RootStore {
     SELECT
       month,
       ${sparklineSelects.join(',\n')}
-    FROM aggregatedVisits
-    WHERE month IN (${sparklineMonths.map((m) => `'${m}'`).join(', ')})
+    FROM filteredVisits
+    WHERE month IN (${sparklineMonths.map(sqlString).join(', ')})
     GROUP BY month
     ORDER BY month;
   `;
@@ -1716,7 +1694,7 @@ export class RootStore {
 
   async getVisitInfo(visitNo: number) {
     if (!this.duckDB) return null;
-    const result = await this.duckDB.query(`SELECT * FROM filteredVisits WHERE visit_no = ${visitNo}`);
+    const result = await this.duckDB.query(`SELECT * FROM filteredVisits WHERE visit_no = ${Number(visitNo)}`);
     return result.toArray().map((row) => row.toJSON())[0] || null;
   }
 
@@ -1730,9 +1708,7 @@ export class RootStore {
       this.selectedVisitNos = [];
       return;
     }
-    // Escape single quotes for SQL strings
-    const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
-    const result = await this.duckDB.query(`SELECT visit_no FROM filteredVisits WHERE month IN (${months.map(q).join(', ')})`);
+    const result = await this.duckDB.query(`SELECT visit_no FROM filteredVisits WHERE month IN (${months.map(sqlString).join(', ')})`);
     this.selectedVisitNos = result.toArray().map((row) => Number(row.toJSON().visit_no));
   }
   // endregion
@@ -1780,7 +1756,6 @@ export class RootStore {
 
     // Generate the visit-level HAVING conditions --------
     const visitFilterConditions: string[] = [];
-    const sqlString = (value: string) => `'${value.replace(/'/g, "''")}'`;
 
     const sumRangeFilterKeys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
     sumRangeFilterKeys.forEach((key) => {
@@ -1807,7 +1782,6 @@ export class RootStore {
 
     // Use list-native predicates to avoid UNNEST/CTE rescans on each filter update.
     // Only allow slug-like IDs (alphanumeric, underscore, hyphen) to be interpolated into SQL.
-    const safeIdPattern = /^[A-Za-z0-9_-]+$/;
 
     if (filterValues.departments.length > 0) {
       const departmentIdList = filterValues.departments.map(sqlString).join(', ');
@@ -2114,7 +2088,7 @@ export class RootStore {
       }
       // DUMBBELL CHART -------------------------------
       if (config.chartType === 'dumbbell') {
-      // TODO: Don't limit to only 10,000 surgeries.
+        // TODO: Don't limit to only 10,000 surgeries.
         const query = `
           SELECT
              CAST(case_id AS VARCHAR) as case_id,
