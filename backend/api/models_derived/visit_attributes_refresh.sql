@@ -43,7 +43,7 @@ SELECT
     v.mrn,
     v.adm_dtm,
     v.dsch_dtm,
-    v.age_at_adm,
+    CASE WHEN ap.attend_prov_line = 1 THEN v.age_at_adm ELSE NULL END AS age_at_adm,    
     v.pat_class_desc,
     CASE WHEN ap.attend_prov_line = 1 THEN v.apr_drg_weight ELSE NULL END AS apr_drg_weight,
     CASE WHEN ap.attend_prov_line = 1 THEN v.ms_drg_weight ELSE NULL END AS ms_drg_weight,
