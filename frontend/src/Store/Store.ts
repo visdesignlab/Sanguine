@@ -961,7 +961,11 @@ export class RootStore {
         }
         // Special case: case mix index
         if (yAxisVar === 'case_mix_index') {
-          return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`;
+          return `AVG(ms_drg_weight) AS ${aggregation}_case_mix_index`;
+        }
+        // Special case: visit count
+        if (yAxisVar === 'visit_count') {
+          return `COUNT(DISTINCT visit_no) AS ${aggregation}_visit_count`;
         }
         // Average adherence – return raw numerator & denominator sums
         if (yAxisVar.endsWith('_adherent') && aggregation === 'avg') {
@@ -979,29 +983,25 @@ export class RootStore {
     for (const xAxisVar of dashboardXAxisVars) {
       // FINAL QUERY: Get the visit count, time period, department id, and aggregated values for each y-axis variable ---
       const query = multiDept
-        // If multiple departments are selected, unnest the departments list and group by department and x-axis (month, quarter, year)
+        // If multiple departments are selected, group by department and x-axis (month, quarter, year)
         ? `
-        WITH unnested AS (
-          SELECT a.*, unnest(a.departments) as dept_id
-          FROM aggregatedVisits a
-        )
         SELECT
           ${xAxisVar} AS timePeriod,
-          dept_id,
-          COUNT(visit_no) AS visit_count,
+          attending_provider_department AS dept_id,
+          COUNT(DISTINCT visit_no) AS visit_count,
           ${selectClauses.join(',\n')}
-        FROM unnested
-        WHERE dept_id IN (${selectedDepts.map(sqlString).join(', ')})
-        GROUP BY ${xAxisVar}, dept_id;
+        FROM filteredVisits
+        WHERE attending_provider_department IN (${selectedDepts.map(sqlString).join(', ')})
+        GROUP BY ${xAxisVar}, attending_provider_department;
       `
         // If no departments are selected, just group by x-axis (month, quarter, year)
         : `
         SELECT
           ${xAxisVar} AS timePeriod,
           NULL as dept_id,
-          COUNT(visit_no) AS visit_count,
+          COUNT(DISTINCT visit_no) AS visit_count,
           ${selectClauses.join(',\n')}
-        FROM aggregatedVisits
+        FROM filteredVisits
         GROUP BY ${xAxisVar};
       `;
 
@@ -1106,13 +1106,13 @@ export class RootStore {
     const statSelects = [
       // Visit counts
       `
-      COUNT(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+      COUNT(DISTINCT CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
         THEN visit_no ELSE NULL END) AS visit_count_current_sum,
-      COUNT(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+      COUNT(DISTINCT CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
         THEN visit_no ELSE NULL END) AS visit_count_comparison_sum,
-      COUNT(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+      COUNT(DISTINCT CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
         THEN visit_no ELSE NULL END) AS visit_count_current_avg,
-      COUNT(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+      COUNT(DISTINCT CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
         THEN visit_no ELSE NULL END) AS visit_count_comparison_avg
       `,
       // For each stat, add the appropriate select statement
@@ -1130,10 +1130,19 @@ export class RootStore {
         // Exception: Case mix index
         if (yAxisVar === 'case_mix_index') {
           return `
-                SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
-                  THEN ms_drg_weight ELSE NULL END) / visit_count_current_sum AS case_mix_index_current_${aggregation},
-                SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
-                  THEN ms_drg_weight ELSE NULL END) / visit_count_comparison_sum AS case_mix_index_comparison_${aggregation}
+                AVG(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+                  THEN ms_drg_weight ELSE NULL END) AS case_mix_index_current_${aggregation},
+                AVG(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+                  THEN ms_drg_weight ELSE NULL END) AS case_mix_index_comparison_${aggregation}
+              `;
+        }
+        // Exception: Visit count
+        if (yAxisVar === 'visit_count') {
+          return `
+                COUNT(DISTINCT CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+                  THEN visit_no ELSE NULL END) AS visit_count_current_${aggregation},
+                COUNT(DISTINCT CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+                  THEN visit_no ELSE NULL END) AS visit_count_comparison_${aggregation}
               `;
         }
         // Avg. adherent units as percentage of total units
@@ -1164,7 +1173,7 @@ export class RootStore {
     const mainStatsQuery = `
     SELECT
       ${statSelects}
-      FROM aggregatedVisits
+      FROM filteredVisits
       WHERE dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}';
     `;
     const mainStatsResult = await this.duckDB!.query(mainStatsQuery);
@@ -1191,17 +1200,17 @@ export class RootStore {
         );
         return;
       }
-      // Exception: Case mix index
-      if (yAxisVar === 'dsch_dtm') {
+      // Exception: Visit count
+      if (yAxisVar === 'visit_count') {
         sparklineSelects.push(
-          `COUNT(dsch_dtm) AS ${aggregation}_dsch_dtm`,
+          `COUNT(DISTINCT visit_no) AS ${aggregation}_visit_count`,
         );
         return;
       }
       // Exception: Case mix index
       if (yAxisVar === 'case_mix_index') {
         sparklineSelects.push(
-          `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`,
+          `AVG(ms_drg_weight) AS ${aggregation}_case_mix_index`,
         );
         return;
       }
@@ -1224,7 +1233,7 @@ export class RootStore {
     SELECT
       month,
       ${sparklineSelects.join(',\n')}
-    FROM aggregatedVisits
+    FROM filteredVisits
     WHERE month IN (${sparklineMonths.map(sqlString).join(', ')})
     GROUP BY month
     ORDER BY month;
