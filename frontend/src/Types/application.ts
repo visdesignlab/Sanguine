@@ -624,14 +624,20 @@ export type DashboardStatConfig = {
 
 export type DashboardStatData = Record<DashboardAggYAxisVar, { value: string, diff: number, comparedTo?: string, sparklineData: number[] }>;
 
-// Chart colors (for up to 6 lines/bars)
+// Chart colors (12-color categorical palette, professional and distinct)
 export const chartColors = [
-  '#FF8787', // Muted Salmon/Coral (distinguishable from "Error Red")
-  '#D0BFFF', // Soft Lavender
-  '#74C0FC', // Sky Blue
-  '#66D9E8', // Aqua Blue (strictly blue-side)
-  '#91A7FF', // Periwinkle / Indigo
-  '#FAA2C1', // Dusty Rose / Pink
+  '#4E79A7', // Blue
+  '#E15759', // Red
+  '#76B7B2', // Teal
+  '#B07AA1', // Purple
+  '#59A14F', // Green (Moved to 5th)
+  '#FF9DA7', // Pink
+  '#9C755F', // Brown
+  '#BAB0AC', // Gray
+  '#D37295', // Rose
+  '#86BCB6', // Light Teal
+  '#6388B4', // Denim
+  '#A0CBE8', // Light Blue
 ];
 
 export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
