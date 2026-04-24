@@ -1866,7 +1866,7 @@ export class RootStore {
 
     // Add date filters if applied
     if (this.dateFiltersAppliedCount > 0) {
-      visitFilterConditions.push(`BOOL_OR(adm_dtm BETWEEN '${dateFrom}' AND '${dateTo}')`);
+      visitFilterConditions.push(`BOOL_OR(adm_dtm >= '${dateFrom}' AND dsch_dtm <= '${dateTo}')`);
     }
 
     // Join the visit-level filter conditions with AND

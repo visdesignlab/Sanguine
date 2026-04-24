@@ -97,7 +97,7 @@ export function FilterPanel() {
             <Accordion.Panel>
               <Flex direction="row" justify="space-between" align="center">
                 <DateInput
-                  label="Date From"
+                  label="Admission Date From"
                   styles={{ label: { color: dateChanged(store, 'dateFrom') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   value={dateSimplify(store.filterValues.dateFrom)}
                   onChange={(date) => date && store.setFilterValue('dateFrom', new Date(date))}
@@ -107,7 +107,7 @@ export function FilterPanel() {
                   w="45%"
                 />
                 <DateInput
-                  label="Date To"
+                  label="Discharge Date To"
                   styles={{ label: { color: dateChanged(store, 'dateTo') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   value={dateSimplify(store.filterValues.dateTo)}
                   onChange={(date) => date && store.setFilterValue('dateTo', new Date(date))}
