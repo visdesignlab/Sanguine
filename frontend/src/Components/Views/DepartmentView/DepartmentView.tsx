@@ -308,13 +308,8 @@ export function DepartmentView() {
 
           <Flex direction="row" align="center" gap="md">
             <Tooltip label="Visible visits after filters" position="bottom">
-              <Text size="sm">
-                <Text span fw={500}>
-                  {store.filteredVisitsLength.toLocaleString()}
-                </Text>
-                <Text span fw={300} c="dimmed">
-                  {` / ${store.allVisitsLength.toLocaleString()} Visits`}
-                </Text>
+              <Text size="sm" c="dimmed" fw={300}>
+                {`Showing ${store.filteredVisitsLength.toLocaleString()} of ${store.allVisitsLength.toLocaleString()} Visits`}
               </Text>
             </Tooltip>
             <Select

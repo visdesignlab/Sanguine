@@ -126,10 +126,8 @@ export function HospitalView() {
           <Title order={3}>Hospital</Title>
           <Flex direction="row" align="center" gap="md">
             <Tooltip label="Visible visits after filters" position="bottom">
-              <Title order={5} c="dimmed">
-                {`${store.filteredVisitsLength} / ${store.allVisitsLength}`}
-                {' '}
-                Visits
+              <Title order={5} c="dimmed" fw={400}>
+                {`Showing ${store.filteredVisitsLength.toLocaleString()} of ${store.allVisitsLength.toLocaleString()} Visits`}
               </Title>
             </Tooltip>
 
