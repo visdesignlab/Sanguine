@@ -56,7 +56,7 @@ class Command(BaseCommand):
             batch = []
             row_count = 0
             for r in row_gen:
-                batch.append(r)
+                batch.append({k: (r"\N" if v is None else v) for k, v in r.items()})
                 row_count += 1
                 if len(batch) >= batch_size:
                     writer.writerows(batch)
