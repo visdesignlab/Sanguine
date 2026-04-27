@@ -528,18 +528,6 @@ export const CASE_MIX_INDEX = {
   decimals: { sum: 2, avg: 2 },
 };
 
-export const PROVIDERS = {
-  value: 'attending_provider',
-  label: {
-    short: 'Provider',
-    base: 'Provider',
-    sum: 'Providers',
-    avg: 'Providers',
-  },
-  units: { sum: '', avg: '' },
-  decimals: 0,
-} as const;
-
 // Costs -----------------------------------------------------------
 export const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
   rbc_units_cost: 200,
@@ -668,9 +656,8 @@ export type ProviderChart = {
 
 export const providerXAxisOptions = [
   ...dashboardYAxisOptions.filter(
-    (opt) => opt.value !== 'stroke' && opt.value !== 'death' && opt.value !== 'ecmo',
+    (opt) => opt.value !== 'stroke' && opt.value !== 'death' && opt.value !== 'ecmo' && opt.value !== 'visit_count',
   ),
-  PROVIDERS,
   PRE_OP_ANEMIA_RATE,
 ];
 export const providerXAxisVars = providerXAxisOptions.map((opt) => opt.value);
