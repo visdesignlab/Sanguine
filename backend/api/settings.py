@@ -126,7 +126,7 @@ AUTHENTICATION_BACKENDS = (
 if AUTH_PROVIDER == AUTH_PROVIDER_CAS:
     AUTHENTICATION_BACKENDS += ('django_cas_ng.backends.CASBackend',)
 elif AUTH_PROVIDER == AUTH_PROVIDER_SAML:
-    AUTHENTICATION_BACKENDS += ('api.saml.SanguineSaml2Backend',)
+    AUTHENTICATION_BACKENDS += ('djangosaml2.backends.Saml2Backend',)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

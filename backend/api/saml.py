@@ -14,11 +14,6 @@ DEFAULT_REPLAY_CACHE_TIMEOUT = 60 * 5
 REPLAY_CACHE_KEY_PREFIX = "saml-assertion-id:"
 
 
-def _first_value(values):
-    if isinstance(values, (list, tuple)):
-        return values[0] if values else None
-    return values
-
 
 def _env_value(env, name: str, default: str = "") -> str:
     value = env(name, default=default)
@@ -227,92 +222,3 @@ def build_saml_settings(*, env, hostname: str) -> dict[str, Any]:
         "SAML_USERNAME_ATTRIBUTE": username_attr,
         "ACS_DEFAULT_REDIRECT_URL": _env_value(env, "SAML_DEFAULT_REDIRECT_URL", "/api"),
     }
-
-try:
-    from djangosaml2.backends import Saml2Backend
-except Exception:  # pragma: no cover - keeps local static analysis/tests importable without the package
-    Saml2Backend = object
-
-
-class SanguineSaml2Backend(Saml2Backend):
-    def clean_attributes(self, attributes: dict, idp_entityid: str, **kwargs) -> dict:
-        attributes = super().clean_attributes(attributes, idp_entityid, **kwargs)
-        username_attr = getattr(self, "_configured_username_attr", None) or "email"
-        main_value = _first_value(attributes.get(username_attr))
-        if not main_value:
-            raise PermissionDenied(
-                f"Configured SAML identity attribute '{username_attr}' was not provided by the IdP."
-            )
-        return attributes
-
-    @property
-    def _configured_username_attr(self) -> str:
-        from django.conf import settings
-
-        return getattr(settings, "SAML_USERNAME_ATTRIBUTE", "email")
-
-    def is_authorized(
-        self,
-        attributes: dict,
-        attribute_mapping: dict,
-        idp_entityid: str,
-        assertion_info: dict | None,
-        **kwargs,
-    ) -> bool:
-        if not super().is_authorized(attributes, attribute_mapping, idp_entityid, assertion_info, **kwargs):
-            return False
-
-        if not assertion_info:
-            logger.warning("SAML assertion metadata is missing; rejecting login.")
-            return False
-
-        assertion_id = assertion_info.get("assertion_id")
-        if not assertion_id:
-            logger.warning("SAML assertion_id is missing; rejecting login.")
-            return False
-
-        cache_key = f"{REPLAY_CACHE_KEY_PREFIX}{assertion_id}"
-        if not cache.add(cache_key, True, timeout=_cache_timeout_for_assertion(assertion_info)):
-            logger.warning("SAML assertion replay detected for assertion_id=%s", assertion_id)
-            return False
-
-        return True
-
-    def _update_user(self, user, attributes: dict, attribute_mapping: dict, force_save: bool = False):
-        username = _first_value(attributes.get(self._configured_username_attr))
-        email = _first_value(attributes.get(getattr(self, "_configured_email_attr", "email")))
-        first_name = _first_value(attributes.get(getattr(self, "_configured_first_name_attr", "first_name")))
-        last_name = _first_value(attributes.get(getattr(self, "_configured_last_name_attr", "last_name")))
-        has_updates = force_save
-
-        if username and user.username != username:
-            user.username = username
-            has_updates = True
-        if email and user.email != email:
-            user.email = email
-            has_updates = True
-        if first_name and user.first_name != first_name:
-            user.first_name = first_name
-            has_updates = True
-        if last_name and user.last_name != last_name:
-            user.last_name = last_name
-            has_updates = True
-        return super()._update_user(user, attributes, attribute_mapping, force_save=has_updates)
-
-    @property
-    def _configured_email_attr(self) -> str:
-        from django.conf import settings
-
-        return getattr(settings, "SAML_EMAIL_ATTRIBUTE", "email")
-
-    @property
-    def _configured_first_name_attr(self) -> str:
-        from django.conf import settings
-
-        return getattr(settings, "SAML_FIRST_NAME_ATTRIBUTE", "first_name")
-
-    @property
-    def _configured_last_name_attr(self) -> str:
-        from django.conf import settings
-
-        return getattr(settings, "SAML_LAST_NAME_ATTRIBUTE", "last_name")
