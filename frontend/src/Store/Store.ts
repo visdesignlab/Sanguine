@@ -2223,6 +2223,7 @@ export class RootStore {
    * Returns the number of date filters that are applied
    */
   get dateFiltersAppliedCount(): number {
+    if (this.state.ui.activeTab === 'Provider') return 0;
     const filters = this.filterValues;
     const dateFrom = safeParseDate(filters.dateFrom);
     const dateTo = safeParseDate(filters.dateTo);

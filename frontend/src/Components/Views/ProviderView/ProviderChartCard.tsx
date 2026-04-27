@@ -166,6 +166,7 @@ export function ProviderChartCard({
     dataKey: chart.dataKey,
     series,
     tooltipProps: {
+      allowEscapeViewBox: { x: true, y: true },
       content: (props: { payload?: unknown[]; label?: string | number }) => (
         <ProviderChartTooltip
           active
@@ -186,7 +187,7 @@ export function ProviderChartCard({
       withBorder
       className={classes.gridItem}
       style={{
-        position: 'relative', width: 'fit-content', minWidth: 300, flexShrink: 0,
+        position: 'relative', width: 'fit-content', minWidth: 300, flexShrink: 0, overflow: 'visible',
       }}
       onMouseLeave={() => setIsHovered(false)}
       onMouseEnter={() => setIsHovered(true)}
@@ -212,6 +213,7 @@ export function ProviderChartCard({
                 top: 12, right: 25, bottom: 15, left: 25,
               },
             }}
+            style={{ overflow: 'visible' }}
             withLegend
             legendProps={{
               wrapperStyle: { padding: 0, margin: 0, top: -5 },
@@ -256,6 +258,7 @@ export function ProviderChartCard({
                 top: 45, right: 25, bottom: 15, left: 25,
               },
             }}
+            style={{ overflow: 'visible' }}
             yAxisProps={{ width: 20 }}
             barProps={{ radius: 5 }}
             xAxisProps={{

@@ -54,7 +54,7 @@ export function ProviderChartTooltip({
   }
 
   return (
-    <Paper withBorder shadow="md" p="sm" radius="md">
+    <Paper withBorder shadow="md" p="sm" radius="md" style={{ zIndex: 1000, pointerEvents: 'none' }}>
       <Box mb={5}>
         <Text size="sm" fw={700}>
           {headerContent}
