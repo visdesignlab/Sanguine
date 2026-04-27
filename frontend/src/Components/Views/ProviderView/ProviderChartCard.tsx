@@ -224,7 +224,22 @@ export function ProviderChartCard({
               type: 'number',
               width: 20,
               domain: ['dataMin', 'dataMax'],
-              tickFormatter: (value: string | number) => formatValueForDisplay(cfg.yAxisVar as never, Number(value), cfg.aggregation as keyof typeof AGGREGATION_OPTIONS, false),
+              tickFormatter: (value: string | number) => {
+                const opt = providerViewYAxisOptions.find((o) => o.value === cfg.yAxisVar);
+                if (opt) {
+                  const unit = opt.units?.[cfg.aggregation as 'sum' | 'avg'] ?? '';
+                  const isPercent = unit.startsWith('%');
+                  const rawValue = isPercent ? Number(value) * 100 : Number(value);
+                  const decimals = typeof opt.decimals === 'number'
+                    ? opt.decimals
+                    : opt.decimals?.[cfg.aggregation as 'sum' | 'avg'] ?? 0;
+                  return rawValue.toLocaleString(undefined, {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals,
+                  });
+                }
+                return formatValueForDisplay(cfg.yAxisVar as never, Number(value), cfg.aggregation as keyof typeof AGGREGATION_OPTIONS, false);
+              },
             }}
             xAxisProps={{
               type: 'category',

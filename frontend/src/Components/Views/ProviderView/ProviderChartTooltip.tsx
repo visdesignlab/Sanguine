@@ -73,7 +73,23 @@ export function ProviderChartTooltip({
               :
               {' '}
               <Text component="span" fw={600}>
-                {formatValueForDisplay(yAxisVar as never, Number(castItem.value), aggregation as keyof typeof AGGREGATION_OPTIONS)}
+                {(() => {
+                  const opt = providerViewYAxisOptions.find((o) => o.value === yAxisVar);
+                  if (opt) {
+                    const unit = opt.units?.[aggregation as 'sum' | 'avg'] ?? '';
+                    const isPercent = unit.startsWith('%');
+                    const rawValue = isPercent ? castItem.value * 100 : castItem.value;
+                    const decimals = typeof opt.decimals === 'number'
+                      ? opt.decimals
+                      : opt.decimals?.[aggregation as 'sum' | 'avg'] ?? 0;
+                    const displayValue = rawValue.toLocaleString(undefined, {
+                      minimumFractionDigits: decimals,
+                      maximumFractionDigits: decimals,
+                    });
+                    return isPercent ? `${displayValue}${unit}` : `${displayValue} ${unit}`.trim();
+                  }
+                  return formatValueForDisplay(yAxisVar as never, Number(castItem.value), aggregation as keyof typeof AGGREGATION_OPTIONS);
+                })()}
               </Text>
             </Text>
           </Box>
