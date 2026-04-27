@@ -693,6 +693,19 @@ export type TimeAggregation = keyof typeof TIME_AGGREGATION_OPTIONS;
 export const dashboardXAxisOptions = Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label })) as { value: keyof typeof TIME_AGGREGATION_OPTIONS; label: string }[];
 export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
 
+// Pre-operative anemia rate (% of surgery cases where pre_hgb < 13.0 g/dL)
+export const PRE_OP_ANEMIA_RATE = {
+  value: 'pre_anemia_rate',
+  label: {
+    short: 'Pre-op Anemia Rate',
+    base: 'Pre-op Anemia Rate (Hgb < 13 g/dL)',
+    sum: 'Total Cases with Pre-op Anemia (Hgb < 13 g/dL)',
+    avg: '% of Cases with Pre-op Anemia (Hgb < 13 g/dL)',
+  },
+  units: { sum: 'Cases', avg: '% of Cases', avgShort: '%' },
+  decimals: { sum: 0, avg: 1 },
+} as const;
+
 // Dashboard chart y-axis variable options
 export const dashboardYAxisOptions = [
   ...BLOOD_COMPONENT_OPTIONS,
@@ -708,6 +721,11 @@ export const dashboardYAxisOptions = [
   ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
+
+export const providerViewYAxisOptions = [
+  ...dashboardYAxisOptions,
+  PRE_OP_ANEMIA_RATE,
+];
 
 // Dashboard aggregate y-axis variable type
 export type DashboardAggYAxisVar = `${keyof typeof AGGREGATION_OPTIONS}_${typeof dashboardYAxisVars[number]}`;
@@ -741,6 +759,49 @@ export type DashboardStatConfig = {
 };
 
 export type DashboardStatData = Record<DashboardAggYAxisVar, { value: string, diff: number, comparedTo?: string, sparklineData: number[] }>;
+
+// Provider View ----------------------------------------------------
+export type ProviderChart = {
+  group?: string;
+  title: string;
+  data: Array<Record<string, string | number | boolean | null | undefined>>;
+  dataKey: string;
+  recommendedMark?: number;
+  providerMark?: number;
+  providerName?: string | null;
+  orientation: 'horizontal' | 'vertical';
+};
+
+export const providerXAxisOptions = [
+  ...dashboardYAxisOptions.filter(
+    (opt) => opt.value !== 'stroke' && opt.value !== 'death' && opt.value !== 'ecmo' && opt.value !== 'visit_count',
+  ),
+  PRE_OP_ANEMIA_RATE,
+];
+export const providerXAxisVars = providerXAxisOptions.map((opt) => opt.value);
+export const providerChartGroups = ['Anemia Management', 'Outcomes', 'Costs'] as const;
+
+export type ProviderChartData = Record<string, ProviderChart>;
+
+export type ProviderChartConfig = ChartConfig<
+  typeof providerXAxisVars[number] | typeof dashboardXAxisVars[number] | 'attending_provider',
+  typeof dashboardXAxisVars[number] | 'attending_provider' | typeof providerXAxisVars[number],
+  keyof typeof AGGREGATION_OPTIONS,
+  'time-series-line' | 'population-histogram'
+> & { group?: (typeof providerChartGroups)[number] };
+
+/**
+ * Props for the ProviderChartTooltip component.
+ */
+export interface ProviderChartTooltipProps {
+  active?: boolean;
+  payload?: unknown[];
+  label?: string | number;
+  xAxisVar: string;
+  yAxisVar: string;
+  aggregation: string;
+  providerName?: string | null;
+}
 
 // Chart colors (12-color categorical palette, professional and distinct)
 export const chartColors = [

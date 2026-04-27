@@ -24,10 +24,15 @@ import {
   ExploreStatData,
   ExploreTableConfig,
   ExploreTableRow,
+  ProviderChart,
+  ProviderChartConfig,
+  ProviderChartData,
+  providerXAxisOptions,
   ProcedureHierarchyResponse,
   TimePeriod,
   dashboardXAxisVars,
   dashboardYAxisOptions,
+  providerViewYAxisOptions,
   DEFAULT_UNIT_COSTS,
 } from '../Types/application';
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
@@ -164,6 +169,718 @@ export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
     statId: '6', yAxisVar: 'plt_units_adherent', aggregation: 'avg', title: 'Percentage of Platelet Units Transfused According to Guidelines',
   },
 ];
+
+/**
+ * ProvidersStore manages provider data for the provider view.
+ */
+export class ProvidersStore {
+  _rootStore: RootStore;
+
+  constructor(rootStore: RootStore) {
+    this._rootStore = rootStore;
+    makeAutoObservable(this);
+  }
+
+  providerChartData: ProviderChartData = {};
+
+  providerList: string[] = [];
+
+  _selectedProvider: string | null = null;
+
+  // Number of unique surgeries performed by the selected provider (all time)
+  selectedProvSurgCount: number | null = null;
+
+  selectedProvRbcUnits: number | null = null;
+
+  selectedProvCmi: number | null = null;
+
+  averageProvCmi: number | null = null;
+
+  cmiComparisonLabel: string = 'within typical range';
+
+  // Current date range applied for Providers view (nullable = all time)
+  dateStart: string | null = null;
+
+  dateEnd: string | null = null;
+
+  earliestDate: string | null = null;
+
+  async findEarliestDate(): Promise<string | null> {
+    if (!this._rootStore.duckDB) {
+      return null;
+    }
+
+    try {
+      const query = `
+        SELECT MIN(dsch_dtm) AS earliest_date
+        FROM filteredVisits
+        WHERE dsch_dtm IS NOT NULL;
+      `;
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
+      const earliestDate = rows[0]?.earliest_date ?? null;
+      return earliestDate ? String(earliestDate) : null;
+    } catch (e) {
+      console.error('Error finding earliest discharge date:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Set date range for Providers view and refresh provider-related data.
+   */
+  setDateRange(startDate: string | null, endDate: string | null) {
+    this.dateStart = startDate || null;
+    this.dateEnd = endDate || null;
+
+    // Refresh provider view data constrained to this date range
+    this.getProviderCharts(this.dateStart, this.dateEnd).catch((e) => {
+      console.error('Error refreshing provider charts after date range change:', e);
+    });
+    this.fetchProviderList(this.dateStart, this.dateEnd).catch((e) => {
+      console.error('Error refreshing provider list after date range change:', e);
+    });
+    // If a selected provider exists, refresh provider-specific stats constrained to date range
+    if (this.selectedProvider) {
+      this.fetchSelectedProvSurgCount(this.dateStart, this.dateEnd).catch((e) => {
+        console.error('Error refreshing surgery count after date range change:', e);
+      });
+      this.fetchSelectedProvRbcUnits(this.dateStart, this.dateEnd).catch((e) => {
+        console.error('Error refreshing RBC units after date range change:', e);
+      });
+      this.fetchCmiComparison(this.dateStart, this.dateEnd).catch((e) => {
+        console.error('Error refreshing CMI comparison after date range change:', e);
+      });
+    }
+  }
+
+  /**
+     * Fetch count of unique surgeries for the currently selected provider.
+     * If startDate/endDate provided, restrict to that discharge date range.
+     * Sets selectedProvSurgCount to 0 when no provider is selected or duckDB missing.
+     */
+  async fetchSelectedProvSurgCount(startDate?: string | null, endDate?: string | null) {
+    if (!this._rootStore.duckDB || !this.selectedProvider) {
+      this.selectedProvSurgCount = 0;
+      return this.selectedProvSurgCount;
+    }
+
+    try {
+      // protect single quotes in provider name
+      const prov = String(this.selectedProvider).replace(/'/g, "''");
+
+      let dateClause = '';
+      if (startDate) dateClause += ` AND fv.dsch_dtm >= DATE '${startDate}'`;
+      if (endDate) dateClause += ` AND fv.dsch_dtm <= DATE '${endDate}'`;
+
+      const query = `
+        SELECT COUNT(DISTINCT sc.case_id) AS cnt
+        FROM filteredSurgeryCases sc
+        INNER JOIN filteredVisits fv ON sc.visit_no = fv.visit_no
+        WHERE fv.attending_provider = '${prov}' ${dateClause};
+      `;
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
+      const cnt = rows[0]?.cnt ?? 0;
+      this.selectedProvSurgCount = Number(cnt) || 0;
+    } catch (e) {
+      console.error('Error fetching selected provider surgery count:', e);
+      this.selectedProvSurgCount = 0;
+    }
+
+    return this.selectedProvSurgCount;
+  }
+
+  async fetchSelectedProvRbcUnits(startDate?: string | null, endDate?: string | null) {
+    // If no DB or no selected provider, set to zero and return
+    if (!this._rootStore.duckDB || !this.selectedProvider) {
+      this.selectedProvRbcUnits = 0;
+      return this.selectedProvRbcUnits;
+    }
+
+    try {
+      const prov = String(this.selectedProvider).replace(/'/g, "''");
+
+      // Build WHERE clause (optionally constrain by discharge date range)
+      let dateClause = '';
+      if (startDate) {
+        // duckdb accepts DATE 'YYYY-MM-DD' or comparable formats
+        dateClause += ` AND dsch_dtm >= DATE '${startDate}'`;
+      }
+      if (endDate) {
+        dateClause += ` AND dsch_dtm <= DATE '${endDate}'`;
+      }
+
+      const query = `
+        SELECT SUM(rbc_units) AS total_rbc
+        FROM filteredVisits
+        WHERE attending_provider = '${prov}' ${dateClause};
+      `;
+
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
+
+      const total = rows[0]?.total_rbc ?? 0;
+      this.selectedProvRbcUnits = Number(total) || 0;
+    } catch (e) {
+      console.error('Error fetching selected provider RBC units:', e);
+      this.selectedProvRbcUnits = 0;
+    }
+
+    return this.selectedProvRbcUnits;
+  }
+
+  get selectedProvider(): string | null {
+    return this._selectedProvider;
+  }
+
+  set selectedProvider(val: string | null) {
+    if (this._selectedProvider === val) return;
+    this._selectedProvider = val;
+    // Recompute charts and stats when selected provider changes, respecting current date range
+    const s = this.dateStart ?? null;
+    const eDate = this.dateEnd ?? null;
+    this.getProviderCharts(s, eDate).catch((e) => {
+      console.error('Error refreshing provider charts after provider change:', e);
+    });
+    // Refresh surgery count for the newly selected provider
+    this.fetchSelectedProvSurgCount(s, eDate).catch((e) => {
+      console.error('Error fetching surgery count after provider change:', e);
+    });
+    // Refresh RBC units (all time by default) when provider changes
+    this.fetchSelectedProvRbcUnits(s, eDate).catch((e) => {
+      console.error('Error fetching RBC units after provider change:', e);
+    });
+    this.fetchCmiComparison(s, eDate).catch((e) => {
+      console.error('Error fetching CMI comparison after provider change:', e);
+    });
+  }
+
+  // Chart configurations by default
+  _chartConfigs: ProviderChartConfig[] = [
+    {
+      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'rbc_units_adherent', aggregation: 'avg', chartType: 'time-series-line', group: 'Anemia Management',
+    },
+    {
+      chartId: '1', xAxisVar: 'ffp_units_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'population-histogram', group: 'Anemia Management',
+    },
+    {
+      chartId: '2', xAxisVar: 'antifibrinolytic', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'population-histogram', group: 'Anemia Management',
+    },
+    {
+      chartId: '3', xAxisVar: 'b12', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'population-histogram', group: 'Outcomes',
+    },
+    {
+      chartId: '4', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'time-series-line', group: 'Outcomes',
+    },
+    {
+      chartId: '5', xAxisVar: 'quarter', yAxisVar: 'rbc_units_cost', aggregation: 'avg', chartType: 'time-series-line', group: 'Costs',
+    },
+    {
+      chartId: '6', xAxisVar: 'quarter', yAxisVar: 'pre_anemia_rate', aggregation: 'avg', chartType: 'time-series-line', group: 'Anemia Management',
+    },
+    {
+      chartId: '7', xAxisVar: 'pre_anemia_rate', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'population-histogram', group: 'Anemia Management',
+    },
+  ];
+
+  get chartConfigs() {
+    return this._chartConfigs;
+  }
+
+  set chartConfigs(input: ProviderChartConfig[]) {
+    this._chartConfigs = input;
+  }
+
+  /**
+     * Adds new chart
+     * @param config Chart data specification for chart to add
+     */
+  addChart(config: ProviderChartConfig) {
+    this._chartConfigs = [config, ...this._chartConfigs];
+    this.getProviderCharts(this.dateStart, this.dateEnd);
+  }
+
+  /**
+   * Removes chart, by ID.
+   */
+  removeChart(chartId: string) {
+    this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
+  }
+
+  /**
+   * Fetches CMI for all providers (optionally bounded by date range),
+   * computes average CMI across providers and selected provider CMI,
+   * and sets cmiComparisonLabel based on relative difference.
+   */
+  async fetchCmiComparison(startDate?: string | null, endDate?: string | null) {
+    if (!this._rootStore.duckDB || !this.selectedProvider) {
+      this.selectedProvCmi = null;
+      this.averageProvCmi = null;
+      this.cmiComparisonLabel = 'within typical range';
+      return this.cmiComparisonLabel;
+    }
+
+    try {
+      let dateClause = '';
+      if (startDate) dateClause += ` WHERE dsch_dtm >= DATE '${startDate}'`;
+      if (endDate) {
+        dateClause += `${dateClause ? ' AND' : ' WHERE'} dsch_dtm <= DATE '${endDate}'`;
+      }
+
+      const query = `
+        SELECT attending_provider, SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS cmi
+        FROM filteredVisits
+        ${dateClause}
+        GROUP BY attending_provider;
+      `;
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
+
+      const cmiValues = rows
+        .map((r) => {
+          const v = Number(r.cmi);
+          return Number.isFinite(v) ? v : NaN;
+        })
+        .filter(Number.isFinite);
+
+      if (cmiValues.length === 0) {
+        this.selectedProvCmi = null;
+        this.averageProvCmi = null;
+        this.cmiComparisonLabel = 'within typical range';
+        return this.cmiComparisonLabel;
+      }
+
+      const avg = cmiValues.reduce((a, b) => a + b, 0) / cmiValues.length;
+      this.averageProvCmi = avg;
+
+      const match = rows.find((r) => String(r.attending_provider) === String(this.selectedProvider));
+      this.selectedProvCmi = match && match.cmi != null ? Number(match.cmi) : null;
+
+      // relative difference
+      const sel = this.selectedProvCmi ?? avg;
+      const rel = avg === 0 ? 0 : (sel - avg) / avg;
+
+      // thresholds (tunable)
+      let label = 'within typical range';
+      if (rel >= 0.15) label = 'much higher than average';
+      else if (rel >= 0.07) label = 'higher than average';
+      else if (rel >= 0.03) label = 'slightly higher than average';
+      else if (rel <= -0.15) label = 'much lower than average';
+      else if (rel <= -0.07) label = 'lower than average';
+      else if (rel <= -0.03) label = 'slightly lower than average';
+      else label = 'within typical range';
+
+      this.cmiComparisonLabel = label;
+      return this.cmiComparisonLabel;
+    } catch (e) {
+      console.error('Error fetching CMI comparison:', e);
+      this.selectedProvCmi = null;
+      this.averageProvCmi = null;
+      this.cmiComparisonLabel = 'within typical range';
+      return this.cmiComparisonLabel;
+    }
+  }
+
+  async fetchProviderList(startDate?: string | null, endDate?: string | null) {
+    if (!this._rootStore.duckDB) {
+      return [];
+    }
+
+    try {
+      let dateClause = '';
+      if (startDate) dateClause += ` WHERE dsch_dtm >= DATE '${startDate}'`;
+      if (endDate) {
+        dateClause += `${dateClause ? ' AND' : ' WHERE'} dsch_dtm <= DATE '${endDate}'`;
+      }
+
+      const query = `
+        SELECT DISTINCT attending_provider
+        FROM filteredVisits
+        ${dateClause}
+        ${dateClause ? ' AND' : ' WHERE'} attending_provider IS NOT NULL
+        ORDER BY attending_provider;
+        `;
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r) => r.toJSON());
+      this.providerList = rows.map((r) => String(r.attending_provider)).filter((v) => v);
+
+      // If no provider is selected yet, pick the first one so UI has a default
+      if (!this.selectedProvider && this.providerList.length > 0) {
+        this.selectedProvider = this.providerList[0];
+        // ensure surgery count populated for default provider
+        this.fetchSelectedProvSurgCount(startDate, endDate).catch((e) => {
+          console.error('Error fetching surgery count for default provider:', e);
+        });
+      }
+    } catch (e) {
+      console.error('Error fetching provider list:', e);
+      this.providerList = [];
+    }
+
+    return this.providerList;
+  }
+
+  // ── Provider chart helpers ──────────────────────────────────────────────────
+
+  /** Pre-operative anemia condition (Hgb < 13.0 g/dL) used in surgery-case SQL queries. */
+  private readonly ANEMIA_EXPR = 'CASE WHEN pre_hgb IS NOT NULL AND pre_hgb < 13.0 THEN 1.0 ELSE 0.0 END';
+
+  /** Aggregate raw query rows by a time-period column into a map of timePeriod → value. */
+  private aggregateByTimePeriod(
+    rows: Array<Record<string, unknown>>,
+    xVar: string,
+    alias: string,
+    agg: string,
+  ): Map<string, number> {
+    const buckets = new Map<string, number[]>();
+    rows.forEach((r) => {
+      const timeVal = r[xVar];
+      const raw = r[alias];
+      if (timeVal == null || raw == null) return;
+      const num = Number(raw);
+      if (!Number.isFinite(num)) return;
+      const arr = buckets.get(String(timeVal)) ?? [];
+      arr.push(num);
+      buckets.set(String(timeVal), arr);
+    });
+    const result = new Map<string, number>();
+    buckets.forEach((arr, tp) => {
+      result.set(tp, agg === 'sum' ? arr.reduce((a, b) => a + b, 0) : arr.reduce((a, b) => a + b, 0) / arr.length);
+    });
+    return result;
+  }
+
+  /** Merge all-providers and selected-provider time maps into sorted Recharts-ready points. */
+  private buildTimeSeriesPoints(
+    allMap: Map<string, number>,
+    selMap: Map<string, number>,
+    xVar: string,
+    providerLabel: string | null,
+  ): Array<Record<string, string | number | undefined>> {
+    const points: Array<Record<string, string | number | undefined>> = [];
+    allMap.forEach((numAll, timePeriod) => {
+      if (!Number.isFinite(numAll)) return;
+      const numSel = selMap.get(timePeriod);
+      const point: Record<string, string | number | undefined> = { [xVar]: timePeriod, All: numAll };
+      if (providerLabel) {
+        point[providerLabel] = numSel !== undefined && Number.isFinite(numSel) ? numSel : undefined;
+      }
+      points.push(point);
+    });
+    points.sort((a, b) => {
+      try { return compareTimePeriods(a[xVar] as TimePeriod, b[xVar] as TimePeriod); } catch { return 0; }
+    });
+    return points;
+  }
+
+  /** Bin a flat array of per-provider numeric values into histogram data points. */
+  private buildHistogramData(
+    values: number[],
+    yVar: string,
+    xVar: string,
+    recommendedMark: number,
+  ): ProviderChart['data'] {
+    if (values.length === 0) return [];
+    const withMark = !Number.isNaN(recommendedMark);
+    const min = Math.min(...values, ...(withMark ? [recommendedMark] : []));
+    const max = Math.max(...values, ...(withMark ? [recommendedMark] : []));
+    if (min === max) return [{ [xVar]: Number(min.toFixed(2)), [yVar]: values.length }];
+    const bins = Math.min(new Set(values.map((v) => Number(v.toFixed(2)))).size || 1, 20);
+    const binWidth = (max - min) / bins;
+    const counts = new Array<number>(bins).fill(0);
+    values.forEach((v) => {
+      let idx = Math.floor((v - min) / binWidth);
+      if (idx < 0) idx = 0;
+      if (idx >= bins) idx = bins - 1;
+      counts[idx] += 1;
+    });
+
+    // Choose decimal precision that guarantees unique bin center labels.
+    // When the range is small relative to the number of bins, toFixed(2)
+    // can produce duplicate category values which breaks Recharts reference lines.
+    let precision = 2;
+    for (let p = 2; p <= 6; p += 1) {
+      const labels = counts.map((_, i) => Number((min + (i + 0.5) * binWidth).toFixed(p)));
+      if (new Set(labels).size === labels.length) { precision = p; break; }
+    }
+
+    return counts.map((count, i) => ({
+      [xVar]: Number((min + (i + 0.5) * binWidth).toFixed(precision)),
+      [yVar]: count,
+    }));
+  }
+
+  async getProviderCharts(startDate?: string | null, endDate?: string | null) {
+    if (!this._rootStore.duckDB) return {};
+
+    try {
+      const charts: ProviderChartData = {};
+      const provEscaped = this.selectedProvider ? String(this.selectedProvider).replace(/'/g, "''") : null;
+      const providerLabel = this.selectedProvider ? String(this.selectedProvider) : null;
+
+      // Date clauses differ by source table: visits use dsch_dtm, surgery cases use case_date
+      const visitDateClause = [
+        startDate && ` AND dsch_dtm >= DATE '${startDate}'`,
+        endDate && ` AND dsch_dtm <= DATE '${endDate}'`,
+      ].filter(Boolean).join('');
+      const surgDateClause = [
+        startDate && ` AND case_date >= DATE '${startDate}'`,
+        endDate && ` AND case_date <= DATE '${endDate}'`,
+      ].filter(Boolean).join('');
+
+      // Convenience wrapper: execute SQL and return plain JS objects
+      const runQuery = async (sql: string) => (
+        await this._rootStore.duckDB!.query(sql)
+      ).toArray().map((r) => r.toJSON());
+
+      // ── HISTOGRAMS ──────────────────────────────────────────────────────────
+
+      const histConfigs = this._chartConfigs.filter((cfg) => cfg.chartType === 'population-histogram');
+      const stdHistConfigs = histConfigs.filter((cfg) => cfg.xAxisVar !== 'pre_anemia_rate');
+      const surgHistConfigs = histConfigs.filter((cfg) => cfg.xAxisVar === 'pre_anemia_rate');
+
+      // Per-provider aggregates from filteredVisits (all standard metrics)
+      let visitHistRows: Array<Record<string, unknown>> = [];
+      if (stdHistConfigs.length > 0) {
+        const selects = stdHistConfigs.flatMap(({ xAxisVar }) => (
+          Object.keys(AGGREGATION_OPTIONS).flatMap((agg) => {
+            const fn = agg.toUpperCase();
+            if (xAxisVar === 'total_blood_product_cost') {
+              const expr = '(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost)';
+              return [`${fn}(${expr}) AS ${agg}_total_blood_product_cost`];
+            }
+            if (xAxisVar === 'case_mix_index') return `SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS ${agg}_case_mix_index`;
+            if (xAxisVar.endsWith('_units_adherent') && agg === 'avg') {
+              const baseVar = xAxisVar === 'overall_units_adherent' ? '(rbc_units + ffp_units + plt_units + cryo_units)' : xAxisVar.replace('_adherent', '');
+              return `CAST(SUM(${xAxisVar}) AS DOUBLE) / NULLIF(SUM(${baseVar}), 0) AS avg_${xAxisVar}`;
+            }
+            return `${fn}(CAST(${xAxisVar} AS DOUBLE)) AS ${agg}_${xAxisVar}`;
+          })
+        ));
+        visitHistRows = await runQuery(`
+          SELECT attending_provider, ${selects.join(', ')}
+          FROM filteredVisits
+          WHERE attending_provider IS NOT NULL ${visitDateClause}
+          GROUP BY attending_provider;
+        `);
+      }
+
+      // Per-provider pre-op anemia rate from filteredSurgeryCases.
+      // Uses UNION to include both surgeons and attending providers so
+      // that the provider marker appears for either role.
+      let surgHistRows: Array<Record<string, unknown>> = [];
+      if (surgHistConfigs.length > 0) {
+        surgHistRows = await runQuery(`
+          SELECT provider_name AS attending_provider,
+            AVG(anemia_flag) AS avg_pre_anemia_rate,
+            SUM(anemia_flag) AS sum_pre_anemia_rate
+          FROM (
+            SELECT surgeon_prov_name AS provider_name,
+              ${this.ANEMIA_EXPR} AS anemia_flag
+            FROM filteredSurgeryCases
+            WHERE surgeon_prov_name IS NOT NULL ${surgDateClause}
+            UNION ALL
+            SELECT fv.attending_provider AS provider_name,
+              ${this.ANEMIA_EXPR} AS anemia_flag
+            FROM filteredSurgeryCases sc
+            INNER JOIN filteredVisits fv ON sc.visit_no = fv.visit_no
+            WHERE fv.attending_provider IS NOT NULL
+              AND fv.attending_provider != sc.surgeon_prov_name
+              ${surgDateClause}
+          ) combined
+          GROUP BY provider_name;
+        `);
+      }
+
+      // Bin each histogram config into chart data
+      histConfigs.forEach((cfg) => {
+        const sourceRows = cfg.xAxisVar === 'pre_anemia_rate' ? surgHistRows : visitHistRows;
+        const {
+          xAxisVar: xVar, yAxisVar: yVar, aggregation: agg = 'avg', chartId, group,
+        } = cfg;
+        const chartKey = `${chartId}_${xVar}`;
+
+        const opt = providerXAxisOptions.find((o) => o.value === xVar) as
+          | { recommendation?: Partial<Record<keyof typeof AGGREGATION_OPTIONS, number>> } | undefined;
+        const recommendedMark = opt?.recommendation?.[agg as keyof typeof AGGREGATION_OPTIONS] ?? NaN;
+
+        const values = sourceRows.map((r) => Number(r[`${agg}_${xVar}`])).filter((n) => Number.isFinite(n));
+        const provMatch = this.selectedProvider
+          ? sourceRows.find((r) => String(r.attending_provider).trim() === String(this.selectedProvider).trim())
+          : undefined;
+        const matchVal = provMatch != null ? Number(provMatch[`${agg}_${xVar}`]) : NaN;
+        const providerMark = Number.isFinite(matchVal) ? Number(matchVal.toFixed(2)) : undefined;
+        const providerName = (providerMark !== undefined && provMatch) ? String(provMatch.attending_provider) : null;
+
+        charts[chartKey] = {
+          group: group || 'Ungrouped',
+          title: providerViewYAxisOptions.find((o) => o.value === xVar)?.label?.[agg] ?? xVar,
+          data: this.buildHistogramData(values, yVar, xVar, recommendedMark),
+          dataKey: xVar,
+          orientation: 'horizontal',
+          recommendedMark,
+          providerMark,
+          providerName,
+        };
+      });
+
+      // ── TIME-SERIES ─────────────────────────────────────────────────────────
+
+      const lineConfigs = this._chartConfigs.filter((cfg) => cfg.chartType === 'time-series-line');
+      const stdLineConfigs = lineConfigs.filter((cfg) => cfg.yAxisVar !== 'pre_anemia_rate');
+      const surgLineConfigs = lineConfigs.filter((cfg) => cfg.yAxisVar === 'pre_anemia_rate');
+
+      // Group standard line configs by xAxisVar to avoid double-averaging
+      const stdLineByXVar = new Map<string, typeof stdLineConfigs>();
+      stdLineConfigs.forEach((cfg) => {
+        const arr = stdLineByXVar.get(cfg.xAxisVar) || [];
+        arr.push(cfg);
+        stdLineByXVar.set(cfg.xAxisVar, arr);
+      });
+
+      // Additive metrics that should be SUM'd per visit in the inner subquery
+      const additiveMetrics = new Set([
+        'rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'whole_units', 'cell_saver_ml',
+        'overall_units', 'rbc_units_adherent', 'ffp_units_adherent', 'plt_units_adherent',
+        'cryo_units_adherent', 'overall_units_adherent',
+        'rbc_units_cost', 'ffp_units_cost', 'plt_units_cost', 'cryo_units_cost',
+        'whole_cost', 'cell_saver_cost',
+      ]);
+
+      // For each unique xAxisVar, run correctly-grouped queries
+      const visitLineRowsAllByXVar = new Map<string, Array<Record<string, unknown>>>();
+      const visitLineRowsSelByXVar = new Map<string, Array<Record<string, unknown>>>();
+
+      for (const [xVar, configs] of stdLineByXVar) {
+        // Build inner per-visit selects and outer time-period selects
+        const innerSelectMap = new Map<string, string>();
+        const outerSelectMap = new Map<string, string>();
+        const selProvSelectMap = new Map<string, string>();
+
+        configs.forEach(({ yAxisVar: yVar, aggregation: cfgAgg = 'avg' }) => {
+          const agg = cfgAgg.toLowerCase();
+          const alias = `${agg}_${yVar}`;
+          if (outerSelectMap.has(alias)) return;
+
+          if (yVar === 'case_mix_index') {
+            innerSelectMap.set('visit_ms_drg_weight', 'SUM(ms_drg_weight) AS visit_ms_drg_weight');
+            innerSelectMap.set('visit_drg_count', 'COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END) AS visit_drg_count');
+            outerSelectMap.set(alias, `SUM(visit_ms_drg_weight) / NULLIF(SUM(visit_drg_count), 0) AS ${alias}`);
+            selProvSelectMap.set(alias, `SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS ${alias}`);
+          } else if (yVar.endsWith('_units_adherent') && agg === 'avg') {
+            const baseVar = yVar === 'overall_units_adherent' ? '(rbc_units + ffp_units + plt_units + cryo_units)' : yVar.replace('_adherent', '');
+            innerSelectMap.set(`visit_${yVar}`, `SUM(CAST(${yVar} AS DOUBLE)) AS visit_${yVar}`);
+            if (yVar === 'overall_units_adherent') {
+              innerSelectMap.set('visit_overall_base', 'SUM(CAST(rbc_units AS DOUBLE) + CAST(ffp_units AS DOUBLE) + CAST(plt_units AS DOUBLE) + CAST(cryo_units AS DOUBLE)) AS visit_overall_base');
+              outerSelectMap.set(alias, `SUM(visit_${yVar}) / NULLIF(SUM(visit_overall_base), 0) AS ${alias}`);
+            } else {
+              innerSelectMap.set(`visit_${baseVar}`, `SUM(CAST(${baseVar} AS DOUBLE)) AS visit_${baseVar}`);
+              outerSelectMap.set(alias, `SUM(visit_${yVar}) / NULLIF(SUM(visit_${baseVar}), 0) AS ${alias}`);
+            }
+            selProvSelectMap.set(alias, `CAST(SUM(${yVar}) AS DOUBLE) / NULLIF(SUM(${baseVar}), 0) AS ${alias}`);
+          } else {
+            const innerFn = additiveMetrics.has(yVar) ? 'SUM' : 'MAX';
+            const visitAlias = `visit_${yVar}`;
+            if (!innerSelectMap.has(visitAlias)) {
+              innerSelectMap.set(visitAlias, `${innerFn}(CAST(${yVar} AS DOUBLE)) AS ${visitAlias}`);
+            }
+            outerSelectMap.set(alias, `${agg.toUpperCase()}(${visitAlias}) AS ${alias}`);
+            selProvSelectMap.set(alias, `${agg.toUpperCase()}(CAST(${yVar} AS DOUBLE)) AS ${alias}`);
+          }
+        });
+
+        const innerSel = Array.from(innerSelectMap.values()).join(', ');
+        const outerSel = Array.from(outerSelectMap.values()).join(', ');
+        const selSel = Array.from(selProvSelectMap.values()).join(', ');
+
+        // eslint-disable-next-line no-await-in-loop
+        visitLineRowsAllByXVar.set(xVar, await runQuery(`
+          SELECT ${xVar}, ${outerSel}
+          FROM (
+            SELECT visit_no, ${xVar}, ${innerSel}
+            FROM filteredVisits
+            WHERE attending_provider IS NOT NULL ${visitDateClause}
+            GROUP BY visit_no, ${xVar}
+          ) sub
+          GROUP BY ${xVar};
+        `));
+
+        if (provEscaped) {
+          // Selected provider: one row per visit, so direct aggregation is correct
+          // eslint-disable-next-line no-await-in-loop
+          visitLineRowsSelByXVar.set(xVar, await runQuery(`
+            SELECT ${xVar}, ${selSel}
+            FROM filteredVisits WHERE attending_provider = '${provEscaped}' ${visitDateClause}
+            GROUP BY ${xVar};
+          `));
+        }
+      }
+
+      // Fetch surgery-case time-series rows (all surgeons + selected surgeon)
+      let surgLineRowsAll: Array<Record<string, unknown>> = [];
+      let surgLineRowsSel: Array<Record<string, unknown>> = [];
+      if (surgLineConfigs.length > 0) {
+        const anemiaSel = `AVG(${this.ANEMIA_EXPR}) AS avg_pre_anemia_rate, SUM(${this.ANEMIA_EXPR}) AS sum_pre_anemia_rate`;
+        surgLineRowsAll = await runQuery(`
+          SELECT month, quarter, year, ${anemiaSel}
+          FROM filteredSurgeryCases WHERE surgeon_prov_name IS NOT NULL ${surgDateClause}
+          GROUP BY month, quarter, year;
+        `);
+        if (provEscaped) {
+          surgLineRowsSel = await runQuery(`
+            SELECT sc.month, sc.quarter, sc.year,
+              AVG(${this.ANEMIA_EXPR}) AS avg_pre_anemia_rate,
+              SUM(${this.ANEMIA_EXPR}) AS sum_pre_anemia_rate
+            FROM filteredSurgeryCases sc
+            LEFT JOIN filteredVisits fv ON sc.visit_no = fv.visit_no
+            WHERE (sc.surgeon_prov_name = '${provEscaped}' OR fv.attending_provider = '${provEscaped}')
+              ${surgDateClause}
+            GROUP BY sc.month, sc.quarter, sc.year;
+          `);
+        }
+      }
+
+      // Build all time-series charts in a single unified loop
+      lineConfigs.forEach((cfg) => {
+        const isAnemia = cfg.yAxisVar === 'pre_anemia_rate';
+        const agg = (cfg.aggregation || 'avg').toLowerCase();
+        const xVar = cfg.xAxisVar as 'month' | 'quarter' | 'year';
+        const alias = `${agg}_${cfg.yAxisVar}`;
+        const chartKey = `${cfg.chartId}_${xVar}`;
+
+        const allRows = isAnemia ? surgLineRowsAll : (visitLineRowsAllByXVar.get(xVar) || []);
+        const selRows = isAnemia ? surgLineRowsSel : (visitLineRowsSelByXVar.get(xVar) || []);
+
+        const allMap = this.aggregateByTimePeriod(allRows, xVar, alias, agg);
+        const selMap = this.aggregateByTimePeriod(selRows, xVar, alias, agg);
+        const points = this.buildTimeSeriesPoints(allMap, selMap, xVar, providerLabel);
+
+        const yOption = providerViewYAxisOptions.find((o) => o.value === cfg.yAxisVar);
+        const chartTitle = (yOption as { label?: Record<string, string> })?.label?.[agg as 'sum' | 'avg'] ?? String(cfg.yAxisVar);
+        const recommendedMark = (yOption as { recommendation?: Record<string, number> })?.recommendation?.[agg] ?? NaN;
+
+        charts[chartKey] = {
+          group: cfg.group || 'Ungrouped',
+          title: chartTitle,
+          data: points,
+          dataKey: xVar,
+          orientation: 'horizontal',
+          recommendedMark,
+          providerMark: undefined,
+          providerName: providerLabel,
+        };
+      });
+
+      this.providerChartData = charts;
+      return this.providerChartData;
+    } catch (e) {
+      console.error('Error building provider charts:', e);
+      this.providerChartData = {};
+      return this.providerChartData;
+    }
+  }
+}
 
 // endregion
 
@@ -303,11 +1020,14 @@ export class RootStore {
   allVisitsLength = 0;
 
   filteredVisitsLength = 0;
+
+  providersStore: ProvidersStore;
   // endregion
 
   // region Constructor
   constructor() {
     this._provenanceAtom = createAtom('provenance');
+    this.providersStore = new ProvidersStore(this);
 
     makeAutoObservable(this, {
       provenance: false,
@@ -553,6 +1273,9 @@ export class RootStore {
    * This should be called after data is loaded and default filter values are calculated.
    */
   init() {
+    this.providersStore.fetchProviderList().catch((e) => {
+      console.error('Error fetching provider list on init:', e);
+    });
     if (this.provenance) {
       console.warn('ProvenanceStore already initialized');
       return;
@@ -1595,6 +2318,7 @@ export class RootStore {
    * Returns the number of date filters that are applied
    */
   get dateFiltersAppliedCount(): number {
+    if (this.state.ui.activeTab === 'Provider') return 0;
     const filters = this.filterValues;
     const dateFrom = safeParseDate(filters.dateFrom);
     const dateTo = safeParseDate(filters.dateTo);
@@ -1993,6 +2717,16 @@ export class RootStore {
     await this.computeExploreStatData();
     await this.generateHistogramData();
     await this.updateSelectedVisits();
+
+    // Update provider store
+    const { dateStart, dateEnd } = this.providersStore;
+    await this.providersStore.fetchProviderList(dateStart, dateEnd);
+    await this.providersStore.getProviderCharts(dateStart, dateEnd);
+    if (this.providersStore.selectedProvider) {
+      await this.providersStore.fetchSelectedProvSurgCount(dateStart, dateEnd);
+      await this.providersStore.fetchSelectedProvRbcUnits(dateStart, dateEnd);
+      await this.providersStore.fetchCmiComparison(dateStart, dateEnd);
+    }
   }
 
   async computeExploreChartData(): Promise<void> {
