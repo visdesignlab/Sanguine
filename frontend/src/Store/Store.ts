@@ -563,13 +563,8 @@ export class ProvidersStore {
           Object.keys(AGGREGATION_OPTIONS).flatMap((agg) => {
             const fn = agg.toUpperCase();
             if (xAxisVar === 'total_blood_product_cost') {
-              return [
-                `${fn}(rbc_units_cost) AS ${agg}_rbc_units_cost`,
-                `${fn}(plt_units_cost) AS ${agg}_plt_units_cost`,
-                `${fn}(ffp_units_cost) AS ${agg}_ffp_units_cost`,
-                `${fn}(cryo_units_cost) AS ${agg}_cryo_units_cost`,
-                `${fn}(cell_saver_cost) AS ${agg}_cell_saver_cost`,
-              ];
+              const expr = '(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost)';
+              return [`${fn}(${expr}) AS ${agg}_total_blood_product_cost`];
             }
             if (xAxisVar === 'case_mix_index') return `SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS ${agg}_case_mix_index`;
             return `${fn}(CAST(${xAxisVar} AS DOUBLE)) AS ${agg}_${xAxisVar}`;
@@ -610,7 +605,7 @@ export class ProvidersStore {
 
         const values = sourceRows.map((r) => Number(r[`${agg}_${xVar}`])).filter((n) => Number.isFinite(n));
         const provMatch = this.selectedProvider
-          ? sourceRows.find((r) => String(r.attending_provider) === String(this.selectedProvider))
+          ? sourceRows.find((r) => String(r.attending_provider).trim() === String(this.selectedProvider).trim())
           : undefined;
         const matchVal = provMatch != null ? Number(provMatch[`${agg}_${xVar}`]) : NaN;
         const providerMark = Number.isFinite(matchVal) ? Number(matchVal.toFixed(2)) : undefined;

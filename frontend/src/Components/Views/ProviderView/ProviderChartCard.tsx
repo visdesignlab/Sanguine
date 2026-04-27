@@ -2,9 +2,8 @@
 import {
   Card, CloseButton, Stack, Text,
 } from '@mantine/core';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { BarChart, LineChart } from '@mantine/charts';
-import { ReferenceLine } from 'recharts';
 import {
   AGGREGATION_OPTIONS,
   ProviderChart, ProviderChartConfig,
@@ -41,41 +40,6 @@ function formatHistogramTick(value: number, xAxisVar: string): string {
 }
 
 /**
- * Compute the label position for the provider marker reference line
- * on a histogram, so the label doesn't clip at the edges.
- */
-function getProviderLabelPosition(marker: number, data: ProviderChart['data'], dataKey: string) {
-  const values = (data || []).map((r) => Number(r[dataKey])).filter(Number.isFinite);
-  const min = values.length ? Math.min(...values) : 0;
-  const max = values.length ? Math.max(...values) : 1;
-  const range = (max - min) || 1;
-  const pct = (marker - min) / range;
-
-  if (pct <= 0.1) return 'insideTopLeft' as const;
-  if (pct >= 0.9) return 'insideTopRight' as const;
-  return 'insideTop' as const;
-}
-
-/** Human-readable label for chart series keys. */
-function formatSeriesLabel(name: string): string {
-  if (name === 'attending_provider') return 'Number of Providers';
-  if (name === 'All') return 'All Providers';
-  return name;
-}
-
-/** Build chart series from the first data row's keys. */
-function buildSeries(chart: ProviderChart) {
-  if (!chart.data?.length) return [];
-  return Object.keys(chart.data[0])
-    .filter((k) => k !== chart.dataKey)
-    .map((name, idx) => ({
-      name,
-      color: idx % 2 === 0 ? MANTINE_BLUE : GOLD,
-      label: formatSeriesLabel(name),
-    }));
-}
-
-/**
  * Snap a numeric value to the nearest category value in the chart data.
  * Required because category x-axes only render reference lines at exact category values.
  */
@@ -99,80 +63,23 @@ function snapToNearestCategory(value: number | undefined, data: ProviderChart['d
   return closest;
 }
 
-/**
- * Common chart adornments including the Provider marker and the Recommended threshold line.
- */
-function ChartAdornments({
-  chart,
-  dataKey,
-  selectedProviderName,
-  isHistogram,
-}: {
-  chart: ProviderChart;
-  dataKey: string;
-  selectedProviderName: string | null;
-  isHistogram: boolean;
-}) {
-  const [hoveredRecommendedLine, setHoveredRecommendedLine] = useState(false);
+/** Human-readable label for chart series keys. */
+function formatSeriesLabel(name: string): string {
+  if (name === 'attending_provider') return 'Number of Providers';
+  if (name === 'All') return 'All Providers';
+  return name;
+}
 
-  const providerX = isHistogram ? snapToNearestCategory(chart.providerMark, chart.data, dataKey) : undefined;
-  const recommendedX = isHistogram ? snapToNearestCategory(chart.recommendedMark, chart.data, dataKey) : undefined;
-  const recommendedY = !isHistogram ? chart.recommendedMark : undefined;
-
-  return (
-    <>
-      {/* Provider marker (Histogram only) */}
-      {isHistogram && providerX !== undefined && (
-        <ReferenceLine
-          yAxisId="left"
-          x={providerX}
-          ifOverflow="visible"
-          stroke="#4a4a4a"
-          label={{
-            value: selectedProviderName ?? 'Provider',
-            fill: '#4a4a4a',
-            position: getProviderLabelPosition(Number(chart.providerMark) || 0, chart.data, dataKey),
-            offset: -25,
-            fontSize: 12,
-          }}
-        />
-      )}
-
-      {/* Recommended mark — visible dashed line */}
-      {!Number.isNaN(chart.recommendedMark) && (
-        <ReferenceLine
-          yAxisId="left"
-          x={recommendedX}
-          y={recommendedY}
-          ifOverflow="visible"
-          stroke="#82ca9d"
-          strokeDasharray="3 3"
-        />
-      )}
-
-      {/* Invisible hitbox for recommended mark hover label */}
-      {!Number.isNaN(chart.recommendedMark) && (
-        <ReferenceLine
-          yAxisId="left"
-          x={recommendedX}
-          y={recommendedY}
-          ifOverflow="visible"
-          stroke="transparent"
-          strokeWidth={8}
-          style={{ pointerEvents: 'stroke', cursor: 'pointer', zIndex: 9999 }}
-          onMouseEnter={() => setHoveredRecommendedLine(true)}
-          onMouseLeave={() => setHoveredRecommendedLine(false)}
-          label={hoveredRecommendedLine ? {
-            value: 'Recommended',
-            position: isHistogram ? 'bottom' : 'right',
-            fill: '#2f9e44',
-            fontSize: 12,
-            style: { zIndex: 9999 },
-          } : undefined}
-        />
-      )}
-    </>
-  );
+/** Build chart series from the first data row's keys. */
+function buildSeries(chart: ProviderChart) {
+  if (!chart.data?.length) return [];
+  return Object.keys(chart.data[0])
+    .filter((k) => k !== chart.dataKey)
+    .map((name, idx) => ({
+      name,
+      color: idx % 2 === 0 ? MANTINE_BLUE : GOLD,
+      label: formatSeriesLabel(name),
+    }));
 }
 
 interface ProviderChartCardProps {
@@ -185,12 +92,72 @@ interface ProviderChartCardProps {
 /**
  * Renders a single chart card in the ProviderView — either a histogram (BarChart)
  * or a time-series (LineChart).
+ *
+ * Provider marker and recommended threshold are rendered using the Mantine
+ * `referenceLines` prop rather than raw Recharts `<ReferenceLine>` children.
+ * Mantine's BarChart/LineChart internally creates the ReferenceLine elements,
+ * which ensures Recharts' `findAllByType` discovery works correctly.
  */
 export function ProviderChartCard({
   cfg, chart, selectedProviderName, onRemove,
 }: ProviderChartCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const series = buildSeries(chart);
+  const isTimeSeries = cfg.chartType === 'time-series-line';
+
+  // Build the Mantine `referenceLines` array for histograms
+  const histogramReferenceLines = useMemo(() => {
+    if (isTimeSeries) return undefined;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const refs: any[] = [];
+    const { dataKey } = chart;
+
+    // Provider marker — vertical line showing where selected provider falls
+    const providerX = snapToNearestCategory(chart.providerMark, chart.data, dataKey);
+    if (providerX !== undefined) {
+      refs.push({
+        x: providerX,
+        label: selectedProviderName ?? 'Provider',
+        color: '#228be6',
+        strokeWidth: 2,
+        strokeDasharray: '6 3',
+        labelPosition: 'insideTopRight',
+      });
+    }
+
+    // Recommended threshold
+    if (chart.recommendedMark !== undefined && !Number.isNaN(chart.recommendedMark)) {
+      const recX = snapToNearestCategory(chart.recommendedMark, chart.data, dataKey);
+      if (recX !== undefined) {
+        refs.push({
+          x: recX,
+          label: 'Recommended',
+          color: '#40c057',
+          strokeDasharray: '3 3',
+          strokeWidth: 1.5,
+          labelPosition: 'insideBottomLeft',
+        });
+      }
+    }
+
+    return refs.length > 0 ? refs : undefined;
+  }, [chart, isTimeSeries, selectedProviderName]);
+
+  // Build the Mantine `referenceLines` array for time-series (y-axis thresholds)
+  const timeSeriesReferenceLines = useMemo(() => {
+    if (!isTimeSeries) return undefined;
+    if (chart.recommendedMark === undefined || Number.isNaN(chart.recommendedMark)) return undefined;
+
+    return [{
+      y: chart.recommendedMark,
+      label: 'Recommended',
+      color: '#40c057',
+      strokeDasharray: '3 3',
+      strokeWidth: 1.5,
+      labelPosition: 'right' as const,
+    }];
+  }, [chart.recommendedMark, isTimeSeries]);
 
   const commonProps = {
     h: 160,
@@ -211,8 +178,6 @@ export function ProviderChartCard({
       ),
     },
   };
-
-  const isTimeSeries = cfg.chartType === 'time-series-line';
 
   return (
     <Card
@@ -240,6 +205,7 @@ export function ProviderChartCard({
         {isTimeSeries ? (
           <LineChart
             {...commonProps}
+            referenceLines={timeSeriesReferenceLines}
             lineProps={{ strokeWidth: 2, dot: false }}
             lineChartProps={{
               margin: {
@@ -264,17 +230,11 @@ export function ProviderChartCard({
               type: 'category',
               padding: { left: 10, right: 10 },
             }}
-          >
-            <ChartAdornments
-              chart={chart}
-              dataKey={chart.dataKey}
-              selectedProviderName={selectedProviderName}
-              isHistogram={false}
-            />
-          </LineChart>
+          />
         ) : (
           <BarChart
             {...commonProps}
+            referenceLines={histogramReferenceLines}
             orientation={chart.orientation}
             barChartProps={{
               margin: {
@@ -288,14 +248,7 @@ export function ProviderChartCard({
               padding: { left: 10, right: 10 },
               tickFormatter: (value: string | number) => formatHistogramTick(Number(value), cfg.xAxisVar),
             }}
-          >
-            <ChartAdornments
-              chart={chart}
-              dataKey={chart.dataKey}
-              selectedProviderName={selectedProviderName}
-              isHistogram
-            />
-          </BarChart>
+          />
         )}
         <Text
           size="sm"
