@@ -74,6 +74,22 @@ const cmiAdjustedBenchmarkExpression = (metric: string, condition?: string, qual
   return `CAST(SUM(${numeratorExpression}) AS DOUBLE) / NULLIF(AVG(${cmiExpression}) * COUNT(DISTINCT ${visitExpression}), 0)`;
 };
 
+const DASHBOARD_BOOLEAN_Y_AXIS_VARS = new Set([
+  'death',
+  'vent',
+  'stroke',
+  'ecmo',
+  'b12',
+  'iron',
+  'antifibrinolytic',
+]);
+
+const dashboardMetricSqlExpression = (yAxisVar: string) => (
+  DASHBOARD_BOOLEAN_Y_AXIS_VARS.has(yAxisVar)
+    ? `CASE WHEN ${yAxisVar} THEN 1 ELSE 0 END`
+    : yAxisVar
+);
+
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
     {
@@ -1033,7 +1049,7 @@ export class RootStore {
             `SUM(${baseUnit}) AS ${aggregation}_${yAxisVar}_den`,
           ];
         }
-        return `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
+        return `${aggFn}(${dashboardMetricSqlExpression(yAxisVar)}) AS ${aggregation}_${yAxisVar}`;
       })
     ));
 
@@ -1228,11 +1244,12 @@ export class RootStore {
               `;
         }
         // Default: Other stats
+        const metricExpression = dashboardMetricSqlExpression(yAxisVar);
         return `
               ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
-                THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
+                THEN ${metricExpression} ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
               ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
-                THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
+                THEN ${metricExpression} ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
             `;
       }),
     ].join(',\n');
@@ -1299,7 +1316,7 @@ export class RootStore {
       }
       // Default: Other stats
       sparklineSelects.push(
-        `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
+        `${aggFn}(${dashboardMetricSqlExpression(yAxisVar)}) AS ${aggregation}_${yAxisVar}`,
       );
     });
 
