@@ -196,13 +196,14 @@ export class ProvidersStore {
       const prov = String(this.selectedProvider).replace(/'/g, "''");
 
       let dateClause = '';
-      if (startDate) dateClause += ` AND dsch_dtm >= DATE '${startDate}'`;
-      if (endDate) dateClause += ` AND dsch_dtm <= DATE '${endDate}'`;
+      if (startDate) dateClause += ` AND fv.dsch_dtm >= DATE '${startDate}'`;
+      if (endDate) dateClause += ` AND fv.dsch_dtm <= DATE '${endDate}'`;
 
       const query = `
-        SELECT COUNT(DISTINCT case_id) AS cnt
-        FROM filteredSurgeryCases
-        WHERE (surgeon_prov_name = '${prov}' OR anesth_prov_name = '${prov}') ${dateClause.replace('dsch_dtm', 'case_date')};
+        SELECT COUNT(DISTINCT sc.case_id) AS cnt
+        FROM filteredSurgeryCases sc
+        INNER JOIN filteredVisits fv ON sc.visit_no = fv.visit_no
+        WHERE fv.attending_provider = '${prov}' ${dateClause};
       `;
       const res = await this._rootStore.duckDB.query(query);
       const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
@@ -354,7 +355,7 @@ export class ProvidersStore {
       }
 
       const query = `
-        SELECT attending_provider, SUM(ms_drg_weight) / COUNT(visit_no) AS cmi
+        SELECT attending_provider, SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS cmi
         FROM filteredVisits
         ${dateClause}
         GROUP BY attending_provider;
@@ -570,7 +571,7 @@ export class ProvidersStore {
                 `${fn}(cell_saver_cost) AS ${agg}_cell_saver_cost`,
               ];
             }
-            if (xAxisVar === 'case_mix_index') return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${agg}_case_mix_index`;
+            if (xAxisVar === 'case_mix_index') return `SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS ${agg}_case_mix_index`;
             return `${fn}(CAST(${xAxisVar} AS DOUBLE)) AS ${agg}_${xAxisVar}`;
           })
         ));
@@ -633,32 +634,78 @@ export class ProvidersStore {
       const stdLineConfigs = lineConfigs.filter((cfg) => cfg.yAxisVar !== 'pre_anemia_rate');
       const surgLineConfigs = lineConfigs.filter((cfg) => cfg.yAxisVar === 'pre_anemia_rate');
 
-      // Fetch visit-level time-series rows (all providers + selected provider)
-      let visitLineRowsAll: Array<Record<string, unknown>> = [];
-      let visitLineRowsSel: Array<Record<string, unknown>> = [];
-      if (stdLineConfigs.length > 0) {
-        const selectMap = new Map<string, string>();
-        stdLineConfigs.forEach(({ yAxisVar: yVar, aggregation: cfgAgg = 'avg' }) => {
+      // Group standard line configs by xAxisVar to avoid double-averaging
+      const stdLineByXVar = new Map<string, typeof stdLineConfigs>();
+      stdLineConfigs.forEach((cfg) => {
+        const arr = stdLineByXVar.get(cfg.xAxisVar) || [];
+        arr.push(cfg);
+        stdLineByXVar.set(cfg.xAxisVar, arr);
+      });
+
+      // Additive metrics that should be SUM'd per visit in the inner subquery
+      const additiveMetrics = new Set([
+        'rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'whole_units', 'cell_saver_ml',
+        'overall_units', 'rbc_units_adherent', 'ffp_units_adherent', 'plt_units_adherent',
+        'cryo_units_adherent', 'overall_units_adherent',
+        'rbc_units_cost', 'ffp_units_cost', 'plt_units_cost', 'cryo_units_cost',
+        'whole_cost', 'cell_saver_cost',
+      ]);
+
+      // For each unique xAxisVar, run correctly-grouped queries
+      const visitLineRowsAllByXVar = new Map<string, Array<Record<string, unknown>>>();
+      const visitLineRowsSelByXVar = new Map<string, Array<Record<string, unknown>>>();
+
+      for (const [xVar, configs] of stdLineByXVar) {
+        // Build inner per-visit selects and outer time-period selects
+        const innerSelectMap = new Map<string, string>();
+        const outerSelectMap = new Map<string, string>();
+        const selProvSelectMap = new Map<string, string>();
+
+        configs.forEach(({ yAxisVar: yVar, aggregation: cfgAgg = 'avg' }) => {
           const agg = cfgAgg.toLowerCase();
           const alias = `${agg}_${yVar}`;
-          if (!selectMap.has(alias)) {
-            selectMap.set(alias, yVar === 'case_mix_index'
-              ? `SUM(ms_drg_weight) / COUNT(visit_no) AS ${alias}`
-              : `${agg.toUpperCase()}(CAST(${yVar} AS DOUBLE)) AS ${alias}`);
+          if (outerSelectMap.has(alias)) return;
+
+          if (yVar === 'case_mix_index') {
+            innerSelectMap.set('visit_ms_drg_weight', 'SUM(ms_drg_weight) AS visit_ms_drg_weight');
+            innerSelectMap.set('visit_drg_count', 'COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END) AS visit_drg_count');
+            outerSelectMap.set(alias, `SUM(visit_ms_drg_weight) / NULLIF(SUM(visit_drg_count), 0) AS ${alias}`);
+            selProvSelectMap.set(alias, `SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS ${alias}`);
+          } else {
+            const innerFn = additiveMetrics.has(yVar) ? 'SUM' : 'MAX';
+            const visitAlias = `visit_${yVar}`;
+            if (!innerSelectMap.has(visitAlias)) {
+              innerSelectMap.set(visitAlias, `${innerFn}(CAST(${yVar} AS DOUBLE)) AS ${visitAlias}`);
+            }
+            outerSelectMap.set(alias, `${agg.toUpperCase()}(${visitAlias}) AS ${alias}`);
+            selProvSelectMap.set(alias, `${agg.toUpperCase()}(CAST(${yVar} AS DOUBLE)) AS ${alias}`);
           }
         });
-        const sel = Array.from(selectMap.values()).join(', ');
-        visitLineRowsAll = await runQuery(`
-          SELECT month, quarter, year, ${sel}
-          FROM filteredVisits WHERE attending_provider IS NOT NULL ${visitDateClause}
-          GROUP BY month, quarter, year;
-        `);
+
+        const innerSel = Array.from(innerSelectMap.values()).join(', ');
+        const outerSel = Array.from(outerSelectMap.values()).join(', ');
+        const selSel = Array.from(selProvSelectMap.values()).join(', ');
+
+        // eslint-disable-next-line no-await-in-loop
+        visitLineRowsAllByXVar.set(xVar, await runQuery(`
+          SELECT ${xVar}, ${outerSel}
+          FROM (
+            SELECT visit_no, ${xVar}, ${innerSel}
+            FROM filteredVisits
+            WHERE attending_provider IS NOT NULL ${visitDateClause}
+            GROUP BY visit_no, ${xVar}
+          ) sub
+          GROUP BY ${xVar};
+        `));
+
         if (provEscaped) {
-          visitLineRowsSel = await runQuery(`
-            SELECT month, quarter, year, ${sel}
+          // Selected provider: one row per visit, so direct aggregation is correct
+          // eslint-disable-next-line no-await-in-loop
+          visitLineRowsSelByXVar.set(xVar, await runQuery(`
+            SELECT ${xVar}, ${selSel}
             FROM filteredVisits WHERE attending_provider = '${provEscaped}' ${visitDateClause}
-            GROUP BY month, quarter, year;
-          `);
+            GROUP BY ${xVar};
+          `));
         }
       }
 
@@ -689,8 +736,8 @@ export class ProvidersStore {
         const alias = `${agg}_${cfg.yAxisVar}`;
         const chartKey = `${cfg.chartId}_${xVar}`;
 
-        const allRows = isAnemia ? surgLineRowsAll : visitLineRowsAll;
-        const selRows = isAnemia ? surgLineRowsSel : visitLineRowsSel;
+        const allRows = isAnemia ? surgLineRowsAll : (visitLineRowsAllByXVar.get(xVar) || []);
+        const selRows = isAnemia ? surgLineRowsSel : (visitLineRowsSelByXVar.get(xVar) || []);
 
         const allMap = this.aggregateByTimePeriod(allRows, xVar, alias, agg);
         const selMap = this.aggregateByTimePeriod(selRows, xVar, alias, agg);
