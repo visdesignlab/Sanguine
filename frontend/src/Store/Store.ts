@@ -577,6 +577,10 @@ export class ProvidersStore {
               return [`${fn}(${expr}) AS ${agg}_total_blood_product_cost`];
             }
             if (xAxisVar === 'case_mix_index') return `SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS ${agg}_case_mix_index`;
+            if (xAxisVar.endsWith('_units_adherent') && agg === 'avg') {
+              const baseVar = xAxisVar === 'overall_units_adherent' ? '(rbc_units + ffp_units + plt_units + cryo_units)' : xAxisVar.replace('_adherent', '');
+              return `CAST(SUM(${xAxisVar}) AS DOUBLE) / NULLIF(SUM(${baseVar}), 0) AS avg_${xAxisVar}`;
+            }
             return `${fn}(CAST(${xAxisVar} AS DOUBLE)) AS ${agg}_${xAxisVar}`;
           })
         ));
@@ -690,6 +694,17 @@ export class ProvidersStore {
             innerSelectMap.set('visit_drg_count', 'COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END) AS visit_drg_count');
             outerSelectMap.set(alias, `SUM(visit_ms_drg_weight) / NULLIF(SUM(visit_drg_count), 0) AS ${alias}`);
             selProvSelectMap.set(alias, `SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS ${alias}`);
+          } else if (yVar.endsWith('_units_adherent') && agg === 'avg') {
+            const baseVar = yVar === 'overall_units_adherent' ? '(rbc_units + ffp_units + plt_units + cryo_units)' : yVar.replace('_adherent', '');
+            innerSelectMap.set(`visit_${yVar}`, `SUM(CAST(${yVar} AS DOUBLE)) AS visit_${yVar}`);
+            if (yVar === 'overall_units_adherent') {
+              innerSelectMap.set('visit_overall_base', 'SUM(CAST(rbc_units AS DOUBLE) + CAST(ffp_units AS DOUBLE) + CAST(plt_units AS DOUBLE) + CAST(cryo_units AS DOUBLE)) AS visit_overall_base');
+              outerSelectMap.set(alias, `SUM(visit_${yVar}) / NULLIF(SUM(visit_overall_base), 0) AS ${alias}`);
+            } else {
+              innerSelectMap.set(`visit_${baseVar}`, `SUM(CAST(${baseVar} AS DOUBLE)) AS visit_${baseVar}`);
+              outerSelectMap.set(alias, `SUM(visit_${yVar}) / NULLIF(SUM(visit_${baseVar}), 0) AS ${alias}`);
+            }
+            selProvSelectMap.set(alias, `CAST(SUM(${yVar}) AS DOUBLE) / NULLIF(SUM(${baseVar}), 0) AS ${alias}`);
           } else {
             const innerFn = additiveMetrics.has(yVar) ? 'SUM' : 'MAX';
             const visitAlias = `visit_${yVar}`;
