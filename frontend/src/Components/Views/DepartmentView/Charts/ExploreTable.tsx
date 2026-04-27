@@ -1489,17 +1489,18 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   }, [rowsWithGroups, chartConfig.twoValsPerRow, chartConfig.rowVar, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues, fromLabel, sortStatus.columnAccessor]);
 
   // Data Table Columns -------
+  const columnVars = `${chartConfig.columns.map((c) => c.colVar).join(',')}|${chartConfig.groupByVar || ''}`;
+  const columnStorageKey = `ExploreTable-${chartConfig.chartId}-${columnVars}`;
   const columnDefs = useMemo(
     () => generateColumnDefs(chartConfig.columns),
     [generateColumnDefs, chartConfig.columns],
   );
   const { effectiveColumns, resetColumnsOrder } = useDataTableColumns<ExploreTableRow>({
-    key: `ExploreTable-${chartConfig.chartId}`,
+    key: columnStorageKey,
     columns: columnDefs,
   });
 
-  // Reset column order when columns change
-  const columnVars = `${chartConfig.columns.map((c) => c.colVar).join(',')}|${chartConfig.groupByVar || ''}`;
+  // Reset column order when columns change while the table is mounted.
   const prevColumnVars = useRef(columnVars);
 
   useEffect(() => {
@@ -1646,7 +1647,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             sorted: <IconChevronUp size={14} className="active-sort-icon" />,
             unsorted: <IconSelector size={14} />,
           }}
-          storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
+          storeColumnsKey={columnStorageKey}
           columns={effectiveColumns}
           style={useMemo(() => ({ fontStyle: 'italic' }), [])}
           onRowClick={undefined}
