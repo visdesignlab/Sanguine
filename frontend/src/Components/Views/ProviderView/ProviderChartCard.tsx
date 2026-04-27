@@ -122,7 +122,7 @@ export function ProviderChartCard({
         color: '#228be6',
         strokeWidth: 2,
         strokeDasharray: '6 3',
-        labelPosition: 'insideTopRight',
+        labelPosition: 'top',
       });
     }
 
@@ -238,7 +238,7 @@ export function ProviderChartCard({
             orientation={chart.orientation}
             barChartProps={{
               margin: {
-                top: 30, right: 25, bottom: 15, left: 25,
+                top: 45, right: 25, bottom: 15, left: 25,
               },
             }}
             yAxisProps={{ width: 20 }}

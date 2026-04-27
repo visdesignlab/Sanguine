@@ -521,8 +521,18 @@ export class ProvidersStore {
       if (idx >= bins) idx = bins - 1;
       counts[idx] += 1;
     });
+
+    // Choose decimal precision that guarantees unique bin center labels.
+    // When the range is small relative to the number of bins, toFixed(2)
+    // can produce duplicate category values which breaks Recharts reference lines.
+    let precision = 2;
+    for (let p = 2; p <= 6; p += 1) {
+      const labels = counts.map((_, i) => Number((min + (i + 0.5) * binWidth).toFixed(p)));
+      if (new Set(labels).size === labels.length) { precision = p; break; }
+    }
+
     return counts.map((count, i) => ({
-      [xVar]: Number((min + (i + 0.5) * binWidth).toFixed(2)),
+      [xVar]: Number((min + (i + 0.5) * binWidth).toFixed(precision)),
       [yVar]: count,
     }));
   }
@@ -578,16 +588,30 @@ export class ProvidersStore {
         `);
       }
 
-      // Per-surgeon pre-op anemia rate from filteredSurgeryCases
+      // Per-provider pre-op anemia rate from filteredSurgeryCases.
+      // Uses UNION to include both surgeons and attending providers so
+      // that the provider marker appears for either role.
       let surgHistRows: Array<Record<string, unknown>> = [];
       if (surgHistConfigs.length > 0) {
         surgHistRows = await runQuery(`
-          SELECT surgeon_prov_name AS attending_provider,
-            AVG(${this.ANEMIA_EXPR}) AS avg_pre_anemia_rate,
-            SUM(${this.ANEMIA_EXPR}) AS sum_pre_anemia_rate
-          FROM filteredSurgeryCases
-          WHERE surgeon_prov_name IS NOT NULL ${surgDateClause}
-          GROUP BY surgeon_prov_name;
+          SELECT provider_name AS attending_provider,
+            AVG(anemia_flag) AS avg_pre_anemia_rate,
+            SUM(anemia_flag) AS sum_pre_anemia_rate
+          FROM (
+            SELECT surgeon_prov_name AS provider_name,
+              ${this.ANEMIA_EXPR} AS anemia_flag
+            FROM filteredSurgeryCases
+            WHERE surgeon_prov_name IS NOT NULL ${surgDateClause}
+            UNION ALL
+            SELECT fv.attending_provider AS provider_name,
+              ${this.ANEMIA_EXPR} AS anemia_flag
+            FROM filteredSurgeryCases sc
+            INNER JOIN filteredVisits fv ON sc.visit_no = fv.visit_no
+            WHERE fv.attending_provider IS NOT NULL
+              AND fv.attending_provider != sc.surgeon_prov_name
+              ${surgDateClause}
+          ) combined
+          GROUP BY provider_name;
         `);
       }
 
