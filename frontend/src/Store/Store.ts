@@ -44,6 +44,32 @@ export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
 const sqlString = (value: string) => `'${value.replace(/'/g, "''")}'`;
 const safeIdPattern = /^[A-Za-z0-9_-]+$/;
+const cmiAdjustedBenchmarkNumerators: Record<string, string> = {
+  transfusions_per_cmi_visit: 'overall_units',
+  rbc_units_per_cmi_visit: 'rbc_units',
+  ffp_units_per_cmi_visit: 'ffp_units',
+  plt_units_per_cmi_visit: 'plt_units',
+  cryo_units_per_cmi_visit: 'cryo_units',
+  whole_units_per_cmi_visit: 'whole_units',
+  cell_saver_ml_per_cmi_visit: 'cell_saver_ml',
+};
+
+const cmiAdjustedBenchmarkExpression = (metric: string, condition?: string) => {
+  const numerator = cmiAdjustedBenchmarkNumerators[metric];
+  if (!numerator) return null;
+
+  const numeratorExpression = condition
+    ? `CASE WHEN ${condition} THEN ${numerator} ELSE 0 END`
+    : numerator;
+  const cmiExpression = condition
+    ? `CASE WHEN ${condition} THEN ms_drg_weight ELSE NULL END`
+    : 'ms_drg_weight';
+  const visitExpression = condition
+    ? `CASE WHEN ${condition} THEN visit_no ELSE NULL END`
+    : 'visit_no';
+
+  return `CAST(SUM(${numeratorExpression}) AS DOUBLE) / NULLIF(AVG(${cmiExpression}) * COUNT(DISTINCT ${visitExpression}), 0)`;
+};
 
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
@@ -984,6 +1010,10 @@ export class RootStore {
             `${aggFn}(COALESCE(rbc_units_cost, 0) + COALESCE(plt_units_cost, 0) + COALESCE(ffp_units_cost, 0) + COALESCE(cryo_units_cost, 0) + COALESCE(whole_cost, 0) + COALESCE(cell_saver_cost, 0)) AS ${aggregation}_total_blood_product_cost`,
           ];
         }
+        const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar);
+        if (adjustedBenchmarkExpression) {
+          return `${adjustedBenchmarkExpression} AS ${aggregation}_${yAxisVar}`;
+        }
         // Special case: case mix index
         if (yAxisVar === 'case_mix_index') {
           return `AVG(ms_drg_weight) AS ${aggregation}_case_mix_index`;
@@ -1152,6 +1182,16 @@ export class RootStore {
                   THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
               `;
         }
+        const currentPeriodCondition = `dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'`;
+        const comparisonPeriodCondition = `dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'`;
+        const currentBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar, currentPeriodCondition);
+        if (currentBenchmarkExpression) {
+          const comparisonBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar, comparisonPeriodCondition);
+          return `
+                ${currentBenchmarkExpression} AS ${yAxisVar}_current_${aggregation},
+                ${comparisonBenchmarkExpression} AS ${yAxisVar}_comparison_${aggregation}
+              `;
+        }
         // Exception: Case mix index
         if (yAxisVar === 'case_mix_index') {
           return `
@@ -1222,6 +1262,13 @@ export class RootStore {
       if (yAxisVar === 'total_blood_product_cost') {
         sparklineSelects.push(
           `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
+        );
+        return;
+      }
+      const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar);
+      if (adjustedBenchmarkExpression) {
+        sparklineSelects.push(
+          `${adjustedBenchmarkExpression} AS ${aggregation}_${yAxisVar}`,
         );
         return;
       }
@@ -2285,6 +2332,11 @@ export class RootStore {
         statSelects.push(
           `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
         );
+        return;
+      }
+      const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar);
+      if (adjustedBenchmarkExpression) {
+        statSelects.push(`${adjustedBenchmarkExpression} AS ${aggregation}_${yAxisVar}`);
         return;
       }
       if (yAxisVar === 'case_mix_index') {
