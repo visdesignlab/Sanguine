@@ -770,13 +770,12 @@ export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
 
 // Explore View ----------------------------------------------------
 // Aggregation options for explore view
-const _AGGREGATIONS = ['surgeon_prov_id', 'anesth_prov_id', 'year', 'quarter'] as const;
+const _AGGREGATIONS = ['attending_provider', 'year', 'quarter'] as const;
 export type Aggregation = typeof _AGGREGATIONS[number];
 
 // --- Cost bar charts TODO: Change to Explore Table ---
 const CostAggregations: { value: Aggregation; label: string }[] = [
-  { value: 'surgeon_prov_id', label: 'Surgeon ID' },
-  { value: 'anesth_prov_id', label: 'Anesthesiologist ID' },
+  { value: 'attending_provider', label: 'Provider' },
   { value: 'year', label: 'Year' },
   { value: 'quarter', label: 'Quarter' },
 ];
@@ -791,6 +790,7 @@ export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof c
 
 // TOOD: Update or remove CostBarData type
 export interface CostBarDatum extends Record<Cost, number> {
+  attending_provider?: string;
   surgeon_prov_id?: string;
   anesth_prov_id?: string;
   year?: string | number;
