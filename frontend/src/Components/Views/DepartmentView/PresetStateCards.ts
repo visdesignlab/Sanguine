@@ -24,7 +24,7 @@ export const presetStateCards: PresetGroup[] = [
         chartConfigs: [
           {
             chartId: 'preset-overview-department',
-            title: 'Blood Product Utilization per Surgeon',
+            title: 'Blood Product Utilization per Provider',
             chartType: 'exploreTable',
             rowVar: 'attending_provider',
             columns: [
@@ -32,7 +32,7 @@ export const presetStateCards: PresetGroup[] = [
                 colVar: 'attending_provider',
                 aggregation: 'none',
                 type: 'text',
-                title: 'Surgeon',
+                title: 'Provider',
               },
               {
                 colVar: 'visit_count',
@@ -488,7 +488,7 @@ export const presetStateCards: PresetGroup[] = [
     groupLabel: 'Cost / Savings',
     options: [
       {
-        question: 'What are the costs of blood products transfused intraoperatively by surgeon?',
+        question: 'What are the costs of blood products transfused intraoperatively by provider?',
         Icon: IconCoin,
         chartConfigs: [
           {
