@@ -941,6 +941,23 @@ export const ExploreTableColumnOptionsGrouped = [
     })),
   },
   {
+    group: 'CMI Weighted Discharge',
+    items: [
+      TRANSFUSIONS_PER_CMI_VISIT,
+      ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
+    ].map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
+      },
+      decimals: opt.decimals,
+    })),
+  },
+  {
     group: 'Outcomes',
     items: OUTCOME_OPTIONS.map((opt) => ({
       value: opt.value,

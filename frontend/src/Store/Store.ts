@@ -54,19 +54,22 @@ const cmiAdjustedBenchmarkNumerators: Record<string, string> = {
   cell_saver_ml_per_cmi_visit: 'cell_saver_ml',
 };
 
-const cmiAdjustedBenchmarkExpression = (metric: string, condition?: string) => {
+const cmiAdjustedBenchmarkExpression = (metric: string, condition?: string, qualifier = '') => {
   const numerator = cmiAdjustedBenchmarkNumerators[metric];
   if (!numerator) return null;
 
+  const qualifiedNumerator = `${qualifier}${numerator}`;
+  const qualifiedCmi = `${qualifier}ms_drg_weight`;
+  const qualifiedVisitNo = `${qualifier}visit_no`;
   const numeratorExpression = condition
-    ? `CASE WHEN ${condition} THEN ${numerator} ELSE 0 END`
-    : numerator;
+    ? `CASE WHEN ${condition} THEN ${qualifiedNumerator} ELSE 0 END`
+    : qualifiedNumerator;
   const cmiExpression = condition
-    ? `CASE WHEN ${condition} THEN ms_drg_weight ELSE NULL END`
-    : 'ms_drg_weight';
+    ? `CASE WHEN ${condition} THEN ${qualifiedCmi} ELSE NULL END`
+    : qualifiedCmi;
   const visitExpression = condition
-    ? `CASE WHEN ${condition} THEN visit_no ELSE NULL END`
-    : 'visit_no';
+    ? `CASE WHEN ${condition} THEN ${qualifiedVisitNo} ELSE NULL END`
+    : qualifiedVisitNo;
 
   return `CAST(SUM(${numeratorExpression}) AS DOUBLE) / NULLIF(AVG(${cmiExpression}) * COUNT(DISTINCT ${visitExpression}), 0)`;
 };
@@ -2095,6 +2098,13 @@ export class RootStore {
           // Special case: salvage_savings
           if (colVar === 'salvage_savings') {
             columnClauses.push(`${aggFn}(cell_saver_cost) AS salvage_savings`);
+            return;
+          }
+
+          // Special case: CMI weighted discharge benchmark metrics
+          const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(colVar, undefined, 'v.');
+          if (adjustedBenchmarkExpression) {
+            columnClauses.push(`${adjustedBenchmarkExpression} AS ${colVar}`);
             return;
           }
 
