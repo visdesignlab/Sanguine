@@ -740,9 +740,14 @@ export class ProvidersStore {
         `);
         if (provEscaped) {
           surgLineRowsSel = await runQuery(`
-            SELECT month, quarter, year, ${anemiaSel}
-            FROM filteredSurgeryCases WHERE surgeon_prov_name = '${provEscaped}' ${surgDateClause}
-            GROUP BY month, quarter, year;
+            SELECT sc.month, sc.quarter, sc.year,
+              AVG(${this.ANEMIA_EXPR}) AS avg_pre_anemia_rate,
+              SUM(${this.ANEMIA_EXPR}) AS sum_pre_anemia_rate
+            FROM filteredSurgeryCases sc
+            LEFT JOIN filteredVisits fv ON sc.visit_no = fv.visit_no
+            WHERE (sc.surgeon_prov_name = '${provEscaped}' OR fv.attending_provider = '${provEscaped}')
+              ${surgDateClause}
+            GROUP BY sc.month, sc.quarter, sc.year;
           `);
         }
       }
