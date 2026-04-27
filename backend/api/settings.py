@@ -178,9 +178,9 @@ if DEBUG:
         'access-control-allow-origin',
     )
 
-LOGIN_REDIRECT_URL = '/api'
+LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/api/accounts/login/'
-LOGOUT_REDIRECT_URL = '/api/'
+LOGOUT_REDIRECT_URL = '/api'
 SESSION_COOKIE_AGE = 60 * 30  # 60 seconds * 30 minutes
 SESSION_COOKIE_SECURE = True
 SESSION_SAVE_EVERY_REQUEST = True
