@@ -90,6 +90,34 @@ const dashboardMetricSqlExpression = (yAxisVar: string) => (
     : yAxisVar
 );
 
+const GUIDELINE_ADHERENCE_GROUP_VAR = 'overall_units_adherent';
+const GUIDELINE_ADHERENCE_UNIT_COLUMNS: Record<string, string> = {
+  rbc_units: 'rbc_units_adherent',
+  ffp_units: 'ffp_units_adherent',
+  plt_units: 'plt_units_adherent',
+  cryo_units: 'cryo_units_adherent',
+};
+
+const guidelineAdherenceEligibleUnitsExpression = (qualifier = '') => (
+  Object.keys(GUIDELINE_ADHERENCE_UNIT_COLUMNS)
+    .map((col) => `COALESCE(${qualifier}${col}, 0)`)
+    .join(' + ')
+);
+
+const guidelineAdherenceBucketUnitsExpression = (isAdherentExpression: string, qualifier = '') => {
+  const eligibleUnits = guidelineAdherenceEligibleUnitsExpression(qualifier);
+  const adherentUnits = `COALESCE(${qualifier}overall_units_adherent, 0)`;
+
+  return `CASE WHEN ${isAdherentExpression} THEN ${adherentUnits} ELSE GREATEST((${eligibleUnits}) - ${adherentUnits}, 0) END`;
+};
+
+const guidelineAdherenceProductExpression = (metric: string, isAdherentExpression: string, qualifier = '') => {
+  const adherentMetric = GUIDELINE_ADHERENCE_UNIT_COLUMNS[metric];
+  if (!adherentMetric) return null;
+
+  return `CASE WHEN ${isAdherentExpression} THEN COALESCE(${qualifier}${adherentMetric}, 0) ELSE GREATEST(COALESCE(${qualifier}${metric}, 0) - COALESCE(${qualifier}${adherentMetric}, 0), 0) END`;
+};
+
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
     {
@@ -1984,6 +2012,14 @@ export class RootStore {
       if (config.chartType === 'exploreTable') {
         // Configuration of table (rowVar, columns, aggregation, etc.)
         const tableConfig = config as ExploreTableConfig;
+        const isGuidelineAdherenceGroup = tableConfig.groupByVar === GUIDELINE_ADHERENCE_GROUP_VAR;
+        const adherenceGroupExpr = 'adherence_group.is_guideline_adherent';
+        const adherenceGroupJoinClause = isGuidelineAdherenceGroup
+          ? 'CROSS JOIN (VALUES (TRUE), (FALSE)) AS adherence_group(is_guideline_adherent)'
+          : '';
+        const adherenceGroupWhereClause = isGuidelineAdherenceGroup
+          ? `WHERE ${guidelineAdherenceBucketUnitsExpression(adherenceGroupExpr, 'v.')} > 0`
+          : '';
         const internalRowKeyExpr = tableConfig.rowVar === 'attending_provider'
           ? 'v.attending_provider_id'
           : `v.${tableConfig.rowVar}`;
@@ -2001,22 +2037,35 @@ export class RootStore {
           const caseIdExpr = tableConfig.rowVar === 'attending_provider'
             ? 'provider_cases.case_id'
             : 'surgery_cases.case_id';
+          const caseAdherenceGroupExpr = 'case_adherence_group.is_guideline_adherent';
+          const caseAdherenceJoinClause = isGuidelineAdherenceGroup
+            ? 'CROSS JOIN (VALUES (TRUE), (FALSE)) AS case_adherence_group(is_guideline_adherent)'
+            : '';
           const caseSource = tableConfig.rowVar === 'attending_provider'
             ? `${needsVisitCaseJoin ? `(
               SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id, visit_no
               FROM filteredSurgeryCases
             ) provider_cases
-            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = provider_cases.visit_no` : `(
+            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = provider_cases.visit_no
+            ${caseAdherenceJoinClause}` : `(
               SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id
               FROM filteredSurgeryCases
             ) provider_cases`}`
             : `filteredSurgeryCases surgery_cases
-            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = surgery_cases.visit_no`;
-          const caseWhereClause = tableConfig.rowVar === 'attending_provider'
-            ? 'WHERE provider_cases.prov_id IS NOT NULL'
+            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = surgery_cases.visit_no
+            ${caseAdherenceJoinClause}`;
+          const caseWhereConditions = [];
+          if (tableConfig.rowVar === 'attending_provider') {
+            caseWhereConditions.push('provider_cases.prov_id IS NOT NULL');
+          }
+          if (isGuidelineAdherenceGroup) {
+            caseWhereConditions.push(`${guidelineAdherenceBucketUnitsExpression(caseAdherenceGroupExpr, 'visit_cases.')} > 0`);
+          }
+          const caseWhereClause = caseWhereConditions.length > 0
+            ? `WHERE ${caseWhereConditions.join(' AND ')}`
             : '';
           const caseGroupExpr = tableConfig.groupByVar
-            ? `visit_cases.${tableConfig.groupByVar}`
+            ? (isGuidelineAdherenceGroup ? caseAdherenceGroupExpr : `visit_cases.${tableConfig.groupByVar}`)
             : null;
           const caseSelects = [`${caseRowExpr} AS row_key`];
           const caseGroupBys = [caseRowExpr];
@@ -2027,7 +2076,7 @@ export class RootStore {
           if (caseGroupExpr) {
             caseSelects.push(`${caseGroupExpr} AS group_key`);
             caseGroupBys.push(caseGroupExpr);
-            caseJoinConditions.push(`pc.group_key = v.${tableConfig.groupByVar}`);
+            caseJoinConditions.push(isGuidelineAdherenceGroup ? `pc.group_key = ${adherenceGroupExpr}` : `pc.group_key = v.${tableConfig.groupByVar}`);
           }
 
           caseCountExpr = 'COALESCE(MAX(pc.case_count), 0)';
@@ -2131,6 +2180,14 @@ export class RootStore {
             return;
           }
 
+          const guidelineAdherenceProduct = isGuidelineAdherenceGroup
+            ? guidelineAdherenceProductExpression(colVar, adherenceGroupExpr, 'v.')
+            : null;
+          if (guidelineAdherenceProduct && (colAggregation === 'avg' || colAggregation === 'sum')) {
+            columnClauses.push(`${aggFn}(${guidelineAdherenceProduct}) AS ${colVar}`);
+            return;
+          }
+
           // Standard numeric & boolean fields
           const booleanFields = ['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'];
           if (booleanFields.includes(colVar) && (colAggregation === 'avg' || colAggregation === 'sum')) {
@@ -2182,7 +2239,7 @@ export class RootStore {
 
         // Add secondary grouping variable if present
         if (tableConfig.groupByVar) {
-          const secondaryGroupCol = `v.${tableConfig.groupByVar}`;
+          const secondaryGroupCol = isGuidelineAdherenceGroup ? adherenceGroupExpr : `v.${tableConfig.groupByVar}`;
           groupByParts.push(secondaryGroupCol);
           orderByParts.push(secondaryGroupCol);
           columnClauses.splice(1, 0, `${secondaryGroupCol} AS _group_val`);
@@ -2196,7 +2253,9 @@ export class RootStore {
           SELECT
             ${columnClauses.join(',\n            ')}
           FROM filteredVisits v
+          ${adherenceGroupJoinClause}
           ${caseJoinClause}
+          ${adherenceGroupWhereClause}
           GROUP BY ${groupByClause}
           ORDER BY ${orderByClause};
         `;
