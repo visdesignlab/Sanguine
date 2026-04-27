@@ -85,7 +85,7 @@ export function AddChartModal({
       <Tabs
         defaultValue="compare"
         style={{ width: '100%' }}
-        onTabChange={(val) => setSelectedChartType(val === 'progress' ? 'time-series-line' : 'population-histogram')}
+        onChange={(val: string | null) => setSelectedChartType(val === 'progress' ? 'time-series-line' : 'population-histogram')}
       >
         <Tabs.List grow>
           <Tabs.Tab value="compare">Compare to Population</Tabs.Tab>
