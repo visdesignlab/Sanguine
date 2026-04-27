@@ -994,13 +994,13 @@ class Command(BaseCommand):
                                 
                     ffp = ffp_units
 
-                    # PLT if PLT count below 50,000
+                    # PLT if PLT count below 10,000
                     plt_units = 0
                     if lab["result_desc"] in ["PLT", "Platelet Count"]:
-                        if lab["result_value"] < 50000:
+                        if lab["result_value"] < 10000:
                             # One plt unit = ~6 Pooled WB Units
                             plt_units = fake.random_int(min=1, max=2)
-                        elif lab["result_value"] < 100000:
+                        elif lab["result_value"] < 20000:
                             plt_units = fake.random_int(min=0, max=1)
                     
                     # Add to MTP
