@@ -58,6 +58,11 @@ export const getGroupColor = (groupByVar: string | undefined, groupVal: string, 
   const outcomes = ['death', 'stroke', 'vent', 'ecmo'];
   const nonOutcomes = ['b12', 'iron', 'antifibrinolytic'];
 
+  if (groupByVar === 'overall_units_adherent') {
+    if (groupVal === '1' || groupVal === 'true') return '#2f9e44';
+    if (groupVal === '0' || groupVal === 'false') return '#c92a2a';
+  }
+
   if (outcomes.includes(groupByVar)) {
     if (groupVal === '1' || groupVal === 'true') return '#D81B60'; // Red
     if (groupVal === '0' || groupVal === 'false') return '#1E88E5'; // Blue
@@ -73,6 +78,10 @@ export const getGroupColor = (groupByVar: string | undefined, groupVal: string, 
 
 export const getGroupLabel = (groupByVar: string | undefined, val: string) => {
   if (!groupByVar) return val;
+  if (groupByVar === 'overall_units_adherent') {
+    if (val === '1' || val === 'true') return 'Guideline Adherent';
+    return 'Not Guideline Adherent';
+  }
   if (['death', 'stroke', 'vent', 'ecmo', 'b12', 'iron', 'antifibrinolytic'].includes(groupByVar)) {
     const label = ExploreTableGroupByOptions.find((o) => o.value === groupByVar)?.label || val;
     if (val === '1' || val === 'true') return label;
@@ -882,7 +891,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
     // Filter noise for boolean vars: keep only '0' and '1' or 'true' and 'false'
     let result = Array.from(values);
-    if (groupByVar && ['death', 'stroke', 'vent', 'ecmo', 'b12', 'iron', 'antifibrinolytic'].includes(groupByVar)) {
+    if (groupByVar && ['death', 'stroke', 'vent', 'ecmo', 'b12', 'iron', 'antifibrinolytic', 'overall_units_adherent'].includes(groupByVar)) {
       result = result.filter((v) => ['0', '1', 'true', 'false'].includes(v));
     }
     return result.sort().reverse(); // Show '1'/'true' on top, '0'/'false' on bottom
@@ -1161,11 +1170,11 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         accessor: colVar,
         title: displayTitle,
         titleClassName: `${isActiveSort ? 'sorted-column-header' : ''} ${isActiveFilter ? 'filtered-column-header' : ''}`.trim() || undefined,
-        draggable: colVar !== 'cases' && !(colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar),
+        draggable: !['cases', 'visit_count'].includes(colVar) && !(colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar),
         resizable: false,
         sortable: true,
         noWrap: true,
-        width: colVar === 'cases' ? 90 : colVar === 'salvage_savings' ? 250 : colVar === 'total_cost' ? 400 : (colVar === 'attending_provider' || (colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar)) ? 175 : undefined,
+        width: ['cases', 'visit_count'].includes(colVar) ? 90 : colVar === 'salvage_savings' ? 250 : colVar === 'total_cost' ? 400 : (colVar === 'attending_provider' || (colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar)) ? 175 : undefined,
         filtering: isActiveFilter,
         filter: filterComponent,
         footer: type === 'violin' ? violinFooter : (type === 'numeric' || type === 'heatmap') ? (
@@ -1489,17 +1498,18 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   }, [rowsWithGroups, chartConfig.twoValsPerRow, chartConfig.rowVar, numericFilters, defaultNumericFilter, textFilters, hoverState, setHoveredValue, chartConfig.groupByVar, getSubRowOpacity, buildGroupFilter, groupValues, fromLabel, sortStatus.columnAccessor]);
 
   // Data Table Columns -------
+  const columnVars = `${chartConfig.columns.map((c) => c.colVar).join(',')}|${chartConfig.groupByVar || ''}`;
+  const columnStorageKey = `ExploreTable-${chartConfig.chartId}-${columnVars}`;
   const columnDefs = useMemo(
     () => generateColumnDefs(chartConfig.columns),
     [generateColumnDefs, chartConfig.columns],
   );
   const { effectiveColumns, resetColumnsOrder } = useDataTableColumns<ExploreTableRow>({
-    key: `ExploreTable-${chartConfig.chartId}`,
+    key: columnStorageKey,
     columns: columnDefs,
   });
 
-  // Reset column order when columns change
-  const columnVars = `${chartConfig.columns.map((c) => c.colVar).join(',')}|${chartConfig.groupByVar || ''}`;
+  // Reset column order when columns change while the table is mounted.
   const prevColumnVars = useRef(columnVars);
 
   useEffect(() => {
@@ -1646,7 +1656,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             sorted: <IconChevronUp size={14} className="active-sort-icon" />,
             unsorted: <IconSelector size={14} />,
           }}
-          storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
+          storeColumnsKey={columnStorageKey}
           columns={effectiveColumns}
           style={useMemo(() => ({ fontStyle: 'italic' }), [])}
           onRowClick={undefined}

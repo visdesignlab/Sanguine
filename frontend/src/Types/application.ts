@@ -528,6 +528,122 @@ export const CASE_MIX_INDEX = {
   decimals: { sum: 2, avg: 2 },
 };
 
+export const TRANSFUSIONS_PER_CMI_VISIT = {
+  value: 'transfusions_per_cmi_visit',
+  label: {
+    short: 'Adjusted Transfusions',
+    base: 'Transfusions / CMI Weighted Discharge',
+    sum: 'Transfusions / CMI Weighted Discharge',
+    avg: 'Transfusions / CMI Weighted Discharge',
+  },
+  units: {
+    sum: 'Units per CMI Weighted Discharge',
+    avg: 'Units per CMI Weighted Discharge',
+    sumShort: 'Units',
+    avgShort: 'Units',
+  },
+  decimals: { sum: 3, avg: 3 },
+} as const;
+
+export const BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS = [
+  {
+    value: 'rbc_units_per_cmi_visit',
+    label: {
+      short: 'Adjusted RBCs',
+      base: 'RBC Units / CMI Weighted Discharge',
+      sum: 'RBC Units / CMI Weighted Discharge',
+      avg: 'RBC Units / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'RBC Units per CMI Weighted Discharge',
+      avg: 'RBC Units per CMI Weighted Discharge',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+  {
+    value: 'ffp_units_per_cmi_visit',
+    label: {
+      short: 'Adjusted FFP',
+      base: 'FFP Units / CMI Weighted Discharge',
+      sum: 'FFP Units / CMI Weighted Discharge',
+      avg: 'FFP Units / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'FFP Units per CMI Weighted Discharge',
+      avg: 'FFP Units per CMI Weighted Discharge',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+  {
+    value: 'plt_units_per_cmi_visit',
+    label: {
+      short: 'Adjusted Platelets',
+      base: 'Platelet Units / CMI Weighted Discharge',
+      sum: 'Platelet Units / CMI Weighted Discharge',
+      avg: 'Platelet Units / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'Platelet Units per CMI Weighted Discharge',
+      avg: 'Platelet Units per CMI Weighted Discharge',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+  {
+    value: 'cryo_units_per_cmi_visit',
+    label: {
+      short: 'Adjusted Cryo',
+      base: 'Cryo Units / CMI Weighted Discharge',
+      sum: 'Cryo Units / CMI Weighted Discharge',
+      avg: 'Cryo Units / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'Cryo Units per CMI Weighted Discharge',
+      avg: 'Cryo Units per CMI Weighted Discharge',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+  {
+    value: 'whole_units_per_cmi_visit',
+    label: {
+      short: 'Adjusted Whole Blood',
+      base: 'Whole Blood Units / CMI Weighted Discharge',
+      sum: 'Whole Blood Units / CMI Weighted Discharge',
+      avg: 'Whole Blood Units / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'Whole Blood Units per CMI Weighted Discharge',
+      avg: 'Whole Blood Units per CMI Weighted Discharge',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+  {
+    value: 'cell_saver_ml_per_cmi_visit',
+    label: {
+      short: 'Adjusted Cell Salvage',
+      base: 'Cell Salvage Volume / CMI Weighted Discharge',
+      sum: 'Cell Salvage Volume / CMI Weighted Discharge',
+      avg: 'Cell Salvage Volume / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'mL per CMI Weighted Discharge',
+      avg: 'mL per CMI Weighted Discharge',
+      sumShort: 'mL',
+      avgShort: 'mL',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+] as const;
+
 // Costs -----------------------------------------------------------
 export const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
   rbc_units_cost: 200,
@@ -588,6 +704,8 @@ export const dashboardYAxisOptions = [
   OVERALL_BLOOD_PRODUCT_COST,
   VISIT_COUNT,
   CASE_MIX_INDEX,
+  TRANSFUSIONS_PER_CMI_VISIT,
+  ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
@@ -652,13 +770,12 @@ export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
 
 // Explore View ----------------------------------------------------
 // Aggregation options for explore view
-const _AGGREGATIONS = ['surgeon_prov_id', 'anesth_prov_id', 'year', 'quarter'] as const;
+const _AGGREGATIONS = ['attending_provider', 'year', 'quarter'] as const;
 export type Aggregation = typeof _AGGREGATIONS[number];
 
 // --- Cost bar charts TODO: Change to Explore Table ---
 const CostAggregations: { value: Aggregation; label: string }[] = [
-  { value: 'surgeon_prov_id', label: 'Surgeon ID' },
-  { value: 'anesth_prov_id', label: 'Anesthesiologist ID' },
+  { value: 'attending_provider', label: 'Provider' },
   { value: 'year', label: 'Year' },
   { value: 'quarter', label: 'Quarter' },
 ];
@@ -673,6 +790,7 @@ export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof c
 
 // TOOD: Update or remove CostBarData type
 export interface CostBarDatum extends Record<Cost, number> {
+  attending_provider?: string;
   surgeon_prov_id?: string;
   anesth_prov_id?: string;
   year?: string | number;
@@ -823,6 +941,23 @@ export const ExploreTableColumnOptionsGrouped = [
     })),
   },
   {
+    group: 'CMI Weighted Discharge',
+    items: [
+      TRANSFUSIONS_PER_CMI_VISIT,
+      ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
+    ].map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
+      },
+      decimals: opt.decimals,
+    })),
+  },
+  {
     group: 'Outcomes',
     items: OUTCOME_OPTIONS.map((opt) => ({
       value: opt.value,
@@ -912,6 +1047,14 @@ export const ExploreTableColumnOptionsGrouped = [
         label: 'Cases',
         units: {
           sum: 'cases', avg: '% of cases', sumShort: ' Cases', avgShort: ' Cases',
+        },
+        decimals: 0,
+      },
+      {
+        value: 'visit_count',
+        label: 'Visits',
+        units: {
+          sum: 'visits', avg: '% of visits', sumShort: ' Visits', avgShort: ' Visits',
         },
         decimals: 0,
       },

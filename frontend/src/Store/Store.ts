@@ -44,6 +44,36 @@ export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
 const sqlString = (value: string) => `'${value.replace(/'/g, "''")}'`;
 const safeIdPattern = /^[A-Za-z0-9_-]+$/;
+const cmiAdjustedBenchmarkNumerators: Record<string, string> = {
+  transfusions_per_cmi_visit: 'overall_units',
+  rbc_units_per_cmi_visit: 'rbc_units',
+  ffp_units_per_cmi_visit: 'ffp_units',
+  plt_units_per_cmi_visit: 'plt_units',
+  cryo_units_per_cmi_visit: 'cryo_units',
+  whole_units_per_cmi_visit: 'whole_units',
+  cell_saver_ml_per_cmi_visit: 'cell_saver_ml',
+};
+
+const cmiAdjustedBenchmarkExpression = (metric: string, condition?: string, qualifier = '') => {
+  const numerator = cmiAdjustedBenchmarkNumerators[metric];
+  if (!numerator) return null;
+
+  const qualifiedNumerator = `${qualifier}${numerator}`;
+  const qualifiedCmi = `${qualifier}ms_drg_weight`;
+  const qualifiedVisitNo = `${qualifier}visit_no`;
+  const numeratorExpression = condition
+    ? `CASE WHEN ${condition} THEN ${qualifiedNumerator} ELSE 0 END`
+    : qualifiedNumerator;
+  const cmiExpression = condition
+    ? `CASE WHEN ${condition} THEN ${qualifiedCmi} ELSE NULL END`
+    : qualifiedCmi;
+  const visitExpression = condition
+    ? `CASE WHEN ${condition} THEN ${qualifiedVisitNo} ELSE NULL END`
+    : qualifiedVisitNo;
+
+  return `CAST(SUM(${numeratorExpression}) AS DOUBLE) / NULLIF(AVG(${cmiExpression}) * COUNT(DISTINCT ${visitExpression}), 0)`;
+};
+
 const DASHBOARD_BOOLEAN_Y_AXIS_VARS = new Set([
   'death',
   'vent',
@@ -59,6 +89,34 @@ const dashboardMetricSqlExpression = (yAxisVar: string) => (
     ? `CASE WHEN ${yAxisVar} THEN 1 ELSE 0 END`
     : yAxisVar
 );
+
+const GUIDELINE_ADHERENCE_GROUP_VAR = 'overall_units_adherent';
+const GUIDELINE_ADHERENCE_UNIT_COLUMNS: Record<string, string> = {
+  rbc_units: 'rbc_units_adherent',
+  ffp_units: 'ffp_units_adherent',
+  plt_units: 'plt_units_adherent',
+  cryo_units: 'cryo_units_adherent',
+};
+
+const guidelineAdherenceEligibleUnitsExpression = (qualifier = '') => (
+  Object.keys(GUIDELINE_ADHERENCE_UNIT_COLUMNS)
+    .map((col) => `COALESCE(${qualifier}${col}, 0)`)
+    .join(' + ')
+);
+
+const guidelineAdherenceBucketUnitsExpression = (isAdherentExpression: string, qualifier = '') => {
+  const eligibleUnits = guidelineAdherenceEligibleUnitsExpression(qualifier);
+  const adherentUnits = `COALESCE(${qualifier}overall_units_adherent, 0)`;
+
+  return `CASE WHEN ${isAdherentExpression} THEN ${adherentUnits} ELSE GREATEST((${eligibleUnits}) - ${adherentUnits}, 0) END`;
+};
+
+const guidelineAdherenceProductExpression = (metric: string, isAdherentExpression: string, qualifier = '') => {
+  const adherentMetric = GUIDELINE_ADHERENCE_UNIT_COLUMNS[metric];
+  if (!adherentMetric) return null;
+
+  return `CASE WHEN ${isAdherentExpression} THEN COALESCE(${qualifier}${adherentMetric}, 0) ELSE GREATEST(COALESCE(${qualifier}${metric}, 0) - COALESCE(${qualifier}${adherentMetric}, 0), 0) END`;
+};
 
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
@@ -999,6 +1057,10 @@ export class RootStore {
             `${aggFn}(COALESCE(rbc_units_cost, 0) + COALESCE(plt_units_cost, 0) + COALESCE(ffp_units_cost, 0) + COALESCE(cryo_units_cost, 0) + COALESCE(whole_cost, 0) + COALESCE(cell_saver_cost, 0)) AS ${aggregation}_total_blood_product_cost`,
           ];
         }
+        const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar);
+        if (adjustedBenchmarkExpression) {
+          return `${adjustedBenchmarkExpression} AS ${aggregation}_${yAxisVar}`;
+        }
         // Special case: case mix index
         if (yAxisVar === 'case_mix_index') {
           return `AVG(ms_drg_weight) AS ${aggregation}_case_mix_index`;
@@ -1167,6 +1229,16 @@ export class RootStore {
                   THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
               `;
         }
+        const currentPeriodCondition = `dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'`;
+        const comparisonPeriodCondition = `dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'`;
+        const currentBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar, currentPeriodCondition);
+        if (currentBenchmarkExpression) {
+          const comparisonBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar, comparisonPeriodCondition);
+          return `
+                ${currentBenchmarkExpression} AS ${yAxisVar}_current_${aggregation},
+                ${comparisonBenchmarkExpression} AS ${yAxisVar}_comparison_${aggregation}
+              `;
+        }
         // Exception: Case mix index
         if (yAxisVar === 'case_mix_index') {
           return `
@@ -1238,6 +1310,13 @@ export class RootStore {
       if (yAxisVar === 'total_blood_product_cost') {
         sparklineSelects.push(
           `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
+        );
+        return;
+      }
+      const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar);
+      if (adjustedBenchmarkExpression) {
+        sparklineSelects.push(
+          `${adjustedBenchmarkExpression} AS ${aggregation}_${yAxisVar}`,
         );
         return;
       }
@@ -1933,6 +2012,14 @@ export class RootStore {
       if (config.chartType === 'exploreTable') {
         // Configuration of table (rowVar, columns, aggregation, etc.)
         const tableConfig = config as ExploreTableConfig;
+        const isGuidelineAdherenceGroup = tableConfig.groupByVar === GUIDELINE_ADHERENCE_GROUP_VAR;
+        const adherenceGroupExpr = 'adherence_group.is_guideline_adherent';
+        const adherenceGroupJoinClause = isGuidelineAdherenceGroup
+          ? 'CROSS JOIN (VALUES (TRUE), (FALSE)) AS adherence_group(is_guideline_adherent)'
+          : '';
+        const adherenceGroupWhereClause = isGuidelineAdherenceGroup
+          ? `WHERE ${guidelineAdherenceBucketUnitsExpression(adherenceGroupExpr, 'v.')} > 0`
+          : '';
         const internalRowKeyExpr = tableConfig.rowVar === 'attending_provider'
           ? 'v.attending_provider_id'
           : `v.${tableConfig.rowVar}`;
@@ -1950,22 +2037,35 @@ export class RootStore {
           const caseIdExpr = tableConfig.rowVar === 'attending_provider'
             ? 'provider_cases.case_id'
             : 'surgery_cases.case_id';
+          const caseAdherenceGroupExpr = 'case_adherence_group.is_guideline_adherent';
+          const caseAdherenceJoinClause = isGuidelineAdherenceGroup
+            ? 'CROSS JOIN (VALUES (TRUE), (FALSE)) AS case_adherence_group(is_guideline_adherent)'
+            : '';
           const caseSource = tableConfig.rowVar === 'attending_provider'
             ? `${needsVisitCaseJoin ? `(
               SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id, visit_no
               FROM filteredSurgeryCases
             ) provider_cases
-            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = provider_cases.visit_no` : `(
+            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = provider_cases.visit_no
+            ${caseAdherenceJoinClause}` : `(
               SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id
               FROM filteredSurgeryCases
             ) provider_cases`}`
             : `filteredSurgeryCases surgery_cases
-            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = surgery_cases.visit_no`;
-          const caseWhereClause = tableConfig.rowVar === 'attending_provider'
-            ? 'WHERE provider_cases.prov_id IS NOT NULL'
+            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = surgery_cases.visit_no
+            ${caseAdherenceJoinClause}`;
+          const caseWhereConditions = [];
+          if (tableConfig.rowVar === 'attending_provider') {
+            caseWhereConditions.push('provider_cases.prov_id IS NOT NULL');
+          }
+          if (isGuidelineAdherenceGroup) {
+            caseWhereConditions.push(`${guidelineAdherenceBucketUnitsExpression(caseAdherenceGroupExpr, 'visit_cases.')} > 0`);
+          }
+          const caseWhereClause = caseWhereConditions.length > 0
+            ? `WHERE ${caseWhereConditions.join(' AND ')}`
             : '';
           const caseGroupExpr = tableConfig.groupByVar
-            ? `visit_cases.${tableConfig.groupByVar}`
+            ? (isGuidelineAdherenceGroup ? caseAdherenceGroupExpr : `visit_cases.${tableConfig.groupByVar}`)
             : null;
           const caseSelects = [`${caseRowExpr} AS row_key`];
           const caseGroupBys = [caseRowExpr];
@@ -1976,7 +2076,7 @@ export class RootStore {
           if (caseGroupExpr) {
             caseSelects.push(`${caseGroupExpr} AS group_key`);
             caseGroupBys.push(caseGroupExpr);
-            caseJoinConditions.push(`pc.group_key = v.${tableConfig.groupByVar}`);
+            caseJoinConditions.push(isGuidelineAdherenceGroup ? `pc.group_key = ${adherenceGroupExpr}` : `pc.group_key = v.${tableConfig.groupByVar}`);
           }
 
           caseCountExpr = 'COALESCE(MAX(pc.case_count), 0)';
@@ -2036,6 +2136,12 @@ export class RootStore {
             return;
           }
 
+          // Special case: visits
+          if (colVar === 'visit_count') {
+            columnClauses.push(`COUNT(DISTINCT v.visit_no) AS ${colVar}`);
+            return;
+          }
+
           // Special case: attending_provider as non-row column
           if (colVar === 'attending_provider') {
             const expr = this.uiState.isInPrivateMode
@@ -2064,6 +2170,21 @@ export class RootStore {
           // Special case: salvage_savings
           if (colVar === 'salvage_savings') {
             columnClauses.push(`${aggFn}(cell_saver_cost) AS salvage_savings`);
+            return;
+          }
+
+          // Special case: CMI weighted discharge benchmark metrics
+          const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(colVar, undefined, 'v.');
+          if (adjustedBenchmarkExpression) {
+            columnClauses.push(`${adjustedBenchmarkExpression} AS ${colVar}`);
+            return;
+          }
+
+          const guidelineAdherenceProduct = isGuidelineAdherenceGroup
+            ? guidelineAdherenceProductExpression(colVar, adherenceGroupExpr, 'v.')
+            : null;
+          if (guidelineAdherenceProduct && (colAggregation === 'avg' || colAggregation === 'sum')) {
+            columnClauses.push(`${aggFn}(${guidelineAdherenceProduct}) AS ${colVar}`);
             return;
           }
 
@@ -2118,7 +2239,7 @@ export class RootStore {
 
         // Add secondary grouping variable if present
         if (tableConfig.groupByVar) {
-          const secondaryGroupCol = `v.${tableConfig.groupByVar}`;
+          const secondaryGroupCol = isGuidelineAdherenceGroup ? adherenceGroupExpr : `v.${tableConfig.groupByVar}`;
           groupByParts.push(secondaryGroupCol);
           orderByParts.push(secondaryGroupCol);
           columnClauses.splice(1, 0, `${secondaryGroupCol} AS _group_val`);
@@ -2132,7 +2253,9 @@ export class RootStore {
           SELECT
             ${columnClauses.join(',\n            ')}
           FROM filteredVisits v
+          ${adherenceGroupJoinClause}
           ${caseJoinClause}
+          ${adherenceGroupWhereClause}
           GROUP BY ${groupByClause}
           ORDER BY ${orderByClause};
         `;
@@ -2301,6 +2424,11 @@ export class RootStore {
         statSelects.push(
           `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
         );
+        return;
+      }
+      const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar);
+      if (adjustedBenchmarkExpression) {
+        statSelects.push(`${adjustedBenchmarkExpression} AS ${aggregation}_${yAxisVar}`);
         return;
       }
       if (yAxisVar === 'case_mix_index') {

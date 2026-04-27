@@ -2,6 +2,8 @@ import {
   dashboardYAxisVars, BLOOD_COMPONENT_OPTIONS, OUTCOME_OPTIONS, COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST, GUIDELINE_ADHERENT_OPTIONS, OVERALL_GUIDELINE_ADHERENT, PROPHYL_MED_OPTIONS,
   AGGREGATION_OPTIONS,
   dashboardYAxisOptions,
+  TRANSFUSIONS_PER_CMI_VISIT,
+  BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
 } from '../Types/application';
 
 /**
@@ -87,13 +89,17 @@ export function isMetricChangeGood(metricVar: typeof dashboardYAxisVars[number],
   const isBloodComponent = BLOOD_COMPONENT_OPTIONS.some((opt) => opt.value === metricVar);
   const isOutcome = OUTCOME_OPTIONS.some((opt) => opt.value === metricVar);
   const isCost = [...COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST].some((opt) => opt.value === metricVar);
+  const isCmiAdjustedBenchmark = [
+    TRANSFUSIONS_PER_CMI_VISIT,
+    ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
+  ].some((opt) => opt.value === metricVar);
 
   // Guideline adherence and prophylactic medications - higher is better (positive change is good)
   const isAdherence = GUIDELINE_ADHERENT_OPTIONS.some((opt) => opt.value === metricVar);
   const isOverallAdherence = metricVar === OVERALL_GUIDELINE_ADHERENT.value;
   const isProphylMed = PROPHYL_MED_OPTIONS.some((opt) => opt.value === metricVar);
 
-  if (isBloodComponent || isOutcome || isCost) {
+  if (isBloodComponent || isOutcome || isCost || isCmiAdjustedBenchmark) {
   // For blood components and outcomes and costs, negative change is good
     return diffPercent < 0;
   }

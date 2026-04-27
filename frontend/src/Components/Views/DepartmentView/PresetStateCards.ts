@@ -24,7 +24,7 @@ export const presetStateCards: PresetGroup[] = [
         chartConfigs: [
           {
             chartId: 'preset-overview-department',
-            title: 'Blood Product Utilization per Surgeon',
+            title: 'Blood Product Utilization per Provider',
             chartType: 'exploreTable',
             rowVar: 'attending_provider',
             columns: [
@@ -32,7 +32,13 @@ export const presetStateCards: PresetGroup[] = [
                 colVar: 'attending_provider',
                 aggregation: 'none',
                 type: 'text',
-                title: 'Surgeon',
+                title: 'Provider',
+              },
+              {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
               },
               {
                 colVar: 'cases',
@@ -147,6 +153,12 @@ export const presetStateCards: PresetGroup[] = [
                 title: 'Provider',
               },
               {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
+              },
+              {
                 colVar: 'cases',
                 aggregation: 'sum',
                 type: 'numeric',
@@ -247,6 +259,12 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'none',
                 type: 'text',
                 title: 'Provider',
+              },
+              {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
               },
               {
                 colVar: 'cases',
@@ -353,6 +371,12 @@ export const presetStateCards: PresetGroup[] = [
                 title: 'Death',
               },
               {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
+              },
+              {
                 colVar: 'cases',
                 aggregation: 'sum',
                 type: 'numeric',
@@ -433,6 +457,12 @@ export const presetStateCards: PresetGroup[] = [
                 title: 'Cell Salvage (mL)',
               },
               {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
+              },
+              {
                 colVar: 'cases',
                 aggregation: 'sum',
                 type: 'numeric',
@@ -458,7 +488,7 @@ export const presetStateCards: PresetGroup[] = [
     groupLabel: 'Cost / Savings',
     options: [
       {
-        question: 'What are the costs of blood products transfused intraoperatively by surgeon?',
+        question: 'What are the costs of blood products transfused intraoperatively by provider?',
         Icon: IconCoin,
         chartConfigs: [
           {
@@ -478,6 +508,12 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'none',
                 type: 'text',
                 title: 'Provider',
+              },
+              {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
               },
               {
                 colVar: 'cases',

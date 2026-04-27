@@ -5,6 +5,8 @@ import {
   LAB_RESULTS,
   COSTS,
   TIME_AGGREGATION_OPTIONS,
+  TRANSFUSIONS_PER_CMI_VISIT,
+  BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
 } from '../Types/application';
 import { BLOOD_COMPONENTS } from '../Types/bloodProducts';
 
@@ -104,6 +106,8 @@ export const formatStateDetailName = (key: string): string => {
     Object.values(GUIDELINE_ADHERENT),
     LAB_RESULTS,
     Object.values(COSTS),
+    TRANSFUSIONS_PER_CMI_VISIT,
+    BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
   ].flat();
   const found = attributes.find((c) => c.value === key);
   if (found) {
