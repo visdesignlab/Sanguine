@@ -589,6 +589,19 @@ export type TimeAggregation = keyof typeof TIME_AGGREGATION_OPTIONS;
 export const dashboardXAxisOptions = Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label })) as { value: keyof typeof TIME_AGGREGATION_OPTIONS; label: string }[];
 export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
 
+// Pre-operative anemia rate (% of surgery cases where pre_hgb < 13.0 g/dL)
+export const PRE_OP_ANEMIA_RATE = {
+  value: 'pre_anemia_rate',
+  label: {
+    short: 'Pre-op Anemia Rate',
+    base: 'Pre-op Anemia Rate (Hgb < 13 g/dL)',
+    sum: 'Total Cases with Pre-op Anemia (Hgb < 13 g/dL)',
+    avg: '% of Cases with Pre-op Anemia (Hgb < 13 g/dL)',
+  },
+  units: { sum: 'Cases', avg: '% of Cases', avgShort: '%' },
+  decimals: { sum: 0, avg: 1 },
+} as const;
+
 // Dashboard chart y-axis variable options
 export const dashboardYAxisOptions = [
   ...BLOOD_COMPONENT_OPTIONS,
@@ -600,6 +613,7 @@ export const dashboardYAxisOptions = [
   OVERALL_BLOOD_PRODUCT_COST,
   VISIT_COUNT,
   CASE_MIX_INDEX,
+  PRE_OP_ANEMIA_RATE,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
