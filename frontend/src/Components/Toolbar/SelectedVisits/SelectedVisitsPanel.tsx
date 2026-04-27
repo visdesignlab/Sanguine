@@ -8,7 +8,6 @@ import {
 } from 'react';
 import { useObserver } from 'mobx-react-lite';
 import {
-  Accordion,
   ActionIcon,
   Badge,
   Box,
@@ -351,41 +350,38 @@ export function SelectedVisitsPanel() {
                 mb="sm"
               />
 
-              <Accordion
-                multiple
-                defaultValue={ATTRIBUTE_GROUPS.map((g) => g.id).concat(['misc'])}
-                styles={{
-                  content: { padding: '8px 12px' },
-                  item: { borderBottom: 'none' },
-                  control: { padding: '8px 0' },
-                }}
-              >
+              <Stack gap="lg">
                 {groupedAttributes.map((group) => (
-                  <Accordion.Item key={group.id} value={group.id}>
-                    <Accordion.Control>
-                      <Text fw={700} size="sm">{group.label}</Text>
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      <Stack gap="xs">
-                        {group.items.map(({ key, value }) => (
-                          <Box key={key}>
-                            <Text size="xs" fw={500} c="dimmed">
-                              {makeHumanReadableColumn(key)}
+                  <Box key={group.id}>
+                    <Text
+                      fw={700}
+                      size="xs"
+                      tt="uppercase"
+                      c="blue.7"
+                      mb={8}
+                      style={{ borderBottom: '1px solid var(--mantine-color-gray-2)', paddingBottom: 2 }}
+                    >
+                      {group.label}
+                    </Text>
+                    <Stack gap="xs">
+                      {group.items.map(({ key, value }) => (
+                        <Box key={key}>
+                          <Text size="xs" fw={500} c="dimmed" lh={1}>
+                            {makeHumanReadableColumn(key)}
+                          </Text>
+                          {key === 'procedure_ids' ? (
+                            <ProcedureList procedureIdsStr={value} />
+                          ) : (
+                            <Text size="sm" style={{ wordBreak: 'break-word' }} lh={1.4}>
+                              {makeHumanReadableValues(key, value)}
                             </Text>
-                            {key === 'procedure_ids' ? (
-                              <ProcedureList procedureIdsStr={value} />
-                            ) : (
-                              <Text size="sm" style={{ wordBreak: 'break-word' }}>
-                                {makeHumanReadableValues(key, value)}
-                              </Text>
-                            )}
-                          </Box>
-                        ))}
-                      </Stack>
-                    </Accordion.Panel>
-                  </Accordion.Item>
+                          )}
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
                 ))}
-              </Accordion>
+              </Stack>
               <Space h={15} />
             </Stack>
           ) : (
