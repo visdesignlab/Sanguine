@@ -798,6 +798,53 @@ export type ScatterPlotData = DumbbellCase[];
 
 // Column options
 const RBC_COUNTS = ['0', '1', '2', '3', '4', 'above_5'] as const;
+
+export const SELECTED_VISITS_PANEL_ATTRIBUTES = [
+  {
+    id: 'overview',
+    label: 'Visit Overview',
+    keys: [
+      'visit_no', 'mrn', 'adm_dtm', 'dsch_dtm', 'age_at_adm',
+      'pat_class_desc', 'apr_drg_weight', 'ms_drg_weight',
+      'month', 'quarter', 'year',
+      'attending_provider', 'attending_provider_id', 'attending_provider_line',
+      'attending_provider_department', 'is_admitting_attending',
+    ],
+  },
+  {
+    id: 'procedures',
+    label: 'Visit Procedures',
+    keys: ['procedure_ids'],
+  },
+  {
+    id: 'blood-products',
+    label: 'Blood Products',
+    keys: [
+      'rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'whole_units',
+      'cell_saver_ml', 'overall_units',
+      'rbc_units_adherent', 'ffp_units_adherent', 'plt_units_adherent',
+      'cryo_units_adherent', 'overall_units_adherent',
+    ],
+  },
+  {
+    id: 'outcomes',
+    label: 'Outcomes',
+    keys: ['los', 'death', 'vent', 'stroke', 'ecmo'],
+  },
+  {
+    id: 'medications',
+    label: 'Prophylactic Medications',
+    keys: ['b12', 'iron', 'antifibrinolytic'],
+  },
+  {
+    id: 'costs',
+    label: 'Costs',
+    keys: [
+      'rbc_units_cost', 'plt_units_cost', 'ffp_units_cost', 'cryo_units_cost',
+      'whole_cost', 'cell_saver_cost',
+    ],
+  },
+];
 const RBC_PERCENT_OPTIONS = RBC_COUNTS.map((count) => ({
   value: `percent_${count}_rbc`,
   label: count === 'above_5' ? '≥5 RBC' : `${count} RBC`,

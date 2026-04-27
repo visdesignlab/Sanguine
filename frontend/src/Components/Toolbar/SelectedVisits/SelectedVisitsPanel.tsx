@@ -3,7 +3,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { useObserver } from 'mobx-react-lite';
@@ -31,6 +30,7 @@ import {
   makeHumanReadableColumn,
   makeHumanReadableValues,
 } from '../../../Utils/humanReadableColsVals';
+import { SELECTED_VISITS_PANEL_ATTRIBUTES } from '../../../Types/application';
 import classes from '../../../Shell/Shell.module.css';
 
 function formatVisitCount(count: number): string {
@@ -43,78 +43,16 @@ function formatVisitCount(count: number): string {
   return count.toString();
 }
 
-const ATTRIBUTE_GROUPS = [
-  {
-    id: 'overview',
-    label: 'Visit Overview',
-    keys: [
-      'visit_no', 'mrn', 'adm_dtm', 'dsch_dtm', 'age_at_adm',
-      'pat_class_desc', 'apr_drg_weight', 'ms_drg_weight',
-      'month', 'quarter', 'year',
-      'attending_provider', 'attending_provider_id', 'attending_provider_line',
-      'attending_provider_department', 'is_admitting_attending',
-    ],
-  },
-  {
-    id: 'procedures',
-    label: 'Visit Procedures',
-    keys: ['procedure_ids'],
-  },
-  {
-    id: 'blood-products',
-    label: 'Blood Products',
-    keys: [
-      'rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'whole_units',
-      'cell_saver_ml', 'overall_units',
-      'rbc_units_adherent', 'ffp_units_adherent', 'plt_units_adherent',
-      'cryo_units_adherent', 'overall_units_adherent',
-    ],
-  },
-  {
-    id: 'outcomes',
-    label: 'Outcomes',
-    keys: ['los', 'death', 'vent', 'stroke', 'ecmo'],
-  },
-  {
-    id: 'medications',
-    label: 'Prophylactic Medications',
-    keys: ['b12', 'iron', 'antifibrinolytic'],
-  },
-  {
-    id: 'costs',
-    label: 'Costs',
-    keys: [
-      'rbc_units_cost', 'plt_units_cost', 'ffp_units_cost', 'cryo_units_cost',
-      'whole_cost', 'cell_saver_cost',
-    ],
-  },
-];
-
 function ProcedureList({ procedureIdsStr }: { procedureIdsStr: unknown }) {
   const [search, setSearch] = useState('');
-
   const procedures = useMemo(() => {
     if (!procedureIdsStr) return [];
-
-    // Aggressively extract identifiers by splitting on any bracket, quote, brace, or comma
     const raw = String(procedureIdsStr);
-    const extracted = Array.from(new Set(
-      raw.split(/[[\],{}"]+/)
-        .map((s) => s.trim())
-        .filter(Boolean),
-    ));
-
-    return extracted.map((proc) => proc
-      .replace(/__/g, ': ')
-      .replace(/-/g, ' ')
-      .replace(/\b\w/g, (c) => c.toUpperCase())).filter(Boolean);
+    return Array.from(new Set(raw.split(/[[\],{}"]+/).map((s) => s.trim()).filter(Boolean)))
+      .map((proc) => proc.replace(/__/g, ': ').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()));
   }, [procedureIdsStr]);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return procedures;
-    const lowerSearch = search.toLowerCase();
-    return procedures.filter((p) => p.toLowerCase().includes(lowerSearch));
-  }, [procedures, search]);
+  const filtered = procedures.filter((p) => p.toLowerCase().includes(search.toLowerCase().trim()));
 
   return (
     <Stack gap="xs" mt="xs">
@@ -134,7 +72,7 @@ function ProcedureList({ procedureIdsStr }: { procedureIdsStr: unknown }) {
             </Flex>
           )) : (
             <Text size="xs" c="dimmed" fs="italic" p="xs">
-              {procedures.length === 0 ? 'No procedures recorded.' : 'No procedures match search.'}
+              {procedures.length === 0 ? 'No procedures recorded.' : 'No match found.'}
             </Text>
           )}
         </Stack>
@@ -189,7 +127,10 @@ export function SelectedVisitsPanel() {
   // Fetch details whenever a visit number is chosen
   useEffect(() => {
     if (store.state.ui.selectedVisitNo != null) {
-      store.getVisitInfo(store.state.ui.selectedVisitNo).then(setSelectedVisit);
+      setLoadingVisit(true);
+      store.getVisitInfo(store.state.ui.selectedVisitNo)
+        .then(setSelectedVisit)
+        .finally(() => setLoadingVisit(false));
     } else {
       setSelectedVisit(null);
     }
@@ -200,79 +141,39 @@ export function SelectedVisitsPanel() {
 
   const groupedAttributes = useMemo(() => {
     if (!selectedVisit) return [];
-
     const searchTerm = attributeSearchQuery.toLowerCase().trim();
     const { isInPrivateMode } = store.state.ui;
-
-    const allEntries = Object.entries(selectedVisit);
     const usedKeys = new Set<string>();
 
-    const groups = ATTRIBUTE_GROUPS.map((group) => {
-      const items = group.keys
-        .filter((key) => {
-          if (isInPrivateMode && (key === 'attending_provider_id' || key === 'attending_provider')) return false;
-          if (selectedVisit[key] === undefined || selectedVisit[key] === null) return false;
+    const filterEntry = (key: string, val: unknown) => {
+      if (isInPrivateMode && ['attending_provider_id', 'attending_provider'].includes(key)) return false;
+      if (val == null) return false;
+      if (!searchTerm) return true;
+      return [key, makeHumanReadableColumn(key), String(makeHumanReadableValues(key, val))]
+        .some((s) => s.toLowerCase().includes(searchTerm));
+    };
 
-          usedKeys.add(key);
+    const groups = SELECTED_VISITS_PANEL_ATTRIBUTES.map((group) => ({
+      ...group,
+      items: group.keys
+        .filter((key) => filterEntry(key, selectedVisit[key]) && usedKeys.add(key))
+        .map((key) => ({ key, value: selectedVisit[key] })),
+    }));
 
-          if (!searchTerm) return true;
-
-          const humanReadableKey = makeHumanReadableColumn(key).toLowerCase();
-          const humanReadableValue = makeHumanReadableValues(key, selectedVisit[key]).toString().toLowerCase();
-
-          return humanReadableKey.includes(searchTerm)
-            || humanReadableValue.includes(searchTerm)
-            || key.toLowerCase().includes(searchTerm);
-        })
-        .map((key) => ({ key, value: selectedVisit[key] }));
-
-      return { ...group, items };
-    });
-
-    // Add remaining keys to a Misc group if they match search
-    const miscItems = allEntries
-      .filter(([key]) => !usedKeys.has(key))
-      .filter(([key, value]) => {
-        if (value === undefined || value === null) return false;
-        if (!searchTerm) return true;
-        const humanReadableKey = makeHumanReadableColumn(key).toLowerCase();
-        const humanReadableValue = makeHumanReadableValues(key, value).toString().toLowerCase();
-        return humanReadableKey.includes(searchTerm)
-          || humanReadableValue.includes(searchTerm)
-          || key.toLowerCase().includes(searchTerm);
-      })
+    const miscItems = Object.entries(selectedVisit)
+      .filter(([key, value]) => !usedKeys.has(key) && filterEntry(key, value))
       .map(([key, value]) => ({ key, value }));
 
-    if (miscItems.length > 0) {
+    if (miscItems.length) {
       groups.push({
         id: 'misc', label: 'Other Details', keys: [], items: miscItems,
       });
     }
-
     return groups.filter((g) => g.items.length > 0);
   }, [selectedVisit, attributeSearchQuery, store.state.ui]);
 
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const handleClickVisitNo = useCallback((visitNo: number) => {
-    // Deselect if already selected
-    if (store.state.ui.selectedVisitNo === visitNo) {
-      setSelectedVisitNo(null);
-      return;
-    }
-
-    // Render loading overlay when changing selection
-    if (store.state.ui.selectedVisitNo !== null) {
-      setLoadingVisit(true);
-    }
-    setSelectedVisitNo(visitNo);
-
-    // Clear any existing timeout before starting a new one
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-    }
-
-    // Simulate loading delay for better UX
-    loadingTimeoutRef.current = setTimeout(() => setLoadingVisit(false), 200);
+    setSelectedVisitNo(store.state.ui.selectedVisitNo === visitNo ? null : visitNo);
   }, [store.state.ui.selectedVisitNo, setSelectedVisitNo]);
 
   return useObserver(() => (
