@@ -2070,6 +2070,12 @@ export class RootStore {
             return;
           }
 
+          // Special case: visits
+          if (colVar === 'visit_count') {
+            columnClauses.push(`COUNT(DISTINCT v.visit_no) AS ${colVar}`);
+            return;
+          }
+
           // Special case: attending_provider as non-row column
           if (colVar === 'attending_provider') {
             const expr = this.uiState.isInPrivateMode

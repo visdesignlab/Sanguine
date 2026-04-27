@@ -1050,6 +1050,14 @@ export const ExploreTableColumnOptionsGrouped = [
         },
         decimals: 0,
       },
+      {
+        value: 'visit_count',
+        label: 'Visits',
+        units: {
+          sum: 'visits', avg: '% of visits', sumShort: ' Visits', avgShort: ' Visits',
+        },
+        decimals: 0,
+      },
     ],
   },
 ];

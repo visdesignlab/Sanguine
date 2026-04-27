@@ -1161,11 +1161,11 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         accessor: colVar,
         title: displayTitle,
         titleClassName: `${isActiveSort ? 'sorted-column-header' : ''} ${isActiveFilter ? 'filtered-column-header' : ''}`.trim() || undefined,
-        draggable: colVar !== 'cases' && !(colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar),
+        draggable: !['cases', 'visit_count'].includes(colVar) && !(colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar),
         resizable: false,
         sortable: true,
         noWrap: true,
-        width: colVar === 'cases' ? 90 : colVar === 'salvage_savings' ? 250 : colVar === 'total_cost' ? 400 : (colVar === 'attending_provider' || (colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar)) ? 175 : undefined,
+        width: ['cases', 'visit_count'].includes(colVar) ? 90 : colVar === 'salvage_savings' ? 250 : colVar === 'total_cost' ? 400 : (colVar === 'attending_provider' || (colConfigs.filter((c) => c.type === 'text').length === 1 && colConfigs[0].colVar === colVar)) ? 175 : undefined,
         filtering: isActiveFilter,
         filter: filterComponent,
         footer: type === 'violin' ? violinFooter : (type === 'numeric' || type === 'heatmap') ? (

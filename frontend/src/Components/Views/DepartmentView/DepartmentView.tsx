@@ -141,6 +141,12 @@ export function DepartmentView() {
             title: groupLabel,
           },
           {
+            colVar: 'visit_count',
+            aggregation: 'sum',
+            type: 'numeric',
+            title: 'Visits',
+          },
+          {
             colVar: 'cases',
             aggregation: 'sum',
             type: 'numeric',
@@ -184,6 +190,12 @@ export function DepartmentView() {
             aggregation: 'none',
             type: 'text',
             title: groupLabel,
+          },
+          {
+            colVar: 'visit_count',
+            aggregation: 'sum',
+            type: 'numeric',
+            title: 'Visits',
           },
           {
             colVar: 'cases',

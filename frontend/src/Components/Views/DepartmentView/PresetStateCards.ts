@@ -35,6 +35,12 @@ export const presetStateCards: PresetGroup[] = [
                 title: 'Surgeon',
               },
               {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
+              },
+              {
                 colVar: 'cases',
                 aggregation: 'sum',
                 type: 'numeric',
@@ -147,6 +153,12 @@ export const presetStateCards: PresetGroup[] = [
                 title: 'Provider',
               },
               {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
+              },
+              {
                 colVar: 'cases',
                 aggregation: 'sum',
                 type: 'numeric',
@@ -247,6 +259,12 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'none',
                 type: 'text',
                 title: 'Provider',
+              },
+              {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
               },
               {
                 colVar: 'cases',
@@ -353,6 +371,12 @@ export const presetStateCards: PresetGroup[] = [
                 title: 'Death',
               },
               {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
+              },
+              {
                 colVar: 'cases',
                 aggregation: 'sum',
                 type: 'numeric',
@@ -433,6 +457,12 @@ export const presetStateCards: PresetGroup[] = [
                 title: 'Cell Salvage (mL)',
               },
               {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
+              },
+              {
                 colVar: 'cases',
                 aggregation: 'sum',
                 type: 'numeric',
@@ -478,6 +508,12 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'none',
                 type: 'text',
                 title: 'Provider',
+              },
+              {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
               },
               {
                 colVar: 'cases',
