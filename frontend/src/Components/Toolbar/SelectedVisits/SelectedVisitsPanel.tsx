@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { useObserver } from 'mobx-react-lite';
 import {
+  Accordion,
   ActionIcon,
   Badge,
   Box,
@@ -41,6 +42,106 @@ function formatVisitCount(count: number): string {
     return `${(count / 1_000).toFixed(1)} K`;
   }
   return count.toString();
+}
+
+const ATTRIBUTE_GROUPS = [
+  {
+    id: 'overview',
+    label: 'Visit Overview',
+    keys: [
+      'visit_no', 'mrn', 'adm_dtm', 'dsch_dtm', 'age_at_adm',
+      'pat_class_desc', 'apr_drg_weight', 'ms_drg_weight',
+      'month', 'quarter', 'year',
+      'attending_provider', 'attending_provider_id', 'attending_provider_line',
+      'attending_provider_department', 'is_admitting_attending',
+    ],
+  },
+  {
+    id: 'procedures',
+    label: 'Visit Procedures',
+    keys: ['procedure_ids'],
+  },
+  {
+    id: 'blood-products',
+    label: 'Blood Products',
+    keys: [
+      'rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'whole_units',
+      'cell_saver_ml', 'overall_units',
+      'rbc_units_adherent', 'ffp_units_adherent', 'plt_units_adherent',
+      'cryo_units_adherent', 'overall_units_adherent',
+    ],
+  },
+  {
+    id: 'outcomes',
+    label: 'Outcomes',
+    keys: ['los', 'death', 'vent', 'stroke', 'ecmo'],
+  },
+  {
+    id: 'medications',
+    label: 'Prophylactic Medications',
+    keys: ['b12', 'iron', 'antifibrinolytic'],
+  },
+  {
+    id: 'costs',
+    label: 'Costs',
+    keys: [
+      'rbc_units_cost', 'plt_units_cost', 'ffp_units_cost', 'cryo_units_cost',
+      'whole_cost', 'cell_saver_cost',
+    ],
+  },
+];
+
+function ProcedureList({ procedureIdsStr }: { procedureIdsStr: unknown }) {
+  const [search, setSearch] = useState('');
+
+  const procedures = useMemo(() => {
+    if (!procedureIdsStr) return [];
+
+    // Aggressively extract identifiers by splitting on any bracket, quote, brace, or comma
+    const raw = String(procedureIdsStr);
+    const extracted = Array.from(new Set(
+      raw.split(/[[\],{}"]+/)
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ));
+
+    return extracted.map((proc) => proc
+      .replace(/__/g, ': ')
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase())).filter(Boolean);
+  }, [procedureIdsStr]);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return procedures;
+    const lowerSearch = search.toLowerCase();
+    return procedures.filter((p) => p.toLowerCase().includes(lowerSearch));
+  }, [procedures, search]);
+
+  return (
+    <Stack gap="xs" mt="xs">
+      <TextInput
+        placeholder="Search procedures..."
+        value={search}
+        onChange={(e) => setSearch(e.currentTarget.value)}
+        leftSection={<IconSearch size={12} />}
+        size="xs"
+      />
+      <ScrollArea h={150} type="auto" offsetScrollbars>
+        <Stack gap={4}>
+          {filtered.length > 0 ? filtered.map((p, i) => (
+            <Flex key={i} align="flex-start" gap={6} px={4}>
+              <Text size="sm" c="blue" fw={700}>•</Text>
+              <Text size="sm" style={{ wordBreak: 'break-word', flex: 1 }}>{p}</Text>
+            </Flex>
+          )) : (
+            <Text size="xs" c="dimmed" fs="italic" p="xs">
+              {procedures.length === 0 ? 'No procedures recorded.' : 'No procedures match search.'}
+            </Text>
+          )}
+        </Stack>
+      </ScrollArea>
+    </Stack>
+  );
 }
 
 /**
@@ -97,30 +198,60 @@ export function SelectedVisitsPanel() {
 
   // Filter visit details based on search query
   const [attributeSearchQuery, setAttributeSearchQuery] = useState('');
-  const filteredVisitAttributes = useMemo(() => {
-    let visitAttributes = selectedVisit ? Object.entries(selectedVisit) : [];
-    if (store.state.ui.isInPrivateMode) {
-      visitAttributes = visitAttributes.filter(([key]) => key !== 'attending_provider_id' && key !== 'attending_provider');
-    }
-    if (!selectedVisit || !attributeSearchQuery.trim()) {
-      return visitAttributes;
-    }
+
+  const groupedAttributes = useMemo(() => {
+    if (!selectedVisit) return [];
 
     const searchTerm = attributeSearchQuery.toLowerCase().trim();
-    return Object.entries(visitAttributes).filter(([key, value]) => {
-      // Search in the human-readable column name
-      const humanReadableKey = makeHumanReadableColumn(key).toLowerCase();
-      // Search in the human-readable value
-      const humanReadableValue = makeHumanReadableValues(
-        key,
-        value,
-      ).toString().toLowerCase();
+    const { isInPrivateMode } = store.state.ui;
 
-      return humanReadableKey.includes(searchTerm)
-        || humanReadableValue.includes(searchTerm)
-        || key.toLowerCase().includes(searchTerm);
+    const allEntries = Object.entries(selectedVisit);
+    const usedKeys = new Set<string>();
+
+    const groups = ATTRIBUTE_GROUPS.map((group) => {
+      const items = group.keys
+        .filter((key) => {
+          if (isInPrivateMode && (key === 'attending_provider_id' || key === 'attending_provider')) return false;
+          if (selectedVisit[key] === undefined || selectedVisit[key] === null) return false;
+
+          usedKeys.add(key);
+
+          if (!searchTerm) return true;
+
+          const humanReadableKey = makeHumanReadableColumn(key).toLowerCase();
+          const humanReadableValue = makeHumanReadableValues(key, selectedVisit[key]).toString().toLowerCase();
+
+          return humanReadableKey.includes(searchTerm)
+            || humanReadableValue.includes(searchTerm)
+            || key.toLowerCase().includes(searchTerm);
+        })
+        .map((key) => ({ key, value: selectedVisit[key] }));
+
+      return { ...group, items };
     });
-  }, [selectedVisit, store.state.ui.isInPrivateMode, attributeSearchQuery]);
+
+    // Add remaining keys to a Misc group if they match search
+    const miscItems = allEntries
+      .filter(([key]) => !usedKeys.has(key))
+      .filter(([key, value]) => {
+        if (value === undefined || value === null) return false;
+        if (!searchTerm) return true;
+        const humanReadableKey = makeHumanReadableColumn(key).toLowerCase();
+        const humanReadableValue = makeHumanReadableValues(key, value).toString().toLowerCase();
+        return humanReadableKey.includes(searchTerm)
+          || humanReadableValue.includes(searchTerm)
+          || key.toLowerCase().includes(searchTerm);
+      })
+      .map(([key, value]) => ({ key, value }));
+
+    if (miscItems.length > 0) {
+      groups.push({
+        id: 'misc', label: 'Other Details', keys: [], items: miscItems,
+      });
+    }
+
+    return groups.filter((g) => g.items.length > 0);
+  }, [selectedVisit, attributeSearchQuery, store.state.ui]);
 
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const handleClickVisitNo = useCallback((visitNo: number) => {
@@ -146,7 +277,7 @@ export function SelectedVisitsPanel() {
   }, [store.state.ui.selectedVisitNo, setSelectedVisitNo]);
 
   return useObserver(() => (
-    <Box>
+    <Box style={{ minWidth: 0, width: '100%' }}>
       {/* Panel Header */}
       <Flex direction="row" justify="space-between" align="center" h={40}>
         <Title order={3}>Selected Visits</Title>
@@ -220,26 +351,41 @@ export function SelectedVisitsPanel() {
                 mb="sm"
               />
 
-              {/* Display filtered attributes */}
-              {filteredVisitAttributes.length > 0 ? (
-                filteredVisitAttributes.map(([key, value]) => (
-                  <Stack key={key} gap={0}>
-                    <Title order={6}>{makeHumanReadableColumn(key)}</Title>
-                    <Text>
-                      {makeHumanReadableValues(
-                        key as keyof typeof makeHumanReadableColumn,
-                        value,
-                      )}
-                    </Text>
-                  </Stack>
-                ))
-              ) : (
-                <Text c="dimmed" size="sm">
-                  No attributes match your search &quot;
-                  {attributeSearchQuery}
-                  &quot;
-                </Text>
-              )}
+              <Accordion
+                multiple
+                defaultValue={ATTRIBUTE_GROUPS.map((g) => g.id).concat(['misc'])}
+                styles={{
+                  content: { padding: '8px 12px' },
+                  item: { borderBottom: 'none' },
+                  control: { padding: '8px 0' },
+                }}
+              >
+                {groupedAttributes.map((group) => (
+                  <Accordion.Item key={group.id} value={group.id}>
+                    <Accordion.Control>
+                      <Text fw={700} size="sm">{group.label}</Text>
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <Stack gap="xs">
+                        {group.items.map(({ key, value }) => (
+                          <Box key={key}>
+                            <Text size="xs" fw={500} c="dimmed">
+                              {makeHumanReadableColumn(key)}
+                            </Text>
+                            {key === 'procedure_ids' ? (
+                              <ProcedureList procedureIdsStr={value} />
+                            ) : (
+                              <Text size="sm" style={{ wordBreak: 'break-word' }}>
+                                {makeHumanReadableValues(key, value)}
+                              </Text>
+                            )}
+                          </Box>
+                        ))}
+                      </Stack>
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                ))}
+              </Accordion>
               <Space h={15} />
             </Stack>
           ) : (

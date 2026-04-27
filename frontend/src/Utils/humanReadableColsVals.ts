@@ -44,8 +44,20 @@ const columnNameMap: Record<string, string> = {
   vent: 'Ventilator',
   visit_no: 'Visit Number',
   whole_units: '# Whole Blood Units',
+  whole_cost: 'Whole Blood Cost',
   year: 'Year',
   departments: 'Departments',
+  attending_provider: 'Attending Provider',
+  attending_provider_id: 'Attending Provider ID',
+  attending_provider_line: 'Attending Provider Line',
+  attending_provider_department: 'Attending Provider Department',
+  is_admitting_attending: 'Is Admitting Attending',
+  surgeon_provider: 'Surgeon',
+  surgeon_provider_id: 'Surgeon ID',
+  anesthesiologist_provider: 'Anesthesiologist',
+  anesthesiologist_provider_id: 'Anesthesiologist ID',
+  procedure_ids: 'Procedures',
+  total_blood_product_cost: 'Total Blood Product Cost',
 };
 
 export function makeHumanReadableColumn(columnName: keyof typeof columnNameMap): string {
@@ -70,7 +82,7 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
     return value.toFixed(3);
   }
   if (columnName === 'departments') {
-    return (value as string).replace(/["[\]]/g, '').replace(/,\s*/g, ', ');
+    return (value as string).replace(/[[]"]/g, '').replace(/,\s*/g, ', ');
   }
   return `${value}`;
 }
