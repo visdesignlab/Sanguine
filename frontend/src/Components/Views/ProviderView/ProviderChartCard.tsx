@@ -8,6 +8,7 @@ import { ReferenceLine } from 'recharts';
 import {
   AGGREGATION_OPTIONS,
   ProviderChart, ProviderChartConfig,
+  dashboardYAxisOptions,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 import { ProviderChartTooltip } from './ProviderChartTooltip';
@@ -17,12 +18,25 @@ const MANTINE_BLUE = '#1C7ED6';
 const GOLD = '#FFD43B';
 
 /**
- * Format a raw numeric tick value for histogram x-axis.
- * Unlike `formatValueForDisplay`, this does NOT multiply by 100 for
- * percentage-unit fields — the bins are already aggregated values.
+ * Check whether a metric variable uses percentage display (its avg unit starts with %).
  */
-function formatHistogramTick(value: number): string {
+function isPercentageMetric(xAxisVar: string): boolean {
+  const opt = dashboardYAxisOptions.find((o) => o.value === xAxisVar);
+  const avgUnit = (opt as { units?: { avg?: string } })?.units?.avg ?? '';
+  return avgUnit.startsWith('%');
+}
+
+/**
+ * Format a raw numeric tick value for histogram x-axis.
+ * For percentage metrics (b12, iron, antifibrinolytic, adherence),
+ * multiply by 100 and append %. Otherwise display the raw value.
+ */
+function formatHistogramTick(value: number, xAxisVar: string): string {
   if (!Number.isFinite(value)) return '';
+  if (isPercentageMetric(xAxisVar)) {
+    const pct = value * 100;
+    return `${pct % 1 === 0 ? String(pct) : pct.toFixed(1)}%`;
+  }
   return value % 1 === 0 ? String(value) : value.toFixed(2);
 }
 
@@ -42,6 +56,13 @@ function getProviderLabelPosition(marker: number, data: ProviderChart['data'], d
   return 'insideTop' as const;
 }
 
+/** Human-readable label for chart series keys. */
+function formatSeriesLabel(name: string): string {
+  if (name === 'attending_provider') return 'Number of Providers';
+  if (name === 'All') return 'All Providers';
+  return name;
+}
+
 /** Build chart series from the first data row's keys. */
 function buildSeries(chart: ProviderChart) {
   if (!chart.data?.length) return [];
@@ -50,7 +71,7 @@ function buildSeries(chart: ProviderChart) {
     .map((name, idx) => ({
       name,
       color: idx % 2 === 0 ? MANTINE_BLUE : GOLD,
-      label: name,
+      label: formatSeriesLabel(name),
     }));
 }
 
@@ -241,9 +262,7 @@ export function ProviderChartCard({
             }}
             xAxisProps={{
               type: 'category',
-              domain: ['dataMin', 'dataMax'],
               padding: { left: 10, right: 10 },
-              tickFormatter: (value: string | number) => formatValueForDisplay(cfg.xAxisVar as never, Number(value), cfg.aggregation as keyof typeof AGGREGATION_OPTIONS, false),
             }}
           >
             <ChartAdornments
@@ -267,7 +286,7 @@ export function ProviderChartCard({
             xAxisProps={{
               type: 'category',
               padding: { left: 10, right: 10 },
-              tickFormatter: formatHistogramTick,
+              tickFormatter: (value: string | number) => formatHistogramTick(Number(value), cfg.xAxisVar),
             }}
           >
             <ChartAdornments

@@ -4,19 +4,28 @@ import {
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 import {
   AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChartTooltipProps, providerXAxisOptions,
+  TIME_AGGREGATION_OPTIONS,
 } from '../../../Types/application';
 
+/** Human-readable label for tooltip series names. */
+function formatSeriesName(name: string): string {
+  if (name === 'attending_provider') return 'Number of Providers';
+  return name;
+}
+
 /**
- * Format the tooltip header value. Histogram bin centers are raw aggregated
- * numbers and must NOT be run through formatValueForDisplay (which multiplies
- * percentage-unit fields by 100). Time-series labels are strings and displayed
- * as-is.
+ * Format the tooltip header label for histogram bins.
+ * For percentage metrics, multiply by 100 and append %.
  */
-function formatTooltipLabel(label: string | number | undefined): string {
-  if (label === undefined || label === null) return '';
-  if (typeof label === 'string') return label;
-  if (!Number.isFinite(label)) return '';
-  return label % 1 === 0 ? String(label) : label.toFixed(2);
+function formatBinLabel(value: number, xAxisVar: string): string {
+  if (!Number.isFinite(value)) return '';
+  const opt = [...dashboardYAxisOptions, ...providerXAxisOptions].find((o) => o.value === xAxisVar);
+  const avgUnit = (opt as { units?: { avg?: string } })?.units?.avg ?? '';
+  if (avgUnit.startsWith('%')) {
+    const pct = value * 100;
+    return `${pct % 1 === 0 ? String(pct) : pct.toFixed(1)}%`;
+  }
+  return value % 1 === 0 ? String(value) : value.toFixed(2);
 }
 
 /**
@@ -27,18 +36,28 @@ export function ProviderChartTooltip({
 }: ProviderChartTooltipProps) {
   if (!active || !payload?.length) return null;
 
-  // Resolve the human-readable name for the x-axis variable
-  const xVarOption = [...dashboardYAxisOptions, ...providerXAxisOptions].find((opt) => opt.value === xAxisVar);
-  const xVarLabel = xVarOption?.label?.[aggregation as keyof typeof AGGREGATION_OPTIONS] || xAxisVar;
+  // Determine if this is a time-series chart (xAxisVar is a time period like month/quarter/year)
+  const isTimeSeries = xAxisVar in TIME_AGGREGATION_OPTIONS;
+
+  // For time-series: show the time period label directly (e.g. "2022-Q3")
+  // For histograms: show a formatted header like "Average RBC Units: 2.33"
+  let headerContent: string;
+  if (isTimeSeries) {
+    // Just show the period label directly, no prefix
+    headerContent = label !== undefined && label !== null ? String(label) : '';
+  } else {
+    // Histogram: resolve the human-readable name for the x-axis metric
+    const xVarOption = [...dashboardYAxisOptions, ...providerXAxisOptions].find((opt) => opt.value === xAxisVar);
+    const xVarLabel = xVarOption?.label?.[aggregation as keyof typeof AGGREGATION_OPTIONS] || xAxisVar;
+    const formattedValue = typeof label === 'number' ? formatBinLabel(label, xAxisVar) : String(label ?? '');
+    headerContent = `${xVarLabel}: ${formattedValue}`;
+  }
 
   return (
     <Paper withBorder shadow="md" p="sm" radius="md">
       <Box mb={5}>
         <Text size="sm" fw={700}>
-          {xVarLabel}
-          :
-          {' '}
-          {formatTooltipLabel(label)}
+          {headerContent}
         </Text>
       </Box>
       {payload.map((item: unknown) => {
@@ -50,7 +69,7 @@ export function ProviderChartTooltip({
             }}
             />
             <Text size="xs">
-              {castItem.name}
+              {formatSeriesName(castItem.name)}
               :
               {' '}
               <Text component="span" fw={600}>
