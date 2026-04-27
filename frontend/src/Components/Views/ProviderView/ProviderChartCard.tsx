@@ -6,8 +6,8 @@ import { useMemo, useState } from 'react';
 import { BarChart, LineChart } from '@mantine/charts';
 import {
   AGGREGATION_OPTIONS,
+  providerViewYAxisOptions,
   ProviderChart, ProviderChartConfig,
-  dashboardYAxisOptions,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 import { ProviderChartTooltip } from './ProviderChartTooltip';
@@ -20,7 +20,7 @@ const GOLD = '#FFD43B';
  * Check whether a metric variable uses percentage display (its avg unit starts with %).
  */
 function isPercentageMetric(xAxisVar: string): boolean {
-  const opt = dashboardYAxisOptions.find((o) => o.value === xAxisVar);
+  const opt = providerViewYAxisOptions.find((o) => o.value === xAxisVar);
   const avgUnit = (opt as { units?: { avg?: string } })?.units?.avg ?? '';
   return avgUnit.startsWith('%');
 }

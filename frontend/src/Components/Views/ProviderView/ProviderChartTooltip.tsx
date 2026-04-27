@@ -3,7 +3,7 @@ import {
 } from '@mantine/core';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 import {
-  AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChartTooltipProps, providerXAxisOptions,
+  AGGREGATION_OPTIONS, providerViewYAxisOptions, ProviderChartTooltipProps,
   TIME_AGGREGATION_OPTIONS,
 } from '../../../Types/application';
 
@@ -19,7 +19,7 @@ function formatSeriesName(name: string): string {
  */
 function formatBinLabel(value: number, xAxisVar: string): string {
   if (!Number.isFinite(value)) return '';
-  const opt = [...dashboardYAxisOptions, ...providerXAxisOptions].find((o) => o.value === xAxisVar);
+  const opt = providerViewYAxisOptions.find((o) => o.value === xAxisVar);
   const avgUnit = (opt as { units?: { avg?: string } })?.units?.avg ?? '';
   if (avgUnit.startsWith('%')) {
     const pct = value * 100;
@@ -47,7 +47,7 @@ export function ProviderChartTooltip({
     headerContent = label !== undefined && label !== null ? String(label) : '';
   } else {
     // Histogram: resolve the human-readable name for the x-axis metric
-    const xVarOption = [...dashboardYAxisOptions, ...providerXAxisOptions].find((opt) => opt.value === xAxisVar);
+    const xVarOption = providerViewYAxisOptions.find((opt) => opt.value === xAxisVar);
     const xVarLabel = xVarOption?.label?.[aggregation as keyof typeof AGGREGATION_OPTIONS] || xAxisVar;
     const formattedValue = typeof label === 'number' ? formatBinLabel(label, xAxisVar) : String(label ?? '');
     headerContent = `${xVarLabel}: ${formattedValue}`;

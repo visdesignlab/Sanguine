@@ -613,9 +613,13 @@ export const dashboardYAxisOptions = [
   OVERALL_BLOOD_PRODUCT_COST,
   VISIT_COUNT,
   CASE_MIX_INDEX,
-  PRE_OP_ANEMIA_RATE,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
+
+export const providerViewYAxisOptions = [
+  ...dashboardYAxisOptions,
+  PRE_OP_ANEMIA_RATE,
+];
 
 // Dashboard aggregate y-axis variable type
 export type DashboardAggYAxisVar = `${keyof typeof AGGREGATION_OPTIONS}_${typeof dashboardYAxisVars[number]}`;
@@ -667,6 +671,7 @@ export const providerXAxisOptions = [
     (opt) => opt.value !== 'stroke' && opt.value !== 'death' && opt.value !== 'ecmo',
   ),
   PROVIDERS,
+  PRE_OP_ANEMIA_RATE,
 ];
 export const providerXAxisVars = providerXAxisOptions.map((opt) => opt.value);
 export const providerChartGroups = ['Anemia Management', 'Outcomes', 'Costs'] as const;

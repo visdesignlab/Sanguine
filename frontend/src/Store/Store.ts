@@ -32,6 +32,7 @@ import {
   TimePeriod,
   dashboardXAxisVars,
   dashboardYAxisOptions,
+  providerViewYAxisOptions,
   DEFAULT_UNIT_COSTS,
 } from '../Types/application';
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
@@ -641,7 +642,7 @@ export class ProvidersStore {
 
         charts[chartKey] = {
           group: group || 'Ungrouped',
-          title: dashboardYAxisOptions.find((o) => o.value === xVar)?.label?.[agg] ?? xVar,
+          title: providerViewYAxisOptions.find((o) => o.value === xVar)?.label?.[agg] ?? xVar,
           data: this.buildHistogramData(values, yVar, xVar, recommendedMark),
           dataKey: xVar,
           orientation: 'horizontal',
@@ -782,7 +783,7 @@ export class ProvidersStore {
         const selMap = this.aggregateByTimePeriod(selRows, xVar, alias, agg);
         const points = this.buildTimeSeriesPoints(allMap, selMap, xVar, providerLabel);
 
-        const yOption = dashboardYAxisOptions.find((o) => o.value === cfg.yAxisVar);
+        const yOption = providerViewYAxisOptions.find((o) => o.value === cfg.yAxisVar);
         const chartTitle = (yOption as { label?: Record<string, string> })?.label?.[agg as 'sum' | 'avg'] ?? String(cfg.yAxisVar);
         const recommendedMark = (yOption as { recommendation?: Record<string, number> })?.recommendation?.[agg] ?? NaN;
 
