@@ -1,11 +1,11 @@
 import {
   IconArrowDownRight,
   IconArrowUpRight,
+  IconTrash,
 } from '@tabler/icons-react';
 import {
   Card,
-  CloseButton,
-  Group, LoadingOverlay, SimpleGrid, Text,
+  Flex, Group, LoadingOverlay, SimpleGrid, Text,
   Title,
   Tooltip,
 } from '@mantine/core';
@@ -69,6 +69,7 @@ export function StatsGrid() {
 
       // Determine if this card is currently hovered
       const isHovered = hoveredIdx === idx;
+      const CardIcon = isHovered ? IconTrash : Icon;
 
       const statCard = (
         <Card
@@ -82,38 +83,53 @@ export function StatsGrid() {
             {/** Stat Title */}
             <Text
               className={`${gridItemStyles.variableTitle} ${isHovered ? gridItemStyles.active : ''}`.trim()}
-              style={{ flex: 1, textAlign: 'left' }}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                textAlign: 'left',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+              title={statConfig.title}
             >
               {statConfig.title}
             </Text>
             <Group gap={4} align="center" style={{ justifyContent: 'flex-end' }}>
               {/** Stat Icon */}
-              <Icon
-                className={`${statsGridStyles.icon} ${isHovered ? statsGridStyles.iconHovered : ''}`.trim()}
+              <CardIcon
+                className={`${statsGridStyles.icon} ${isHovered ? statsGridStyles.deleteIcon : ''}`.trim()}
                 size={cardIconSize}
                 stroke={cardIconStroke}
+                onClick={isHovered ? () => handleRemoveStat(statConfig.statId) : undefined}
+                style={{
+                  cursor: isHovered ? 'pointer' : 'default',
+                }}
               />
-              {/** Stat Close / Delete Button */}
-              {isHovered && (
-              <CloseButton size="xs" onClick={() => handleRemoveStat(statConfig.statId)} />
-              )}
             </Group>
           </Group>
-          <Group align="center" gap={5} mt="sm">
+          <Flex align="center" gap={8} mt="sm" className={statsGridStyles.valueRow}>
             {/** Stat Value */}
-            <Title order={2}>{statValue}</Title>
+            <Title
+              order={2}
+              className={statsGridStyles.metricValue}
+            >
+              {statValue}
+            </Title>
             {/** Stat Sparkline */}
-            <Sparkline
-              w={60}
-              h={25}
-              data={statSparklineData}
-              curveType="linear"
-              fillOpacity={0.4}
-              strokeWidth={0.6}
-              color={statColor}
-              mb={-4}
-            />
-          </Group>
+            <div className={statsGridStyles.sparklineWrap}>
+              <Sparkline
+                w={60}
+                h={25}
+                data={statSparklineData}
+                curveType="linear"
+                fillOpacity={0.4}
+                strokeWidth={0.6}
+                color={statColor}
+                mb={-4}
+              />
+            </div>
+          </Flex>
           {/* Comparison Text */}
           {/** Stat % Change in Value */}
           <Group align="center" mt="sm" gap={2}>

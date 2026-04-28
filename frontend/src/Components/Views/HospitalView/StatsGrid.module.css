@@ -26,3 +26,23 @@
 .iconHovered {
   color: var(--mantine-color-blue-6);
 }
+
+.deleteIcon {
+  color: var(--mantine-color-red-6);
+}
+
+.valueRow {
+  max-width: 100%;
+}
+
+.metricValue {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.sparklineWrap {
+  flex-shrink: 0;
+  margin-left: auto;
+}
