@@ -73,6 +73,9 @@ export function formatValueForDisplay(
     return `${unit}${displayValue}`;
   }
   if (isPercent) {
+    if (!showFullUnits && yAxisVar.includes('adherent')) {
+      return `${displayValue}% adherent`;
+    }
     return showFullUnits ? `${displayValue}${unit}` : `${displayValue}%`;
   }
   return showFullUnits ? `${displayValue} ${unit}`.trim() : displayValue;
