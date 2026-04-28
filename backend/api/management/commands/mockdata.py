@@ -12,6 +12,7 @@ import string
 import tempfile
 import time
 
+from django.utils import timezone
 from api.views.utils.utils import get_all_cpt_code_filters
 
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -55,7 +56,7 @@ class Command(BaseCommand):
             batch = []
             row_count = 0
             for r in row_gen:
-                batch.append(r)
+                batch.append({k: (r"\N" if v is None else v) for k, v in r.items()})
                 row_count += 1
                 if len(batch) >= batch_size:
                     writer.writerows(batch)
@@ -142,6 +143,8 @@ class Command(BaseCommand):
 
         # Initialize the Faker object
         self.generation_start_time = time.time()
+        now = timezone.now()
+        five_years_ago = now - timedelta(days=5*365)
         Faker.seed(42)
         fake = Faker()
         fake.add_provider(date_time)
@@ -315,11 +318,10 @@ class Command(BaseCommand):
             for pat, bad_pat in pats:
                 num_visits = 3 if bad_pat else 1
                 for _ in range(num_visits):
-                    year = fake.random_int(min=2020, max=2024)
                     admit_date = make_aware(
                         fake.date_time_between(
-                            start_date=datetime(year, 1, 1),
-                            end_date=datetime(year , 12, 31).date()
+                            start_date=five_years_ago,
+                            end_date=now
                         )
                     )
                     # Right-skewed LOS: median ~3-4 days, tail to 45
@@ -334,8 +336,17 @@ class Command(BaseCommand):
                         los_days = random.randint(11, 20)
                     else:
                         los_days = random.randint(21, 45)
-                    discharge_date = admit_date + timedelta(days=los_days)
-                    clinical_los = los_days
+                    
+                    projected_discharge = admit_date + timedelta(days=los_days)
+                    if projected_discharge > now:
+                        discharge_date = None
+                        clinical_los = None
+                        effective_dsch = now
+                    else:
+                        discharge_date = projected_discharge
+                        clinical_los = los_days
+                        effective_dsch = projected_discharge
+
                     age_at_adm = (admit_date.date() - pat["birth_date"].date()).days // 365
                     # CCI with realistic prevalences and correct Charlson weights
                     # Each component: (probability_present, CCI_weight)
@@ -380,7 +391,7 @@ class Command(BaseCommand):
                         "epic_pat_id": fake.unique.random_number(digits=10),
                         "hsp_account_id": fake.unique.random_number(digits=10),
                         "adm_dtm": admit_date.strftime(DATE_FORMAT),
-                        "dsch_dtm": discharge_date.strftime(DATE_FORMAT),
+                        "dsch_dtm": discharge_date.strftime(DATE_FORMAT) if discharge_date else None,
                         "clinical_los": clinical_los,
                         "age_at_adm": age_at_adm,
                         "pat_class_desc": random.choices(pat_class_choices, weights=pat_class_weights, k=1)[0],
@@ -388,24 +399,24 @@ class Command(BaseCommand):
                         "invasive_vent_f": "Y" if vent else None,
                         "total_vent_mins": vent_mins,
                         "total_vent_days": vent_days,
-                        "apr_drg_code": drg_code,
+                        "apr_drg_code": drg_code if discharge_date else None,
                         "apr_drg_rom": fake.random_element(elements=(1, 2, 3, 4, None)),
                         "apr_drg_soi": fake.random_element(elements=(1, 2, 3, 4, None)),
-                        "apr_drg_desc": drg_desc,
+                        "apr_drg_desc": drg_desc if discharge_date else None,
                         "apr_drg_weight": (
                             round(random.uniform(0.5, 2.5), 4) if (r := random.random()) < 0.8
                             else round(random.uniform(2.5, 5.0), 4) if r < 0.95
                             else round(random.uniform(5.0, 25.0), 4)
-                        ),
+                        ) if discharge_date else None,
                         "ms_drg_weight": (
                             round(random.uniform(0.5, 2.5), 4) if (r := random.random()) < 0.8
                             else round(random.uniform(2.5, 5.0), 4) if r < 0.95
                             else round(random.uniform(5.0, 25.0), 4)
-                        ),
+                        ) if discharge_date else None,
                         **cci,
                         "cci_score": cci_score,
                         "_adm_dtm": admit_date,
-                        "_dsch_dtm": discharge_date,
+                        "_dsch_dtm": effective_dsch,
                     }
                     visits.append((pat, bad_pat, visit))
                     visit_no += 1
@@ -695,9 +706,9 @@ class Command(BaseCommand):
                         result_value = fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=10, max_value=16)
                 else:
                     if last_lab["result_value"] < 6:
-                        result_value = last_lab["result_value"] + 2
+                        result_value = last_lab["result_value"] + 0.5
                     elif last_lab["result_value"] < 8:
-                        result_value = last_lab["result_value"] + 1
+                        result_value = last_lab["result_value"] + 0.2
                     else:
                         result_value = fake.pydecimal(
                             left_digits=2,
@@ -962,7 +973,7 @@ class Command(BaseCommand):
         def gen_transfusions():
             transfusion_id_counter = 1
             for rank, (surg, lab) in enumerate(labs):
-                num_transfusions = random.choices([0, 1, 2, 3, 4], weights=[0.94, 0.03, 0.015, 0.01, 0.005])[0]
+                num_transfusions = random.choices([0, 1, 2, 3, 4], weights=[0.70, 0.15, 0.10, 0.03, 0.02])[0]
                 for t in range(num_transfusions):
                     rcb_units = 0
                     cell_saver_ml = 0
@@ -973,8 +984,8 @@ class Command(BaseCommand):
                         elif lab["result_value"] < 7:
                             rcb_units = fake.random_int(min=1, max=2)
                             cell_saver_ml = fake.random_int(min=100, max=500)
-                        elif lab["result_value"] < 8:
-                            rcb_units = fake.random_int(min=0, max=1)
+                        elif lab["result_value"] < 10:
+                            rcb_units = fake.random_int(min=1, max=2)
                             cell_saver_ml = fake.random_int(min=100, max=200)
 
                     rbcs = rcb_units
@@ -997,10 +1008,10 @@ class Command(BaseCommand):
                     # PLT if PLT count below 10,000
                     plt_units = 0
                     if lab["result_desc"] in ["PLT", "Platelet Count"]:
-                        if lab["result_value"] < 10000:
+                        if lab["result_value"] < 50000:
                             # One plt unit = ~6 Pooled WB Units
                             plt_units = fake.random_int(min=1, max=2)
-                        elif lab["result_value"] < 20000:
+                        elif lab["result_value"] < 100000:
                             plt_units = fake.random_int(min=0, max=1)
                     
                     # Add to MTP
