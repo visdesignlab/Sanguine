@@ -1579,6 +1579,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               });
             }}
             w={140}
+            comboboxProps={{ width: 160 }}
             clearable
           />
           {/** Row Selection */}
@@ -1609,6 +1610,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             onChange={handleColumnsChange}
             value={chartConfig.columns.map((c) => c.colVar)}
             w={160}
+            comboboxProps={{ width: 260, position: 'bottom-end' }}
             placeholder={`${chartConfig.columns.length} Selected`}
             styles={{
               pill: { display: 'none' },
