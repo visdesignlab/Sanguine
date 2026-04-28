@@ -422,7 +422,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
   // Flatten nested series data: store format is [{name, color, data: case[]}, ...]
   const rawData = useMemo(() => {
-    const storeData = store.exploreChartData[chartConfig.chartId];
+    const storeData = store.departmentChartData[chartConfig.chartId];
     if (!storeData) return [] as DumbbellCase[];
     // Check if data is in the old series format ({data: [...]})
     if (Array.isArray(storeData) && storeData.length > 0 && 'data' in storeData[0]) {
@@ -430,7 +430,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       return ((storeData as unknown) as { data: DumbbellCase[] }[]).flatMap((s) => s.data);
     }
     return (storeData as DumbbellCase[]) || [];
-  }, [store.exploreChartData, chartConfig.chartId]);
+  }, [store.departmentChartData, chartConfig.chartId]);
   const processedData = useMemo(
     () => getProcessedScatterData(rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey),
     [rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey],
@@ -924,7 +924,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
               allowDeselect={false}
               leftSection={<Title order={6} c="dimmed" style={{ fontSize: '10px' }}>Y</Title>}
             />
-            <CloseButton onClick={() => store.removeExploreChart(chartConfig.chartId)} />
+            <CloseButton onClick={() => store.removeDepartmentChart(chartConfig.chartId)} />
           </Flex>
         </Flex>
 

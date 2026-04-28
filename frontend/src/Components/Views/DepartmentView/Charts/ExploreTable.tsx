@@ -34,7 +34,14 @@ import { BarChart } from '@mantine/charts';
 import { Store } from '../../../../Store/Store';
 import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3Utils';
 import {
-  ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions, ExploreTableColumnOptionsGrouped, ExploreTableRowOptions, ExploreTableGroupByOptions,
+  DepartmentTableRow as ExploreTableRow,
+  DepartmentTableData as ExploreTableData,
+  DepartmentTableConfig as ExploreTableConfig,
+  DepartmentTableColumn as ExploreTableColumn,
+  DepartmentTableColumnOptions as ExploreTableColumnOptions,
+  DepartmentTableColumnOptionsGrouped as ExploreTableColumnOptionsGrouped,
+  DepartmentTableRowOptions as ExploreTableRowOptions,
+  DepartmentTableGroupByOptions as ExploreTableGroupByOptions,
 } from '../../../../Types/application';
 import { backgroundHoverColor, smallHoverColor } from '../../../../Theme/mantineTheme';
 import { getDepartmentContextLabel } from '../../../../Utils/departmentContext';
@@ -744,11 +751,11 @@ const HistogramFooter = observer(({
   );
 });
 
-// MARK: - ExploreTable
+// MARK: - DepartmentTable
 
-const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfig }) => {
+const DepartmentTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfig }) => {
   const store = useContext(Store);
-  const chartData = store.exploreChartData[chartConfig.chartId] as ExploreTableData;
+  const chartData = store.departmentChartData[chartConfig.chartId] as ExploreTableData;
 
   // Compute department context labels for tooltips
   const fromLabel = useMemo(
@@ -960,7 +967,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       title: newTitle,
       groupByVar,
     };
-    store.updateExploreChartConfig(updatedConfig);
+    store.updateDepartmentChartConfig(updatedConfig);
 
     // If the new row variable is year or quarter, sort by it chronologically
     if (['year', 'quarter'].includes(value)) {
@@ -1020,7 +1027,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       ...chartConfig,
       columns: newCols,
     };
-    store.updateExploreChartConfig(updatedConfig);
+    store.updateDepartmentChartConfig(updatedConfig);
   };
 
   // Definitions of columns (their styles and values)
@@ -1060,7 +1067,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         colVar, type, title, numericTextVisible, aggregation: agg,
       } = colConfig;
 
-      // All explore table department context tooltips should use provider-based phrasing.
+      // All department table context tooltips should use provider-based phrasing.
       const deptLabel = fromLabel;
 
       // Extract values for footer
@@ -1499,7 +1506,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
   // Data Table Columns -------
   const columnVars = `${chartConfig.columns.map((c) => c.colVar).join(',')}|${chartConfig.groupByVar || ''}`;
-  const columnStorageKey = `ExploreTable-${chartConfig.chartId}-${columnVars}`;
+  const columnStorageKey = `DepartmentTable-${chartConfig.chartId}-${columnVars}`;
   const columnDefs = useMemo(
     () => generateColumnDefs(chartConfig.columns),
     [generateColumnDefs, chartConfig.columns],
@@ -1551,7 +1558,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                   aggregation: (c.type === 'text' || c.aggregation === 'none') ? c.aggregation : newAgg,
                 }));
 
-                store.updateExploreChartConfig({
+                store.updateDepartmentChartConfig({
                   ...chartConfig,
                   aggregation: newAgg,
                   columns: newCols,
@@ -1573,7 +1580,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             data={['year', 'quarter'].includes(chartConfig.rowVar) ? ExploreTableGroupByOptions.filter((o) => o.value !== 'year') : ExploreTableGroupByOptions}
             value={chartConfig.groupByVar || null}
             onChange={(val) => {
-              store.updateExploreChartConfig({
+              store.updateDepartmentChartConfig({
                 ...chartConfig,
                 groupByVar: val || undefined,
               });
@@ -1617,7 +1624,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             }}
           />
           {/** Close Chart */}
-          <CloseButton onClick={() => { store.removeExploreChart(chartConfig.chartId); }} />
+          <CloseButton onClick={() => { store.removeDepartmentChart(chartConfig.chartId); }} />
         </Flex>
       </Flex>
 
@@ -1637,7 +1644,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           }}
         />
         <DataTable<ExploreTableRow>
-          className="explore-table-data-table"
+          className="department-table-data-table"
           rowClassName={() => (chartConfig.groupByVar ? 'fat-row' : '')}
           borderRadius="sm"
           pinFirstColumn
@@ -1664,4 +1671,4 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   );
 });
 
-export default ExploreTable;
+export default DepartmentTable;

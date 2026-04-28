@@ -5,7 +5,7 @@ import {
 import { useObserver } from 'mobx-react-lite';
 import gridItemStyles from '../GridLayoutItem.module.css';
 import { Store } from '../../../Store/Store';
-import { ExploreStatData } from '../../../Types/application';
+import { DepartmentStatData } from '../../../Types/application';
 import { getIconForVar } from '../../../Utils/icons';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 
@@ -15,11 +15,11 @@ export function DepartmentStatsGrid() {
   const { cardIconSize, cardIconStroke } = useThemeConstants();
 
   return useObserver(() => {
-    if (store.exploreStatConfigs.length === 0) return null;
+    if (store.departmentStatConfigs.length === 0) return null;
 
-    const statCards = store.exploreStatConfigs.map((statConfig, idx) => {
+    const statCards = store.departmentStatConfigs.map((statConfig, idx) => {
       const key = `${statConfig.aggregation}_${statConfig.yAxisVar}`;
-      const statData = store.exploreStatData[key] as ExploreStatData[string] | undefined;
+      const statData = store.departmentStatData[key] as DepartmentStatData[string] | undefined;
       const statValue = statData?.value || '-';
       const isHovered = hoveredIdx === idx;
       const Icon = getIconForVar(statConfig.yAxisVar);
@@ -50,7 +50,7 @@ export function DepartmentStatsGrid() {
               </div>
             </Group>
             {isHovered && (
-              <CloseButton size="xs" onClick={() => store.removeExploreStat(statConfig.statId)} />
+              <CloseButton size="xs" onClick={() => store.removeDepartmentStat(statConfig.statId)} />
             )}
           </Group>
         </Card>
