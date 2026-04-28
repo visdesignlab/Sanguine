@@ -8,6 +8,8 @@ describe('Store - RootStore', () => {
   let store: RootStore;
 
   beforeEach(() => {
+    // Clear the URL hash so trrack's loadFromUrl does not bleed state across tests
+    window.history.replaceState(null, '', window.location.pathname);
     store = new RootStore();
     // Initialize provenance so actions will work
     store.init();
@@ -592,6 +594,230 @@ describe('Store - RootStore', () => {
       };
       store.actions.resetProcedureFilters(filters);
       expect(store.state.filterValues.departments).toEqual(filters.departments);
+    });
+  });
+
+  describe('Filters Applied Count', () => {
+    test('dateFiltersAppliedCount is 0 by default', () => {
+      expect(store.dateFiltersAppliedCount).toBe(0);
+    });
+
+    test('dateFiltersAppliedCount is 1 after changing dateFrom', () => {
+      store.actions.updateFilter('dateFrom', new Date('2020-01-01').toISOString());
+      expect(store.dateFiltersAppliedCount).toBe(1);
+    });
+
+    test('dateFiltersAppliedCount is 0 when activeTab is Provider', () => {
+      store.actions.updateFilter('dateFrom', new Date('2020-01-01').toISOString());
+      store.actions.setUiState({ activeTab: 'Provider' });
+      expect(store.dateFiltersAppliedCount).toBe(0);
+    });
+
+    test('bloodComponentFiltersAppliedCount counts narrowed ranges', () => {
+      expect(store.bloodComponentFiltersAppliedCount).toBe(0);
+      store.actions.updateFilter('rbc_units', [10, 100]);
+      expect(store.bloodComponentFiltersAppliedCount).toBe(1);
+      store.actions.updateFilter('ffp_units', [5, 50]);
+      expect(store.bloodComponentFiltersAppliedCount).toBe(2);
+    });
+
+    test('medicationsFiltersAppliedCount counts non-null medication filters', () => {
+      expect(store.medicationsFiltersAppliedCount).toBe(0);
+      store.actions.updateFilter('b12', true);
+      store.actions.updateFilter('iron', false);
+      expect(store.medicationsFiltersAppliedCount).toBe(2);
+    });
+
+    test('outcomeFiltersAppliedCount counts narrowed los and non-null booleans', () => {
+      expect(store.outcomeFiltersAppliedCount).toBe(0);
+      store.actions.updateFilter('los', [0, 30]);
+      expect(store.outcomeFiltersAppliedCount).toBe(1);
+      store.actions.updateFilter('death', true);
+      store.actions.updateFilter('vent', false);
+      expect(store.outcomeFiltersAppliedCount).toBe(3);
+    });
+
+    test('procedureFiltersAppliedCount counts departments and procedureIds independently', () => {
+      expect(store.procedureFiltersAppliedCount).toBe(0);
+      store.actions.updateProcedureFilters({ departments: ['ICU'], procedureIds: [] });
+      expect(store.procedureFiltersAppliedCount).toBe(1);
+      store.actions.updateProcedureFilters({ departments: ['ICU'], procedureIds: ['p1'] });
+      expect(store.procedureFiltersAppliedCount).toBe(2);
+    });
+
+    test('providerDepartmentAppliedCount unions departments with procedureId prefixes', () => {
+      store.actions.updateProcedureFilters({
+        departments: ['ICU'],
+        procedureIds: ['ICU__proc1', 'OR__proc2', 'noprefix'],
+      });
+      // ICU (from both) + OR (from procedureId prefix) = 2 unique departments
+      expect(store.providerDepartmentAppliedCount).toBe(2);
+    });
+
+    test('procedureGroupsAppliedCount is 0 when hierarchy is null', () => {
+      store.actions.updateProcedureFilters({ departments: [], procedureIds: ['p1'] });
+      expect(store.procedureHierarchy).toBeNull();
+      expect(store.procedureGroupsAppliedCount).toBe(0);
+    });
+
+    test('procedureGroupsAppliedCount counts groups with at least one selected procedure', () => {
+      store.procedureHierarchy = {
+        version: '1',
+        source: 'test',
+        department_level: 'department' as const,
+        procedure_level: 'procedure' as const,
+        departments: [
+          {
+            id: 'dept1',
+            name: 'Department 1',
+            visit_count: 0,
+            procedures: [{
+              id: 'p1', name: 'Proc 1', visit_count: 0, cpt_codes: [],
+            }],
+          },
+          {
+            id: 'dept2',
+            name: 'Department 2',
+            visit_count: 0,
+            procedures: [{
+              id: 'p2', name: 'Proc 2', visit_count: 0, cpt_codes: [],
+            }],
+          },
+        ],
+      };
+
+      store.actions.updateProcedureFilters({ departments: [], procedureIds: ['p1'] });
+      expect(store.procedureGroupsAppliedCount).toBe(1);
+
+      store.actions.updateProcedureFilters({ departments: [], procedureIds: ['p1', 'p2'] });
+      expect(store.procedureGroupsAppliedCount).toBe(2);
+    });
+
+    test('totalFiltersAppliedCount sums all filter category counts', () => {
+      store.actions.updateFilter('dateFrom', new Date('2020-01-01').toISOString());
+      store.actions.updateFilter('rbc_units', [10, 100]);
+      store.actions.updateFilter('b12', true);
+      store.actions.updateFilter('los', [0, 30]);
+      store.actions.updateProcedureFilters({ departments: ['ICU'], procedureIds: [] });
+
+      const expected = store.dateFiltersAppliedCount
+        + store.bloodComponentFiltersAppliedCount
+        + store.medicationsFiltersAppliedCount
+        + store.outcomeFiltersAppliedCount
+        + store.procedureFiltersAppliedCount;
+
+      expect(store.totalFiltersAppliedCount).toBe(expected);
+      expect(store.totalFiltersAppliedCount).toBe(5);
+    });
+  });
+
+  describe('Saved State Name Generation', () => {
+    test('returns "State 1" when only "Initial State" exists', () => {
+      expect(store.getNextStateName()).toBe('State 1');
+    });
+
+    test('returns "State 2" after saving "State 1"', () => {
+      store.saveState('State 1');
+      expect(store.getNextStateName()).toBe('State 2');
+    });
+
+    test('returns "State N+1" based on the highest existing State number', () => {
+      store.saveState('State 5');
+      expect(store.getNextStateName()).toBe('State 6');
+    });
+
+    test('non-"State N" names do not affect the counter', () => {
+      store.saveState('My snapshot');
+      expect(store.getNextStateName()).toBe('State 1');
+    });
+  });
+
+  describe('Selection Time Period Expansion', () => {
+    test('adding a year populates 17 entries (year + 4 quarters + 12 months)', async () => {
+      await store.addSelectedTimePeriod('2024');
+      expect(store.selectedTimePeriods).toHaveLength(17);
+      expect(store.selectedTimePeriods).toContain('2024');
+      expect(store.selectedTimePeriods).toContain('2024-Q1');
+      expect(store.selectedTimePeriods).toContain('2024-Q4');
+      expect(store.selectedTimePeriods).toContain('2024-Jan');
+      expect(store.selectedTimePeriods).toContain('2024-Dec');
+    });
+
+    test('adding a quarter populates the quarter plus its 3 months', async () => {
+      await store.addSelectedTimePeriod('2024-Q2');
+      expect(store.selectedTimePeriods).toHaveLength(4);
+      expect(store.selectedTimePeriods).toEqual(
+        expect.arrayContaining(['2024-Q2', '2024-Apr', '2024-May', '2024-Jun']),
+      );
+    });
+
+    test('adding a month populates exactly that one entry', async () => {
+      await store.addSelectedTimePeriod('2024-Jan');
+      expect(store.selectedTimePeriods).toEqual(['2024-Jan']);
+    });
+
+    test('adding the same year twice does not duplicate entries', async () => {
+      await store.addSelectedTimePeriod('2024');
+      await store.addSelectedTimePeriod('2024');
+      expect(store.selectedTimePeriods).toHaveLength(17);
+    });
+
+    test('removing a quarter removes only its sub-periods', async () => {
+      await store.addSelectedTimePeriod('2024');
+      await store.removeSelectedTimePeriod('2024-Q1');
+      // Started with 17 (year + 4 quarters + 12 months); removed Q1 + Jan/Feb/Mar = 4 entries
+      expect(store.selectedTimePeriods).toHaveLength(13);
+      expect(store.selectedTimePeriods).not.toContain('2024-Q1');
+      expect(store.selectedTimePeriods).not.toContain('2024-Jan');
+      expect(store.selectedTimePeriods).not.toContain('2024-Feb');
+      expect(store.selectedTimePeriods).not.toContain('2024-Mar');
+      expect(store.selectedTimePeriods).toContain('2024');
+      expect(store.selectedTimePeriods).toContain('2024-Q2');
+      expect(store.selectedTimePeriods).toContain('2024-Apr');
+    });
+
+    test('adding an empty string is a no-op', async () => {
+      await store.addSelectedTimePeriod('');
+      expect(store.selectedTimePeriods).toHaveLength(0);
+    });
+  });
+
+  describe('Department View Width Clamping', () => {
+    test('clamps values below 250 up to 250', () => {
+      store.setDepartmentViewQuestionsWidth(100);
+      expect(store.departmentViewQuestionsWidth).toBe(250);
+    });
+
+    test('clamps values above 800 down to 800', () => {
+      store.setDepartmentViewQuestionsWidth(1000);
+      expect(store.departmentViewQuestionsWidth).toBe(800);
+    });
+
+    test('keeps values within range unchanged', () => {
+      store.setDepartmentViewQuestionsWidth(500);
+      expect(store.departmentViewQuestionsWidth).toBe(500);
+    });
+  });
+
+  describe('Filter Values Merging', () => {
+    test('exposes dateFrom and dateTo as Date instances', () => {
+      expect(store.filterValues.dateFrom).toBeInstanceOf(Date);
+      expect(store.filterValues.dateTo).toBeInstanceOf(Date);
+    });
+
+    test('reflects updated blood-component range while keeping other defaults', () => {
+      store.actions.updateFilter('rbc_units', [5, 50]);
+      expect(store.filterValues.rbc_units).toEqual([5, 50]);
+      expect(store.filterValues.ffp_units).toEqual([0, MANUAL_INFINITY]);
+      expect(store.filterValues.b12).toBeNull();
+    });
+
+    test('falls back to initial defaults for departments and procedureIds when state is empty', () => {
+      // Default state should expose arrays for both
+      expect(Array.isArray(store.filterValues.departments)).toBe(true);
+      expect(Array.isArray(store.filterValues.procedureIds)).toBe(true);
+      expect(store.filterValues.departments).toEqual([]);
+      expect(store.filterValues.procedureIds).toEqual([]);
     });
   });
 });
