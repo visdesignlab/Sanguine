@@ -1598,14 +1598,10 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           {/** Add Column */}
           <MultiSelect
             leftSection={(
-              <Flex gap={8} ml={8} align="center" style={{ whiteSpace: 'nowrap' }}>
-                <Tooltip label="Measures for columns" position="top" withArrow>
-                  <IconColumns3 size={18} style={{ opacity: 0.6 }} />
-                </Tooltip>
-                <Text size="sm">{`${chartConfig.columns.length} Selected`}</Text>
-              </Flex>
+              <Tooltip label="Measures for columns" position="top" withArrow>
+                <IconColumns3 size={18} style={{ opacity: 0.6 }} />
+              </Tooltip>
             )}
-            leftSectionWidth={100}
             searchable
             clearable={false}
             nothingFoundMessage="No options"
@@ -1613,9 +1609,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             onChange={handleColumnsChange}
             value={chartConfig.columns.map((c) => c.colVar)}
             w={160}
+            placeholder={`${chartConfig.columns.length} Selected`}
             styles={{
               pill: { display: 'none' },
-              input: { paddingLeft: 100 },
             }}
           />
           {/** Close Chart */}
