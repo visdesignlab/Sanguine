@@ -1,5 +1,5 @@
 import {
-  Card,
+  Card, Box,
   Divider, Flex, Stack, Title, Tooltip, Text,
   Button,
   Select,
@@ -26,6 +26,7 @@ import {
 } from '../../../Utils/screenshotUtils';
 import { AddChartModal } from './AddChartModal';
 import { ProviderChartCard } from './ProviderChartCard';
+import layoutClasses from '../ViewLayout.module.css';
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -146,72 +147,76 @@ export const ProviderView = observer(() => {
         providersStore={store.providersStore}
       />
 
-      {/* Toolbar */}
-      <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-        <Title order={3}>Providers</Title>
-        <Flex direction="row" align="center" gap="md" ml="auto">
-          {/* Visit Count */}
-          <Tooltip label="Visible visits after filters" position="bottom">
-            <Title order={5} c="dimmed" fw={400}>
-              {`Showing ${store.filteredVisitsLength.toLocaleString()} of ${store.allVisitsLength.toLocaleString()} Visits`}
-            </Title>
-          </Tooltip>
-          {/* Export menu */}
-          <Tooltip label="Export View" position="bottom">
-            <Menu
-              withinPortal
-              shadow="md"
-              trigger="hover"
-              closeOnItemClick={false}
-              opened={exportMenuOpened}
-              onOpen={() => setExportMenuOpened(true)}
-              onClose={() => { if (!sharingInProgress) setExportMenuOpened(false); }}
-            >
-              <Menu.Target>
-                <ActionIcon size="lg" aria-label="Export View">
-                  <IconShare2 stroke={iconStroke} />
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item leftSection={<IconDownload size={16} />} onClick={() => captureView('download')}>
-                  Download View
-                </Menu.Item>
-                <Menu.Item leftSection={<IconShare size={16} />} onClick={() => captureView('share')}>
-                  Share View
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Tooltip>
-          {/* Date Range Picker */}
-          <DatePickerInput
-            type="range"
-            presets={datePresets}
-            defaultValue={[dayjs().format(DATE_FORMAT), dayjs().format(DATE_FORMAT)]}
-            defaultLevel="month"
-            leftSection={<IconCalendarWeek size={18} stroke={1} />}
-            placeholder="Pick dates range"
-            value={dateRange}
-            onChange={onDateRangeChange}
-          />
-          {/* Select Provider */}
-          <Select
-            leftSection={<IconSearch size={18} stroke={1} />}
-            searchable
-            data={store.providersStore.providerList}
-            value={store.providersStore.selectedProvider}
-            w="fit-content"
-            style={{ minWidth: 180 }}
-            onChange={(val) => { if (store.providersStore) store.providersStore.selectedProvider = val; }}
-          />
-          {/* Add Chart */}
-          <Button onClick={openModal}>
-            <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
-            Add Chart
-          </Button>
-        </Flex>
-      </Flex>
+      <Box component="header" className={layoutClasses.stickyHeader}>
+        <Stack gap="lg">
+          {/* Toolbar */}
+          <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
+            <Title order={3}>Providers</Title>
+            <Flex direction="row" align="center" gap="md" ml="auto">
+              {/* Visit Count */}
+              <Tooltip label="Visible visits after filters" position="bottom">
+                <Title order={5} c="dimmed" fw={400}>
+                  {`Showing ${store.filteredVisitsLength.toLocaleString()} of ${store.allVisitsLength.toLocaleString()} Visits`}
+                </Title>
+              </Tooltip>
+              {/* Export menu */}
+              <Tooltip label="Export View" position="bottom">
+                <Menu
+                  withinPortal
+                  shadow="md"
+                  trigger="hover"
+                  closeOnItemClick={false}
+                  opened={exportMenuOpened}
+                  onOpen={() => setExportMenuOpened(true)}
+                  onClose={() => { if (!sharingInProgress) setExportMenuOpened(false); }}
+                >
+                  <Menu.Target>
+                    <ActionIcon size="lg" aria-label="Export View">
+                      <IconShare2 stroke={iconStroke} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item leftSection={<IconDownload size={16} />} onClick={() => captureView('download')}>
+                      Download View
+                    </Menu.Item>
+                    <Menu.Item leftSection={<IconShare size={16} />} onClick={() => captureView('share')}>
+                      Share View
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              </Tooltip>
+              {/* Date Range Picker */}
+              <DatePickerInput
+                type="range"
+                presets={datePresets}
+                defaultValue={[dayjs().format(DATE_FORMAT), dayjs().format(DATE_FORMAT)]}
+                defaultLevel="month"
+                leftSection={<IconCalendarWeek size={18} stroke={1} />}
+                placeholder="Pick dates range"
+                value={dateRange}
+                onChange={onDateRangeChange}
+              />
+              {/* Select Provider */}
+              <Select
+                leftSection={<IconSearch size={18} stroke={1} />}
+                searchable
+                data={store.providersStore.providerList}
+                value={store.providersStore.selectedProvider}
+                w="fit-content"
+                style={{ minWidth: 180 }}
+                onChange={(val) => { if (store.providersStore) store.providersStore.selectedProvider = val; }}
+              />
+              {/* Add Chart */}
+              <Button onClick={openModal}>
+                <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+                Add Chart
+              </Button>
+            </Flex>
+          </Flex>
 
-      <Divider />
+          <Divider />
+        </Stack>
+      </Box>
 
       {/* Screenshot target */}
       <div ref={screenshotRef} data-screenshot-target>
