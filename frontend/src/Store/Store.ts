@@ -1484,30 +1484,29 @@ export class RootStore {
         MIN(min_adm_dtm) AS min_adm,
         MAX(max_dsch_dtm) AS max_dsch,
 
-        MIN(rbc_units) AS min_rbc,
-        MAX(rbc_units) AS max_rbc,
-        approx_quantile(rbc_units, ${percentileClamp}) AS stats_max_rbc,
+        MIN(rbc_units)::DOUBLE AS min_rbc,
+        MAX(rbc_units)::DOUBLE AS max_rbc,
+        COALESCE(quantile_disc(NULLIF(rbc_units, 0), ${percentileClamp}), MAX(rbc_units))::DOUBLE AS stats_max_rbc,
 
-        MIN(ffp_units) AS min_ffp,
-        MAX(ffp_units) AS max_ffp,
-        approx_quantile(ffp_units, ${percentileClamp}) AS stats_max_ffp,
+        MIN(ffp_units)::DOUBLE AS min_ffp,
+        MAX(ffp_units)::DOUBLE AS max_ffp,
+        COALESCE(approx_quantile(NULLIF(ffp_units, 0), ${percentileClamp}), MAX(ffp_units))::DOUBLE AS stats_max_ffp,
 
-        MIN(plt_units) AS min_plt,
-        MAX(plt_units) AS max_plt,
-        approx_quantile(plt_units, ${percentileClamp}) AS stats_max_plt,
+        MIN(plt_units)::DOUBLE AS min_plt,
+        MAX(plt_units)::DOUBLE AS max_plt,
+        COALESCE(approx_quantile(NULLIF(plt_units, 0), ${percentileClamp}), MAX(plt_units))::DOUBLE AS stats_max_plt,
 
-        MIN(cryo_units) AS min_cryo,
-        MAX(cryo_units) AS max_cryo,
-        approx_quantile(cryo_units, ${percentileClamp}) AS stats_max_cryo,
+        MIN(cryo_units)::DOUBLE AS min_cryo,
+        MAX(cryo_units)::DOUBLE AS max_cryo,
+        COALESCE(approx_quantile(NULLIF(cryo_units, 0), ${percentileClamp}), MAX(cryo_units))::DOUBLE AS stats_max_cryo,
 
-        MIN(cell_saver_ml) AS min_cell_saver,
-        MAX(cell_saver_ml) AS max_cell_saver,
-       CEIL(approx_quantile(cell_saver_ml, ${percentileClamp}) / 50.0) * 50
-  AS stats_max_cell_saver,
+        MIN(cell_saver_ml)::DOUBLE AS min_cell_saver,
+        MAX(cell_saver_ml)::DOUBLE AS max_cell_saver,
+       (CEIL(COALESCE(approx_quantile(NULLIF(cell_saver_ml, 0), ${percentileClamp}), MAX(cell_saver_ml)) / 50.0) * 50)::DOUBLE AS stats_max_cell_saver,
 
-        MIN(los) AS min_los,
-        MAX(los) AS max_los,
-        approx_quantile(los, ${percentileClamp}) AS stats_max_los
+        MIN(los)::DOUBLE AS min_los,
+        MAX(los)::DOUBLE AS max_los,
+        approx_quantile(los, ${percentileClamp})::DOUBLE AS stats_max_los
       FROM visit_rollups;
     `);
     const row = result.toArray()[0].toJSON();
