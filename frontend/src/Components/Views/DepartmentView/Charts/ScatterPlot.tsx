@@ -22,7 +22,9 @@ import {
 import {
   AddGroupModal, GroupDefinition, GroupCondition, CONDITION_FIELDS_FLAT,
 } from './AddGroupModal';
-import { smallHoverColor } from '../../../../Theme/mantineTheme';
+import { smallHoverColor, smallSelectColor } from '../../../../Theme/mantineTheme';
+import { caseSelection } from '../../../../Store/CaseSelection';
+import { CaseSelectionBadge } from './CaseSelectionBadge';
 import {
   getProcessedScatterData, calculateScatterLayout,
   buildSpatialIndex, findNearestPoint,
@@ -588,8 +590,10 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     ctx.scale(dpr, dpr);
     ctx.translate(-Math.max(0, visibleRange[0]), 0);
 
-    const hovered = hoveredPointRef.current;
-    const sel = appliedSelection;
+    // Read cross-chart state directly from singleton (no React deps needed)
+    const hoveredIds = caseSelection.hoveredCaseIds;
+    const selectedIds = caseSelection.selectedCaseIds;
+    const hasSelection = selectedIds.size > 0;
 
     const legendHover = hoveredLegendGroup;
     const legendSelected = selectedLegendGroups;
@@ -602,32 +606,36 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       let radius = SCATTER_DOT_RADIUS;
       let opacity = 0.7;
 
-      // Legend emphasis (selected takes precedence, hover overlays)
+      // Legend group emphasis
       if (hasLegendEmphasis) {
         const pointKey = groupColor || '__default__';
-        const isSelected = legendSelected.has(pointKey);
-        const isHovered = legendHover === pointKey;
-        if (isSelected || isHovered) {
+        const isLegendSelected = legendSelected.has(pointKey);
+        const isLegendHovered = legendHover === pointKey;
+        if (isLegendSelected || isLegendHovered) {
           opacity = 0.9;
         } else {
           opacity = 0.08;
         }
       }
 
-      // Check selection
-      if (sel) {
-        const minX = Math.min(sel.x1, sel.x2);
-        const maxX = Math.max(sel.x1, sel.x2);
-        const minY = Math.min(sel.y1, sel.y2);
-        const maxY = Math.max(sel.y1, sel.y2);
-        if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
-          color = theme.colors.orange[6];
+      // Case-level hover / selection (higher priority than legend emphasis)
+      const caseId = rawData[p.caseIdx]?.case_id;
+      const isHoveredCase = caseId ? hoveredIds.has(caseId) : false;
+      const isSelectedCase = caseId ? selectedIds.has(caseId) : false;
+
+      // Highlight selected cases; dim non-selected only when focus mode is active
+      const focusDim = hasSelection && (caseSelection.isFocusModeActive || caseSelection.isHoveringBadge);
+      if (!hasLegendEmphasis) {
+        if (isSelectedCase) {
+          color = smallSelectColor;
           opacity = 0.9;
+        } else if (focusDim && !isHoveredCase) {
+          opacity = 0.2;
         }
       }
 
-      // Check hover
-      if (hovered && p.caseIdx === hovered.caseIdx) {
+      // Hover is highest priority
+      if (isHoveredCase) {
         color = smallHoverColor;
         radius = SCATTER_DOT_RADIUS + 2;
         opacity = 1;
@@ -641,10 +649,13 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
 
     ctx.restore();
-  }, [pointPositions, appliedSelection, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange]);
+  }, [pointPositions, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange, rawData]);
 
   // Redraw canvas when dependencies change
   useEffect(() => { drawPoints(); }, [drawPoints]);
+
+  // Subscribe to cross-chart hover/selection changes and redraw this canvas
+  useEffect(() => caseSelection.subscribe(() => requestAnimationFrame(drawPoints)), [drawPoints]);
 
   // Set canvas size
   useEffect(() => {
@@ -669,13 +680,14 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     const chartTop = SCATTER_MARGIN.top;
     const chartBottom = height - bottomMargin;
 
-    if (selection) {
-      const minX = Math.min(selection.x1, selection.x2);
-      const maxX = Math.max(selection.x1, selection.x2);
-      const minY = Math.min(selection.y1, selection.y2);
-      const maxY = Math.max(selection.y1, selection.y2);
+    // Check if clicking on applied selection handles or interior
+    if (appliedSelection) {
+      const minX = Math.min(appliedSelection.x1, appliedSelection.x2);
+      const maxX = Math.max(appliedSelection.x1, appliedSelection.x2);
+      const minY = Math.min(appliedSelection.y1, appliedSelection.y2);
+      const maxY = Math.max(appliedSelection.y1, appliedSelection.y2);
       const tol = 10;
-      let handle = null;
+      let handle: string | null = null;
       if (Math.abs(x - minX) < tol && Math.abs(y - minY) < tol) handle = 'nw';
       else if (Math.abs(x - maxX) < tol && Math.abs(y - minY) < tol) handle = 'ne';
       else if (Math.abs(x - minX) < tol && Math.abs(y - maxY) < tol) handle = 'sw';
@@ -684,9 +696,10 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       else if (Math.abs(y - maxY) < tol && x > minX && x < maxX) handle = 's';
       else if (Math.abs(x - minX) < tol && y > minY && y < maxY) handle = 'w';
       else if (Math.abs(x - maxX) < tol && y > minY && y < maxY) handle = 'e';
-      if (handle) { setInteractionMode('resizing'); setResizeHandle(handle); initialSelection.current = { ...selection }; return; }
-      if (x > minX && x < maxX && y > minY && y < maxY) { setInteractionMode('moving'); dragStart.current = { x, y }; initialSelection.current = { ...selection }; return; }
+      if (handle) { setInteractionMode('resizing'); setResizeHandle(handle); initialSelection.current = { ...appliedSelection }; return; }
+      if (x > minX && x < maxX && y > minY && y < maxY) { setInteractionMode('moving'); dragStart.current = { x, y }; initialSelection.current = { ...appliedSelection }; return; }
     }
+
     if (y < chartTop || y > chartBottom) { setAppliedSelection(null); setSelection(null); return; }
     setInteractionMode('selecting');
     setSelection({
@@ -696,7 +709,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     initialSelection.current = {
       x1: x, y1: y, x2: x, y2: y,
     };
-  }, [selection, height, bottomMargin]);
+  }, [appliedSelection, height, bottomMargin]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
@@ -707,29 +720,31 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     const chartBottom = height - bottomMargin;
     const clampedY = Math.max(chartTop, Math.min(y, chartBottom));
 
-    // Hover detection (always, even during brush)
+    // Hover detection when idle
     if (interactionMode === 'idle') {
       const nearest = findNearestPoint(spatialIndex, pointPositions, x, y, 12);
       const prev = hoveredPointRef.current;
       if (nearest !== prev) {
         hoveredPointRef.current = nearest;
         if (nearest) {
-          // Find the case data
           const caseData = rawData[nearest.caseIdx];
-          if (caseData) setTooltipData({ x: nearest.x, y: nearest.y, caseData });
+          if (caseData) {
+            setTooltipData({ x: nearest.x, y: nearest.y, caseData });
+            caseSelection.setHovered([caseData.case_id]);
+          }
         } else {
           setTooltipData(null);
+          caseSelection.clearHovered();
         }
-        requestAnimationFrame(drawPoints);
       }
 
-      // Check for brush hover interaction to set dynamic resize/move cursor
+      // Dynamic cursor based on proximity to applied selection
       let cursor = 'crosshair';
-      if (selection) {
-        const minX = Math.min(selection.x1, selection.x2);
-        const maxX = Math.max(selection.x1, selection.x2);
-        const minY = Math.min(selection.y1, selection.y2);
-        const maxY = Math.max(selection.y1, selection.y2);
+      if (appliedSelection) {
+        const minX = Math.min(appliedSelection.x1, appliedSelection.x2);
+        const maxX = Math.max(appliedSelection.x1, appliedSelection.x2);
+        const minY = Math.min(appliedSelection.y1, appliedSelection.y2);
+        const maxY = Math.max(appliedSelection.y1, appliedSelection.y2);
         const tol = 10;
         if (Math.abs(x - minX) < tol && Math.abs(y - minY) < tol) cursor = 'nw-resize';
         else if (Math.abs(x - maxX) < tol && Math.abs(y - minY) < tol) cursor = 'ne-resize';
@@ -755,7 +770,10 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       if (cMinY + dy < chartTop) clampedDy = chartTop - cMinY;
       if (cMaxY + dy > chartBottom) clampedDy = chartBottom - cMaxY;
       setSelection({
-        x1: initialSelection.current.x1 + dx, y1: initialSelection.current.y1 + clampedDy, x2: initialSelection.current.x2 + dx, y2: initialSelection.current.y2 + clampedDy,
+        x1: initialSelection.current.x1 + dx,
+        y1: initialSelection.current.y1 + clampedDy,
+        x2: initialSelection.current.x2 + dx,
+        y2: initialSelection.current.y2 + clampedDy,
       });
     } else if (interactionMode === 'resizing' && initialSelection.current) {
       const minX = Math.min(initialSelection.current.x1, initialSelection.current.x2);
@@ -771,19 +789,64 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         x1: nMinX, y1: nMinY, x2: nMaxX, y2: nMaxY,
       });
     }
-  }, [interactionMode, selection, height, resizeHandle, bottomMargin, spatialIndex, pointPositions, drawPoints, rawData]);
+  }, [interactionMode, appliedSelection, height, resizeHandle, bottomMargin, spatialIndex, pointPositions, rawData]);
 
   const handleMouseUp = useCallback(() => {
+    const mode = interactionMode;
     setInteractionMode('idle');
     setResizeHandle(null);
     dragStart.current = null;
     initialSelection.current = null;
-    if (selection) {
-      if (Math.abs(selection.x2 - selection.x1) < 5 && Math.abs(selection.y2 - selection.y1) < 5) {
-        setSelection(null); setAppliedSelection(null);
-      } else { setAppliedSelection(selection); }
+
+    if (!selection) return;
+
+    const dx = Math.abs(selection.x2 - selection.x1);
+    const dy = Math.abs(selection.y2 - selection.y1);
+
+    if (mode === 'moving' || mode === 'resizing') {
+      // Compute cases in the new box position and add them
+      const minX = Math.min(selection.x1, selection.x2);
+      const maxX = Math.max(selection.x1, selection.x2);
+      const minY = Math.min(selection.y1, selection.y2);
+      const maxY = Math.max(selection.y1, selection.y2);
+      const ids: string[] = [];
+      pointPositions.forEach((p) => {
+        if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
+          const caseData = rawData[p.caseIdx];
+          if (caseData?.case_id) ids.push(caseData.case_id);
+        }
+      });
+      caseSelection.addSelected(ids);
+      setAppliedSelection(selection);
+      setSelection(null);
+      return;
     }
-  }, [selection]);
+
+    if (dx < SCATTER_DRAG_LIMIT && dy < SCATTER_DRAG_LIMIT) {
+      // Click — toggle hovered case
+      if (hoveredPointRef.current) {
+        const caseData = rawData[hoveredPointRef.current.caseIdx];
+        if (caseData) caseSelection.toggleSelected([caseData.case_id]);
+      }
+      setAppliedSelection(null);
+    } else {
+      // Box drag — add cases in box to selection and persist the box
+      const minX = Math.min(selection.x1, selection.x2);
+      const maxX = Math.max(selection.x1, selection.x2);
+      const minY = Math.min(selection.y1, selection.y2);
+      const maxY = Math.max(selection.y1, selection.y2);
+      const ids: string[] = [];
+      pointPositions.forEach((p) => {
+        if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
+          const caseData = rawData[p.caseIdx];
+          if (caseData?.case_id) ids.push(caseData.case_id);
+        }
+      });
+      caseSelection.addSelected(ids);
+      setAppliedSelection(selection);
+    }
+    setSelection(null);
+  }, [interactionMode, selection, rawData, pointPositions]);
 
   // X axis label for title
   const xLabel = xAxisOption?.label || selectedX;
@@ -805,6 +868,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
             </Title>
           </Flex>
           <Flex direction="row" align="center" gap="sm">
+            {/* Selection badge */}
+            <CaseSelectionBadge />
             {/* Groups icon */}
             <Tooltip label="Manage color groups" openDelay={500}>
               <ActionIcon
@@ -1067,7 +1132,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
-                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); setBrushHoverCursor('crosshair'); requestAnimationFrame(drawPoints); }}
+                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); caseSelection.clearHovered(); setBrushHoverCursor('crosshair'); requestAnimationFrame(drawPoints); }}
                 >
                   {/* SVG layer for gridlines, bins, targets, avg, brush */}
                   <svg
@@ -1254,7 +1319,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                       />
                     )}
 
-                    {/* Brush selection */}
+                    {/* Brush selection — live drag */}
                     {selection && (
                       <rect
                         x={Math.min(selection.x1, selection.x2)}
@@ -1265,6 +1330,21 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                         fillOpacity={0.2}
                         stroke={theme.colors.orange[6]}
                         strokeDasharray="4 2"
+                        style={{ pointerEvents: 'none' }}
+                      />
+                    )}
+                    {/* Applied selection box — persists after drag */}
+                    {!selection && appliedSelection && (
+                      <rect
+                        x={Math.min(appliedSelection.x1, appliedSelection.x2)}
+                        y={Math.min(appliedSelection.y1, appliedSelection.y2)}
+                        width={Math.abs(appliedSelection.x2 - appliedSelection.x1)}
+                        height={Math.abs(appliedSelection.y2 - appliedSelection.y1)}
+                        fill="none"
+                        stroke={theme.colors.orange[5]}
+                        strokeWidth={1.5}
+                        strokeDasharray="5 3"
+                        style={{ pointerEvents: 'none' }}
                       />
                     )}
                     {/* Hover crosshair reference lines */}

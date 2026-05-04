@@ -1053,8 +1053,6 @@ export class RootStore {
 
   activeDepartmentViewQuestion: string | null = null;
 
-  departmentViewSelectedSurgeryCases: { case_no: number, [key: string]: unknown }[] = [];
-
   // --- Common ---
   allVisitsLength = 0;
 
