@@ -73,6 +73,20 @@ class CaseSelectionStore {
     this.notify();
   }
 
+  /** Remove specific case IDs from the selection without clearing others. */
+  removeSelected(ids: string[]): void {
+    if (ids.length === 0) return;
+    const next = new Set(this.selectedCaseIds);
+    let changed = false;
+    for (const id of ids) {
+      if (next.has(id)) { next.delete(id); changed = true; }
+    }
+    if (changed) {
+      this.selectedCaseIds = next;
+      this.notify();
+    }
+  }
+
   /** Clear all selections. No-ops if already empty. */
   clearSelected(): void {
     if (this.selectedCaseIds.size === 0) return;
