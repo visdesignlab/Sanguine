@@ -23,6 +23,7 @@ import { useThemeConstants } from '../../../Theme/mantineTheme';
 import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
+import layoutClasses from '../ViewLayout.module.css';
 import {
   costYAxisOptions, ExploreTableRowOptions, ExploreTableConfig,
   SCATTER_X_AXIS_OPTIONS, SCATTER_Y_AXIS_OPTIONS,
@@ -310,88 +311,92 @@ export function DepartmentView() {
     const selectedDepartment = store.state.ui.departmentViewDepartment;
     return (
       <Stack>
-        {/* Title, Add Chart Button */}
-        <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-          <Flex align="center" gap="xs">
-            <Title order={3}>
-              {selectedDepartment ? `Department of ${selectedDepartment}` : 'Department'}
-            </Title>
-          </Flex>
+        <Box component="header" className={layoutClasses.stickyHeader}>
+          <Stack gap="lg">
+            {/* Title, Add Chart Button */}
+            <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
+              <Flex align="center" gap="xs">
+                <Title order={3}>
+                  {selectedDepartment ? `Department of ${selectedDepartment}` : 'Department'}
+                </Title>
+              </Flex>
 
-          <Flex direction="row" align="center" gap="md">
-            <Tooltip label="Visible visits after filters" position="bottom">
-              <Text size="sm" c="dimmed" fw={300}>
-                {`Showing ${store.filteredVisitsLength.toLocaleString()} of ${store.allVisitsLength.toLocaleString()} Visits`}
-              </Text>
-            </Tooltip>
-            <Select
-              placeholder="Select department"
-              value={selectedDepartment}
-              onChange={(value) => {
-                store.actions.setUiState({ departmentViewDepartment: value || null });
-              }}
-              data={departmentOptions}
-              renderOption={renderDeptOption}
-              leftSection={<IconBuildingHospital size={18} stroke={1.2} color="black" />}
-              styles={{
-                input: {
-                  borderColor: 'black',
-                  borderWidth: '1px',
-                },
-              }}
-              w={260}
-              searchable
-              clearable
-            />
-            <Menu width="md">
-              <Menu.Target>
-                <Button>
-                  <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
-                  Add Item
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconNumbers size={cardIconSize} stroke={cardIconStroke} />}
-                  onClick={handleOpenStatModal}
-                >
-                  Add Stat
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconChartLine size={cardIconSize} stroke={cardIconStroke} />}
-                  onClick={handleOpenAdd}
-                >
-                  Add Chart
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-            <Tooltip label="Chart Presets" position="bottom">
-              <ActionIcon
-                variant={store.departmentViewQuestionsOpened ? 'light' : 'default'}
-                onClick={() => store.toggleDepartmentViewQuestions()}
-                size="lg"
-                aria-label="Chart Presets"
-              >
-                <Flex align="center" gap={1}>
-                  {store.departmentViewQuestionsOpened
-                    ? (
-                      <>
-                        <IconSearch size={buttonIconSize - 4} />
-                        <IconChevronRight size={buttonIconSize - 6} />
-                      </>
-                    )
-                    : (
-                      <>
-                        <IconChevronLeft size={buttonIconSize - 6} />
-                        <IconSearch size={buttonIconSize - 4} />
-                      </>
-                    )}
-                </Flex>
-              </ActionIcon>
-            </Tooltip>
-          </Flex>
-        </Flex>
-        <Divider />
+              <Flex direction="row" align="center" gap="md">
+                <Tooltip label="Visible visits after filters" position="bottom">
+                  <Text size="sm" c="dimmed" fw={300}>
+                    {`Showing ${store.filteredVisitsLength.toLocaleString()} of ${store.allVisitsLength.toLocaleString()} Visits`}
+                  </Text>
+                </Tooltip>
+                <Select
+                  placeholder="Select department"
+                  value={selectedDepartment}
+                  onChange={(value) => {
+                    store.actions.setUiState({ departmentViewDepartment: value || null });
+                  }}
+                  data={departmentOptions}
+                  renderOption={renderDeptOption}
+                  leftSection={<IconBuildingHospital size={18} stroke={1.2} color="black" />}
+                  styles={{
+                    input: {
+                      borderColor: 'black',
+                      borderWidth: '1px',
+                    },
+                  }}
+                  w={260}
+                  searchable
+                  clearable
+                />
+                <Menu width="md">
+                  <Menu.Target>
+                    <Button>
+                      <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+                      Add Item
+                    </Button>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<IconNumbers size={cardIconSize} stroke={cardIconStroke} />}
+                      onClick={handleOpenStatModal}
+                    >
+                      Add Stat
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconChartLine size={cardIconSize} stroke={cardIconStroke} />}
+                      onClick={handleOpenAdd}
+                    >
+                      Add Chart
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+                <Tooltip label="Chart Presets" position="bottom">
+                  <ActionIcon
+                    variant={store.departmentViewQuestionsOpened ? 'light' : 'default'}
+                    onClick={() => store.toggleDepartmentViewQuestions()}
+                    size="lg"
+                    aria-label="Chart Presets"
+                  >
+                    <Flex align="center" gap={1}>
+                      {store.departmentViewQuestionsOpened
+                        ? (
+                          <>
+                            <IconSearch size={buttonIconSize - 4} />
+                            <IconChevronRight size={buttonIconSize - 6} />
+                          </>
+                        )
+                        : (
+                          <>
+                            <IconChevronLeft size={buttonIconSize - 6} />
+                            <IconSearch size={buttonIconSize - 4} />
+                          </>
+                        )}
+                    </Flex>
+                  </ActionIcon>
+                </Tooltip>
+              </Flex>
+            </Flex>
+            <Divider />
+          </Stack>
+        </Box>
         {/* Add Chart Modal */}
         <Modal
           opened={isAddModalOpen}

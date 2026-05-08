@@ -20,6 +20,7 @@ import {
 import { StatsGrid } from './StatsGrid';
 import { DashboardChartTooltip } from './DashboardChartTooltip';
 import classes from '../GridLayoutItem.module.css';
+import layoutClasses from '../ViewLayout.module.css';
 
 // Application
 import { Store } from '../../../Store/Store';
@@ -121,43 +122,47 @@ export function HospitalView() {
 
     return (
       <Stack mb="xl" gap="lg">
-        <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-          {/** View Title */}
-          <Title order={3}>Hospital</Title>
-          <Flex direction="row" align="center" gap="md">
-            <Tooltip label="Visible visits after filters" position="bottom">
-              <Title order={5} c="dimmed" fw={400}>
-                {`Showing ${store.filteredVisitsLength.toLocaleString()} of ${store.allVisitsLength.toLocaleString()} Visits`}
-              </Title>
-            </Tooltip>
+        <Box component="header" className={layoutClasses.stickyHeader}>
+          <Stack gap="lg">
+            <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
+              {/** View Title */}
+              <Title order={3}>Hospital</Title>
+              <Flex direction="row" align="center" gap="md">
+                <Tooltip label="Visible visits after filters" position="bottom">
+                  <Title order={5} c="dimmed" fw={400}>
+                    {`Showing ${store.filteredVisitsLength.toLocaleString()} of ${store.allVisitsLength.toLocaleString()} Visits`}
+                  </Title>
+                </Tooltip>
 
-            {/** Add Item Button */}
-            <Menu width="md">
-              <Menu.Target>
-                <Button>
-                  <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
-                  Add Item
-                </Button>
-              </Menu.Target>
-              {/** Add Stat or Add Chart */}
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconNumbers size={cardIconSize} stroke={cardIconStroke} />}
-                  onClick={openAddStatModal}
-                >
-                  Add Stat
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconChartLine size={cardIconSize} stroke={cardIconStroke} />}
-                  onClick={openAddChartModal}
-                >
-                  Add Chart
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Flex>
-        </Flex>
-        <Divider />
+                {/** Add Item Button */}
+                <Menu width="md">
+                  <Menu.Target>
+                    <Button>
+                      <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+                      Add Item
+                    </Button>
+                  </Menu.Target>
+                  {/** Add Stat or Add Chart */}
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<IconNumbers size={cardIconSize} stroke={cardIconStroke} />}
+                      onClick={openAddStatModal}
+                    >
+                      Add Stat
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconChartLine size={cardIconSize} stroke={cardIconStroke} />}
+                      onClick={openAddChartModal}
+                    >
+                      Add Chart
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              </Flex>
+            </Flex>
+            <Divider />
+          </Stack>
+        </Box>
         {/** Modal when add chart or stat clicked */}
         <Modal
           opened={isAddItemModalOpen}
