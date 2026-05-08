@@ -107,6 +107,12 @@ class CaseSelectionStore {
    */
   isHoveringBadge: boolean = false;
 
+  /** Replace the entire selection with the given case IDs. */
+  setSelected(ids: string[]): void {
+    this.selectedCaseIds = new Set(ids);
+    this.notify();
+  }
+
   setFocusModeActive(active: boolean): void {
     if (this.isFocusModeActive === active) return;
     this.isFocusModeActive = active;

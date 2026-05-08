@@ -791,6 +791,32 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
   }, [interactionMode, appliedSelection, height, resizeHandle, bottomMargin, spatialIndex, pointPositions, rawData]);
 
+  const extractBoxIds = useCallback((box: { x1: number; y1: number; x2: number; y2: number }) => {
+    const minX = Math.min(box.x1, box.x2);
+    const maxX = Math.max(box.x1, box.x2);
+    const minY = Math.min(box.y1, box.y2);
+    const maxY = Math.max(box.y1, box.y2);
+    const ids: string[] = [];
+    pointPositions.forEach((p) => {
+      if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
+        const caseData = rawData[p.caseIdx];
+        if (caseData?.case_id) ids.push(caseData.case_id);
+      }
+    });
+    return ids;
+  }, [pointPositions, rawData]);
+
+  // Live-update the case selection to match the current box while dragging / moving / resizing.
+  // This ensures points that fall outside the shrunken box are deselected immediately.
+  useEffect(() => {
+    if (!selection) return;
+    const dx = Math.abs(selection.x2 - selection.x1);
+    const dy = Math.abs(selection.y2 - selection.y1);
+    // Ignore zero-area boxes (clicks) — let mouseUp toggle instead.
+    if (dx < SCATTER_DRAG_LIMIT && dy < SCATTER_DRAG_LIMIT) return;
+    caseSelection.setSelected(extractBoxIds(selection));
+  }, [selection, extractBoxIds]);
+
   const handleMouseUp = useCallback(() => {
     const mode = interactionMode;
     setInteractionMode('idle');
@@ -804,19 +830,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     const dy = Math.abs(selection.y2 - selection.y1);
 
     if (mode === 'moving' || mode === 'resizing') {
-      // Compute cases in the new box position and add them
-      const minX = Math.min(selection.x1, selection.x2);
-      const maxX = Math.max(selection.x1, selection.x2);
-      const minY = Math.min(selection.y1, selection.y2);
-      const maxY = Math.max(selection.y1, selection.y2);
-      const ids: string[] = [];
-      pointPositions.forEach((p) => {
-        if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
-          const caseData = rawData[p.caseIdx];
-          if (caseData?.case_id) ids.push(caseData.case_id);
-        }
-      });
-      caseSelection.addSelected(ids);
+      // Live effect already set the selection; finalize the box overlay.
+      caseSelection.setSelected(extractBoxIds(selection));
       setAppliedSelection(selection);
       setSelection(null);
       return;
@@ -830,23 +845,12 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       }
       setAppliedSelection(null);
     } else {
-      // Box drag — add cases in box to selection and persist the box
-      const minX = Math.min(selection.x1, selection.x2);
-      const maxX = Math.max(selection.x1, selection.x2);
-      const minY = Math.min(selection.y1, selection.y2);
-      const maxY = Math.max(selection.y1, selection.y2);
-      const ids: string[] = [];
-      pointPositions.forEach((p) => {
-        if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
-          const caseData = rawData[p.caseIdx];
-          if (caseData?.case_id) ids.push(caseData.case_id);
-        }
-      });
-      caseSelection.addSelected(ids);
+      // Live effect already set the selection; finalize the box overlay.
+      caseSelection.setSelected(extractBoxIds(selection));
       setAppliedSelection(selection);
     }
     setSelection(null);
-  }, [interactionMode, selection, rawData, pointPositions]);
+  }, [interactionMode, selection, rawData, extractBoxIds]);
 
   // X axis label for title
   const xLabel = xAxisOption?.label || selectedX;
@@ -1340,7 +1344,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                         y={Math.min(appliedSelection.y1, appliedSelection.y2)}
                         width={Math.abs(appliedSelection.x2 - appliedSelection.x1)}
                         height={Math.abs(appliedSelection.y2 - appliedSelection.y1)}
-                        fill="none"
+                        fill={theme.colors.orange[2]}
+                        fillOpacity={0.2}
                         stroke={theme.colors.orange[5]}
                         strokeWidth={1.5}
                         strokeDasharray="5 3"

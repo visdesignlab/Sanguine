@@ -1632,6 +1632,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
         </Flex>
 
         <Flex direction="row" align="center" gap="sm">
+          <CaseSelectionBadge />
           {/** Aggregation Toggle */}
           <DepartmentTableLegend
             groupByVar={chartConfig.groupByVar}
