@@ -69,7 +69,7 @@ describe('Store - RootStore', () => {
       expect(store.dashboardChartConfigs.length).toBeGreaterThan(initialCount);
     });
 
-    test('should detect duplicate charts on add', () => {
+    test('allows adding the same chart config twice (no duplicate detection)', () => {
       const config: DashboardChartConfig = {
         chartId: 'test-chart',
         xAxisVar: 'month',
@@ -78,8 +78,11 @@ describe('Store - RootStore', () => {
         chartType: 'bar',
       };
 
+      const initialCount = store.dashboardChartConfigs.length;
       store.addDashboardChart(config);
-      expect(store.dashboardChartConfigs).toContainEqual(config);
+      store.addDashboardChart(config);
+      expect(store.dashboardChartConfigs.length).toBe(initialCount + 2);
+      expect(store.dashboardChartConfigs.filter((c) => c.chartId === 'test-chart')).toHaveLength(2);
     });
 
     test('should remove a dashboard chart by ID', () => {
@@ -186,13 +189,13 @@ describe('Store - RootStore', () => {
     });
 
     test('should update selection with time periods', () => {
-      const periods = ['2024-01', '2024-02'];
+      const periods = ['2024-Jan', '2024-Feb'];
       store.actions.updateSelection(periods);
       expect(store.state.selections.selectedTimePeriods).toEqual(periods);
     });
 
     test('should clear all selections', () => {
-      store.actions.updateSelection(['2024-01', '2024-02']);
+      store.actions.updateSelection(['2024-Jan', '2024-Feb']);
       store.actions.clearSelection();
       expect(store.state.selections.selectedTimePeriods).toHaveLength(0);
     });
