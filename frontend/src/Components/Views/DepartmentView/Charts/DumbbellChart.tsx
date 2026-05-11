@@ -988,6 +988,19 @@ export const DumbbellChartContent = memo(({
               fill={isBinGroupCollapsed ? theme.colors.gray[4] : binGroupColor}
               stroke={theme.colors.gray[5]}
               strokeWidth={1}
+              style={{ cursor: 'pointer' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                const ids = binGroup.cases.map((c) => c.case_id);
+                if (ids.length === 0) return;
+                const currentSelected = caseSelection.selectedCaseIds;
+                const allSelected = ids.every((id) => currentSelected.has(id));
+                if (allSelected) {
+                  caseSelection.removeSelected(ids);
+                } else {
+                  caseSelection.addSelected(ids);
+                }
+              }}
             >
               <title>
                 {(() => {
@@ -1039,7 +1052,7 @@ export const DumbbellChartContent = memo(({
               style={{ cursor: 'pointer' }}
               onMouseEnter={() => setHoveredCollapse(binGroup.id)}
               onMouseLeave={() => setHoveredCollapse(null)}
-              onClick={(e) => onToggleBinGroupCollapse(e, binGroup.id)}
+              onClick={(e) => { e.stopPropagation(); onToggleBinGroupCollapse(e, binGroup.id); }}
             />
             {hoveredCollapse === binGroup.id && (
               <path

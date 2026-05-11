@@ -313,6 +313,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [showTargets, setShowTargets] = useState(true);
   const [showAvg, setShowAvg] = useState(true);
   const [sortMode, setSortMode] = useState<string>('asc');
+  const [binSort, setBinSort] = useState<'alpha' | 'count' | 'avg'>('alpha');
   const [collapsedBinGroups, setCollapsedBinGroups] = useState<Set<string>>(new Set());
 
   // Groups
@@ -434,8 +435,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     return (storeData as DumbbellCase[]) || [];
   }, [store.departmentChartData, chartConfig.chartId]);
   const processedData = useMemo(
-    () => getProcessedScatterData(rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey),
-    [rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey],
+    () => getProcessedScatterData(rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey, binSort),
+    [rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey, binSort],
   );
   const rawIndexByCaseRef = useMemo(() => {
     const map = new Map<DumbbellCase, number>();
@@ -938,6 +939,34 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
               </Flex>
             )}
 
+            {/* Bin Sort Toggle — shown for all discrete axes */}
+            {isDiscrete && (
+              <Tooltip
+                label={`Sort ${xAxisOption?.label || selectedX} Bins: ${binSort === 'alpha' ? 'A/Z →' : binSort === 'count' ? 'Case Count →' : 'Avg Y →'}`}
+                openDelay={500}
+              >
+                <Button
+                  size="xs"
+                  variant="subtle"
+                  color="gray"
+                  px={8}
+                  style={{
+                    fontSize: 11,
+                    backgroundColor: 'transparent',
+                    border: `1px solid ${theme.colors.gray[3]}`,
+                  }}
+                  onClick={() => {
+                    const order: ('alpha' | 'count' | 'avg')[] = ['alpha', 'count', 'avg'];
+                    setBinSort(order[(order.indexOf(binSort) + 1) % order.length]);
+                  }}
+                >
+                  {binSort === 'alpha' && 'Bins: A/Z →'}
+                  {binSort === 'count' && 'Bins: Cases →'}
+                  {binSort === 'avg' && <Text size="xs" fw={700} c="blue">Bins: Avg →</Text>}
+                </Button>
+              </Tooltip>
+            )}
+
             {/* Show buttons */}
             <Flex direction="row" align="center" gap="xs" ml={0}>
               <Text size="xs" c="dimmed" fw={500}>Show:</Text>
@@ -1196,6 +1225,19 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                                   fill={isBinGroupCollapsed ? theme.colors.gray[4] : bgColor}
                                   stroke={theme.colors.gray[5]}
                                   strokeWidth={1}
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const ids = binGroup.cases.map((c) => c.case_id);
+                                    if (ids.length === 0) return;
+                                    const currentSelected = caseSelection.selectedCaseIds;
+                                    const allSelected = ids.every((id) => currentSelected.has(id));
+                                    if (allSelected) {
+                                      caseSelection.removeSelected(ids);
+                                    } else {
+                                      caseSelection.addSelected(ids);
+                                    }
+                                  }}
                                 />
                               </Tooltip>
                               <foreignObject
@@ -1234,7 +1276,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                                 style={{ cursor: 'pointer' }}
                                 onMouseEnter={() => setHoveredCollapse(binGroup.id)}
                                 onMouseLeave={() => setHoveredCollapse(null)}
-                                onClick={(e) => handleToggleBinGroupCollapse(e, binGroup.id)}
+                                onClick={(e) => { e.stopPropagation(); handleToggleBinGroupCollapse(e, binGroup.id); }}
                               />
                               {hoveredCollapse === binGroup.id && (
                                 <path
