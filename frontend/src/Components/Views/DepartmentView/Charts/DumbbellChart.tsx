@@ -1,6 +1,7 @@
 import {
   useMemo, useState, useContext, memo, useCallback, useEffect, useRef,
 } from 'react';
+import { reaction } from 'mobx';
 import { useElementSize } from '@mantine/hooks';
 import {
   Box, CloseButton, Title, Flex, useMantineTheme,
@@ -21,8 +22,8 @@ import {
   DUMBBELL_DRAG_LIMIT, DumbbellLabConfig as LabConfig,
 } from '../../../../Types/application';
 import { smallHoverColor, smallSelectColor } from '../../../../Theme/mantineTheme';
-import { caseSelection } from '../../../../Store/CaseSelection';
 import { CaseSelectionBadge } from './CaseSelectionBadge';
+import { useBrushSelection, type BrushRect } from './useBrushSelection';
 import { getProcessedDumbbellData, calculateDumbbellLayout } from './DumbbellUtils';
 
 interface DumbbellChartSVGProps {
@@ -424,24 +425,13 @@ export const DumbbellChartContent = memo(({
   targets: { preMin: number; postMin: number; postMax: number },
   setHoveredTarget: (t: string | null) => void,
 }) => {
+  const store = useContext(Store);
   const chartRef = useRef<HTMLDivElement>(null);
   const bottomMargin = 25;
   const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - bottomMargin);
-
-  // Interaction State
-  const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing'>('idle');
-  // Live brush rectangle while dragging
-  const [selection, setSelection] = useState<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
-  // Persisted box shown after drag completes
-  const [appliedSelection, setAppliedSelection] = useState<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
-  const [resizeHandle, setResizeHandle] = useState<string | null>(null);
-  const [brushHoverCursor, setBrushHoverCursor] = useState<string>('crosshair');
-  const initialSelection = useRef<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
-  const dragStart = useRef<{ x: number, y: number } | null>(null);
-  const prevSelectionRef = useRef<Set<string>>(new Set());
   const hoveredCaseRef = useRef<{ caseData: DumbbellCase; x: number; preY: number | null; postY: number | null; hoveredDot: 'pre' | 'post' | null } | null>(null);
 
-  const extractBoxIds = useCallback((box: { x1: number; y1: number; x2: number; y2: number }) => {
+  const extractBoxIds = (box: BrushRect) => {
     const minX = Math.min(box.x1, box.x2);
     const maxX = Math.max(box.x1, box.x2);
     const minY = Math.min(box.y1, box.y2);
@@ -465,157 +455,26 @@ export const DumbbellChartContent = memo(({
       });
     });
     return ids;
-  }, [processedData, collapsedBinGroups, binGroupLayout, labConfig, yScale]);
+  };
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!chartRef.current) return;
-    const rect = chartRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const chartTop = DUMBBELL_MARGIN.top;
-    const chartBottom = height - bottomMargin;
-
-    // Check if clicking on applied selection handles or interior
-    if (appliedSelection) {
-      const minX = Math.min(appliedSelection.x1, appliedSelection.x2);
-      const maxX = Math.max(appliedSelection.x1, appliedSelection.x2);
-      const minY = Math.min(appliedSelection.y1, appliedSelection.y2);
-      const maxY = Math.max(appliedSelection.y1, appliedSelection.y2);
-      const tol = 10;
-      let handle: string | null = null;
-      if (Math.abs(x - minX) < tol && Math.abs(y - minY) < tol) handle = 'nw';
-      else if (Math.abs(x - maxX) < tol && Math.abs(y - minY) < tol) handle = 'ne';
-      else if (Math.abs(x - minX) < tol && Math.abs(y - maxY) < tol) handle = 'sw';
-      else if (Math.abs(x - maxX) < tol && Math.abs(y - maxY) < tol) handle = 'se';
-      else if (Math.abs(y - minY) < tol && x > minX && x < maxX) handle = 'n';
-      else if (Math.abs(y - maxY) < tol && x > minX && x < maxX) handle = 's';
-      else if (Math.abs(x - minX) < tol && y > minY && y < maxY) handle = 'w';
-      else if (Math.abs(x - maxX) < tol && y > minY && y < maxY) handle = 'e';
-      if (handle) { setInteractionMode('resizing'); setResizeHandle(handle); initialSelection.current = { ...appliedSelection }; const boxIds = new Set(extractBoxIds(appliedSelection)); prevSelectionRef.current = new Set([...caseSelection.selectedCaseIds].filter((id) => !boxIds.has(id))); return; }
-      if (x > minX && x < maxX && y > minY && y < maxY) { setInteractionMode('moving'); dragStart.current = { x, y }; initialSelection.current = { ...appliedSelection }; const boxIds = new Set(extractBoxIds(appliedSelection)); prevSelectionRef.current = new Set([...caseSelection.selectedCaseIds].filter((id) => !boxIds.has(id))); return; }
+  const onClickPoint = () => {
+    if (hoveredCaseRef.current) {
+      store.toggleSelected([hoveredCaseRef.current.caseData.case_id]);
     }
+  };
 
-    if (y < chartTop || y > chartBottom) {
-      setAppliedSelection(null);
-      setSelection(null);
-      return;
-    }
-    prevSelectionRef.current = new Set(caseSelection.selectedCaseIds);
-    setInteractionMode('selecting');
-    setSelection({
-      x1: x, y1: y, x2: x, y2: y,
-    });
-    setAppliedSelection(null);
-    initialSelection.current = {
-      x1: x, y1: y, x2: x, y2: y,
-    };
-  }, [appliedSelection, height, bottomMargin, extractBoxIds]);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!chartRef.current) return;
-    const rect = chartRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const chartTop = DUMBBELL_MARGIN.top;
-    const chartBottom = height - bottomMargin;
-    const clampedY = Math.max(chartTop, Math.min(y, chartBottom));
-
-    if (interactionMode === 'idle') {
-      // Dynamic cursor based on proximity to applied selection
-      let cursor = 'crosshair';
-      if (appliedSelection) {
-        const minX = Math.min(appliedSelection.x1, appliedSelection.x2);
-        const maxX = Math.max(appliedSelection.x1, appliedSelection.x2);
-        const minY = Math.min(appliedSelection.y1, appliedSelection.y2);
-        const maxY = Math.max(appliedSelection.y1, appliedSelection.y2);
-        const tol = 10;
-        if (Math.abs(x - minX) < tol && Math.abs(y - minY) < tol) cursor = 'nw-resize';
-        else if (Math.abs(x - maxX) < tol && Math.abs(y - minY) < tol) cursor = 'ne-resize';
-        else if (Math.abs(x - minX) < tol && Math.abs(y - maxY) < tol) cursor = 'sw-resize';
-        else if (Math.abs(x - maxX) < tol && Math.abs(y - maxY) < tol) cursor = 'se-resize';
-        else if (Math.abs(y - minY) < tol && x > minX && x < maxX) cursor = 'n-resize';
-        else if (Math.abs(y - maxY) < tol && x > minX && x < maxX) cursor = 's-resize';
-        else if (Math.abs(x - minX) < tol && y > minY && y < maxY) cursor = 'w-resize';
-        else if (Math.abs(x - maxX) < tol && y > minY && y < maxY) cursor = 'e-resize';
-        else if (x > minX && x < maxX && y > minY && y < maxY) cursor = 'move';
-      }
-      setBrushHoverCursor(cursor);
-    }
-
-    if (interactionMode === 'selecting' && initialSelection.current) {
-      setSelection({ ...initialSelection.current, x2: x, y2: clampedY });
-    } else if (interactionMode === 'moving' && initialSelection.current && dragStart.current) {
-      const dx = x - dragStart.current.x;
-      const dy = y - dragStart.current.y;
-      const cMinY = Math.min(initialSelection.current.y1, initialSelection.current.y2);
-      const cMaxY = Math.max(initialSelection.current.y1, initialSelection.current.y2);
-      let clampedDy = dy;
-      if (cMinY + dy < chartTop) clampedDy = chartTop - cMinY;
-      if (cMaxY + dy > chartBottom) clampedDy = chartBottom - cMaxY;
-      setSelection({
-        x1: initialSelection.current.x1 + dx,
-        y1: initialSelection.current.y1 + clampedDy,
-        x2: initialSelection.current.x2 + dx,
-        y2: initialSelection.current.y2 + clampedDy,
-      });
-    } else if (interactionMode === 'resizing' && initialSelection.current) {
-      const minX = Math.min(initialSelection.current.x1, initialSelection.current.x2);
-      const maxX = Math.max(initialSelection.current.x1, initialSelection.current.x2);
-      const minY = Math.min(initialSelection.current.y1, initialSelection.current.y2);
-      const maxY = Math.max(initialSelection.current.y1, initialSelection.current.y2);
-      let nMinX = minX; let nMaxX = maxX; let nMinY = minY; let nMaxY = maxY;
-      if (resizeHandle?.includes('w')) nMinX = x;
-      if (resizeHandle?.includes('e')) nMaxX = x;
-      if (resizeHandle?.includes('n')) nMinY = clampedY;
-      if (resizeHandle?.includes('s')) nMaxY = clampedY;
-      setSelection({
-        x1: nMinX, y1: nMinY, x2: nMaxX, y2: nMaxY,
-      });
-    }
-  }, [interactionMode, appliedSelection, height, resizeHandle, bottomMargin]);
-
-  // Live-update the case selection to match the current box while dragging / moving / resizing.
-  // This ensures points that fall outside the shrunken box are deselected immediately.
-  useEffect(() => {
-    if (!selection) return;
-    const dx = Math.abs(selection.x2 - selection.x1);
-    const dy = Math.abs(selection.y2 - selection.y1);
-    // Ignore zero-area boxes (clicks) — let mouseUp toggle instead.
-    if (dx < DUMBBELL_DRAG_LIMIT && dy < DUMBBELL_DRAG_LIMIT) return;
-    caseSelection.setSelected([...prevSelectionRef.current, ...extractBoxIds(selection)]);
-  }, [selection, extractBoxIds]);
-
-  const handleMouseUp = useCallback(() => {
-    const mode = interactionMode;
-    setInteractionMode('idle');
-    setResizeHandle(null);
-    dragStart.current = null;
-    initialSelection.current = null;
-    if (!selection) return;
-
-    const dx = Math.abs(selection.x2 - selection.x1);
-    const dy = Math.abs(selection.y2 - selection.y1);
-
-    if (mode === 'moving' || mode === 'resizing') {
-      // Live effect already set the selection; finalize the box overlay.
-      caseSelection.setSelected([...prevSelectionRef.current, ...extractBoxIds(selection)]);
-      setAppliedSelection(selection);
-      setSelection(null);
-      return;
-    }
-
-    if (dx < DUMBBELL_DRAG_LIMIT && dy < DUMBBELL_DRAG_LIMIT) {
-      if (hoveredCaseRef.current) {
-        caseSelection.toggleSelected([hoveredCaseRef.current.caseData.case_id]);
-      }
-      setAppliedSelection(null);
-    } else {
-      // Live effect already set the selection; finalize the box overlay.
-      caseSelection.setSelected([...prevSelectionRef.current, ...extractBoxIds(selection)]);
-      setAppliedSelection(selection);
-    }
-    setSelection(null);
-  }, [interactionMode, selection, extractBoxIds]);
+  const {
+    selection, appliedSelection, interactionMode, resizeHandle, brushCursor,
+    handleMouseDown, handleMouseMove: brushHandleMouseMove, handleMouseUp,
+  } = useBrushSelection({
+    chartRef,
+    height,
+    marginTop: DUMBBELL_MARGIN.top,
+    bottomMargin,
+    dragLimit: DUMBBELL_DRAG_LIMIT,
+    extractBoxIds,
+    onClickPoint,
+  });
 
   // Canvas rendering for cases
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -650,8 +509,8 @@ export const DumbbellChartContent = memo(({
     ctx.setLineDash([]); // Reset dash for subsequent drawing
 
     // Read cross-chart state directly from singleton (no React deps needed)
-    const hoveredIds = caseSelection.hoveredCaseIds;
-    const selectedIds = caseSelection.selectedCaseIds;
+    const hoveredIds = store.hoveredCaseIds;
+    const selectedIds = store.selectedCaseIds;
     const hasSelection = selectedIds.size > 0;
 
     const getGradient = (gradWidth: number, baseColorHex: string) => {
@@ -746,7 +605,7 @@ export const DumbbellChartContent = memo(({
                 lineColor = theme.colors.orange[4];
               }
 
-              const focusDim = hasSelection && (caseSelection.isFocusModeActive || caseSelection.isHoveringBadge);
+              const focusDim = hasSelection && (store.isFocusModeActive || store.isHoveringBadge);
               if (focusDim && !isSelectedCase && !isHovered) {
                 opacity = 0.25;
               }
@@ -786,13 +645,16 @@ export const DumbbellChartContent = memo(({
     }
 
     ctx.restore();
-  }, [processedData, collapsedBinGroups, visibleRange, labConfig, yScale, showPre, showPost, theme, binGroupLayout, showMedian, totalWidth]);
+  }, [processedData, collapsedBinGroups, visibleRange, labConfig, yScale, showPre, showPost, theme, binGroupLayout, showMedian, totalWidth, store]);
 
   // Redraw when own deps change
   useEffect(() => { drawDumbbells(); }, [drawDumbbells]);
 
-  // Subscribe to cross-chart hover/selection changes and redraw this canvas
-  useEffect(() => caseSelection.subscribe(() => requestAnimationFrame(drawDumbbells)), [drawDumbbells]);
+  // Redraw canvas whenever cross-chart hover/selection state changes
+  useEffect(() => reaction(
+    () => [store.hoveredCaseIds, store.selectedCaseIds, store.isFocusModeActive, store.isHoveringBadge],
+    () => requestAnimationFrame(drawDumbbells),
+  ), [store, drawDumbbells]);
 
   // Resize canvas
   useEffect(() => {
@@ -810,7 +672,6 @@ export const DumbbellChartContent = memo(({
 
   // Canvas hover detection
   const handleCanvasHover = useCallback((e: React.MouseEvent) => {
-    if (interactionMode !== 'idle') return;
     if (!chartRef.current) return;
     const rect = chartRef.current.getBoundingClientRect();
     const mx = e.clientX - rect.left;
@@ -822,7 +683,7 @@ export const DumbbellChartContent = memo(({
       if (hoveredCaseRef.current) {
         hoveredCaseRef.current = null;
         setTooltipData(null);
-        caseSelection.clearHovered(); // subscription triggers rAF redraw
+        store.clearHovered(); // subscription triggers rAF redraw
       }
       return;
     }
@@ -931,10 +792,10 @@ export const DumbbellChartContent = memo(({
           postVal,
         });
         // Notify all charts (subscription triggers rAF redraws in each subscriber)
-        caseSelection.setHovered([bestCase.caseData.case_id]);
+        store.setHovered([bestCase.caseData.case_id]);
       } else {
         setTooltipData(null);
-        caseSelection.clearHovered();
+        store.clearHovered();
       }
     }
 
@@ -942,7 +803,7 @@ export const DumbbellChartContent = memo(({
       hoveredAvgRef.current = hoveredAvg;
       setAvgTooltipData(hoveredAvg);
     }
-  }, [processedData, collapsedBinGroups, binGroupLayout, showMedian, labConfig, yScale, showPre, showPost, height, bottomMargin, interactionMode]);
+  }, [processedData, collapsedBinGroups, binGroupLayout, showMedian, labConfig, yScale, showPre, showPost, height, bottomMargin, store]);
 
   const chartBody = useMemo(() => (
     <g transform={`translate(0, ${DUMBBELL_MARGIN.top})`}>
@@ -995,12 +856,12 @@ export const DumbbellChartContent = memo(({
                 e.stopPropagation();
                 const ids = binGroup.cases.map((c) => c.case_id);
                 if (ids.length === 0) return;
-                const currentSelected = caseSelection.selectedCaseIds;
+                const currentSelected = store.selectedCaseIds;
                 const allSelected = ids.every((id) => currentSelected.has(id));
                 if (allSelected) {
-                  caseSelection.removeSelected(ids);
+                  store.removeSelected(ids);
                 } else {
-                  caseSelection.addSelected(ids);
+                  store.addSelected(ids);
                 }
               }}
             >
@@ -1071,7 +932,7 @@ export const DumbbellChartContent = memo(({
         );
       })}
     </g>
-  ), [processedData, collapsedBinGroups, hoveredCollapse, theme, innerHeight, onToggleBinGroupCollapse, setHoveredCollapse, binGroupLayout, selectedX, visibleRange]);
+  ), [processedData, collapsedBinGroups, hoveredCollapse, theme, innerHeight, onToggleBinGroupCollapse, setHoveredCollapse, binGroupLayout, selectedX, visibleRange, store]);
 
   return (
     <div
@@ -1081,19 +942,19 @@ export const DumbbellChartContent = memo(({
         height,
         position: 'relative',
         userSelect: 'none',
-        cursor: interactionMode !== 'idle' ? (interactionMode === 'moving' ? 'move' : (interactionMode === 'resizing' && resizeHandle ? `${resizeHandle}-resize` : 'crosshair')) : brushHoverCursor,
+        cursor: interactionMode === 'moving' ? 'move' : interactionMode === 'resizing' && resizeHandle ? `${resizeHandle}-resize` : interactionMode === 'selecting' ? 'crosshair' : brushCursor,
       }}
       onMouseDown={handleMouseDown}
       onMouseMove={(e) => {
-        handleMouseMove(e);
-        handleCanvasHover(e);
+        brushHandleMouseMove(e);
+        if (interactionMode === 'idle') handleCanvasHover(e);
       }}
       onMouseUp={handleMouseUp}
       onMouseLeave={() => {
         handleMouseUp();
         hoveredCaseRef.current = null;
         setTooltipData(null);
-        caseSelection.clearHovered();
+        store.clearHovered();
       }}
     >
       <svg
@@ -1248,9 +1109,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   const [providerSort, setProviderSort] = useState<'alpha' | 'count' | 'pre' | 'post'>('alpha');
 
   // Clear provider sorts when global sort changes
-  const handleSortChange = (value: string) => {
-    setSortMode(value);
-  };
+  const handleSortChange = setSortMode;
 
   const labConfig = useMemo(() => {
     const pre = LAB_RESULTS.find((l) => l.metricId === selectedLab && l.value.startsWith('pre'));
