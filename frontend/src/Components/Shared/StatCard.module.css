@@ -6,25 +6,9 @@
 .comparisonTextHovered {
   color: var(--mantine-color-blue-6);
 }
-.diff {
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.diffGood {
-  color: var(--mantine-color-teal-6, #12b886);
-}
-
-.diffBad {
-  color: var(--mantine-color-red-6, #fa5252);
-}
 
 .icon {
   color: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-3));
-}
-
-.iconHovered {
-  color: var(--mantine-color-blue-6);
 }
 
 .deleteIcon {
@@ -45,4 +29,13 @@
 .sparklineWrap {
   flex-shrink: 0;
   margin-left: auto;
+}
+
+.titleEllipsis {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
