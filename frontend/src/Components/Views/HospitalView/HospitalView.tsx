@@ -442,6 +442,10 @@ export function HospitalView() {
                         lineProps={{
                           // Per-point rendering for dots to allow dynamic fill based on selection
                           dot: (props) => {
+                            // Skip rendering dots for null data points (cy will be non-finite)
+                            if (!Number.isFinite(props?.cy)) {
+                              return <circle key={props?.key} r={0} />;
+                            }
                             const timePeriod = String(props?.payload?.timePeriod ?? '');
                             const isSelected = selectedSet.has(timePeriod);
                             return (
