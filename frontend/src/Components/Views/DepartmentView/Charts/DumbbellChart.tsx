@@ -438,7 +438,34 @@ export const DumbbellChartContent = memo(({
   const [brushHoverCursor, setBrushHoverCursor] = useState<string>('crosshair');
   const initialSelection = useRef<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
   const dragStart = useRef<{ x: number, y: number } | null>(null);
+  const prevSelectionRef = useRef<Set<string>>(new Set());
   const hoveredCaseRef = useRef<{ caseData: DumbbellCase; x: number; preY: number | null; postY: number | null; hoveredDot: 'pre' | 'post' | null } | null>(null);
+
+  const extractBoxIds = useCallback((box: { x1: number; y1: number; x2: number; y2: number }) => {
+    const minX = Math.min(box.x1, box.x2);
+    const maxX = Math.max(box.x1, box.x2);
+    const minY = Math.min(box.y1, box.y2);
+    const maxY = Math.max(box.y1, box.y2);
+    const ids: string[] = [];
+    processedData.forEach((binGroup) => {
+      if (collapsedBinGroups.has(binGroup.id)) return;
+      const layout = binGroupLayout.get(binGroup.id);
+      if (!layout) return;
+      binGroup.cases.forEach((d, ci) => {
+        const caseX = layout.x + ci * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
+        if (caseX < minX || caseX > maxX) return;
+        const preVal = d[labConfig.preKey] as number | null;
+        const postVal = d[labConfig.postKey] as number | null;
+        const cyPre = preVal !== null ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
+        const cyPost = postVal !== null ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
+        if (
+          (cyPre !== null && cyPre >= minY && cyPre <= maxY)
+          || (cyPost !== null && cyPost >= minY && cyPost <= maxY)
+        ) ids.push(d.case_id);
+      });
+    });
+    return ids;
+  }, [processedData, collapsedBinGroups, binGroupLayout, labConfig, yScale]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
@@ -464,8 +491,8 @@ export const DumbbellChartContent = memo(({
       else if (Math.abs(y - maxY) < tol && x > minX && x < maxX) handle = 's';
       else if (Math.abs(x - minX) < tol && y > minY && y < maxY) handle = 'w';
       else if (Math.abs(x - maxX) < tol && y > minY && y < maxY) handle = 'e';
-      if (handle) { setInteractionMode('resizing'); setResizeHandle(handle); initialSelection.current = { ...appliedSelection }; return; }
-      if (x > minX && x < maxX && y > minY && y < maxY) { setInteractionMode('moving'); dragStart.current = { x, y }; initialSelection.current = { ...appliedSelection }; return; }
+      if (handle) { setInteractionMode('resizing'); setResizeHandle(handle); initialSelection.current = { ...appliedSelection }; const boxIds = new Set(extractBoxIds(appliedSelection)); prevSelectionRef.current = new Set([...caseSelection.selectedCaseIds].filter((id) => !boxIds.has(id))); return; }
+      if (x > minX && x < maxX && y > minY && y < maxY) { setInteractionMode('moving'); dragStart.current = { x, y }; initialSelection.current = { ...appliedSelection }; const boxIds = new Set(extractBoxIds(appliedSelection)); prevSelectionRef.current = new Set([...caseSelection.selectedCaseIds].filter((id) => !boxIds.has(id))); return; }
     }
 
     if (y < chartTop || y > chartBottom) {
@@ -473,6 +500,7 @@ export const DumbbellChartContent = memo(({
       setSelection(null);
       return;
     }
+    prevSelectionRef.current = new Set(caseSelection.selectedCaseIds);
     setInteractionMode('selecting');
     setSelection({
       x1: x, y1: y, x2: x, y2: y,
@@ -481,7 +509,7 @@ export const DumbbellChartContent = memo(({
     initialSelection.current = {
       x1: x, y1: y, x2: x, y2: y,
     };
-  }, [appliedSelection, height, bottomMargin]);
+  }, [appliedSelection, height, bottomMargin, extractBoxIds]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
@@ -546,32 +574,6 @@ export const DumbbellChartContent = memo(({
     }
   }, [interactionMode, appliedSelection, height, resizeHandle, bottomMargin]);
 
-  const extractBoxIds = useCallback((box: { x1: number; y1: number; x2: number; y2: number }) => {
-    const minX = Math.min(box.x1, box.x2);
-    const maxX = Math.max(box.x1, box.x2);
-    const minY = Math.min(box.y1, box.y2);
-    const maxY = Math.max(box.y1, box.y2);
-    const ids: string[] = [];
-    processedData.forEach((binGroup) => {
-      if (collapsedBinGroups.has(binGroup.id)) return;
-      const layout = binGroupLayout.get(binGroup.id);
-      if (!layout) return;
-      binGroup.cases.forEach((d, ci) => {
-        const caseX = layout.x + ci * DUMBBELL_CHAR_WIDTH_CASE + DUMBBELL_CHAR_WIDTH_CASE / 2;
-        if (caseX < minX || caseX > maxX) return;
-        const preVal = d[labConfig.preKey] as number | null;
-        const postVal = d[labConfig.postKey] as number | null;
-        const cyPre = preVal !== null ? yScale(preVal) + DUMBBELL_MARGIN.top : null;
-        const cyPost = postVal !== null ? yScale(postVal) + DUMBBELL_MARGIN.top : null;
-        if (
-          (cyPre !== null && cyPre >= minY && cyPre <= maxY)
-          || (cyPost !== null && cyPost >= minY && cyPost <= maxY)
-        ) ids.push(d.case_id);
-      });
-    });
-    return ids;
-  }, [processedData, collapsedBinGroups, binGroupLayout, labConfig, yScale]);
-
   // Live-update the case selection to match the current box while dragging / moving / resizing.
   // This ensures points that fall outside the shrunken box are deselected immediately.
   useEffect(() => {
@@ -580,7 +582,7 @@ export const DumbbellChartContent = memo(({
     const dy = Math.abs(selection.y2 - selection.y1);
     // Ignore zero-area boxes (clicks) — let mouseUp toggle instead.
     if (dx < DUMBBELL_DRAG_LIMIT && dy < DUMBBELL_DRAG_LIMIT) return;
-    caseSelection.setSelected(extractBoxIds(selection));
+    caseSelection.setSelected([...prevSelectionRef.current, ...extractBoxIds(selection)]);
   }, [selection, extractBoxIds]);
 
   const handleMouseUp = useCallback(() => {
@@ -596,7 +598,7 @@ export const DumbbellChartContent = memo(({
 
     if (mode === 'moving' || mode === 'resizing') {
       // Live effect already set the selection; finalize the box overlay.
-      caseSelection.setSelected(extractBoxIds(selection));
+      caseSelection.setSelected([...prevSelectionRef.current, ...extractBoxIds(selection)]);
       setAppliedSelection(selection);
       setSelection(null);
       return;
@@ -609,7 +611,7 @@ export const DumbbellChartContent = memo(({
       setAppliedSelection(null);
     } else {
       // Live effect already set the selection; finalize the box overlay.
-      caseSelection.setSelected(extractBoxIds(selection));
+      caseSelection.setSelected([...prevSelectionRef.current, ...extractBoxIds(selection)]);
       setAppliedSelection(selection);
     }
     setSelection(null);

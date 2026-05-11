@@ -571,6 +571,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [brushHoverCursor, setBrushHoverCursor] = useState<string>('crosshair');
   const initialSelection = useRef<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
   const dragStart = useRef<{ x: number, y: number } | null>(null);
+  const prevSelectionRef = useRef<Set<string>>(new Set());
 
   // Hover state for canvas
   const hoveredPointRef = useRef<PointPosition | null>(null);
@@ -673,6 +674,21 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   }, [totalWidth, height, visibleRange, drawPoints]);
 
   // Mouse handlers for brush + hover
+  const extractBoxIds = useCallback((box: { x1: number; y1: number; x2: number; y2: number }) => {
+    const minX = Math.min(box.x1, box.x2);
+    const maxX = Math.max(box.x1, box.x2);
+    const minY = Math.min(box.y1, box.y2);
+    const maxY = Math.max(box.y1, box.y2);
+    const ids: string[] = [];
+    pointPositions.forEach((p) => {
+      if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
+        const caseData = rawData[p.caseIdx];
+        if (caseData?.case_id) ids.push(caseData.case_id);
+      }
+    });
+    return ids;
+  }, [pointPositions, rawData]);
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
     const rect = chartRef.current.getBoundingClientRect();
@@ -697,11 +713,12 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       else if (Math.abs(y - maxY) < tol && x > minX && x < maxX) handle = 's';
       else if (Math.abs(x - minX) < tol && y > minY && y < maxY) handle = 'w';
       else if (Math.abs(x - maxX) < tol && y > minY && y < maxY) handle = 'e';
-      if (handle) { setInteractionMode('resizing'); setResizeHandle(handle); initialSelection.current = { ...appliedSelection }; return; }
-      if (x > minX && x < maxX && y > minY && y < maxY) { setInteractionMode('moving'); dragStart.current = { x, y }; initialSelection.current = { ...appliedSelection }; return; }
+      if (handle) { setInteractionMode('resizing'); setResizeHandle(handle); initialSelection.current = { ...appliedSelection }; const boxIds = new Set(extractBoxIds(appliedSelection)); prevSelectionRef.current = new Set([...caseSelection.selectedCaseIds].filter((id) => !boxIds.has(id))); return; }
+      if (x > minX && x < maxX && y > minY && y < maxY) { setInteractionMode('moving'); dragStart.current = { x, y }; initialSelection.current = { ...appliedSelection }; const boxIds = new Set(extractBoxIds(appliedSelection)); prevSelectionRef.current = new Set([...caseSelection.selectedCaseIds].filter((id) => !boxIds.has(id))); return; }
     }
 
     if (y < chartTop || y > chartBottom) { setAppliedSelection(null); setSelection(null); return; }
+    prevSelectionRef.current = new Set(caseSelection.selectedCaseIds);
     setInteractionMode('selecting');
     setSelection({
       x1: x, y1: y, x2: x, y2: y,
@@ -710,7 +727,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     initialSelection.current = {
       x1: x, y1: y, x2: x, y2: y,
     };
-  }, [appliedSelection, height, bottomMargin]);
+  }, [appliedSelection, height, bottomMargin, extractBoxIds]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
@@ -792,21 +809,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
   }, [interactionMode, appliedSelection, height, resizeHandle, bottomMargin, spatialIndex, pointPositions, rawData]);
 
-  const extractBoxIds = useCallback((box: { x1: number; y1: number; x2: number; y2: number }) => {
-    const minX = Math.min(box.x1, box.x2);
-    const maxX = Math.max(box.x1, box.x2);
-    const minY = Math.min(box.y1, box.y2);
-    const maxY = Math.max(box.y1, box.y2);
-    const ids: string[] = [];
-    pointPositions.forEach((p) => {
-      if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
-        const caseData = rawData[p.caseIdx];
-        if (caseData?.case_id) ids.push(caseData.case_id);
-      }
-    });
-    return ids;
-  }, [pointPositions, rawData]);
-
   // Live-update the case selection to match the current box while dragging / moving / resizing.
   // This ensures points that fall outside the shrunken box are deselected immediately.
   useEffect(() => {
@@ -815,7 +817,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     const dy = Math.abs(selection.y2 - selection.y1);
     // Ignore zero-area boxes (clicks) — let mouseUp toggle instead.
     if (dx < SCATTER_DRAG_LIMIT && dy < SCATTER_DRAG_LIMIT) return;
-    caseSelection.setSelected(extractBoxIds(selection));
+    caseSelection.setSelected([...prevSelectionRef.current, ...extractBoxIds(selection)]);
   }, [selection, extractBoxIds]);
 
   const handleMouseUp = useCallback(() => {
@@ -832,7 +834,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
     if (mode === 'moving' || mode === 'resizing') {
       // Live effect already set the selection; finalize the box overlay.
-      caseSelection.setSelected(extractBoxIds(selection));
+      caseSelection.setSelected([...prevSelectionRef.current, ...extractBoxIds(selection)]);
       setAppliedSelection(selection);
       setSelection(null);
       return;
@@ -847,7 +849,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       setAppliedSelection(null);
     } else {
       // Live effect already set the selection; finalize the box overlay.
-      caseSelection.setSelected(extractBoxIds(selection));
+      caseSelection.setSelected([...prevSelectionRef.current, ...extractBoxIds(selection)]);
       setAppliedSelection(selection);
     }
     setSelection(null);
