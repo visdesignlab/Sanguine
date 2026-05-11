@@ -9,6 +9,7 @@ from django.http import HttpResponseRedirect
 AUTH_PROVIDER_CAS = "cas"
 AUTH_PROVIDER_SAML = "saml"
 VALID_AUTH_PROVIDERS = {AUTH_PROVIDER_CAS, AUTH_PROVIDER_SAML}
+DEFAULT_APP_REDIRECT = "/"
 logger = logging.getLogger(__name__)
 
 
@@ -26,9 +27,15 @@ def query_redirect(path: str, query_params) -> HttpResponseRedirect:
     return HttpResponseRedirect(path)
 
 
+def query_params_with_default_next(query_params, default_next: str = DEFAULT_APP_REDIRECT) -> dict:
+    params = dict(query_params.lists())
+    params.setdefault("next", [default_next])
+    return params
+
+
 def auth_login(request):
     if settings.AUTH_PROVIDER == AUTH_PROVIDER_SAML:
-        return query_redirect("/api/saml2/login/", request.GET)
+        return query_redirect("/api/saml2/login/", query_params_with_default_next(request.GET))
 
     from django_cas_ng.views import LoginView
 

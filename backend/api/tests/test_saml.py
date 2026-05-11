@@ -43,7 +43,7 @@ def saml_env():
         SAML_EMAIL_ATTRIBUTE=(str, "email"),
         SAML_FIRST_NAME_ATTRIBUTE=(str, "first_name"),
         SAML_LAST_NAME_ATTRIBUTE=(str, "last_name"),
-        SAML_DEFAULT_REDIRECT_URL=(str, "/api"),
+        SAML_DEFAULT_REDIRECT_URL=(str, "/"),
     )
 
 
@@ -79,6 +79,7 @@ class SAMLConfigTests(SimpleTestCase):
         self.assertTrue(settings_dict["SAML_CONFIG"]["service"]["sp"]["authn_requests_signed"])
         self.assertTrue(settings_dict["SAML_CONFIG"]["service"]["sp"]["logout_requests_signed"])
         self.assertTrue(settings_dict["SAML_CONFIG"]["service"]["sp"]["want_response_signed"])
+        self.assertEqual(settings_dict["ACS_DEFAULT_REDIRECT_URL"], "/")
 
     @unittest.skipUnless(HAS_PYSAML2, "pysaml2 is not installed")
     def test_file_metadata_mode_uses_local_file(self):

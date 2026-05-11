@@ -22,7 +22,7 @@ export async function whoamiAPICall() {
     },
   });
   if (result.status !== 200) {
-    window.location.replace(`${import.meta.env.VITE_QUERY_URL}accounts/login/`);
+    window.location.replace(`${import.meta.env.VITE_QUERY_URL}accounts/login/?next=/`);
   }
 }
 

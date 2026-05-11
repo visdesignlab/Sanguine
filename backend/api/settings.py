@@ -34,7 +34,7 @@ env = environ.Env(
     SAML_EMAIL_ATTRIBUTE=(str, "email"),
     SAML_FIRST_NAME_ATTRIBUTE=(str, "first_name"),
     SAML_LAST_NAME_ATTRIBUTE=(str, "last_name"),
-    SAML_DEFAULT_REDIRECT_URL=(str, "/api"),
+    SAML_DEFAULT_REDIRECT_URL=(str, "/"),
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -179,6 +179,7 @@ if DEBUG:
     )
 
 LOGIN_REDIRECT_URL = '/'
+CAS_REDIRECT_URL = '/'
 LOGIN_URL = '/api/accounts/login/'
 LOGOUT_REDIRECT_URL = '/api'
 SESSION_COOKIE_AGE = 60 * 30  # 60 seconds * 30 minutes
