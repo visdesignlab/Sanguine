@@ -24,8 +24,6 @@ export function CaseSelectionBadge() {
     setFocused(caseSelection.isFocusModeActive);
   }), []);
 
-  if (count === 0) return null;
-
   const handleToggleFocus = () => {
     caseSelection.setFocusModeActive(!caseSelection.isFocusModeActive);
   };
@@ -34,6 +32,8 @@ export function CaseSelectionBadge() {
     e.stopPropagation();
     caseSelection.clearSelected();
   };
+
+  if (count === 0) return null;
 
   return (
     <Tooltip
