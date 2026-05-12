@@ -919,6 +919,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     }));
   }, [rows, chartConfig.groupByVar, getFilteredGroups]);
 
+  const tableStyle = useMemo(() => ({ fontStyle: 'italic' as const }), []);
+
   const handleRowChange = (value: string | null) => {
     if (!value) return;
 
@@ -1656,7 +1658,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           }}
           storeColumnsKey={columnStorageKey}
           columns={effectiveColumns}
-          style={useMemo(() => ({ fontStyle: 'italic' }), [])}
+          style={tableStyle}
           onRowClick={undefined}
           minHeight={!isSyncing && chartData !== undefined && rowsWithGroups.length === 0 ? 150 : undefined}
           emptyState={(() => {
