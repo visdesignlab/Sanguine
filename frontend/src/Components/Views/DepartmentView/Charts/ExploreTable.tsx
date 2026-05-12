@@ -1623,6 +1623,28 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
       {/** Data Table */}
       <Box style={{ minHeight: 0, width: '100%', position: 'relative' }}>
+        {!isSyncing && chartData !== undefined && rowsWithGroups.length === 0 && (
+          <Flex
+            style={{
+              position: 'absolute',
+              top: 28,
+              bottom: 28,
+              left: 0,
+              right: 0,
+              zIndex: 10,
+            }}
+            align="center"
+            justify="center"
+          >
+            <Box px="lg" py="md" style={{ backgroundColor: 'rgba(255, 255, 255, 0.85)', borderRadius: 6 }}>
+              <Text c="dimmed" fs="italic" size="sm">
+                {store.totalFiltersAppliedCount > 0
+                  ? 'No data available for this chart after filtering'
+                  : 'No data available for this chart'}
+              </Text>
+            </Box>
+          </Flex>
+        )}
         <LoadingOverlay
           visible={isSyncing}
           zIndex={100}
@@ -1636,29 +1658,31 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             ),
           }}
         />
-        <DataTable<ExploreTableRow>
-          className="explore-table-data-table"
-          rowClassName={() => (chartConfig.groupByVar ? 'fat-row' : '')}
-          borderRadius="sm"
-          pinFirstColumn
-          striped
-          withTableBorder={false}
-          highlightOnHover
-          withRowBorders={false}
-          highlightOnHoverColor={backgroundHoverColor}
-          records={rowsWithGroups}
-          idAccessor="_row_key"
-          sortStatus={sortStatus}
-          onSortStatusChange={setSortStatus}
-          sortIcons={{
-            sorted: <IconChevronUp size={14} className="active-sort-icon" />,
-            unsorted: <IconSelector size={14} />,
-          }}
-          storeColumnsKey={columnStorageKey}
-          columns={effectiveColumns}
-          style={useMemo(() => ({ fontStyle: 'italic' }), [])}
-          onRowClick={undefined}
-        />
+        {rowsWithGroups.length > 0 && (
+          <DataTable<ExploreTableRow>
+            className="explore-table-data-table"
+            rowClassName={() => (chartConfig.groupByVar ? 'fat-row' : '')}
+            borderRadius="sm"
+            pinFirstColumn
+            striped
+            withTableBorder={false}
+            highlightOnHover
+            withRowBorders={false}
+            highlightOnHoverColor={backgroundHoverColor}
+            records={rowsWithGroups}
+            idAccessor="_row_key"
+            sortStatus={sortStatus}
+            onSortStatusChange={setSortStatus}
+            sortIcons={{
+              sorted: <IconChevronUp size={14} className="active-sort-icon" />,
+              unsorted: <IconSelector size={14} />,
+            }}
+            storeColumnsKey={columnStorageKey}
+            columns={effectiveColumns}
+            style={useMemo(() => ({ fontStyle: 'italic' }), [])}
+            onRowClick={undefined}
+          />
+        )}
       </Box>
     </Stack>
   );
