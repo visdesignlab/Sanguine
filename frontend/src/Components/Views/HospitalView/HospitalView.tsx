@@ -384,7 +384,7 @@ export function HospitalView() {
                   </Flex>
                   <Box style={{ flex: 1, minHeight: 0, padding: '0 15px' }}>
                     <LoadingOverlay visible={rawChartData === undefined} overlayProps={{ radius: 'sm', blur: 2 }} />
-                    {rawChartData !== undefined && chartData.length === 0 && (
+                    {rawChartData !== undefined && chartData.length === 0 ? (
                       <Flex h="100%" align="center" justify="center">
                         <Text c="dimmed" fs="italic" size="sm">
                           {store.totalFiltersAppliedCount > 0
@@ -392,8 +392,7 @@ export function HospitalView() {
                             : 'No data available for this chart'}
                         </Text>
                       </Flex>
-                    )}
-                    {chartType === 'bar' ? (
+                    ) : chartType === 'bar' ? (
                       // Bar Chart
                       <BarChart
                         h="100%"
