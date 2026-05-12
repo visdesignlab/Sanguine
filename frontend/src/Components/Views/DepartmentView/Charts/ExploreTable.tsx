@@ -1658,13 +1658,18 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           columns={effectiveColumns}
           style={useMemo(() => ({ fontStyle: 'italic' }), [])}
           onRowClick={undefined}
-          noRecordsText={
-            !isSyncing && chartData !== undefined && rowsWithGroups.length === 0
-              ? (store.totalFiltersAppliedCount > 0
-                ? 'No data available for this chart after filtering'
-                : 'No data available for this chart')
-              : ''
-          }
+          minHeight={!isSyncing && chartData !== undefined && rowsWithGroups.length === 0 ? 150 : undefined}
+          emptyState={(() => {
+            if (isSyncing || chartData === undefined || rowsWithGroups.length > 0) return <span />;
+            const isFiltered = store.totalFiltersAppliedCount > 0
+              || Object.values(numericFilters).some((f) => f.query)
+              || Object.values(textFilters).some((f) => f.length > 0);
+            return (
+              <Text c="dimmed" fs="italic" size="sm">
+                {isFiltered ? 'No data available for this chart after filtering' : 'No data available for this chart'}
+              </Text>
+            );
+          })()}
         />
       </Box>
     </Stack>
