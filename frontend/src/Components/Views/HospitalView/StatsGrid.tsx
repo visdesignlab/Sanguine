@@ -72,6 +72,7 @@ export function StatsGrid() {
 
       const card = (
         <StatCard
+          key={statConfig.statId}
           title={statConfig.title}
           value={statValue}
           icon={Icon}
@@ -90,7 +91,7 @@ export function StatsGrid() {
         );
       }
 
-      return <div key={statConfig.statId}>{card}</div>;
+      return card;
     });
 
     return (
