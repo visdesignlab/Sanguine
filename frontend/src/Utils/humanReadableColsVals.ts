@@ -84,7 +84,7 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
     return value.toFixed(3);
   }
   if (columnName === 'departments') {
-    return (value as string).replace(/[[]"]/g, '').replace(/,\s*/g, ', ');
+    return (value as string).replace(/[[\]"]/g, '').replace(/,\s*/g, ', ');
   }
   return `${value}`;
 }

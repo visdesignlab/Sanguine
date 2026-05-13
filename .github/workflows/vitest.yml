@@ -17,9 +17,10 @@ jobs:
         with:
           node-version: lts/*
           cache: "yarn"
+          cache-dependency-path: frontend/yarn.lock
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn --cwd frontend install --immutable
 
       - name: Run unit tests
-        run: yarn unittest
+        run: yarn --cwd frontend unittest
