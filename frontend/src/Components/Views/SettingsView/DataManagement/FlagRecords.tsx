@@ -198,6 +198,24 @@ export function FlagRecords({
               <Button size="xs" variant="subtle" color="gray" onClick={deselectAll}>Reset All</Button>
             )}
             {hasFilters && (
+              <Tooltip label="Exclude all cases present after filters" openDelay={300}>
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="red"
+                  onClick={() => {
+                    displayedRows.forEach((row) => {
+                      if (!isEffectivelyExcluded(row)) {
+                        onPendingChange(pendingKey(row), true);
+                      }
+                    });
+                  }}
+                >
+                  Exclude Filtered
+                </Button>
+              </Tooltip>
+            )}
+            {hasFilters && (
               <Button size="xs" variant="subtle" color="orange" onClick={() => setFilters({})}>
                 Clear Filters
               </Button>

@@ -1,7 +1,7 @@
 import {
   Badge, Box, Group, NavLink, Stack, Text,
 } from '@mantine/core';
-import { IconCheck } from '@tabler/icons-react';
+import { IconCheck, IconFlag } from '@tabler/icons-react';
 import { FLAG_CATEGORY_META, FLAGS, type FlagCategory } from './flagDefinitions';
 
 interface FlagListProps {
@@ -65,6 +65,7 @@ export function FlagList({
                     size="sm"
                     variant={isActive ? 'filled' : 'light'}
                     color="red"
+                    leftSection={<IconFlag size={10} />}
                   >
                     {count}
                   </Badge>

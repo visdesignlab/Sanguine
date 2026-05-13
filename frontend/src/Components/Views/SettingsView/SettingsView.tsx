@@ -22,7 +22,7 @@ export function SettingsView() {
           <Divider />
         </Stack>
       </Box>
-      <Accordion multiple defaultValue={['bloodProductCosts']} variant="contained" radius="md">
+      <Accordion multiple defaultValue={['dataManagement']} variant="contained" radius="md">
         <DataManagementView />
         <BloodProductCostSettings />
         <GuidelineAdherenceSettings />

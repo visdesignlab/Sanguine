@@ -8,7 +8,7 @@ import {
   Paper,
   Text,
 } from '@mantine/core';
-import { IconDatabase } from '@tabler/icons-react';
+import { IconDatabase, IconFlag } from '@tabler/icons-react';
 import {
   useCallback, useContext, useEffect, useMemo, useState,
 } from 'react';
@@ -132,6 +132,7 @@ export function DataManagementView() {
       <Accordion.Panel>
         <Divider mb="sm" />
         <Text size="sm" c="dimmed" mb="md">
+          <IconFlag size={14} color="var(--mantine-color-red-4)" style={{ verticalAlign: 'middle', marginRight: 4 }} />
           <Text span size="sm" fw={600} c="dark">Flagged Records: </Text>
           Review flagged records and exclude those that should not influence charts or metrics.
           Excluding records from calculations does not delete source data.
