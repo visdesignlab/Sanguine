@@ -34,7 +34,7 @@ import {
   AGGREGATION_OPTIONS,
 } from '../../../Types/application';
 import { DumbbellChart } from './Charts/DumbbellChart';
-import DepartmentTable from './Charts/ExploreTable';
+import DepartmentTable from './Charts/DepartmentTable';
 import { ScatterPlot } from './Charts/ScatterPlot';
 import { DepartmentViewQuestions } from './DepartmentViewQuestions';
 import { DepartmentStatsGrid } from './DepartmentStatsGrid';

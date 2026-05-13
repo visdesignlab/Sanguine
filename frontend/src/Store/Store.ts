@@ -903,7 +903,7 @@ const normalizeDepartmentState = (state: LegacyApplicationState): ApplicationSta
       ...departmentState,
       chartConfigs: departmentState.chartConfigs.map((config) => {
         const legacyConfig = config as { chartType?: string };
-        return legacyConfig.chartType === 'exploreTable'
+        return legacyConfig.chartType === 'DepartmentTable'
           ? { ...(config as Record<string, unknown>), chartType: 'departmentTable' as const }
           : config;
       }) as ApplicationState['department']['chartConfigs'],
