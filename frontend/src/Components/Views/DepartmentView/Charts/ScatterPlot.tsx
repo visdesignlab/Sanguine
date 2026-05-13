@@ -929,7 +929,24 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         </Flex>
 
         {/* Chart Area */}
-        <div style={{ flex: 1, minHeight: 0, width: '100%' }} ref={sizeRef}>
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            width: '100%',
+            position: 'relative',
+          }}
+          ref={sizeRef}
+        >
+          {processedData.length === 0 && store.departmentChartData[chartConfig.chartId] !== undefined && (
+            <Flex style={{ position: 'absolute', inset: 0, zIndex: 10 }} align="center" justify="center">
+              <Text c="dimmed" fs="italic" size="sm">
+                {store.totalFiltersAppliedCount > 0
+                  ? 'No data available for this chart after filtering'
+                  : 'No data available for this chart'}
+              </Text>
+            </Flex>
+          )}
           <Flex direction="row" h={height}>
             {/* Fixed Y Axis */}
             <ScatterYAxis

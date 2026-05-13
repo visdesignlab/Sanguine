@@ -1,59 +1,33 @@
-import { useContext, useState } from 'react';
-import {
-  Card, CloseButton, Group, SimpleGrid, Text, Title,
-} from '@mantine/core';
+import { useContext } from 'react';
+import { SimpleGrid, Text } from '@mantine/core';
 import { useObserver } from 'mobx-react-lite';
-import gridItemStyles from '../GridLayoutItem.module.css';
 import { Store } from '../../../Store/Store';
 import { DepartmentStatData } from '../../../Types/application';
 import { getIconForVar } from '../../../Utils/icons';
-import { useThemeConstants } from '../../../Theme/mantineTheme';
+import { StatCard } from '../../Shared/StatCard';
 
 export function DepartmentStatsGrid() {
   const store = useContext(Store);
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const { cardIconSize, cardIconStroke } = useThemeConstants();
 
   return useObserver(() => {
     if (store.departmentStatConfigs.length === 0) return null;
 
-    const statCards = store.departmentStatConfigs.map((statConfig, idx) => {
+    const statCards = store.departmentStatConfigs.map((statConfig) => {
       const key = `${statConfig.aggregation}_${statConfig.yAxisVar}`;
       const statData = store.departmentStatData[key] as DepartmentStatData[string] | undefined;
       const statValue = statData?.value || '-';
-      const isHovered = hoveredIdx === idx;
       const Icon = getIconForVar(statConfig.yAxisVar);
 
       return (
-        <Card
+        <StatCard
           key={statConfig.statId}
-          withBorder
-          p="sm"
-          className={`${gridItemStyles.gridItem} ${isHovered ? gridItemStyles.gridItemHovered : ''}`.trim()}
-          onMouseEnter={() => setHoveredIdx(idx)}
-          onMouseLeave={() => setHoveredIdx(null)}
-        >
-          <Group justify="space-between" align="center" wrap="nowrap">
-            <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-              <Icon size={cardIconSize} stroke={cardIconStroke} style={{ flexShrink: 0, color: 'var(--mantine-color-gray-5)' }} />
-              <div style={{ minWidth: 0 }}>
-                <Text
-                  className={`${gridItemStyles.variableTitle} ${isHovered ? gridItemStyles.active : ''}`.trim()}
-                  lineClamp={1}
-                >
-                  {statConfig.title}
-                </Text>
-                <Group gap={6} align="baseline" mt={2}>
-                  <Title order={4}>{statValue}</Title>
-                  <Text size="xs" c="dimmed">All Time</Text>
-                </Group>
-              </div>
-            </Group>
-            {isHovered && (
-              <CloseButton size="xs" onClick={() => store.removeDepartmentStat(statConfig.statId)} />
-            )}
-          </Group>
-        </Card>
+          title={statConfig.title}
+          value={statValue}
+          icon={Icon}
+          loading={statData?.value === undefined}
+          onRemove={() => store.removeDepartmentStat(statConfig.statId)}
+          comparison={<Text size="xs" c="dimmed">All Time</Text>}
+        />
       );
     });
 
