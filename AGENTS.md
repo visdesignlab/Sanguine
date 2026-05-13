@@ -52,9 +52,9 @@ Derived artifact notes:
   - Backend tests use a custom Django test runner that runs `migrate_derived_tables` after the test database is created.
 
 Views we provide
-- Dashboard: A hospital-wide view of PBM data, including key metrics and trends. Charts here are intended to show entire hospital trends, and department-level trends.
-- Providers: A view of individual providers and their PBM-related metrics, such as transfusion rates, anemia management practices, and blood conservation techniques. Charts here are intended to show provider-level trends vs. their department.
-- Explore: The explore shows data across a department in the hospital allowing for our PBM experts to explore the data and find trends that may not be visible in the other views. Charts here are intended to show patient-level trends, and surgery-level trends.
+- Hospital: A hospital-wide view of PBM data, including key metrics and trends. Charts here are intended to show entire hospital trends, and department-level trends.
+- Department: The explore shows data across a department in the hospital allowing for our PBM experts to explore the data and find trends that may not be visible in the other views. Charts here are intended to show patient-level trends, and surgery-level trends.
+- Provider: A view of individual providers and their PBM-related metrics, such as transfusion rates, anemia management practices, and blood conservation techniques. Charts here are intended to show provider-level trends vs. their department.
 - Settings: A view for managing application wide settings, such as blood product costs, and thresholds for various PBM metrics. This view is intended for administrators of the platform to customize the application to their institution's needs.
 
 Common items across views

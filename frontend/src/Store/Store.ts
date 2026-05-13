@@ -18,12 +18,12 @@ import {
   DashboardChartDatum,
   DashboardStatConfig,
   DashboardStatData,
-  ExploreChartConfig,
-  ExploreChartData,
-  ExploreStatConfig,
-  ExploreStatData,
-  ExploreTableConfig,
-  ExploreTableRow,
+  DepartmentChartConfig,
+  DepartmentChartData,
+  DepartmentStatConfig,
+  DepartmentStatData,
+  DepartmentTableConfig,
+  DepartmentTableRow,
   ProviderChart,
   ProviderChartConfig,
   ProviderChartData,
@@ -886,6 +886,31 @@ export class ProvidersStore {
 
 // endregion
 
+type LegacyApplicationState = ApplicationState & {
+  explore?: ApplicationState['department'];
+};
+
+const normalizeDepartmentState = (state: LegacyApplicationState): ApplicationState => ({
+  ...state,
+  department: (() => {
+    const departmentState = state.department ?? state.explore ?? {
+      chartConfigs: [],
+      chartLayouts: { main: [] },
+      statConfigs: [],
+    };
+
+    return {
+      ...departmentState,
+      chartConfigs: departmentState.chartConfigs.map((config) => {
+        const legacyConfig = config as { chartType?: string };
+        return legacyConfig.chartType === 'DepartmentTable'
+          ? { ...(config as Record<string, unknown>), chartType: 'departmentTable' as const }
+          : config;
+      }) as ApplicationState['department']['chartConfigs'],
+    };
+  })(),
+});
+
 // region Types
 export interface ApplicationState {
   filterValues: {
@@ -915,10 +940,10 @@ export interface ApplicationState {
     statConfigs: DashboardStatConfig[];
     chartLayouts: { [key: string]: Layout[] };
   };
-  explore: {
-    chartConfigs: ExploreChartConfig[];
+  department: {
+    chartConfigs: DepartmentChartConfig[];
     chartLayouts: { [key: string]: Layout[] };
-    statConfigs: ExploreStatConfig[];
+    statConfigs: DepartmentStatConfig[];
   };
   settings: {
     unitCosts: Record<Cost, number>;
@@ -957,16 +982,16 @@ export class RootStore {
 
   dashboardStatData: DashboardStatData = {} as DashboardStatData;
 
-  // --- Explore State ---
-  exploreInitialChartConfigs: ExploreChartConfig[] = [];
+  // --- Department State ---
+  departmentInitialChartConfigs: DepartmentChartConfig[] = [];
 
-  exploreInitialChartLayouts: { [key: string]: Layout[] } = { main: [] };
+  departmentInitialChartLayouts: { [key: string]: Layout[] } = { main: [] };
 
-  _transientExploreLayouts: { [key: string]: Layout[] } | null = null;
+  _transientDepartmentLayouts: { [key: string]: Layout[] } | null = null;
 
-  exploreChartData: ExploreChartData = {};
+  departmentChartData: DepartmentChartData = {};
 
-  exploreStatData: ExploreStatData = {};
+  departmentStatData: DepartmentStatData = {};
 
   // --- Filters State ---
   _initialFilterValues = {
@@ -1050,8 +1075,8 @@ export class RootStore {
       currentState: computed,
       uiState: computed,
       dashboardChartData: observable.ref,
-      exploreChartData: observable.ref,
-      exploreStatData: observable.ref,
+      departmentChartData: observable.ref,
+      departmentStatData: observable.ref,
       procedureHierarchy: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
@@ -1153,14 +1178,14 @@ export class RootStore {
         },
       }), partialUiState);
     },
-    updateExploreState: (exploreState: Partial<ApplicationState['explore']>, label: string = 'Update Explore State') => {
+    updateDepartmentState: (departmentState: Partial<ApplicationState['department']>, label: string = 'Update Department State') => {
       this.applyAction(label, (state, partial) => ({
         ...state,
-        explore: {
-          ...state.explore,
+        department: {
+          ...state.department,
           ...partial,
         },
-      }), exploreState);
+      }), departmentState);
     },
     updateSettings: (unitCosts: Record<Cost, number>) => {
       this.applyAction('Update Settings', (state, costs) => ({
@@ -1259,9 +1284,9 @@ export class RootStore {
         statConfigs: JSON.parse(JSON.stringify(DEFAULT_STAT_CONFIGS || [])),
         chartLayouts: JSON.parse(JSON.stringify(DEFAULT_CHART_LAYOUTS || {})),
       },
-      explore: {
-        chartConfigs: JSON.parse(JSON.stringify(this.exploreInitialChartConfigs || [])),
-        chartLayouts: JSON.parse(JSON.stringify(this.exploreInitialChartLayouts || {})),
+      department: {
+        chartConfigs: JSON.parse(JSON.stringify(this.departmentInitialChartConfigs || [])),
+        chartLayouts: JSON.parse(JSON.stringify(this.departmentInitialChartLayouts || {})),
         statConfigs: [],
       },
       settings: {
@@ -1347,7 +1372,7 @@ export class RootStore {
     if (!this.provenance) return;
     this.provenance.apply({
       apply: (state: ApplicationState) => {
-        const newState = updater(state, payload);
+        const newState = updater(normalizeDepartmentState(state as LegacyApplicationState), payload);
         return {
           state: newState,
           label,
@@ -1568,11 +1593,14 @@ export class RootStore {
     };
 
     // Compare relevant sections
-    return isEqual(stateA.filterValues, stateB.filterValues)
-      && isEqual(stateA.selections, stateB.selections)
-      && isEqual(stateA.dashboard, stateB.dashboard)
-      && isEqual(stateA.explore, stateB.explore)
-      && isEqual(stateA.settings, stateB.settings);
+    const normalizedA = normalizeDepartmentState(stateA as LegacyApplicationState);
+    const normalizedB = normalizeDepartmentState(stateB as LegacyApplicationState);
+
+    return isEqual(normalizedA.filterValues, normalizedB.filterValues)
+      && isEqual(normalizedA.selections, normalizedB.selections)
+      && isEqual(normalizedA.dashboard, normalizedB.dashboard)
+      && isEqual(normalizedA.department, normalizedB.department)
+      && isEqual(normalizedA.settings, normalizedB.settings);
   }
 
   get currentState(): ApplicationState {
@@ -1582,7 +1610,7 @@ export class RootStore {
       // Return default/empty state if not initialized
       return this.getBaseInitialState();
     }
-    return this.provenance.getState(this.provenance.current);
+    return normalizeDepartmentState(this.provenance.getState(this.provenance.current) as LegacyApplicationState);
   }
 
   get uiState() {
@@ -2132,91 +2160,91 @@ export class RootStore {
   }
   // endregion
 
-  // region Explore
+  // region Department
 
-  get exploreChartLayouts() {
-    if (this._transientExploreLayouts) {
-      return this._transientExploreLayouts;
+  get departmentChartLayouts() {
+    if (this._transientDepartmentLayouts) {
+      return this._transientDepartmentLayouts;
     }
     const { state } = this;
-    return (state && state.explore && state.explore.chartLayouts) ? state.explore.chartLayouts : this.exploreInitialChartLayouts;
+    return (state && state.department && state.department.chartLayouts) ? state.department.chartLayouts : this.departmentInitialChartLayouts;
   }
 
-  set exploreChartLayouts(input: { [key: string]: Layout[] }) {
+  set departmentChartLayouts(input: { [key: string]: Layout[] }) {
     if (this.state.ui.activeTab !== 'Department') return;
-    this._transientExploreLayouts = input;
+    this._transientDepartmentLayouts = input;
   }
 
-  updateExploreLayout(input: { [key: string]: Layout[] }) {
-    this.actions.updateExploreState({ chartLayouts: input }, 'Update Explore Layout');
-    this._transientExploreLayouts = null;
+  updateDepartmentLayout(input: { [key: string]: Layout[] }) {
+    this.actions.updateDepartmentState({ chartLayouts: input }, 'Update Department Layout');
+    this._transientDepartmentLayouts = null;
   }
 
-  get exploreChartConfigs() {
+  get departmentChartConfigs() {
     const { state } = this;
-    return (state && state.explore && state.explore.chartConfigs) ? state.explore.chartConfigs : this.exploreInitialChartConfigs;
+    return (state && state.department && state.department.chartConfigs) ? state.department.chartConfigs : this.departmentInitialChartConfigs;
   }
 
-  set exploreChartConfigs(input: ExploreChartConfig[]) {
-    this.actions.updateExploreState({ chartConfigs: input }, 'Update Explore Config');
+  set departmentChartConfigs(input: DepartmentChartConfig[]) {
+    this.actions.updateDepartmentState({ chartConfigs: input }, 'Update Department Config');
   }
 
-  loadExplorePreset(configs: ExploreChartConfig[], layouts: { [key: string]: Layout[] }, title?: string, statConfigs?: ExploreStatConfig[]) {
-    this.actions.updateExploreState({ chartConfigs: configs, chartLayouts: layouts, statConfigs: statConfigs || [] }, 'Load Explore Preset');
-    this._transientExploreLayouts = null;
+  loadDepartmentPreset(configs: DepartmentChartConfig[], layouts: { [key: string]: Layout[] }, title?: string, statConfigs?: DepartmentStatConfig[]) {
+    this.actions.updateDepartmentState({ chartConfigs: configs, chartLayouts: layouts, statConfigs: statConfigs || [] }, 'Load Department Preset');
+    this._transientDepartmentLayouts = null;
     this.activeDepartmentViewQuestion = title || null;
   }
 
-  addExploreChart(config: ExploreChartConfig) {
+  addDepartmentChart(config: DepartmentChartConfig) {
     this.activeDepartmentViewQuestion = null;
-    const currentConfigs = this.exploreChartConfigs;
-    const currentLayouts = this.exploreChartLayouts;
+    const currentConfigs = this.departmentChartConfigs;
+    const currentLayouts = this.departmentChartLayouts;
     const newConfigs = [config, ...currentConfigs];
     const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 2 }));
     shifted.unshift({
       i: config.chartId, x: 0, y: 0, w: 4, h: 3, maxH: 4,
     });
     const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 4) };
-    this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Explore Chart');
-    this._transientExploreLayouts = null;
+    this.actions.updateDepartmentState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Department Chart');
+    this._transientDepartmentLayouts = null;
   }
 
-  removeExploreChart(chartId: string) {
+  removeDepartmentChart(chartId: string) {
     this.activeDepartmentViewQuestion = null;
-    const currentConfigs = this.exploreChartConfigs;
-    const currentLayouts = this.exploreChartLayouts;
+    const currentConfigs = this.departmentChartConfigs;
+    const currentLayouts = this.departmentChartLayouts;
     const newConfigs = currentConfigs.filter((config) => config.chartId !== chartId);
     // Filter the layouts for the main and sm breakpoints
     const filteredMain = (currentLayouts.main || []).filter((layout) => layout.i !== chartId);
     const filteredSm = (currentLayouts.sm || []).filter((layout) => layout.i !== chartId);
     const newLayouts = { ...currentLayouts, main: compact(filteredMain, 'vertical', 2), ...(currentLayouts.sm ? { sm: compact(filteredSm, 'vertical', 1) } : {}) };
-    this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Explore Chart');
-    this._transientExploreLayouts = null;
+    this.actions.updateDepartmentState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Department Chart');
+    this._transientDepartmentLayouts = null;
   }
 
-  updateExploreChartConfig(updatedConfig: ExploreChartConfig) {
-    this.exploreChartConfigs = this.exploreChartConfigs.map((cfg) => (cfg.chartId === updatedConfig.chartId ? updatedConfig : cfg));
+  updateDepartmentChartConfig(updatedConfig: DepartmentChartConfig) {
+    this.departmentChartConfigs = this.departmentChartConfigs.map((cfg) => (cfg.chartId === updatedConfig.chartId ? updatedConfig : cfg));
   }
 
-  get exploreStatConfigs(): ExploreStatConfig[] {
+  get departmentStatConfigs(): DepartmentStatConfig[] {
     const { state } = this;
-    return (state && state.explore && state.explore.statConfigs) ? state.explore.statConfigs : [];
+    return (state && state.department && state.department.statConfigs) ? state.department.statConfigs : [];
   }
 
-  set exploreStatConfigs(input: ExploreStatConfig[]) {
-    this.actions.updateExploreState({ statConfigs: input }, 'Update Explore Stats');
+  set departmentStatConfigs(input: DepartmentStatConfig[]) {
+    this.actions.updateDepartmentState({ statConfigs: input }, 'Update Department Stats');
   }
 
-  addExploreStat(config: ExploreStatConfig) {
+  addDepartmentStat(config: DepartmentStatConfig) {
     this.activeDepartmentViewQuestion = null;
-    const currentStats = this.exploreStatConfigs;
-    this.actions.updateExploreState({ statConfigs: [...currentStats, config] }, 'Add Explore Stat');
+    const currentStats = this.departmentStatConfigs;
+    this.actions.updateDepartmentState({ statConfigs: [...currentStats, config] }, 'Add Department Stat');
   }
 
-  removeExploreStat(statId: string) {
+  removeDepartmentStat(statId: string) {
     this.activeDepartmentViewQuestion = null;
-    const newStats = this.exploreStatConfigs.filter((s) => s.statId !== statId);
-    this.actions.updateExploreState({ statConfigs: newStats }, 'Remove Explore Stat');
+    const newStats = this.departmentStatConfigs.filter((s) => s.statId !== statId);
+    this.actions.updateDepartmentState({ statConfigs: newStats }, 'Remove Department Stat');
   }
   // endregion
 
@@ -2594,7 +2622,7 @@ export class RootStore {
 
   async togglePrivateMode() {
     this.actions.togglePrivateMode();
-    await this.computeExploreChartData();
+    await this.computeDepartmentChartData();
   }
 
   async getVisitInfo(visitNo: number) {
@@ -2653,12 +2681,12 @@ export class RootStore {
       async () => { await this.updateCostsTable(); },
     );
     reaction(
-      () => this.state.explore.chartConfigs,
-      async () => { await this.computeExploreChartData(); },
+      () => this.state.department.chartConfigs,
+      async () => { await this.computeDepartmentChartData(); },
     );
     reaction(
-      () => this.state.explore.statConfigs,
-      async () => { await this.computeExploreStatData(); },
+      () => this.state.department.statConfigs,
+      async () => { await this.computeDepartmentStatData(); },
     );
   }
 
@@ -2750,8 +2778,8 @@ export class RootStore {
     await this.updateFilteredVisitsLength();
     await this.computeDashboardChartData();
     await this.computeDashboardStatData();
-    await this.computeExploreChartData();
-    await this.computeExploreStatData();
+    await this.computeDepartmentChartData();
+    await this.computeDepartmentStatData();
     await this.generateHistogramData();
     await this.updateSelectedVisits();
 
@@ -2766,8 +2794,13 @@ export class RootStore {
     }
   }
 
-  async computeExploreChartData(): Promise<void> {
-    const promises = this.exploreChartConfigs.map(async (config) => {
+  async computeDepartmentChartData(): Promise<void> {
+    if (!this.duckDB || this.departmentChartConfigs.length === 0) {
+      this.departmentChartData = {};
+      return;
+    }
+
+    const promises = this.departmentChartConfigs.map(async (config) => {
       const surgeonNameExpr = this.uiState.isInPrivateMode
         ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY surgeon_prov_name)'
         : 'surgeon_prov_name';
@@ -2780,9 +2813,9 @@ export class RootStore {
         ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY attending_provider)'
         : 'attending_provider';
 
-      if (config.chartType === 'exploreTable') {
+      if (config.chartType === 'departmentTable') {
         // Configuration of table (rowVar, columns, aggregation, etc.)
-        const tableConfig = config as ExploreTableConfig;
+        const tableConfig = config as DepartmentTableConfig;
         const isGuidelineAdherenceGroup = tableConfig.groupByVar === GUIDELINE_ADHERENCE_GROUP_VAR;
         const adherenceGroupExpr = 'adherence_group.is_guideline_adherent';
         const adherenceGroupJoinClause = isGuidelineAdherenceGroup
@@ -3033,12 +3066,12 @@ export class RootStore {
 
         try {
           const queryResult = await this.duckDB!.query(query);
-          const rawRows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as ExploreTableRow);
+          const rawRows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as DepartmentTableRow);
 
           let rows = rawRows;
           if (tableConfig.groupByVar) {
             // Transform flat rows into grouped rows
-            const groupedMap = new Map<string | number, ExploreTableRow>();
+            const groupedMap = new Map<string | number, DepartmentTableRow>();
 
             rawRows.forEach((r) => {
               const rowKey = String(r._row_key ?? r[tableConfig.rowVar] ?? 'Unknown');
@@ -3049,7 +3082,7 @@ export class RootStore {
                 });
               }
               const rowObj = groupedMap.get(rowKey)!;
-              (rowObj._groups as ExploreTableRow[]).push(r);
+              (rowObj._groups as DepartmentTableRow[]).push(r);
             });
 
             rows = Array.from(groupedMap.values());
@@ -3061,7 +3094,7 @@ export class RootStore {
 
           return { id: config.chartId, data: rows };
         } catch (error) {
-          console.error('Error executing explore table query:', error);
+          console.error('Error executing department table query:', error);
           return { id: config.chartId, data: [] };
         }
       }
@@ -3171,24 +3204,24 @@ export class RootStore {
     });
 
     const results = await Promise.all(promises);
-    const data: ExploreChartData = {};
+    const data: DepartmentChartData = {};
     results.forEach(({ id, data: d }) => {
       data[id] = d;
     });
 
-    this.exploreChartData = data;
+    this.departmentChartData = data;
   }
 
-  async computeExploreStatData(): Promise<void> {
-    if (!this.duckDB || this.exploreStatConfigs.length === 0) {
-      this.exploreStatData = {};
+  async computeDepartmentStatData(): Promise<void> {
+    if (!this.duckDB || this.departmentStatConfigs.length === 0) {
+      this.departmentStatData = {};
       return;
     }
 
-    const result: ExploreStatData = {};
+    const result: DepartmentStatData = {};
 
     const statSelects: string[] = [];
-    this.exploreStatConfigs.forEach(({ yAxisVar, aggregation }) => {
+    this.departmentStatConfigs.forEach(({ yAxisVar, aggregation }) => {
       const aggFn = aggregation.toUpperCase();
 
       if (yAxisVar === 'total_blood_product_cost') {
@@ -3230,7 +3263,7 @@ export class RootStore {
     });
 
     if (statSelects.length === 0) {
-      this.exploreStatData = {};
+      this.departmentStatData = {};
       return;
     }
 
@@ -3243,7 +3276,7 @@ export class RootStore {
       const row = queryResult.toArray()[0]?.toJSON();
 
       if (row) {
-        this.exploreStatConfigs.forEach(({ yAxisVar, aggregation }) => {
+        this.departmentStatConfigs.forEach(({ yAxisVar, aggregation }) => {
           const key = `${aggregation}_${yAxisVar}`;
           const rawValue = Number(row[key]);
           const formattedValue = yAxisVar.includes('adherent')
@@ -3253,10 +3286,10 @@ export class RootStore {
         });
       }
     } catch (error) {
-      console.error('Error computing explore stat data:', error);
+      console.error('Error computing department stat data:', error);
     }
 
-    this.exploreStatData = result;
+    this.departmentStatData = result;
   }
 
   async updateFilteredVisitsLength() {

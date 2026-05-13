@@ -1291,12 +1291,12 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
 
   // Process Data
   const processedData = useMemo(() => getProcessedDumbbellData(
-    (store.exploreChartData[chartConfig.chartId] as DumbbellData) || [],
+    (store.departmentChartData[chartConfig.chartId] as DumbbellData) || [],
     selectedX,
     labConfig,
     sortMode,
     providerSort,
-  ), [store.exploreChartData, chartConfig.chartId, labConfig, selectedX, sortMode, providerSort]);
+  ), [store.departmentChartData, chartConfig.chartId, labConfig, selectedX, sortMode, providerSort]);
 
   // Layout & Width Calculation
   const layoutData = useMemo(() => calculateDumbbellLayout(
@@ -1562,7 +1562,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
             allowDeselect={false}
             leftSection={<Title order={6} c="dimmed" style={{ fontSize: '10px' }}>Y</Title>}
           />
-          <CloseButton onClick={() => { store.removeExploreChart(chartConfig.chartId); }} />
+          <CloseButton onClick={() => { store.removeDepartmentChart(chartConfig.chartId); }} />
         </Flex>
       </Flex>
 
@@ -1576,7 +1576,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
         }}
         ref={ref}
       >
-        {processedData.length === 0 && store.exploreChartData[chartConfig.chartId] !== undefined && (
+        {processedData.length === 0 && store.departmentChartData[chartConfig.chartId] !== undefined && (
           <Flex style={{ position: 'absolute', inset: 0, zIndex: 10 }} align="center" justify="center">
             <Text c="dimmed" fs="italic" size="sm">
               {store.totalFiltersAppliedCount > 0

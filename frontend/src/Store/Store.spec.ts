@@ -5,7 +5,7 @@ import { Layout } from 'react-grid-layout';
 import {
   RootStore, MANUAL_INFINITY,
 } from './Store';
-import type { DashboardChartConfig, ExploreChartConfig } from '../Types/application';
+import type { DashboardChartConfig, DepartmentChartConfig } from '../Types/application';
 
 describe('Store - RootStore', () => {
   let store: RootStore;
@@ -33,8 +33,8 @@ describe('Store - RootStore', () => {
       expect(store.dashboardChartData).toEqual({});
     });
 
-    test('should have empty explore chart data initially', () => {
-      expect(store.exploreChartData).toEqual({});
+    test('should have empty department chart data initially', () => {
+      expect(store.departmentChartData).toEqual({});
     });
 
     test('should have empty histogram data initially', () => {
@@ -353,29 +353,34 @@ describe('Store - RootStore', () => {
     });
   });
 
-  describe('Explore State Management', () => {
-    test('should initialize explore chart configs', () => {
-      expect(Array.isArray(store.exploreInitialChartConfigs)).toBe(true);
+  describe('Department State Management', () => {
+    test('should initialize department chart configs', () => {
+      expect(Array.isArray(store.departmentInitialChartConfigs)).toBe(true);
     });
 
-    test('should initialize explore chart layouts', () => {
-      expect(store.exploreInitialChartLayouts).toBeDefined();
-      expect(typeof store.exploreInitialChartLayouts).toBe('object');
+    test('should initialize department chart layouts', () => {
+      expect(store.departmentInitialChartLayouts).toBeDefined();
+      expect(typeof store.departmentInitialChartLayouts).toBe('object');
     });
 
-    test('should update explore state', () => {
-      const newConfigs: ExploreChartConfig[] = [
+    test('should update department state', () => {
+      const newConfigs: DepartmentChartConfig[] = [
         {
-          chartId: 'explore-1', yAxisVar: 'quarter', aggregation: 'sum', xAxisVar: 'cost', chartType: 'cost',
+          chartId: 'department-1',
+          title: 'Test Department Table',
+          chartType: 'departmentTable',
+          rowVar: 'quarter',
+          columns: [],
+          aggregation: 'sum',
         },
       ];
-      store.actions.updateExploreState({ chartConfigs: newConfigs });
-      expect(store.state.explore.chartConfigs).toEqual(newConfigs);
+      store.actions.updateDepartmentState({ chartConfigs: newConfigs });
+      expect(store.state.department.chartConfigs).toEqual(newConfigs);
     });
 
-    test('should track explore stat data', () => {
-      expect(store.exploreStatData).toBeDefined();
-      expect(typeof store.exploreStatData).toBe('object');
+    test('should track department stat data', () => {
+      expect(store.departmentStatData).toBeDefined();
+      expect(typeof store.departmentStatData).toBe('object');
     });
   });
 

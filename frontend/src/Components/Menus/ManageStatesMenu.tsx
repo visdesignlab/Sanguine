@@ -42,7 +42,7 @@ import { Store, ApplicationState } from '../../Store/Store';
 import {
   AGGREGATION_OPTIONS,
   DashboardChartConfig,
-  ExploreChartConfig,
+  DepartmentChartConfig,
   Cost,
   DEFAULT_UNIT_COSTS,
 } from '../../Types/application';
@@ -57,12 +57,12 @@ import { ZoomedStateModal } from '../Modals/ZoomedStateModal';
 
 // region State Details Display
 /**
- * Retrieve and display the details of a saved state (filters, selections, dashboard, explore, settings)
+ * Retrieve and display the details of a saved state (filters, selections, dashboard, department, settings)
  */
 function StateDetails({ state }: { state: ApplicationState }) {
   const store = useContext(Store);
   const {
-    filterValues, selections, dashboard, explore, settings,
+    filterValues, selections, dashboard, department, settings,
   } = state;
 
   // Find State's Dashboard Charts
@@ -84,13 +84,13 @@ function StateDetails({ state }: { state: ApplicationState }) {
     return items;
   }, [dashboard]);
 
-  // Find State's Explore View Charts
-  const exploreCharts = useMemo(() => {
+  // Find State's Department View Charts
+  const departmentCharts = useMemo(() => {
     const items: string[] = [];
-    if (explore?.chartConfigs) {
-      explore.chartConfigs.forEach((config: ExploreChartConfig) => {
-        if (config.chartType === 'exploreTable') {
-          items.push('Table: Explore Data');
+    if (department?.chartConfigs) {
+      department.chartConfigs.forEach((config: DepartmentChartConfig) => {
+        if (config.chartType === 'departmentTable') {
+          items.push('Table: Department Data');
         } else {
           const xLabel = formatStateDetailName(config.xAxisVar as string);
           const yLabel = formatStateDetailName(config.yAxisVar as string);
@@ -99,7 +99,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
       });
     }
     return items;
-  }, [explore]);
+  }, [department]);
 
   // Find State's Settings
   const activeSettings = useMemo(() => {
@@ -179,7 +179,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
       id: 'dashboard', content: dashboardCharts, icon: IconChartBar, color: 'blue', label: 'Dashboard',
     },
     {
-      id: 'explore', content: exploreCharts, icon: IconChartScatter, color: 'grape', label: 'Explore View',
+      id: 'department', content: departmentCharts, icon: IconChartScatter, color: 'grape', label: 'Department View',
     },
     {
       id: 'filters', content: activeFilters, icon: IconFilter, color: 'orange', label: 'Filters', type: 'key-value',
@@ -202,7 +202,7 @@ function StateDetails({ state }: { state: ApplicationState }) {
 
   return (
     <Stack gap="xs" w="100%">
-      {/** Accordion of state details (Dashboard, Explore, Filters, Selections, Settings) */}
+      {/** Accordion of state details (Dashboard, Department, Filters, Selections, Settings) */}
       <Accordion variant="contained" radius="md" defaultValue={[]} multiple>
         {sections.map((section) => (
           <Accordion.Item value={section.id} key={section.id}>
