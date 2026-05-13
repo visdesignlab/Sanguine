@@ -1,6 +1,8 @@
 import { RangeSliderValue, RangeSlider } from '@mantine/core';
 import { useObserver } from 'mobx-react-lite';
-import { useContext } from 'react';
+import {
+  useContext, useEffect, useState,
+} from 'react';
 import { Store, ApplicationState } from '../../../Store/Store';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 import { CELL_SAVER_ML } from '../../../Types/bloodProducts';
@@ -23,6 +25,11 @@ export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: Filter
   const clampedMax = Math.min(store.clampedMax[varName], initialFilterMax);
   const displayMax = Math.min(filterMax, clampedMax);
   const isFilterActive = filterMin !== initialFilterMin || filterMax !== initialFilterMax;
+  const [sliderValues, setSliderValues] = useState<[number, number]>([filterMin, displayMax]);
+
+  useEffect(() => {
+    setSliderValues([filterMin, displayMax]);
+  }, [displayMax, filterMax, filterMin]);
 
   const handleCommit = (v: RangeSliderValue) => {
     store.setFilterValue(varName, [v[0], v[1] === clampedMax ? initialFilterMax : v[1]]);
@@ -30,9 +37,9 @@ export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: Filter
 
   return useObserver(() => (
     <RangeSlider
-      key={`${filterMin}-${filterMax}`}
-      defaultValue={[filterMin, displayMax]}
+      value={sliderValues}
       size="sm"
+      onChange={setSliderValues}
       onChangeEnd={handleCommit}
       min={initialFilterMin}
       max={clampedMax}
