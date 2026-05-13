@@ -2795,6 +2795,11 @@ export class RootStore {
   }
 
   async computeDepartmentChartData(): Promise<void> {
+    if (!this.duckDB || this.departmentChartConfigs.length === 0) {
+      this.departmentChartData = {};
+      return;
+    }
+
     const promises = this.departmentChartConfigs.map(async (config) => {
       const surgeonNameExpr = this.uiState.isInPrivateMode
         ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY surgeon_prov_name)'
