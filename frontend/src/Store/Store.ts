@@ -3,7 +3,7 @@ import {
   makeAutoObservable, reaction, runInAction, observable, computed, createAtom, type IAtom,
 } from 'mobx';
 import { createContext } from 'react';
-import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
+import type { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
 import { initProvenance, Provenance, NodeID } from '@visdesignlab/trrack';
 import { Layout } from 'react-grid-layout';
 // @ts-expect-error: rgl utils not typed

@@ -1,3 +1,6 @@
+import {
+  beforeEach, describe, expect, test,
+} from 'vitest';
 import { Layout } from 'react-grid-layout';
 import {
   RootStore, MANUAL_INFINITY,

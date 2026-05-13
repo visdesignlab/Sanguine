@@ -13,6 +13,7 @@ backend/.pytest_cache/
 
 # Build artifacts
 frontend/dist
+frontend/coverage
 backend/parquet_cache
 *.zip
 
