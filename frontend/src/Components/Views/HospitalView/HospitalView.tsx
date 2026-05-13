@@ -8,7 +8,7 @@ import { useObserver } from 'mobx-react-lite';
 import { useDisclosure } from '@mantine/hooks';
 import {
   useMantineTheme, Title, Stack, Card, Flex, Select, Button, CloseButton, ActionIcon, Menu, Modal, Divider, Tooltip,
-  LoadingOverlay,
+  LoadingOverlay, Text,
   Box,
 } from '@mantine/core';
 import { BarChart, LineChart } from '@mantine/charts';
@@ -239,8 +239,8 @@ export function HospitalView() {
           }) => {
             const selectedSet = new Set(store.selectedTimePeriods);
 
-            const rawChartData = store.dashboardChartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
-            const chartData = rawChartData.map((d) => {
+            const rawChartData = store.dashboardChartData[`${aggregation}_${yAxisVar}_${xAxisVar}`];
+            const chartData = (rawChartData || []).map((d) => {
               if (typeof d.data === 'object') {
                 return { timePeriod: d.timePeriod, ...d.data };
               }
@@ -383,8 +383,16 @@ export function HospitalView() {
                     </Flex>
                   </Flex>
                   <Box style={{ flex: 1, minHeight: 0, padding: '0 15px' }}>
-                    <LoadingOverlay visible={chartData.length === 0} overlayProps={{ radius: 'sm', blur: 2 }} />
-                    {chartType === 'bar' ? (
+                    <LoadingOverlay visible={rawChartData === undefined} overlayProps={{ radius: 'sm', blur: 2 }} />
+                    {rawChartData !== undefined && chartData.length === 0 ? (
+                      <Flex h="100%" align="center" justify="center">
+                        <Text c="dimmed" fs="italic" size="sm">
+                          {store.totalFiltersAppliedCount > 0
+                            ? 'No data available for this chart after filtering'
+                            : 'No data available for this chart'}
+                        </Text>
+                      </Flex>
+                    ) : chartType === 'bar' ? (
                       // Bar Chart
                       <BarChart
                         h="100%"

@@ -919,6 +919,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     }));
   }, [rows, chartConfig.groupByVar, getFilteredGroups]);
 
+  const tableStyle = useMemo(() => ({ fontStyle: 'italic' as const }), []);
+
   const handleRowChange = (value: string | null) => {
     if (!value) return;
 
@@ -1656,8 +1658,20 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           }}
           storeColumnsKey={columnStorageKey}
           columns={effectiveColumns}
-          style={useMemo(() => ({ fontStyle: 'italic' }), [])}
+          style={tableStyle}
           onRowClick={undefined}
+          minHeight={!isSyncing && chartData !== undefined && rowsWithGroups.length === 0 ? 150 : undefined}
+          emptyState={(() => {
+            if (isSyncing || chartData === undefined || rowsWithGroups.length > 0) return <span />;
+            const isFiltered = store.totalFiltersAppliedCount > 0
+              || Object.values(numericFilters).some((f) => f.query)
+              || Object.values(textFilters).some((f) => f.length > 0);
+            return (
+              <Text c="dimmed" fs="italic" size="sm">
+                {isFiltered ? 'No data available for this chart after filtering' : 'No data available for this chart'}
+              </Text>
+            );
+          })()}
         />
       </Box>
     </Stack>
