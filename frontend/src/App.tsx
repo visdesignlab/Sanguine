@@ -110,6 +110,10 @@ function App() {
           
           CREATE TABLE IF NOT EXISTS filteredDepartments (department VARCHAR);
 
+          CREATE TABLE IF NOT EXISTS excludedVisitIds (visit_no BIGINT);
+
+          CREATE TABLE IF NOT EXISTS excludedSurgeryCaseIds (case_id BIGINT);
+
           CREATE TABLE IF NOT EXISTS filteredVisitIds AS
           SELECT DISTINCT visit_no FROM visits;
 
@@ -129,11 +133,14 @@ function App() {
              OR v.attending_provider_department IN (SELECT department FROM filteredDepartments); -- If filteredDepartments is not empty, filter on department
 
           CREATE VIEW IF NOT EXISTS filteredSurgeryCases AS
-          SELECT 
-            sc.*
+          SELECT sc.*
           FROM surgery_cases sc
-          INNER JOIN filteredVisitIds fvi ON sc.visit_no = fvi.visit_no;
+          INNER JOIN filteredVisitIds fvi ON sc.visit_no = fvi.visit_no
+          WHERE sc.case_id NOT IN (SELECT case_id FROM excludedSurgeryCaseIds);
         `);
+
+        // Load persisted exclusions from backend into DuckDB
+        await store.loadExclusions();
 
         await fetchProcedureHierarchy();
 

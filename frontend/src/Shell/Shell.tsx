@@ -11,6 +11,7 @@ import {
   Anchor,
 } from '@mantine/core';
 import {
+  IconBook,
   IconArrowNarrowLeftDashed,
   IconArrowNarrowRightDashed, IconDeviceFloppy,
   IconCamera, IconLogout, IconMenu,
@@ -121,6 +122,12 @@ export const Shell = observer(() => {
         </Badge>,
 
       ],
+    },
+    {
+      icon: IconBook,
+      label: 'Learn',
+      content: <Text>Learning content</Text>,
+      disabled: true,
     },
   ];
 

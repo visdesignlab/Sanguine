@@ -31,3 +31,22 @@ class StateAccess(models.Model):
 
     class Meta:
         unique_together = ['state', 'user']
+
+
+class DataExclusion(models.Model):
+    VISIT = 'visit'
+    SURGERY_CASE = 'surgery_case'
+    RECORD_TYPE_CHOICES = [
+        (VISIT, 'Visit'),
+        (SURGERY_CASE, 'Surgery Case'),
+    ]
+
+    record_type = models.CharField(max_length=20, choices=RECORD_TYPE_CHOICES)
+    record_id = models.CharField(max_length=100)  # visit_no or case_id as string
+    flag_key = models.CharField(max_length=100)
+    excluded_by = models.CharField(max_length=128)
+    excluded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'DataExclusion'
+        unique_together = [['record_type', 'record_id']]

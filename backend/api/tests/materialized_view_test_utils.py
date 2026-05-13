@@ -17,6 +17,7 @@ from api.models.intelvia import (
 
 
 TABLES_TO_TRUNCATE = [
+    "SurgeryCaseAttributes",
     "VisitAttributes",
     "GuidelineAdherence",
     "DerivedArtifactRefresh",
@@ -52,6 +53,52 @@ def truncate_intelvia_tables() -> None:
 
 def materialize_visit_attributes() -> None:
     refresh_derived_tables(target="visit_attributes")
+
+
+def materialize_surgery_case_attributes() -> None:
+    refresh_derived_tables(target="surgery_case_attributes")
+
+
+def fetch_surgery_case_attributes_row(case_id: int) -> dict | None:
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM SurgeryCaseAttributes WHERE case_id = %s",
+            [case_id],
+        )
+        columns = [column[0] for column in cursor.description]
+        row = cursor.fetchone()
+        return dict(zip(columns, row)) if row else None
+
+
+def add_surgery_case(
+    *,
+    visit: Visit,
+    case_id: int,
+    surgery_start_dtm: datetime,
+    surgery_end_dtm: datetime,
+    surgeon_prov_id: str = "SURG-FIXTURE",
+    surgeon_prov_name: str = "Surgeon Fixture",
+    anesth_prov_id: str = "ANES-FIXTURE",
+    anesth_prov_name: str = "Anesthesiologist Fixture",
+) -> SurgeryCase:
+    return SurgeryCase.objects.create(
+        case_id=case_id,
+        visit_no=visit,
+        mrn=visit.mrn,
+        case_date=surgery_start_dtm.date(),
+        surgery_start_dtm=surgery_start_dtm,
+        surgery_end_dtm=surgery_end_dtm,
+        surgery_elap=(surgery_end_dtm - surgery_start_dtm).total_seconds() / 60,
+        surgery_type_desc="Fixture Surgery",
+        surgeon_prov_id=surgeon_prov_id,
+        surgeon_prov_name=surgeon_prov_name,
+        anesth_prov_id=anesth_prov_id,
+        anesth_prov_name=anesth_prov_name,
+        prim_proc_desc="Fixture Procedure",
+        postop_icu_los=Decimal("1.00"),
+        sched_site_desc="Main OR",
+        asa_code="2",
+    )
 
 
 def fetch_guideline_adherence_rows(visit_no: int) -> list[dict]:

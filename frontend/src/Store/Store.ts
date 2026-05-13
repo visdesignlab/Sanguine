@@ -2769,6 +2769,7 @@ export class RootStore {
       INSERT INTO filteredVisitIds
         SELECT visit_no
         FROM visits
+        WHERE visit_no NOT IN (SELECT visit_no FROM excludedVisitIds)
         GROUP BY visit_no
         ${visitFiltersToApply ? `HAVING ${visitFiltersToApply}` : ''}
         ;
@@ -3312,6 +3313,39 @@ export class RootStore {
     `);
     await this.computeDashboardStatData();
     await this.computeDashboardChartData();
+  }
+
+  async loadExclusions(): Promise<void> {
+    if (!this.duckDB) return;
+    try {
+      const res = await fetch('/api/exclusions');
+      if (!res.ok) return;
+      const data = await res.json() as { visits: number[], surgery_cases: number[] };
+      await this.duckDB.query('TRUNCATE TABLE excludedVisitIds; TRUNCATE TABLE excludedSurgeryCaseIds;');
+      if (data.visits.length > 0) {
+        await this.duckDB.query(`INSERT INTO excludedVisitIds VALUES ${data.visits.map((id) => `(${id})`).join(',')}`);
+      }
+      if (data.surgery_cases.length > 0) {
+        await this.duckDB.query(`INSERT INTO excludedSurgeryCaseIds VALUES ${data.surgery_cases.map((id) => `(${id})`).join(',')}`);
+      }
+    } catch (e) {
+      console.error('Failed to load exclusions', e);
+    }
+  }
+
+  async saveExclusions(
+    toAdd: { record_type: string; record_id: string; flag_key: string }[],
+    toRemove: { record_type: string; record_id: string }[],
+  ): Promise<void> {
+    if (!this.duckDB) return;
+    const res = await fetch('/api/exclusions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to_add: toAdd, to_remove: toRemove }),
+    });
+    if (!res.ok) throw new Error('Failed to save exclusions');
+    await this.loadExclusions();
+    await this.updateFilteredData();
   }
   // endregion
 }

@@ -4,6 +4,7 @@ import {
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import { BloodProductCostSettings } from './BloodProductCostSettings';
 import { GuidelineAdherenceSettings } from './GuidelineAdherenceSettings';
+import { DataManagementView } from './DataManagement/DataManagementView';
 import layoutClasses from '../ViewLayout.module.css';
 
 export function SettingsView() {
@@ -22,6 +23,7 @@ export function SettingsView() {
         </Stack>
       </Box>
       <Accordion multiple defaultValue={['bloodProductCosts']} variant="contained" radius="md">
+        <DataManagementView />
         <BloodProductCostSettings />
         <GuidelineAdherenceSettings />
       </Accordion>
