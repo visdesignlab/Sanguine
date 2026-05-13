@@ -806,34 +806,6 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
               </Flex>
             )}
 
-            {/* Bin Sort Toggle — shown for all discrete axes */}
-            {isDiscrete && (
-              <Tooltip
-                label={`Sort ${xAxisOption?.label || selectedX} Bins: ${binSort === 'alpha' ? 'A/Z →' : binSort === 'count' ? 'Case Count →' : 'Avg Y →'}`}
-                openDelay={500}
-              >
-                <Button
-                  size="xs"
-                  variant="subtle"
-                  color="gray"
-                  px={8}
-                  style={{
-                    fontSize: 11,
-                    backgroundColor: 'transparent',
-                    border: `1px solid ${theme.colors.gray[3]}`,
-                  }}
-                  onClick={() => {
-                    const order: ('alpha' | 'count' | 'avg')[] = ['alpha', 'count', 'avg'];
-                    setBinSort(order[(order.indexOf(binSort) + 1) % order.length]);
-                  }}
-                >
-                  {binSort === 'alpha' && 'Bins: A/Z →'}
-                  {binSort === 'count' && 'Bins: Cases →'}
-                  {binSort === 'avg' && <Text size="xs" fw={700} c="blue">Bins: Avg →</Text>}
-                </Button>
-              </Tooltip>
-            )}
-
             {/* Show buttons */}
             <Flex direction="row" align="center" gap="xs" ml={0}>
               <Text size="xs" c="dimmed" fw={500}>Show:</Text>
@@ -914,17 +886,50 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
           )}
           <Flex direction="row" h={height}>
             {/* Fixed Y Axis */}
-            <ScatterYAxis
-              height={height}
-              isDiscrete={isDiscrete}
-              yScale={yScale}
-              theme={theme}
-              varConfig={varConfig}
-              targets={targets}
-              setTargets={setTargets}
-              hoveredTarget={hoveredTarget}
-              setHoveredTarget={setHoveredTarget}
-            />
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <ScatterYAxis
+                height={height}
+                isDiscrete={isDiscrete}
+                yScale={yScale}
+                theme={theme}
+                varConfig={varConfig}
+                targets={targets}
+                setTargets={setTargets}
+                hoveredTarget={hoveredTarget}
+                setHoveredTarget={setHoveredTarget}
+              />
+              {/* Bin Sort Toggle — overlaid bottom-right of Y axis, same as DumbbellChart */}
+              {isDiscrete && (
+                <Box style={{ position: 'absolute', bottom: 0, right: 5, zIndex: 10 }}>
+                  <Tooltip
+                    label={`Sort ${xAxisOption?.label || selectedX} bins: ${binSort === 'alpha' ? 'A→Z' : binSort === 'count' ? 'Case Count' : 'Avg Y'}`}
+                    position="right"
+                    openDelay={300}
+                  >
+                    <Button
+                      size="compact-xs"
+                      variant="subtle"
+                      color="gray"
+                      px={4}
+                      h={26}
+                      style={{
+                        fontSize: 10,
+                        backgroundColor: 'rgba(255,255,255,0.85)',
+                        border: `1px solid ${theme.colors.gray[3]}`,
+                      }}
+                      onClick={() => {
+                        const order: ('alpha' | 'count' | 'avg')[] = ['alpha', 'count', 'avg'];
+                        setBinSort(order[(order.indexOf(binSort) + 1) % order.length]);
+                      }}
+                    >
+                      {binSort === 'alpha' && 'A/Z →'}
+                      {binSort === 'count' && 'Cases →'}
+                      {binSort === 'avg' && <Text size="0.6rem" fw={700} c="blue">Avg →</Text>}
+                    </Button>
+                  </Tooltip>
+                </Box>
+              )}
+            </div>
 
             {/* Scrollable Content */}
             <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
