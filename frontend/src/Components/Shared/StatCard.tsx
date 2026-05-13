@@ -53,7 +53,7 @@ export function StatCard({
           />
         </Group>
       </Group>
-      <Flex align="center" gap={8} mt="sm" className={statCardStyles.valueRow}>
+      <Flex align="center" gap={8} className={statCardStyles.valueRow}>
         <Title order={2} className={statCardStyles.metricValue}>
           {value}
         </Title>
@@ -66,7 +66,7 @@ export function StatCard({
       {comparison && (
         <Group
           align="center"
-          mt="sm"
+          mt={2}
           gap={2}
           className={`${statCardStyles.comparisonText} ${isHovered ? statCardStyles.comparisonTextHovered : ''}`.trim()}
         >
