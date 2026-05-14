@@ -100,17 +100,26 @@ try {{
   }};
   console.log(JSON.stringify(payload));
 }} finally {{
-  conn.close();
+  await conn.close();
+  if (typeof db.terminate === 'function') {{
+    await db.terminate();
+  }}
 }}
 """
 
-    completed = subprocess.run(
-        ["node", "--input-type=module", "-e", node_script],
-        cwd=frontend_dir,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    try:
+        completed = subprocess.run(
+            ["node", "--input-type=module", "-e", node_script],
+            cwd=frontend_dir,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise AssertionError(
+            f"DuckDB parquet read timed out for {parquet_path}"
+        ) from exc
 
     if completed.returncode != 0:
         raise AssertionError(
