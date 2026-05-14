@@ -129,7 +129,7 @@ Run the backend suite from the backend container:
 
 ```bash
 docker compose -f docker-compose.dev.yml exec -it backend bash
-poetry run python manage.py test api.tests --verbosity 2 --parallel 8
+poetry run python manage.py test api.tests --verbosity 2 --parallel 8 --exclude-tag duckdb-roundtrip
 ```
 
 The custom Django test runner at `backend/api/tests/runner.py` runs `migrate_derived_tables` after the test database is created, so `GuidelineAdherence`, `VisitAttributes`, and `SurgeryCaseAttributes` exist before fixtures are populated and refreshed.

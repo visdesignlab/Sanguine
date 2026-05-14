@@ -4,12 +4,16 @@ on:
   pull_request:
     paths:
       - "backend/**"
+      - "frontend/package.json"
+      - "frontend/yarn.lock"
       - ".github/workflows/backend-db-tests.yml"
   push:
     branches:
       - main
     paths:
       - "backend/**"
+      - "frontend/package.json"
+      - "frontend/yarn.lock"
       - ".github/workflows/backend-db-tests.yml"
 
 jobs:
