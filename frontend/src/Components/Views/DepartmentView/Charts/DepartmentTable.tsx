@@ -53,6 +53,9 @@ type HoveredValue = { col: string; value: number } | null;
 type HistogramBin = { binMin: number; binMax: number; count: number };
 type SetHoveredValue = (val: HoveredValue) => void;
 
+export const DEPT_GRID_ROW_HEIGHT = 10; // px per grid unit — must match rowHeight in DepartmentView
+const DEPT_MIN_H = 20; // minimum grid units (200px)
+
 const ROW_H_GROUPED = 60;
 const SUB_ROW_H = 26;
 const ROW_GAP = 12;
@@ -1528,10 +1531,40 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     }
   }, [columnVars, resetColumnsOrder]);
 
+  // Measure table natural height and update layout maxH so the card can't be
+  // dragged taller than its content, preventing empty whitespace below the table.
+  const stackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const measure = () => {
+      if (!stackRef.current) return;
+      const stack = stackRef.current;
+      const toolbar = stack.children[0] as HTMLElement | undefined;
+      const toolbarH = toolbar?.offsetHeight ?? 52;
+      const tableEl = stack.querySelector('table.mantine-datatable-table') as HTMLElement | null;
+      const tableH = tableEl?.offsetHeight ?? (rowsWithGroups.length === 0 ? 150 : 0);
+      const gap = parseFloat(getComputedStyle(stack).gap) || 8;
+      const card = stack.parentElement;
+      const paddingTop = card ? parseFloat(getComputedStyle(card).paddingTop) : 16;
+      const paddingBot = card ? parseFloat(getComputedStyle(card).paddingBottom) : 16;
+      const naturalPx = paddingTop + toolbarH + gap + tableH + paddingBot;
+      const maxH = Math.max(DEPT_MIN_H, Math.ceil(naturalPx / DEPT_GRID_ROW_HEIGHT));
+      store.updateDepartmentChartMaxH(chartConfig.chartId, maxH);
+    };
+
+    measure();
+
+    const tableEl = stackRef.current?.querySelector('table.mantine-datatable-table');
+    if (!tableEl) return undefined;
+    const ro = new ResizeObserver(measure);
+    ro.observe(tableEl);
+    return () => ro.disconnect();
+  }, [rowsWithGroups, chartConfig.chartId, store]);
+
   // -------------------------------------------------------
   // Data Table -------
   return (
-    <Stack style={{ height: '100%', width: '100%' }}>
+    <Stack ref={stackRef} style={{ height: '100%', width: '100%' }}>
       <Flex direction="row" justify="space-between" align="center" pl="md">
         <Flex direction="row" align="center" gap="md" ml={-12}>
           {/** Chart Grip */}
