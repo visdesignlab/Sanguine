@@ -34,7 +34,7 @@ import {
   AGGREGATION_OPTIONS,
 } from '../../../Types/application';
 import { DumbbellChart } from './Charts/DumbbellChart';
-import DepartmentTable, { DEPT_GRID_ROW_HEIGHT } from './Charts/DepartmentTable';
+import DepartmentTable from './Charts/DepartmentTable';
 import { ScatterPlot } from './Charts/ScatterPlot';
 import { DepartmentViewQuestions } from './DepartmentViewQuestions';
 import { DepartmentStatsGrid } from './DepartmentStatsGrid';
@@ -546,7 +546,7 @@ export function DepartmentView() {
                 cols={{
                   main: 4, sm: 1,
                 }}
-                rowHeight={DEPT_GRID_ROW_HEIGHT}
+                rowHeight={10}
                 containerPadding={[0, 0]}
                 draggableHandle=".move-icon"
                 onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {

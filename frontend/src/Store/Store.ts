@@ -2202,7 +2202,7 @@ export class RootStore {
     const newConfigs = [config, ...currentConfigs];
     const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 2 }));
     shifted.unshift({
-      i: config.chartId, x: 0, y: 0, w: 4, h: 45, minH: 20,
+      i: config.chartId, x: 0, y: 0, w: 4, h: 45,
     });
     const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 4) };
     this.actions.updateDepartmentState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Department Chart');
@@ -2224,17 +2224,6 @@ export class RootStore {
 
   updateDepartmentChartConfig(updatedConfig: DepartmentChartConfig) {
     this.departmentChartConfigs = this.departmentChartConfigs.map((cfg) => (cfg.chartId === updatedConfig.chartId ? updatedConfig : cfg));
-  }
-
-  updateDepartmentChartMaxH(chartId: string, maxH: number) {
-    const currentLayouts = this.departmentChartLayouts;
-    if (!currentLayouts.main) return;
-    const newMain = currentLayouts.main.map((l) => {
-      if (l.i !== chartId) return l;
-      const clampedH = Math.min(l.h, maxH);
-      return { ...l, h: clampedH, maxH };
-    });
-    this._transientDepartmentLayouts = { ...currentLayouts, main: newMain };
   }
 
   get departmentStatConfigs(): DepartmentStatConfig[] {
