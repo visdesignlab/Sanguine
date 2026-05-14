@@ -74,7 +74,7 @@ def _code_map() -> dict[str, tuple[str, str, str, str]]:
 
 
 def _read_parquet_rows_with_duckdb(parquet_path: Path) -> dict:
-    frontend_dir = Path(__file__).resolve().parents[3] / "frontend"
+    frontend_dir = Path(__file__).resolve().parents[2] / "frontend"
     parquet_sql_literal = str(parquet_path).replace("'", "''")
     node_script = f"""
 import * as duckdb from '@duckdb/duckdb-wasm/blocking';
