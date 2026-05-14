@@ -2750,7 +2750,9 @@ export class RootStore {
 
     // Add date filters if applied
     if (this.dateFiltersAppliedCount > 0) {
-      visitFilterConditions.push(`BOOL_OR(adm_dtm >= '${dateFrom}' AND dsch_dtm <= '${dateTo}')`);
+      const maxDschQuery = await this.duckDB.query('SELECT MAX(dsch_dtm) AS max_d FROM visits');
+      const maxDschStr = maxDschQuery.toArray()[0].toJSON().max_d;
+      visitFilterConditions.push(`BOOL_OR(adm_dtm >= '${dateFrom}' AND COALESCE(dsch_dtm, '${maxDschStr}') <= '${dateTo}')`);
     }
 
     // Join the visit-level filter conditions with AND
