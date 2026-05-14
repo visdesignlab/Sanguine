@@ -1,10 +1,8 @@
-import { useContext } from 'react';
 import {
   Flex, Text, Tooltip, ActionIcon, useMantineTheme,
 } from '@mantine/core';
 import { IconFocusCentered, IconX } from '@tabler/icons-react';
-import { observer } from 'mobx-react-lite';
-import { Store } from '../../../../Store/Store';
+import { caseSelection, useCaseSelection } from '../../../../Store/CaseSelection';
 
 /**
  * Compact badge showing the count of selected surgery cases with focus-mode and clear controls.
@@ -15,10 +13,9 @@ import { Store } from '../../../../Store/Store';
  *
  * Renders nothing when no cases are selected.
  */
-export const CaseSelectionBadge = observer(() => {
-  const store = useContext(Store);
+export function CaseSelectionBadge() {
   const theme = useMantineTheme();
-  const { selectedCaseIds, isFocusModeActive } = store;
+  const { selectedCaseIds, isFocusModeActive } = useCaseSelection();
 
   if (selectedCaseIds.size === 0) return null;
 
@@ -42,9 +39,9 @@ export const CaseSelectionBadge = observer(() => {
           flexShrink: 0,
           transition: 'background 120ms, border-color 120ms',
         }}
-        onMouseEnter={() => store.setHoveringBadge(true)}
-        onMouseLeave={() => store.setHoveringBadge(false)}
-        onClick={() => store.setFocusModeActive(!store.isFocusModeActive)}
+        onMouseEnter={() => caseSelection.setHoveringBadge(true)}
+        onMouseLeave={() => caseSelection.setHoveringBadge(false)}
+        onClick={() => caseSelection.setFocusModeActive(!isFocusModeActive)}
       >
         <IconFocusCentered
           size={13}
@@ -69,7 +66,7 @@ export const CaseSelectionBadge = observer(() => {
           size={16}
           variant="transparent"
           color={isFocusModeActive ? 'orange' : 'gray'}
-          onClick={(e: React.MouseEvent) => { e.stopPropagation(); store.clearSelected(); }}
+          onClick={(e: React.MouseEvent) => { e.stopPropagation(); caseSelection.clearSelected(); }}
           style={{ marginLeft: 2 }}
           aria-label="Clear selection"
         >
@@ -78,4 +75,4 @@ export const CaseSelectionBadge = observer(() => {
       </Flex>
     </Tooltip>
   );
-});
+}

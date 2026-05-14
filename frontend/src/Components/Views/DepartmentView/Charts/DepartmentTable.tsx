@@ -7,7 +7,6 @@ import { scaleLinear, scaleLog } from 'd3-scale';
 import { max as d3Max, ticks as d3Ticks } from 'd3-array';
 import { interpolateReds } from 'd3';
 import { observer, useLocalObservable } from 'mobx-react-lite';
-import { reaction } from 'mobx';
 import {
   MultiSelect,
   CloseButton,
@@ -33,6 +32,8 @@ import {
 import { BarChart } from '@mantine/charts';
 
 import { Store } from '../../../../Store/Store';
+import { caseSelection } from '../../../../Store/CaseSelection';
+import { EmptyChartState } from './EmptyChartState';
 import { CaseSelectionBadge } from './CaseSelectionBadge';
 import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3Utils';
 import {
@@ -790,16 +791,13 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
   const displayedRowsRef = useRef<ExploreTableRow[]>([]);
 
   // External clear (badge ×) — clear local row keys too
-  useEffect(() => reaction(
-    () => store.selectedCaseIds,
-    (ids) => {
-      if (ids.size === 0) {
-        setSelectedRowKeys(new Set());
-        selectedRowKeysRef.current = new Set();
-        lastClickedIndexRef.current = -1;
-      }
-    },
-  ), [store]);
+  useEffect(() => caseSelection.subscribe(() => {
+    if (caseSelection.selectedCaseIds.size === 0) {
+      setSelectedRowKeys(new Set());
+      selectedRowKeysRef.current = new Set();
+      lastClickedIndexRef.current = -1;
+    }
+  }), []);
 
   // End drag on mouseup anywhere
   useEffect(() => {
@@ -817,8 +815,8 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     next.add(key);
     selectedRowKeysRef.current = next;
     setSelectedRowKeys(next);
-    store.addSelected(rowIds(row));
-  }, [rowIds, store]);
+    caseSelection.addSelected(rowIds(row));
+  }, [rowIds]);
 
   const deselectRow = useCallback((row: ExploreTableRow) => {
     const key = String(row._row_key ?? '');
@@ -827,8 +825,8 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     next.delete(key);
     selectedRowKeysRef.current = next;
     setSelectedRowKeys(next);
-    store.removeSelected(rowIds(row));
-  }, [rowIds, store]);
+    caseSelection.removeSelected(rowIds(row));
+  }, [rowIds]);
 
   const handleRowMouseDown = useCallback((row: ExploreTableRow) => {
     const key = String(row._row_key ?? '');
@@ -840,17 +838,17 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
   }, []);
 
   const handleRowMouseEnter = useCallback((row: ExploreTableRow) => {
-    store.setHovered(rowIds(row));
+    caseSelection.setHovered(rowIds(row));
     if (!isDraggingRef.current) return;
     const key = String(row._row_key ?? '');
     if (!key || key === dragStartKeyRef.current) return;
     didDragRef.current = true;
     if (dragSelectingRef.current) selectRow(row); else deselectRow(row);
-  }, [rowIds, selectRow, deselectRow, store]);
+  }, [rowIds, selectRow, deselectRow]);
 
   const handleRowMouseLeave = useCallback(() => {
-    store.clearHovered();
-  }, [store]);
+    caseSelection.clearHovered();
+  }, []);
 
   const handleRowClick = useCallback(({ record, index, event }: { record: ExploreTableRow; index: number; event: React.MouseEvent<Element> }) => {
     if (didDragRef.current) { didDragRef.current = false; return; }

@@ -10,6 +10,7 @@ import React, {
   useState, useRef, useCallback, useEffect, useContext, type RefObject,
 } from 'react';
 import { Store } from '../../../../Store/Store';
+import { caseSelection } from '../../../../Store/CaseSelection';
 
 export type BrushRect = { x1: number; y1: number; x2: number; y2: number };
 type InteractionMode = 'idle' | 'selecting' | 'moving' | 'resizing';
@@ -123,7 +124,7 @@ export function useBrushSelection({
         brushRef.current.resizeHandle = handle; setResizeHandle(handle);
         initialSelection.current = { ...applied };
         const boxIds = new Set(extract(applied));
-        prevSelectionRef.current = new Set([...store.selectedCaseIds].filter((id) => !boxIds.has(id)));
+        prevSelectionRef.current = new Set([...caseSelection.selectedCaseIds].filter((id) => !boxIds.has(id)));
         return;
       }
       if (cursor === 'move') {
@@ -131,7 +132,7 @@ export function useBrushSelection({
         dragStart.current = { x, y };
         initialSelection.current = { ...applied };
         const boxIds = new Set(extract(applied));
-        prevSelectionRef.current = new Set([...store.selectedCaseIds].filter((id) => !boxIds.has(id)));
+        prevSelectionRef.current = new Set([...caseSelection.selectedCaseIds].filter((id) => !boxIds.has(id)));
         return;
       }
     }
@@ -142,7 +143,7 @@ export function useBrushSelection({
       return;
     }
 
-    prevSelectionRef.current = new Set(store.selectedCaseIds);
+    prevSelectionRef.current = new Set(caseSelection.selectedCaseIds);
     brushRef.current.mode = 'selecting'; setInteractionMode('selecting');
     const box: BrushRect = {
       x1: x, y1: y, x2: x, y2: y,
@@ -222,7 +223,7 @@ export function useBrushSelection({
     } = optsRef.current;
 
     if (mode === 'moving' || mode === 'resizing') {
-      store.setSelected([...prevSelectionRef.current, ...extract(sel)]);
+      caseSelection.setSelected([...prevSelectionRef.current, ...extract(sel)]);
       brushRef.current.appliedSelection = sel; setAppliedSelection(sel);
       brushRef.current.selection = null; setSelection(null);
       return;
@@ -232,7 +233,7 @@ export function useBrushSelection({
       onClick();
       brushRef.current.appliedSelection = null; setAppliedSelection(null);
     } else {
-      store.setSelected([...prevSelectionRef.current, ...extract(sel)]);
+      caseSelection.setSelected([...prevSelectionRef.current, ...extract(sel)]);
       brushRef.current.appliedSelection = sel; setAppliedSelection(sel);
     }
     brushRef.current.selection = null; setSelection(null);
@@ -246,7 +247,7 @@ export function useBrushSelection({
     const dx = Math.abs(sel.x2 - sel.x1);
     const dy = Math.abs(sel.y2 - sel.y1);
     if (dx < optsRef.current.dragLimit && dy < optsRef.current.dragLimit) return;
-    store.setSelected([...prevSelectionRef.current, ...optsRef.current.extractBoxIds(sel)]);
+    caseSelection.setSelected([...prevSelectionRef.current, ...optsRef.current.extractBoxIds(sel)]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection]); // intentionally depends on selection state (triggers on every box update)
 

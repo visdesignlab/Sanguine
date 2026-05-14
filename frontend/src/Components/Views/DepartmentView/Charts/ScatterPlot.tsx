@@ -11,8 +11,9 @@ import {
 } from '@tabler/icons-react';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { useObserver } from 'mobx-react-lite';
-import { reaction } from 'mobx';
 import { Store } from '../../../../Store/Store';
+import { caseSelection } from '../../../../Store/CaseSelection';
+import { EmptyChartState } from './EmptyChartState';
 
 import {
   DumbbellCase, LAB_RESULTS,
@@ -578,8 +579,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     ctx.translate(-Math.max(0, visibleRange[0]), 0);
 
     // Read cross-chart state directly from singleton (no React deps needed)
-    const hoveredIds = store.hoveredCaseIds;
-    const selectedIds = store.selectedCaseIds;
+    const { hoveredCaseIds: hoveredIds, selectedCaseIds: selectedIds } = caseSelection;
     const hasSelection = selectedIds.size > 0;
 
     const legendHover = hoveredLegendGroup;
@@ -611,7 +611,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       const isSelectedCase = caseId ? selectedIds.has(caseId) : false;
 
       // Highlight selected cases; dim non-selected only when focus mode is active
-      const focusDim = hasSelection && (store.isFocusModeActive || store.isHoveringBadge);
+      const focusDim = hasSelection && (caseSelection.isFocusModeActive || caseSelection.isHoveringBadge);
       if (!hasLegendEmphasis) {
         if (isSelectedCase) {
           color = smallSelectColor;
@@ -636,16 +636,15 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
 
     ctx.restore();
-  }, [pointPositions, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange, rawData, store]);
+  }, [pointPositions, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange, rawData]);
 
   // Redraw canvas when dependencies change
   useEffect(() => { drawPoints(); }, [drawPoints]);
 
   // Redraw canvas whenever cross-chart hover/selection state changes
-  useEffect(() => reaction(
-    () => [store.hoveredCaseIds, store.selectedCaseIds, store.isFocusModeActive, store.isHoveringBadge],
-    () => requestAnimationFrame(drawPoints),
-  ), [store, drawPoints]);
+  useEffect(() => caseSelection.subscribe(() => {
+    requestAnimationFrame(drawPoints);
+  }), [drawPoints]);
 
   // Set canvas size
   useEffect(() => {
@@ -680,7 +679,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const onClickPoint = () => {
     if (hoveredPointRef.current) {
       const caseData = rawData[hoveredPointRef.current.caseIdx];
-      if (caseData) store.toggleSelected([caseData.case_id]);
+      if (caseData) caseSelection.toggleSelected([caseData.case_id]);
     }
   };
 
@@ -711,14 +710,14 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         const caseData = rawData[nearest.caseIdx];
         if (caseData) {
           setTooltipData({ x: nearest.x, y: nearest.y, caseData });
-          store.setHovered([caseData.case_id]);
+          caseSelection.setHovered([caseData.case_id]);
         }
       } else {
         setTooltipData(null);
-        store.clearHovered();
+        caseSelection.clearHovered();
       }
     }
-  }, [spatialIndex, pointPositions, rawData, store]);
+  }, [spatialIndex, pointPositions, rawData]);
 
   // X axis label for title
   const xLabel = xAxisOption?.label || selectedX;
@@ -876,13 +875,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
           ref={sizeRef}
         >
           {processedData.length === 0 && store.departmentChartData[chartConfig.chartId] !== undefined && (
-            <Flex style={{ position: 'absolute', inset: 0, zIndex: 10 }} align="center" justify="center">
-              <Text c="dimmed" fs="italic" size="sm">
-                {store.totalFiltersAppliedCount > 0
-                  ? 'No data available for this chart after filtering'
-                  : 'No data available for this chart'}
-              </Text>
-            </Flex>
+            <EmptyChartState hasFilters={store.totalFiltersAppliedCount > 0} />
           )}
           <Flex direction="row" h={height}>
             {/* Fixed Y Axis */}
@@ -900,7 +893,14 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
               />
               {/* Bin Sort Toggle — overlaid bottom-right of Y axis, same as DumbbellChart */}
               {isDiscrete && (
-                <Box style={{ position: 'absolute', bottom: 0, right: 5, zIndex: 10 }}>
+                <Box
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 5,
+                    zIndex: 10,
+                  }}
+                >
                   <Tooltip
                     label={`Sort ${xAxisOption?.label || selectedX} bins: ${binSort === 'alpha' ? 'A→Z' : binSort === 'count' ? 'Case Count' : 'Avg Y'}`}
                     position="right"

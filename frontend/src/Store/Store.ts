@@ -44,6 +44,7 @@ import {
   BloodComponent,
   CELL_SAVER_ML, PLT_UNITS, RBC_UNITS,
 } from '../Types/bloodProducts';
+import { caseSelection } from './CaseSelection';
 
 export const DEFAULT_CLAMP_PERCENTILE = 0.99;
 
@@ -1046,21 +1047,23 @@ export class RootStore {
 
   selectedVisitNos: number[] = [];
 
+  // Backward-compatibility alias used by Department/Hospital chart components.
+  get selectedCaseIds() { return caseSelection.selectedCaseIds; }
+
+  addSelected(ids: string[]) { caseSelection.addSelected(ids); }
+
+  removeSelected(ids: string[]) { caseSelection.removeSelected(ids); }
+
+  clearHovered() { caseSelection.clearHovered(); }
+
+  get isDashboardDataLoading() { return false; }
+
   // --- Department View State (non-provenance) ---
   departmentViewQuestionsOpened = true;
 
   departmentViewQuestionsWidth = 380;
 
   activeDepartmentViewQuestion: string | null = null;
-
-  // --- Case Selection (cross-chart hover/selection for DepartmentView) ---
-  hoveredCaseIds: Set<string> = new Set();
-
-  selectedCaseIds: Set<string> = new Set();
-
-  isFocusModeActive: boolean = false;
-
-  isHoveringBadge: boolean = false;
 
   // --- Common ---
   allVisitsLength = 0;
@@ -1089,8 +1092,6 @@ export class RootStore {
       procedureHierarchy: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
-      hoveredCaseIds: observable.ref,
-      selectedCaseIds: observable.ref,
     });
 
     this.initReactions();
@@ -3318,58 +3319,6 @@ export class RootStore {
     await this.computeDashboardChartData();
   }
 
-  // --- Case Selection Actions ---
-  setHovered(ids: string[]) {
-    if (ids.length === this.hoveredCaseIds.size && ids.every((id) => this.hoveredCaseIds.has(id))) return;
-    this.hoveredCaseIds = new Set(ids);
-  }
-
-  clearHovered() {
-    if (this.hoveredCaseIds.size === 0) return;
-    this.hoveredCaseIds = new Set();
-  }
-
-  addSelected(ids: string[]) {
-    if (ids.length === 0) return;
-    const next = new Set(this.selectedCaseIds);
-    ids.forEach((id) => next.add(id));
-    if (next.size !== this.selectedCaseIds.size) this.selectedCaseIds = next;
-  }
-
-  toggleSelected(ids: string[]) {
-    if (ids.length === 0) return;
-    const next = new Set(this.selectedCaseIds);
-    ids.forEach((id) => { if (next.has(id)) next.delete(id); else next.add(id); });
-    this.selectedCaseIds = next;
-  }
-
-  removeSelected(ids: string[]) {
-    if (ids.length === 0) return;
-    const next = new Set(this.selectedCaseIds);
-    ids.forEach((id) => next.delete(id));
-    if (next.size !== this.selectedCaseIds.size) this.selectedCaseIds = next;
-  }
-
-  clearSelected() {
-    if (this.selectedCaseIds.size === 0) return;
-    this.selectedCaseIds = new Set();
-    this.isFocusModeActive = false;
-  }
-
-  setSelected(ids: string[]) {
-    this.selectedCaseIds = new Set(ids);
-    if (ids.length === 0) this.isFocusModeActive = false;
-  }
-
-  setFocusModeActive(active: boolean) {
-    if (this.isFocusModeActive === active) return;
-    this.isFocusModeActive = active;
-  }
-
-  setHoveringBadge(hovering: boolean) {
-    if (this.isHoveringBadge === hovering) return;
-    this.isHoveringBadge = hovering;
-  }
   // endregion
 }
 
