@@ -23,17 +23,18 @@ import { useThemeConstants } from '../../../Theme/mantineTheme';
 import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
+import layoutClasses from '../ViewLayout.module.css';
 import {
-  costYAxisOptions, ExploreTableRowOptions, ExploreTableConfig,
+  costYAxisOptions, DepartmentTableRowOptions, DepartmentTableConfig,
   SCATTER_X_AXIS_OPTIONS, SCATTER_Y_AXIS_OPTIONS,
   ScatterXAxisVar, ScatterYAxisVar,
   DumbbellXAxisVar, DumbbellYAxisVar,
   DUMBBELL_X_AXIS_OPTIONS, DUMBBELL_Y_AXIS_OPTIONS,
-  exploreStatYAxisOptions,
+  departmentStatYAxisOptions,
   AGGREGATION_OPTIONS,
 } from '../../../Types/application';
 import { DumbbellChart } from './Charts/DumbbellChart';
-import ExploreTable from './Charts/ExploreTable';
+import DepartmentTable from './Charts/DepartmentTable';
 import { ScatterPlot } from './Charts/ScatterPlot';
 import { DepartmentViewQuestions } from './DepartmentViewQuestions';
 import { DepartmentStatsGrid } from './DepartmentStatsGrid';
@@ -46,11 +47,11 @@ export function DepartmentView() {
 
   // Initial Load Default Preset
   useEffect(() => {
-    if (store.exploreChartConfigs.length === 0 && presetStateCards[0]?.options[0]) {
+    if (store.departmentChartConfigs.length === 0 && presetStateCards[0]?.options[0]) {
       const {
         chartConfigs, chartLayouts, question, statConfigs,
       } = presetStateCards[0].options[0];
-      store.loadExplorePreset([...chartConfigs], { main: [...chartLayouts.main] }, question, statConfigs ? [...statConfigs] : undefined);
+      store.loadDepartmentPreset([...chartConfigs], { main: [...chartLayouts.main] }, question, statConfigs ? [...statConfigs] : undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -66,10 +67,10 @@ export function DepartmentView() {
   // Add Chart Modal State ---------------------------------
   const [isAddModalOpen, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
 
-  const [chartType, setChartType] = useState<'cost' | 'dumbbell' | 'exploreTable' | 'scatterPlot'>('cost');
+  const [chartType, setChartType] = useState<'cost' | 'dumbbell' | 'departmentTable' | 'scatterPlot'>('cost');
   const [aggregation, setAggregation] = useState<'sum' | 'avg' | 'none'>('sum');
   const [costGroupVar, setCostGroupVar] = useState<string>('');
-  const [exploreTableGroupVar, setExploreTableGroupVar] = useState<string>('');
+  const [departmentTableGroupVar, setDepartmentTableGroupVar] = useState<string>('');
   const [dumbbellXVar, setDumbbellXVar] = useState<string>('');
   const [dumbbellYVar, setDumbbellYVar] = useState<string>('');
   const [scatterXVar, setScatterXVar] = useState<string>('');
@@ -79,7 +80,7 @@ export function DepartmentView() {
     setChartType('cost');
     setAggregation('sum');
     setCostGroupVar('');
-    setExploreTableGroupVar('');
+    setDepartmentTableGroupVar('');
     setDumbbellXVar('surgeon');
     setDumbbellYVar('hgb');
     setScatterXVar('surgeon');
@@ -98,11 +99,11 @@ export function DepartmentView() {
 
   const handleAddStat = useCallback(() => {
     if (!statYAxisVar) return;
-    const option = exploreStatYAxisOptions.find((o) => o.value === statYAxisVar);
+    const option = departmentStatYAxisOptions.find((o) => o.value === statYAxisVar);
     const aggLabel = statAggregation === 'sum' ? option?.label.sum : option?.label.avg;
-    store.addExploreStat({
+    store.addDepartmentStat({
       statId: `stat-${Date.now()}`,
-      yAxisVar: statYAxisVar as typeof exploreStatYAxisOptions[number]['value'],
+      yAxisVar: statYAxisVar as typeof departmentStatYAxisOptions[number]['value'],
       aggregation: statAggregation,
       title: aggLabel || statYAxisVar,
     });
@@ -116,16 +117,16 @@ export function DepartmentView() {
   }, [openStatModal]);
 
   const handleAddChart = () => {
-    const id = `explore-${Date.now()}`;
+    const id = `department-${Date.now()}`;
     if (chartType === 'cost') {
       if (!costGroupVar) return;
-      const groupLabel = ExploreTableRowOptions.find((o) => o.value === costGroupVar)?.label || costGroupVar;
+      const groupLabel = DepartmentTableRowOptions.find((o) => o.value === costGroupVar)?.label || costGroupVar;
 
-      store.addExploreChart({
+      store.addDepartmentChart({
         chartId: id,
-        chartType: 'exploreTable',
+        chartType: 'departmentTable',
         title: `Cost Savings Analysis per ${groupLabel}`,
-        rowVar: costGroupVar as ExploreTableConfig['rowVar'],
+        rowVar: costGroupVar as DepartmentTableConfig['rowVar'],
         aggregation: (aggregation === 'none' ? 'sum' : aggregation) as 'sum' | 'avg',
         columns: [
           {
@@ -135,7 +136,7 @@ export function DepartmentView() {
             title: 'DRG Weight',
           },
           {
-            colVar: costGroupVar as ExploreTableConfig['rowVar'],
+            colVar: costGroupVar as DepartmentTableConfig['rowVar'],
             aggregation: 'none',
             type: 'text',
             title: groupLabel,
@@ -167,16 +168,16 @@ export function DepartmentView() {
         ],
         twoValsPerRow: false,
       });
-    } else if (chartType === 'exploreTable') {
-      if (!exploreTableGroupVar) return;
+    } else if (chartType === 'departmentTable') {
+      if (!departmentTableGroupVar) return;
 
-      const groupLabel = ExploreTableRowOptions.find((o) => o.value === exploreTableGroupVar)?.label || exploreTableGroupVar;
+      const groupLabel = DepartmentTableRowOptions.find((o) => o.value === departmentTableGroupVar)?.label || departmentTableGroupVar;
 
-      store.addExploreChart({
+      store.addDepartmentChart({
         chartId: id,
-        chartType: 'exploreTable',
+        chartType: 'departmentTable',
         title: `RBC Transfusions per ${groupLabel}`,
-        rowVar: exploreTableGroupVar as ExploreTableConfig['rowVar'],
+        rowVar: departmentTableGroupVar as DepartmentTableConfig['rowVar'],
         aggregation: (aggregation === 'none' ? 'avg' : aggregation) as 'sum' | 'avg',
         columns: [
           {
@@ -186,7 +187,7 @@ export function DepartmentView() {
             title: 'DRG Weight',
           },
           {
-            colVar: exploreTableGroupVar,
+            colVar: departmentTableGroupVar,
             aggregation: 'none',
             type: 'text',
             title: groupLabel,
@@ -243,7 +244,7 @@ export function DepartmentView() {
         twoValsPerRow: false,
       });
     } else if (chartType === 'dumbbell') {
-      store.addExploreChart({
+      store.addDepartmentChart({
         chartId: id,
         chartType: 'dumbbell',
         xAxisVar: (dumbbellXVar || 'surgeon') as DumbbellXAxisVar,
@@ -251,7 +252,7 @@ export function DepartmentView() {
         aggregation: 'none',
       });
     } else if (chartType === 'scatterPlot') {
-      store.addExploreChart({
+      store.addDepartmentChart({
         chartId: id,
         chartType: 'scatterPlot',
         xAxisVar: (scatterXVar || 'surgeon') as ScatterXAxisVar,
@@ -310,88 +311,92 @@ export function DepartmentView() {
     const selectedDepartment = store.state.ui.departmentViewDepartment;
     return (
       <Stack>
-        {/* Title, Add Chart Button */}
-        <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-          <Flex align="center" gap="xs">
-            <Title order={3}>
-              {selectedDepartment ? `Department of ${selectedDepartment}` : 'Department'}
-            </Title>
-          </Flex>
+        <Box component="header" className={layoutClasses.stickyHeader}>
+          <Stack gap="lg">
+            {/* Title, Add Chart Button */}
+            <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
+              <Flex align="center" gap="xs">
+                <Title order={3}>
+                  {selectedDepartment ? `Department of ${selectedDepartment}` : 'Department'}
+                </Title>
+              </Flex>
 
-          <Flex direction="row" align="center" gap="md">
-            <Tooltip label="Visible visits after filters" position="bottom">
-              <Text size="sm" c="dimmed" fw={300}>
-                {`Showing ${store.filteredVisitsLength.toLocaleString()} of ${store.allVisitsLength.toLocaleString()} Visits`}
-              </Text>
-            </Tooltip>
-            <Select
-              placeholder="Select department"
-              value={selectedDepartment}
-              onChange={(value) => {
-                store.actions.setUiState({ departmentViewDepartment: value || null });
-              }}
-              data={departmentOptions}
-              renderOption={renderDeptOption}
-              leftSection={<IconBuildingHospital size={18} stroke={1.2} color="black" />}
-              styles={{
-                input: {
-                  borderColor: 'black',
-                  borderWidth: '1px',
-                },
-              }}
-              w={260}
-              searchable
-              clearable
-            />
-            <Menu width="md">
-              <Menu.Target>
-                <Button>
-                  <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
-                  Add Item
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconNumbers size={cardIconSize} stroke={cardIconStroke} />}
-                  onClick={handleOpenStatModal}
-                >
-                  Add Stat
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconChartLine size={cardIconSize} stroke={cardIconStroke} />}
-                  onClick={handleOpenAdd}
-                >
-                  Add Chart
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-            <Tooltip label="Chart Presets" position="bottom">
-              <ActionIcon
-                variant={store.departmentViewQuestionsOpened ? 'light' : 'default'}
-                onClick={() => store.toggleDepartmentViewQuestions()}
-                size="lg"
-                aria-label="Chart Presets"
-              >
-                <Flex align="center" gap={1}>
-                  {store.departmentViewQuestionsOpened
-                    ? (
-                      <>
-                        <IconSearch size={buttonIconSize - 4} />
-                        <IconChevronRight size={buttonIconSize - 6} />
-                      </>
-                    )
-                    : (
-                      <>
-                        <IconChevronLeft size={buttonIconSize - 6} />
-                        <IconSearch size={buttonIconSize - 4} />
-                      </>
-                    )}
-                </Flex>
-              </ActionIcon>
-            </Tooltip>
-          </Flex>
-        </Flex>
-        <Divider />
+              <Flex direction="row" align="center" gap="md">
+                <Tooltip label="Visible visits after filters" position="bottom">
+                  <Text size="sm" c="dimmed" fw={300}>
+                    {`Showing ${store.filteredVisitsLength.toLocaleString()} of ${store.allVisitsLength.toLocaleString()} Visits`}
+                  </Text>
+                </Tooltip>
+                <Select
+                  placeholder="Select department"
+                  value={selectedDepartment}
+                  onChange={(value) => {
+                    store.actions.setUiState({ departmentViewDepartment: value || null });
+                  }}
+                  data={departmentOptions}
+                  renderOption={renderDeptOption}
+                  leftSection={<IconBuildingHospital size={18} stroke={1.2} color="black" />}
+                  styles={{
+                    input: {
+                      borderColor: 'black',
+                      borderWidth: '1px',
+                    },
+                  }}
+                  w={260}
+                  searchable
+                  clearable
+                />
+                <Menu width="md">
+                  <Menu.Target>
+                    <Button>
+                      <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+                      Add Item
+                    </Button>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<IconNumbers size={cardIconSize} stroke={cardIconStroke} />}
+                      onClick={handleOpenStatModal}
+                    >
+                      Add Stat
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconChartLine size={cardIconSize} stroke={cardIconStroke} />}
+                      onClick={handleOpenAdd}
+                    >
+                      Add Chart
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+                <Tooltip label="Chart Presets" position="bottom">
+                  <ActionIcon
+                    variant={store.departmentViewQuestionsOpened ? 'light' : 'default'}
+                    onClick={() => store.toggleDepartmentViewQuestions()}
+                    size="lg"
+                    aria-label="Chart Presets"
+                  >
+                    <Flex align="center" gap={1}>
+                      {store.departmentViewQuestionsOpened
+                        ? (
+                          <>
+                            <IconSearch size={buttonIconSize - 4} />
+                            <IconChevronRight size={buttonIconSize - 6} />
+                          </>
+                        )
+                        : (
+                          <>
+                            <IconChevronLeft size={buttonIconSize - 6} />
+                            <IconSearch size={buttonIconSize - 4} />
+                          </>
+                        )}
+                    </Flex>
+                  </ActionIcon>
+                </Tooltip>
+              </Flex>
+            </Flex>
+            <Divider />
+          </Stack>
+        </Box>
         {/* Add Chart Modal */}
         <Modal
           opened={isAddModalOpen}
@@ -405,21 +410,21 @@ export function DepartmentView() {
               value={chartType}
               data={[
                 { value: 'cost', label: 'Costs & Savings' },
-                { value: 'exploreTable', label: 'Heatmap' },
+                { value: 'departmentTable', label: 'Heatmap' },
                 { value: 'dumbbell', label: 'Dumbbell Chart' },
                 { value: 'scatterPlot', label: 'Scatter Plot' },
               ]}
               onChange={(v) => {
-                const val = (v as 'cost' | 'exploreTable' | 'dumbbell' | 'scatterPlot') || 'cost';
+                const val = (v as 'cost' | 'departmentTable' | 'dumbbell' | 'scatterPlot') || 'cost';
                 setChartType(val);
-                if (val === 'exploreTable') {
+                if (val === 'departmentTable') {
                   setAggregation('avg');
                 } else if (val === 'scatterPlot' || val === 'dumbbell') {
                   setAggregation('none');
                 }
               }}
             />
-            {(chartType === 'cost' || chartType === 'exploreTable') && (
+            {(chartType === 'cost' || chartType === 'departmentTable') && (
             <Select
               label="Aggregation"
               value={aggregation}
@@ -436,13 +441,13 @@ export function DepartmentView() {
                 data={costGroupOptions}
                 onChange={(v) => setCostGroupVar(v || '')}
               />
-            ) : chartType === 'exploreTable' ? (
+            ) : chartType === 'departmentTable' ? (
               <Select
                 label="Group By"
                 placeholder="Choose grouping variable"
-                value={exploreTableGroupVar}
-                data={ExploreTableRowOptions}
-                onChange={(v) => setExploreTableGroupVar(v || '')}
+                value={departmentTableGroupVar}
+                data={DepartmentTableRowOptions}
+                onChange={(v) => setDepartmentTableGroupVar(v || '')}
               />
             ) : chartType === 'scatterPlot' ? (
               <Flex gap="md" direction="column">
@@ -483,7 +488,7 @@ export function DepartmentView() {
               onClick={handleAddChart}
               disabled={
               (chartType === 'cost' && !costGroupVar)
-              || (chartType === 'exploreTable' && !exploreTableGroupVar)
+              || (chartType === 'departmentTable' && !departmentTableGroupVar)
               || (chartType === 'scatterPlot' && (!scatterXVar || !scatterYVar))
               || (chartType === 'dumbbell' && (!dumbbellXVar || !dumbbellYVar))
             }
@@ -510,7 +515,7 @@ export function DepartmentView() {
             <Select
               label="Metric"
               placeholder="Choose metric"
-              data={exploreStatYAxisOptions.map((opt) => ({
+              data={departmentStatYAxisOptions.map((opt) => ({
                 value: opt.value,
                 label: opt.label.base,
               }))}
@@ -530,9 +535,9 @@ export function DepartmentView() {
         {/* Charts + Sidebar flex row */}
         <Flex gap="md" style={{ flex: 1, minHeight: 0 }}>
           <Box style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
-            {/* Explore Stat Cards */}
+            {/* Department Stat Cards */}
             <DepartmentStatsGrid />
-            {store.exploreChartLayouts.main.length > 0 ? (
+            {store.departmentChartLayouts.main.length > 0 ? (
               <ResponsiveGridLayout
                 className="layout"
                 breakpoints={{
@@ -545,20 +550,20 @@ export function DepartmentView() {
                 containerPadding={[0, 0]}
                 draggableHandle=".move-icon"
                 onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-                  store.updateExploreLayout({ main: _layout });
+                  store.updateDepartmentLayout({ main: _layout });
                 }}
                 onResizeStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {
-                  store.updateExploreLayout({ main: _layout });
+                  store.updateDepartmentLayout({ main: _layout });
                 }}
-                layouts={store.exploreChartLayouts}
+                layouts={store.departmentChartLayouts}
               >
-                {store.exploreChartConfigs.map((chartConfig) => (
+                {store.departmentChartConfigs.map((chartConfig) => (
                   <Card
                     key={chartConfig.chartId}
                     withBorder
                     className={classes.gridItem}
                   >
-                    {chartConfig.chartType === 'exploreTable' && <ExploreTable chartConfig={chartConfig} />}
+                    {chartConfig.chartType === 'departmentTable' && <DepartmentTable chartConfig={chartConfig} />}
                     {chartConfig.chartType === 'dumbbell' && <DumbbellChart chartConfig={chartConfig} />}
                     {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
                   </Card>

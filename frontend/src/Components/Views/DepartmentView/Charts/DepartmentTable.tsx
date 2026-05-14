@@ -34,11 +34,18 @@ import { BarChart } from '@mantine/charts';
 import { Store } from '../../../../Store/Store';
 import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3Utils';
 import {
-  ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions, ExploreTableColumnOptionsGrouped, ExploreTableRowOptions, ExploreTableGroupByOptions,
+  DepartmentTableRow,
+  DepartmentTableData,
+  DepartmentTableConfig,
+  DepartmentTableColumn,
+  DepartmentTableColumnOptions,
+  DepartmentTableColumnOptionsGrouped,
+  DepartmentTableRowOptions,
+  DepartmentTableGroupByOptions,
 } from '../../../../Types/application';
 import { backgroundHoverColor, smallHoverColor } from '../../../../Theme/mantineTheme';
 import { getDepartmentContextLabel } from '../../../../Utils/departmentContext';
-import './ExploreTable.css';
+import './DepartmentTable.css';
 
 // Types
 type NumericFilter = { query: string; cmp: '>' | '<' };
@@ -83,14 +90,14 @@ export const getGroupLabel = (groupByVar: string | undefined, val: string) => {
     return 'Not Guideline Adherent';
   }
   if (['death', 'stroke', 'vent', 'ecmo', 'b12', 'iron', 'antifibrinolytic'].includes(groupByVar)) {
-    const label = ExploreTableGroupByOptions.find((o) => o.value === groupByVar)?.label || val;
+    const label = DepartmentTableGroupByOptions.find((o) => o.value === groupByVar)?.label || val;
     if (val === '1' || val === 'true') return label;
     return `No ${label}`;
   }
   return val;
 };
 
-function ExploreTableLegend({
+function DepartmentTableLegend({
   groupByVar,
   groupValues,
   hoveredLegendGroup,
@@ -143,7 +150,7 @@ function ExploreTableLegend({
 
 // Helper to get decimals
 const getDecimals = (colVar: string, agg: string = 'sum'): number => {
-  const option = ExploreTableColumnOptions.find((opt) => opt.value === colVar);
+  const option = DepartmentTableColumnOptions.find((opt) => opt.value === colVar);
   if (!option || option.decimals === undefined) return 0;
   if (typeof option.decimals === 'number') return option.decimals;
   const key = (agg === 'avg') ? 'avg' : 'sum';
@@ -159,7 +166,7 @@ const getFormattedValue = (
 ): string => {
   if (value === null || value === undefined) return '-';
 
-  const unitConfig = ExploreTableColumnOptions.find((opt) => opt.value === colVar)?.units;
+  const unitConfig = DepartmentTableColumnOptions.find((opt) => opt.value === colVar)?.units;
   const aggKey = (agg === 'avg') ? 'avg' : 'sum';
   const shortKey = (agg === 'avg') ? 'avgShort' : 'sumShort';
 
@@ -183,7 +190,7 @@ const getFormattedValue = (
 const HEATMAP_COLS = ['percent_0_rbc', 'percent_1_rbc', 'percent_2_rbc', 'percent_3_rbc', 'percent_4_rbc', 'percent_above_5_rbc'];
 
 // When adding column, infer column type from attribute
-const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColumn['type'] => {
+const inferColumnType = (key: string, data: DepartmentTableData): DepartmentTableColumn['type'] => {
   // Always treat year and quarter as text
   if (['year', 'quarter', 'attending_provider'].includes(key)) {
     return 'text';
@@ -543,7 +550,7 @@ function NumericBarCell({
 function StackedBarCell({
   row, max, colVar, agg, groupFilter, rowLabel, columnLabel, departmentLabel,
 }: {
-  row: ExploreTableRow;
+  row: DepartmentTableRow;
   max: number;
   colVar: string;
   agg?: string;
@@ -744,11 +751,11 @@ const HistogramFooter = observer(({
   );
 });
 
-// MARK: - ExploreTable
+// MARK: - DepartmentTable
 
-const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfig }) => {
+const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTableConfig }) => {
   const store = useContext(Store);
-  const chartData = store.exploreChartData[chartConfig.chartId] as ExploreTableData;
+  const chartData = store.departmentChartData[chartConfig.chartId] as DepartmentTableData;
 
   // Compute department context labels for tooltips
   const fromLabel = useMemo(
@@ -801,7 +808,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   }, [hoveredLegendGroup, selectedLegendGroup]);
 
   // Sorting
-  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ExploreTableRow>>({
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<DepartmentTableRow>>({
     columnAccessor: chartConfig.sort?.colVar || chartConfig.columns[0]?.colVar || 'surgeon_prov_id',
     direction: chartConfig.sort?.direction || 'asc',
   });
@@ -837,9 +844,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     });
 
     // Sort ---
-    const accessor = sortStatus.columnAccessor as keyof ExploreTableRow;
+    const accessor = sortStatus.columnAccessor as keyof DepartmentTableRow;
 
-    const getSortValue = (row: ExploreTableRow) => {
+    const getSortValue = (row: DepartmentTableRow) => {
       const val = row[accessor];
 
       if (chartConfig.twoValsPerRow && Array.isArray(val) && typeof val[0] === 'number') {
@@ -898,7 +905,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
   }, [rows, chartConfig]);
 
   // Precompute filtered+sorted groups per row so column renderers don't repeat this work per cell
-  const getFilteredGroups = useCallback((row: ExploreTableRow): ExploreTableRow[] => {
+  const getFilteredGroups = useCallback((row: DepartmentTableRow): DepartmentTableRow[] => {
     if (!row._groups || row._groups.length === 0) return [];
     return row._groups
       .filter((g) => g._group_val !== undefined && g._group_val !== null && g._group_val !== '' && groupValues.includes(String(g._group_val)))
@@ -919,20 +926,22 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     }));
   }, [rows, chartConfig.groupByVar, getFilteredGroups]);
 
+  const tableStyle = useMemo(() => ({ fontStyle: 'italic' as const }), []);
+
   const handleRowChange = (value: string | null) => {
     if (!value) return;
 
-    const rowOptions = ExploreTableRowOptions.map((o) => o.value);
+    const rowOptions = DepartmentTableRowOptions.map((o) => o.value);
     // Keep the column if it's NOT a row option OR if it matches the NEW value
     let newColumns = chartConfig.columns.filter((c) => !rowOptions.includes(c.colVar) || c.colVar === value);
 
     // Ensure the new row variable is included as a column
     const isRowVarPresent = newColumns.some((c) => c.colVar === value);
     if (!isRowVarPresent) {
-      const selectedOption = ExploreTableColumnOptions.find((o) => o.value === value);
+      const selectedOption = DepartmentTableColumnOptions.find((o) => o.value === value);
       if (selectedOption) {
         // Create new column config
-        const newCol: ExploreTableColumn = {
+        const newCol: DepartmentTableColumn = {
           colVar: selectedOption.value,
           aggregation: 'none', // Usually the grouping column shouldn't be aggregated or it's implicitly grouped
           type: inferColumnType(selectedOption.value, chartData),
@@ -944,7 +953,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     }
 
     // Generate new title
-    const groupLabel = ExploreTableRowOptions.find((o) => o.value === value)?.label || value;
+    const groupLabel = DepartmentTableRowOptions.find((o) => o.value === value)?.label || value;
     const aggLabel = chartConfig.aggregation === 'avg' ? 'Average' : 'Total';
     const newTitle = `${aggLabel} RBC Transfusions per ${groupLabel}`;
 
@@ -953,14 +962,14 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       groupByVar = undefined;
     }
 
-    const updatedConfig: ExploreTableConfig = {
+    const updatedConfig: DepartmentTableConfig = {
       ...chartConfig,
       rowVar: value,
       columns: newColumns,
       title: newTitle,
       groupByVar,
     };
-    store.updateExploreChartConfig(updatedConfig);
+    store.updateDepartmentChartConfig(updatedConfig);
 
     // If the new row variable is year or quarter, sort by it chronologically
     if (['year', 'quarter'].includes(value)) {
@@ -973,8 +982,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
   // Available columns for the multi-select (excludes the row variable)
   const availableColumnOptions = useMemo(() => {
-    const rowOptions = ExploreTableRowOptions.map((o) => o.value);
-    return ExploreTableColumnOptionsGrouped.map((group) => ({
+    const rowOptions = DepartmentTableRowOptions.map((o) => o.value);
+    return DepartmentTableColumnOptionsGrouped.map((group) => ({
       ...group,
       items: group.items.filter((item) => {
         if (rowOptions.includes(item.value)) {
@@ -997,9 +1006,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     const prevCols = currentCols.filter((c) => selectedColValues.includes(c.colVar));
 
     // Create objects for added columns
-    const addedCols: ExploreTableColumn[] = [];
+    const addedCols: DepartmentTableColumn[] = [];
     addedColVars.forEach((v) => {
-      const selected = ExploreTableColumnOptions.find((o) => o.value === v);
+      const selected = DepartmentTableColumnOptions.find((o) => o.value === v);
       if (!selected) return;
 
       addedCols.push({
@@ -1016,22 +1025,22 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     const newCols = [...addedCols, ...prevCols];
 
     // Update this chart's configuration with the new columns
-    const updatedConfig: ExploreTableConfig = {
+    const updatedConfig: DepartmentTableConfig = {
       ...chartConfig,
       columns: newCols,
     };
-    store.updateExploreChartConfig(updatedConfig);
+    store.updateDepartmentChartConfig(updatedConfig);
   };
 
   // Definitions of columns (their styles and values)
-  const generateColumnDefs = useCallback((colConfigs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => {
+  const generateColumnDefs = useCallback((colConfigs: DepartmentTableColumn[]): DataTableColumn<DepartmentTableRow>[] => {
     // Compute global min/max for heatmap columns to normalize colors
     let heatmapMin = Infinity;
     let heatmapMax = -Infinity;
     const heatmapCols = colConfigs.filter((c) => c.type === 'heatmap');
 
     if (heatmapCols.length > 0) {
-      rowsWithGroups.forEach((r: ExploreTableRow) => {
+      rowsWithGroups.forEach((r: DepartmentTableRow) => {
         heatmapCols.forEach((c) => {
           const val = r[c.colVar];
           const values = Array.isArray(val) ? val : [val];
@@ -1060,11 +1069,11 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         colVar, type, title, numericTextVisible, aggregation: agg,
       } = colConfig;
 
-      // All explore table department context tooltips should use provider-based phrasing.
+      // All department table context tooltips should use provider-based phrasing.
       const deptLabel = fromLabel;
 
       // Extract values for footer
-      const rawValues = rowsWithGroups.map((r: ExploreTableRow) => r[colVar]);
+      const rawValues = rowsWithGroups.map((r: DepartmentTableRow) => r[colVar]);
       const values = chartConfig.twoValsPerRow
         ? rawValues.flat().map((v: unknown) => Number(v ?? 0))
         : rawValues.map((r: unknown) => Number(r ?? 0));
@@ -1073,7 +1082,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       // Compute violin aggregate for footer when violin columns exist
       const violinAggregate = (() => {
         if (type !== 'violin') return null;
-        const perRow = rowsWithGroups.map((r: ExploreTableRow) => {
+        const perRow = rowsWithGroups.map((r: DepartmentTableRow) => {
           const raw = r[colVar];
           return raw ? Array.from(raw as Iterable<number>, Number) : [] as number[];
         });
@@ -1166,7 +1175,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
       const isActiveFilter = !!(numericFilters[colVar]?.query || (textFilters[colVar] && textFilters[colVar].length > 0));
 
       // Base column definition
-      const column: DataTableColumn<ExploreTableRow> = {
+      const column: DataTableColumn<DepartmentTableRow> = {
         accessor: colVar,
         title: displayTitle,
         titleClassName: `${isActiveSort ? 'sorted-column-header' : ''} ${isActiveFilter ? 'filtered-column-header' : ''}`.trim() || undefined,
@@ -1191,9 +1200,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
       // Custom Render Logic
       if (type === 'stackedBar') {
-        column.render = (row: ExploreTableRow) => {
+        column.render = (row: DepartmentTableRow) => {
           const rowLabel = String(row[chartConfig.rowVar] ?? '');
-          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          const filteredGroups = (row._filteredGroups ?? []) as DepartmentTableRow[];
           if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
@@ -1212,9 +1221,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           return <StackedBarCell row={row} max={maxVal} colVar={colVar} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} departmentLabel={deptLabel} />;
         };
       } else if (type === 'numericBar') {
-        column.render = (row: ExploreTableRow) => {
+        column.render = (row: DepartmentTableRow) => {
           const rowLabel = String(row[chartConfig.rowVar] ?? '');
-          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          const filteredGroups = (row._filteredGroups ?? []) as DepartmentTableRow[];
           if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
@@ -1256,7 +1265,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           );
         };
       } else if (type === 'heatmap') {
-        column.render = (row: ExploreTableRow) => {
+        column.render = (row: DepartmentTableRow) => {
           const rowLabel = String(row[chartConfig.rowVar] ?? '');
           const renderHeatmapCell = (val: number, padding: string, height: number | string = '100%', groupFilter?: { label: string; color: string }) => {
             const normalizedVal = getNormalizedValue(val);
@@ -1321,7 +1330,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             );
           };
 
-          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          const filteredGroups = (row._filteredGroups ?? []) as DepartmentTableRow[];
           if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
@@ -1351,12 +1360,12 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         };
       } else if (type === 'violin') {
         column.textAlign = 'center';
-        column.render = (row: ExploreTableRow) => {
+        column.render = (row: DepartmentTableRow) => {
           const domain: [number, number] = violinAggregate
             ? [violinAggregate.minAll, violinAggregate.maxAll]
             : [0, 1];
 
-          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          const filteredGroups = (row._filteredGroups ?? []) as DepartmentTableRow[];
           if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
@@ -1379,9 +1388,9 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           return <ViolinCell samples={samples} domain={domain} height={24} padding={0} departmentLabel={deptLabel} />;
         };
       } else if (type === 'numeric') {
-        column.render = (row: ExploreTableRow) => {
+        column.render = (row: DepartmentTableRow) => {
           const rowLabel = String(row[chartConfig.rowVar] ?? '');
-          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+          const filteredGroups = (row._filteredGroups ?? []) as DepartmentTableRow[];
           if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center">
@@ -1423,8 +1432,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           return <NumericBarCell value={row[colVar] as number} max={maxVal} colVar={colVar} setHoveredValue={setHoveredValue} agg={agg} rowLabel={rowLabel} columnLabel={displayTitle} departmentLabel={deptLabel} />;
         };
       } else {
-        column.render = (row: ExploreTableRow) => {
-          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+        column.render = (row: DepartmentTableRow) => {
+          const filteredGroups = (row._filteredGroups ?? []) as DepartmentTableRow[];
           if (filteredGroups.length > 0) {
             return (
               <Box h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} py={ROW_GAP / 2} display="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10 }}>
@@ -1442,7 +1451,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
     });
 
     if (chartConfig.groupByVar) {
-      const groupOption = ExploreTableGroupByOptions.find((o) => o.value === chartConfig.groupByVar);
+      const groupOption = DepartmentTableGroupByOptions.find((o) => o.value === chartConfig.groupByVar);
 
       resultColumns.unshift({
         accessor: '_group_val',
@@ -1452,8 +1461,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
         sortable: false,
         noWrap: true,
         width: 140,
-        render: (row: ExploreTableRow) => {
-          const filteredGroups = (row._filteredGroups ?? []) as ExploreTableRow[];
+        render: (row: DepartmentTableRow) => {
+          const filteredGroups = (row._filteredGroups ?? []) as DepartmentTableRow[];
           if (filteredGroups.length > 0) {
             return (
               <Stack gap={0} px={0} py={ROW_GAP / 2} h={Math.max(ROW_H_GROUPED, filteredGroups.length * SUB_ROW_H) + ROW_GAP} justify="center" w="100%">
@@ -1499,12 +1508,12 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
   // Data Table Columns -------
   const columnVars = `${chartConfig.columns.map((c) => c.colVar).join(',')}|${chartConfig.groupByVar || ''}`;
-  const columnStorageKey = `ExploreTable-${chartConfig.chartId}-${columnVars}`;
+  const columnStorageKey = `DepartmentTable-${chartConfig.chartId}-${columnVars}`;
   const columnDefs = useMemo(
     () => generateColumnDefs(chartConfig.columns),
     [generateColumnDefs, chartConfig.columns],
   );
-  const { effectiveColumns, resetColumnsOrder } = useDataTableColumns<ExploreTableRow>({
+  const { effectiveColumns, resetColumnsOrder } = useDataTableColumns<DepartmentTableRow>({
     key: columnStorageKey,
     columns: columnDefs,
   });
@@ -1533,7 +1542,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
 
         <Flex direction="row" align="center" gap="sm">
           {/** Aggregation Toggle */}
-          <ExploreTableLegend
+          <DepartmentTableLegend
             groupByVar={chartConfig.groupByVar}
             groupValues={groupValues}
             hoveredLegendGroup={hoveredLegendGroup}
@@ -1551,7 +1560,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
                   aggregation: (c.type === 'text' || c.aggregation === 'none') ? c.aggregation : newAgg,
                 }));
 
-                store.updateExploreChartConfig({
+                store.updateDepartmentChartConfig({
                   ...chartConfig,
                   aggregation: newAgg,
                   columns: newCols,
@@ -1570,10 +1579,10 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             )}
             searchable
             placeholder="Group by"
-            data={['year', 'quarter'].includes(chartConfig.rowVar) ? ExploreTableGroupByOptions.filter((o) => o.value !== 'year') : ExploreTableGroupByOptions}
+            data={['year', 'quarter'].includes(chartConfig.rowVar) ? DepartmentTableGroupByOptions.filter((o) => o.value !== 'year') : DepartmentTableGroupByOptions}
             value={chartConfig.groupByVar || null}
             onChange={(val) => {
-              store.updateExploreChartConfig({
+              store.updateDepartmentChartConfig({
                 ...chartConfig,
                 groupByVar: val || undefined,
               });
@@ -1590,7 +1599,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
               </Tooltip>
             )}
             leftSectionWidth={40}
-            data={ExploreTableRowOptions}
+            data={DepartmentTableRowOptions}
             value={chartConfig.rowVar}
             onChange={handleRowChange}
             allowDeselect={false}
@@ -1617,7 +1626,7 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             }}
           />
           {/** Close Chart */}
-          <CloseButton onClick={() => { store.removeExploreChart(chartConfig.chartId); }} />
+          <CloseButton onClick={() => { store.removeDepartmentChart(chartConfig.chartId); }} />
         </Flex>
       </Flex>
 
@@ -1636,8 +1645,8 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
             ),
           }}
         />
-        <DataTable<ExploreTableRow>
-          className="explore-table-data-table"
+        <DataTable<DepartmentTableRow>
+          className="department-table-data-table"
           rowClassName={() => (chartConfig.groupByVar ? 'fat-row' : '')}
           borderRadius="sm"
           pinFirstColumn
@@ -1656,12 +1665,24 @@ const ExploreTable = observer(({ chartConfig }: { chartConfig: ExploreTableConfi
           }}
           storeColumnsKey={columnStorageKey}
           columns={effectiveColumns}
-          style={useMemo(() => ({ fontStyle: 'italic' }), [])}
+          style={tableStyle}
           onRowClick={undefined}
+          minHeight={!isSyncing && chartData !== undefined && rowsWithGroups.length === 0 ? 150 : undefined}
+          emptyState={(() => {
+            if (isSyncing || chartData === undefined || rowsWithGroups.length > 0) return <span />;
+            const isFiltered = store.totalFiltersAppliedCount > 0
+              || Object.values(numericFilters).some((f) => f.query)
+              || Object.values(textFilters).some((f) => f.length > 0);
+            return (
+              <Text c="dimmed" fs="italic" size="sm">
+                {isFiltered ? 'No data available for this chart after filtering' : 'No data available for this chart'}
+              </Text>
+            );
+          })()}
         />
       </Box>
     </Stack>
   );
 });
 
-export default ExploreTable;
+export default DepartmentTable;

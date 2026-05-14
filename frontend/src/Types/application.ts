@@ -674,7 +674,7 @@ type ChartConfig<X, Y, A, T> = {
   yAxisVar: Y;
   aggregation: A;
   chartType: T;
-  rowVar?: typeof ExploreTableRowVars[number];
+  rowVar?: typeof DepartmentTableRowVars[number];
 };
 
 // PBM Dashboard ---------------------------------------------------
@@ -829,12 +829,12 @@ export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
   cell_saver: '#E4572E',
 };
 
-// Explore View ----------------------------------------------------
-// Aggregation options for explore view
+// Department View ----------------------------------------------------
+// Aggregation options for department view
 const _AGGREGATIONS = ['attending_provider', 'year', 'quarter'] as const;
 export type Aggregation = typeof _AGGREGATIONS[number];
 
-// --- Cost bar charts TODO: Change to Explore Table ---
+// --- Cost bar charts TODO: Change to Department Table ---
 const CostAggregations: { value: Aggregation; label: string }[] = [
   { value: 'attending_provider', label: 'Provider' },
   { value: 'year', label: 'Year' },
@@ -973,7 +973,7 @@ export type ScatterYAxisVar = typeof SCATTER_Y_AXIS_OPTIONS[number]['value'];
 export type ScatterPlotConfig = ChartConfig<ScatterXAxisVar, ScatterYAxisVar, keyof typeof AGGREGATION_OPTIONS | 'none', 'scatterPlot'>;
 export type ScatterPlotData = DumbbellCase[];
 
-// --- Explore Table ---
+// --- Department Table ---
 
 // Column options
 const RBC_COUNTS = ['0', '1', '2', '3', '4', 'above_5'] as const;
@@ -1032,7 +1032,7 @@ const RBC_PERCENT_OPTIONS = RBC_COUNTS.map((count) => ({
 }));
 
 // Column Groups
-export const ExploreTableColumnOptionsGrouped = [
+export const DepartmentTableColumnOptionsGrouped = [
   {
     group: 'Blood Products',
     items: BLOOD_COMPONENT_OPTIONS.map((opt) => ({
@@ -1170,7 +1170,7 @@ export const ExploreTableColumnOptionsGrouped = [
   },
 ];
 
-export const ExploreTableColumnOptions: {
+export const DepartmentTableColumnOptions: {
   value: string;
   label: string;
   units?: {
@@ -1181,7 +1181,7 @@ export const ExploreTableColumnOptions: {
     type?: 'prefix' | 'suffix';
   };
   decimals?: number | { sum: number; avg: number };
-}[] = ExploreTableColumnOptionsGrouped.flatMap((g) => g.items as {
+}[] = DepartmentTableColumnOptionsGrouped.flatMap((g) => g.items as {
   value: string;
   label: string;
   units?: {
@@ -1195,13 +1195,13 @@ export const ExploreTableColumnOptions: {
 }[]);
 
 // Row options
-export const ExploreTableRowOptions: { value: string; label: string }[] = [
+export const DepartmentTableRowOptions: { value: string; label: string }[] = [
   { value: 'attending_provider', label: 'Provider' },
   { value: 'year', label: 'Year' },
   { value: 'quarter', label: 'Quarter' },
 ];
 
-export const ExploreTableGroupByOptions = [
+export const DepartmentTableGroupByOptions = [
   { value: 'death', label: 'Death' },
   { value: 'stroke', label: 'Stroke' },
   { value: 'vent', label: 'Ventilator >24hr' },
@@ -1214,66 +1214,66 @@ export const ExploreTableGroupByOptions = [
 ];
 
 // Variables
-export const ExploreTableColumnVars = ExploreTableColumnOptions.map((opt) => opt.value);
-export const ExploreTableRowVars = ExploreTableRowOptions.map((opt) => opt.value);
+export const DepartmentTableColumnVars = DepartmentTableColumnOptions.map((opt) => opt.value);
+export const DepartmentTableRowVars = DepartmentTableRowOptions.map((opt) => opt.value);
 
 // Column type
-export type ExploreTableColumn = {
-  colVar: typeof ExploreTableColumnVars[number];
+export type DepartmentTableColumn = {
+  colVar: typeof DepartmentTableColumnVars[number];
   aggregation: keyof typeof AGGREGATION_OPTIONS | 'none';
   type: 'numeric' | 'text' | 'violin' | 'heatmap' | 'stackedBar' | 'numericBar';
   title: string;
   numericTextVisible?: boolean;
 };
 
-// Explore Table Sort
-export type ExploreTableSort = {
+// Department Table Sort
+export type DepartmentTableSort = {
   colVar: string;
   direction: 'asc' | 'desc';
 };
 
-// Explore Table Chart Config
-export type ExploreTableConfig = {
+// Department Table Chart Config
+export type DepartmentTableConfig = {
   chartId: string;
   title: string;
-  chartType: 'exploreTable';
-  rowVar: typeof ExploreTableRowVars[number];
-  columns: ExploreTableColumn[];
+  chartType: 'departmentTable';
+  rowVar: typeof DepartmentTableRowVars[number];
+  columns: DepartmentTableColumn[];
   aggregation?: 'sum' | 'avg';
   twoValsPerRow?: boolean;
   groupByVar?: string;
-  sort?: ExploreTableSort;
+  sort?: DepartmentTableSort;
 };
 
-// Explore Table Data
-export type ExploreTableRow = {
+// Department Table Data
+export type DepartmentTableRow = {
   [key: string]: string | number | number[] | number[][] | unknown[] | undefined;
 } & {
   _row_key?: string | number;
-  _groups?: ExploreTableRow[];
+  _groups?: DepartmentTableRow[];
   _case_ids?: string[];
 };
-export type ExploreTableData = ExploreTableRow[]; // E.g. [{ attending_provider: 'Dr. Smith', cases: 100}, { attending_provider: 'Dr. Johnson', cases: 200}]
+export type DepartmentTableData = DepartmentTableRow[]; // E.g. [{ attending_provider: 'Dr. Smith', cases: 100}, { attending_provider: 'Dr. Johnson', cases: 200}]
 
-// --- Explore Chart ---
-export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData | DumbbellData>;
-export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig | DumbbellChartConfig;
+// --- Department Chart ---
+export type DepartmentChartData = Record<string, ScatterPlotData | CostBarData | DepartmentTableData | DumbbellData>;
+export type DepartmentChartConfig = CostChartConfig | ScatterPlotConfig | DepartmentTableConfig | DumbbellChartConfig;
 
-// --- Explore Stats ---
-// Stat options for explore view — same as dashboard but excluding costs
-export const exploreStatYAxisOptions = dashboardYAxisOptions.filter(
+// --- Department Stats ---
+// Stat options for department view — same as dashboard but excluding costs
+export const departmentStatYAxisOptions = dashboardYAxisOptions.filter(
   (opt) => !COST_OPTIONS.some((c) => c.value === opt.value)
     && opt.value !== OVERALL_BLOOD_PRODUCT_COST.value,
 );
 
-export type ExploreStatConfig = {
+export type DepartmentStatConfig = {
   statId: string;
   yAxisVar: typeof dashboardYAxisVars[number];
   aggregation: keyof typeof AGGREGATION_OPTIONS;
   title: string;
 };
 
-export type ExploreStatData = Record<string, { value: string }>;
+export type DepartmentStatData = Record<string, { value: string }>;
 
 // Procedure hierarchy ---------------------------------------------------
 
