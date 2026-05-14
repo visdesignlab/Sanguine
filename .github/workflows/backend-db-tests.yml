@@ -4,12 +4,16 @@ on:
   pull_request:
     paths:
       - "backend/**"
+      - "frontend/package.json"
+      - "frontend/yarn.lock"
       - ".github/workflows/backend-db-tests.yml"
   push:
     branches:
       - main
     paths:
       - "backend/**"
+      - "frontend/package.json"
+      - "frontend/yarn.lock"
       - ".github/workflows/backend-db-tests.yml"
 
 jobs:
@@ -41,6 +45,8 @@ jobs:
           services:
             backend:
               image: sanguine-backend:ci
+              volumes:
+                - ./frontend:/app/frontend:z
           EOF
 
       - name: Start MariaDB
@@ -49,7 +55,19 @@ jobs:
       - name: Run migration and materialized view tests in backend container
         run: >
           docker compose -f docker-compose.dev.yml -f docker-compose.ci.override.yml run --rm --no-deps backend
-          poetry run python manage.py test api.tests --verbosity 2 --parallel 2
+          poetry run python manage.py test api.tests --verbosity 2 --parallel 2 --exclude-tag duckdb-roundtrip
+
+      - name: Run parquet DuckDB round-trip tests
+        run: >
+          docker compose -f docker-compose.dev.yml -f docker-compose.ci.override.yml run --rm --no-deps backend
+          sh -lc 'export DEBIAN_FRONTEND=noninteractive &&
+          apt-get update &&
+          apt-get install -y nodejs npm &&
+          npm install -g yarn &&
+          cd /app/frontend &&
+          yarn install --frozen-lockfile --production --ignore-scripts &&
+          cd /app &&
+          poetry run python manage.py test api.tests.test_parquet_duckdb_roundtrip --verbosity 2 --tag duckdb-roundtrip'
 
       - name: Tear down containers
         if: always()
