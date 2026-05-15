@@ -35,6 +35,7 @@ import {
   DashboardStatConfig,
   chartColors,
   BLOOD_PRODUCT_COLOR_THEME,
+  DASHBOARD_NO_AGGREGATION_TOGGLE_VARS,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 import { getDepartmentContextLabel } from '../../../Utils/departmentContext';
@@ -171,14 +172,16 @@ export function HospitalView() {
           centered
         >
           <Stack gap="md">
-            {/** Modal - choose aggregation for chart or stat */}
-            <Select
-              label="Aggregation"
-              placeholder="Choose aggregation type"
-              data={aggregationOptions}
-              value={selectedAggregation}
-              onChange={(value) => setSelectedAggregation(value || 'Average')}
-            />
+            {/** Modal - choose aggregation for chart or stat (hidden for CMI-weighted metrics) */}
+            {!DASHBOARD_NO_AGGREGATION_TOGGLE_VARS.has(selectedYAxisVar) && (
+              <Select
+                label="Aggregation"
+                placeholder="Choose aggregation type"
+                data={aggregationOptions}
+                value={selectedAggregation}
+                onChange={(value) => setSelectedAggregation(value || 'Average')}
+              />
+            )}
             {/** Modal - choose y-axis for chart or stat */}
             <Select
               label={`${itemModalType === 'chart' ? 'Metric (Y-Axis)' : 'Metric'}`}
@@ -332,17 +335,19 @@ export function HospitalView() {
                         </ActionIcon>
                       </Tooltip>
 
-                      {/* Chart y-axis aggregation toggle */}
-                      <Tooltip label={`Change Y-Axis Aggregation to ${aggregation === 'sum' ? 'Average' : 'Sum'}`}>
-                        <ActionIcon
-                          variant="subtle"
-                          onClick={() => store.setDashboardChartConfig(chartId, {
-                            chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum', chartType,
-                          })}
-                        >
-                          <IconPercentage size={18} color={theme.colors.gray[6]} stroke={3} />
-                        </ActionIcon>
-                      </Tooltip>
+                      {/* Chart y-axis aggregation toggle (hidden for CMI-weighted metrics) */}
+                      {!DASHBOARD_NO_AGGREGATION_TOGGLE_VARS.has(yAxisVar) && (
+                        <Tooltip label={`Change Y-Axis Aggregation to ${aggregation === 'sum' ? 'Average' : 'Sum'}`}>
+                          <ActionIcon
+                            variant="subtle"
+                            onClick={() => store.setDashboardChartConfig(chartId, {
+                              chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum', chartType,
+                            })}
+                          >
+                            <IconPercentage size={18} color={theme.colors.gray[6]} stroke={3} />
+                          </ActionIcon>
+                        </Tooltip>
+                      )}
                       {/** Chart x-axis aggregation toggle */}
                       <Tooltip label={`Change X-Axis to ${xAxisVar === 'month' ? 'Quarter' : xAxisVar === 'quarter' ? 'Year' : 'Month'}`}>
                         <ActionIcon
