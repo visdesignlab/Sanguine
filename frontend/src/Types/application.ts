@@ -644,6 +644,13 @@ export const BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS = [
   },
 ] as const;
 
+// Metrics that have no meaningful sum/avg distinction (e.g. CMI-weighted rates)
+export const DASHBOARD_NO_AGGREGATION_TOGGLE_VARS = new Set<string>([
+  CASE_MIX_INDEX.value,
+  TRANSFUSIONS_PER_CMI_VISIT.value,
+  ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS.map((o) => o.value),
+]);
+
 // Costs -----------------------------------------------------------
 export const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
   rbc_units_cost: 200,
