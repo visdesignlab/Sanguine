@@ -967,8 +967,7 @@ export const DumbbellChartContent = memo(({
             >
               <title>
                 {(() => {
-                  if (selectedX === 'surgeon') return `Surgical Cases for ${binGroup.label}`;
-                  if (selectedX === 'anesthesiologist') return `Surgical Cases for ${binGroup.label}`;
+                  if (selectedX === 'surgeon' || selectedX === 'anesthesiologist' || selectedX === 'provider') return `Surgical Cases for ${binGroup.label}`;
                   if (selectedX === 'year' || selectedX === 'quarter') return `Surgical Cases in ${binGroup.label}`;
                   if (['rbc', 'platelet', 'cryo', 'ffp'].includes(selectedX)) {
                     return `Surgical Cases where ${binGroup.label} Transfused`;
@@ -1600,7 +1599,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
             />
 
             {/* Provider Sort Toggle */}
-            {(selectedX === 'surgeon' || selectedX === 'anesthesiologist') && (
+            {(selectedX === 'surgeon' || selectedX === 'anesthesiologist' || selectedX === 'provider') && (
               <Box style={{
                 position: 'absolute', bottom: 0, right: 5, zIndex: 10,
               }}

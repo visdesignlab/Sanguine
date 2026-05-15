@@ -25,6 +25,14 @@ export function getProcessedDumbbellData(
 
   // Grouping Logic based on selectedX
   filteredData.forEach((d: DumbbellCase) => {
+    if (selectedX === 'provider') {
+      [d.surgeon_prov_name, d.anesth_prov_name].forEach((k) => {
+        if (!k) return;
+        if (!groupedByBinGroup.has(k)) groupedByBinGroup.set(k, []);
+        groupedByBinGroup.get(k)?.push(d);
+      });
+      return;
+    }
     let key = d.surgeon_prov_name; // Default Surgeon Name
     if (selectedX === 'anesthesiologist') key = d.anesth_prov_name;
     else if (selectedX === 'year') {
