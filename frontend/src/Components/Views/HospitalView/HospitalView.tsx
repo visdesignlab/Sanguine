@@ -29,6 +29,7 @@ import {
 } from '../../../Theme/mantineTheme';
 import {
   dashboardYAxisOptions,
+  dashboardYAxisOptionsGrouped,
   AGGREGATION_OPTIONS,
   dashboardXAxisOptions,
   type DashboardChartConfig,
@@ -183,12 +184,10 @@ export function HospitalView() {
             <Select
               label={`${itemModalType === 'chart' ? 'Metric (Y-Axis)' : 'Metric'}`}
               placeholder={`Choose ${itemModalType} metric`}
-              data={dashboardYAxisOptions.map((opt) => ({
-                value: opt.value,
-                label: opt.label.base,
-              }))}
+              data={dashboardYAxisOptionsGrouped}
               value={selectedYAxisVar}
               onChange={(value) => setSelectedYAxisVar(value || '')}
+              searchable
             />
             {/** Modal - choose x-axis for chart only */}
             {itemModalType === 'chart' && (
@@ -356,13 +355,11 @@ export function HospitalView() {
                       </Tooltip>
                       {/* Chart Select Attribute Menu */}
                       <Select
-                        data={dashboardYAxisOptions.map((opt) => ({
-                          value: opt.value,
-                          label: opt.label.base,
-                        }))}
+                        data={dashboardYAxisOptionsGrouped}
                         defaultValue={yAxisVar}
                         value={yAxisVar}
                         allowDeselect={false}
+                        searchable
                         onChange={(value) => {
                           const selectedOption = dashboardYAxisOptions.find((opt) => opt.value === value);
                           let inferredChartType: DashboardChartConfig['chartType'] = 'line';
