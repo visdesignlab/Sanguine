@@ -105,6 +105,13 @@ export function getProcessedScatterData(
   const groupedByBinGroup = new Map<string, DumbbellCase[]>();
 
   filteredData.forEach((d: DumbbellCase) => {
+    if (selectedX === 'provider') {
+      [d.surgeon_prov_name || 'Unknown', d.anesth_prov_name || 'Unknown'].forEach((k) => {
+        if (!groupedByBinGroup.has(k)) groupedByBinGroup.set(k, []);
+        groupedByBinGroup.get(k)?.push(d);
+      });
+      return;
+    }
     let key = '';
     if (selectedX === 'surgeon') {
       key = d.surgeon_prov_name || 'Unknown';

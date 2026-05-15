@@ -861,6 +861,7 @@ export type CostBarData = CostBarDatum[];
 
 // --- Dumbbell Chart ---
 export const DUMBBELL_X_AXIS_OPTIONS = [
+  { value: 'provider', label: 'Provider' },
   { value: 'surgeon', label: 'Surgeon' },
   { value: 'anesthesiologist', label: 'Anesthesiologist' },
   { value: 'year', label: 'Year' },
@@ -946,6 +947,7 @@ export type DumbbellData = DumbbellCase[];
 
 // --- Scatter plots ---
 export const SCATTER_X_AXIS_OPTIONS = [
+  { value: 'provider' as const, label: 'Provider', isDiscrete: true },
   { value: 'surgeon' as const, label: 'Surgeon', isDiscrete: true },
   { value: 'anesthesiologist' as const, label: 'Anesthesiologist', isDiscrete: true },
   { value: 'year' as const, label: 'Year', isDiscrete: true },
