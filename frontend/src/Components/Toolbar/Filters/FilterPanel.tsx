@@ -78,6 +78,7 @@ export function FilterPanel() {
         h={`calc(100vh - ${toolbarWidth}px - 45px)`}
         type="scroll"
         overscrollBehavior="contain"
+        scrollbars="y"
         mt="sm"
       >
         <Accordion
