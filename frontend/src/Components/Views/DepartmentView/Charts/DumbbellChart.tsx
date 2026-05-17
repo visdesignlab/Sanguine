@@ -1362,7 +1362,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   return (
     <Box h="100%" display="flex" style={{ flexDirection: 'column' }}>
       {/* Header */}
-      <Flex direction="row" justify="space-between" align="center" pl="md" pr="md" pt="xs">
+      <Flex direction="column" justify="space-between" align="start" pl="md" pr="md" pt="xs" gap="xs">
         <Flex direction="row" align="center" gap="md" ml={-12}>
           <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
           <Title order={4}>

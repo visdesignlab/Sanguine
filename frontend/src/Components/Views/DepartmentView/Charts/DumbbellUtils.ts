@@ -276,12 +276,15 @@ export function calculateDumbbellLayout(
         }
       } else {
         const shortLabel = getShortenedLabel(displayLabel);
-        const shortWidth = measureText(shortLabel);
         if (shortLabel !== displayLabel) {
           displayLabel = shortLabel;
         }
-        if (binGroupWidth < shortWidth + 10) {
-          isOverflowing = true;
+        const labelWidth = measureText(displayLabel) + 10;
+        if (binGroupWidth < labelWidth) {
+          const deficit = labelWidth - binGroupWidth;
+          items.push({ type: 'spacer', width: deficit });
+          currentX += deficit;
+          binGroupWidth += deficit;
         }
       }
     }
