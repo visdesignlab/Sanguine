@@ -9,7 +9,7 @@ import { caseSelection, useCaseSelection } from '../../../../Store/CaseSelection
  *
  * - Hover the badge → temporarily dim non-selected cases in all charts
  * - Click the badge → lock focus-dimming until clicked again
- * - Click × → clear all selections and exit focus mode
+ * - Click × → clear all selections and exit the focus mode
  *
  * Renders nothing when no cases are selected.
  */
