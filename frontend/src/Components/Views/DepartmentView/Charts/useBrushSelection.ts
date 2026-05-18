@@ -7,9 +7,8 @@
  * the currently-hovered point). Everything else is generic brush state.
  */
 import React, {
-  useState, useRef, useCallback, useEffect, useContext, type RefObject,
+  useState, useRef, useCallback, useEffect, type RefObject,
 } from 'react';
-import { Store } from '../../../../Store/Store';
 import { caseSelection } from '../../../../Store/CaseSelection';
 
 export type BrushRect = { x1: number; y1: number; x2: number; y2: number };
@@ -74,7 +73,6 @@ export function useBrushSelection({
   extractBoxIds,
   onClickPoint,
 }: UseBrushSelectionOptions): BrushSelectionReturn {
-  const store = useContext(Store);
   const [selection, setSelection] = useState<BrushRect | null>(null);
   const [appliedSelection, setAppliedSelection] = useState<BrushRect | null>(null);
   const [interactionMode, setInteractionMode] = useState<InteractionMode>('idle');
@@ -151,7 +149,7 @@ export function useBrushSelection({
     brushRef.current.selection = box; setSelection(box);
     brushRef.current.appliedSelection = null; setAppliedSelection(null);
     initialSelection.current = box;
-  }, [store]);
+  }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const {
@@ -237,7 +235,7 @@ export function useBrushSelection({
       brushRef.current.appliedSelection = sel; setAppliedSelection(sel);
     }
     brushRef.current.selection = null; setSelection(null);
-  }, [store]);
+  }, []);
 
   // Live-update the global selection as the box changes during drag / move / resize.
   // Points that fall outside a shrinking box are deselected immediately.
@@ -248,7 +246,6 @@ export function useBrushSelection({
     const dy = Math.abs(sel.y2 - sel.y1);
     if (dx < optsRef.current.dragLimit && dy < optsRef.current.dragLimit) return;
     caseSelection.setSelected([...prevSelectionRef.current, ...optsRef.current.extractBoxIds(sel)]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection]); // intentionally depends on selection state (triggers on every box update)
 
   return {

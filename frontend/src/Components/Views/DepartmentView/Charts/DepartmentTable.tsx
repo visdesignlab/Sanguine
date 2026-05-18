@@ -33,7 +33,6 @@ import { BarChart } from '@mantine/charts';
 
 import { Store } from '../../../../Store/Store';
 import { caseSelection } from '../../../../Store/CaseSelection';
-import { EmptyChartState } from './EmptyChartState';
 import { CaseSelectionBadge } from './CaseSelectionBadge';
 import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3Utils';
 import {
@@ -788,7 +787,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
   const dragSelectingRef = useRef(true);
   const didDragRef = useRef(false);
   const dragStartKeyRef = useRef('');
-  const displayedRowsRef = useRef<ExploreTableRow[]>([]);
+  const displayedRowsRef = useRef<DepartmentTableRow[]>([]);
 
   // External clear (badge ×) — clear local row keys too
   useEffect(() => caseSelection.subscribe(() => {
@@ -806,9 +805,9 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     return () => window.removeEventListener('mouseup', onMouseUp);
   }, []);
 
-  const rowIds = useCallback((row: ExploreTableRow) => (row._case_ids ?? []) as string[], []);
+  const rowIds = useCallback((row: DepartmentTableRow) => (row._case_ids ?? []) as string[], []);
 
-  const selectRow = useCallback((row: ExploreTableRow) => {
+  const selectRow = useCallback((row: DepartmentTableRow) => {
     const key = String(row._row_key ?? '');
     if (!key) return;
     const next = new Set(selectedRowKeysRef.current);
@@ -818,7 +817,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     caseSelection.addSelected(rowIds(row));
   }, [rowIds]);
 
-  const deselectRow = useCallback((row: ExploreTableRow) => {
+  const deselectRow = useCallback((row: DepartmentTableRow) => {
     const key = String(row._row_key ?? '');
     if (!key) return;
     const next = new Set(selectedRowKeysRef.current);
@@ -828,7 +827,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     caseSelection.removeSelected(rowIds(row));
   }, [rowIds]);
 
-  const handleRowMouseDown = useCallback((row: ExploreTableRow) => {
+  const handleRowMouseDown = useCallback((row: DepartmentTableRow) => {
     const key = String(row._row_key ?? '');
     if (!key) return;
     isDraggingRef.current = true;
@@ -837,7 +836,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     dragSelectingRef.current = !selectedRowKeysRef.current.has(key);
   }, []);
 
-  const handleRowMouseEnter = useCallback((row: ExploreTableRow) => {
+  const handleRowMouseEnter = useCallback((row: DepartmentTableRow) => {
     caseSelection.setHovered(rowIds(row));
     if (!isDraggingRef.current) return;
     const key = String(row._row_key ?? '');
@@ -850,7 +849,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     caseSelection.clearHovered();
   }, []);
 
-  const handleRowClick = useCallback(({ record, index, event }: { record: ExploreTableRow; index: number; event: React.MouseEvent<Element> }) => {
+  const handleRowClick = useCallback(({ record, index, event }: { record: DepartmentTableRow; index: number; event: React.MouseEvent<Element> }) => {
     if (didDragRef.current) { didDragRef.current = false; return; }
     const key = String(record._row_key ?? '');
     if (!key || rowIds(record).length === 0) return;
