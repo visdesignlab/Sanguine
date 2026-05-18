@@ -8,7 +8,6 @@ import { useObserver } from 'mobx-react-lite';
 import { useDisclosure } from '@mantine/hooks';
 import {
   useMantineTheme, Title, Stack, Card, Flex, Select, Button, CloseButton, ActionIcon, Menu, Modal, Divider, Tooltip,
-  LoadingOverlay, Text,
   Box,
 } from '@mantine/core';
 import { BarChart, LineChart } from '@mantine/charts';
@@ -21,6 +20,7 @@ import { StatsGrid } from './StatsGrid';
 import { DashboardChartTooltip } from './DashboardChartTooltip';
 import classes from '../GridLayoutItem.module.css';
 import layoutClasses from '../ViewLayout.module.css';
+import { EmptyChartState } from '../DepartmentView/Charts/EmptyChartState';
 
 // Application
 import { Store } from '../../../Store/Store';
@@ -382,17 +382,17 @@ export function HospitalView() {
                       <CloseButton onClick={() => handleRemoveChart(chartId)} />
                     </Flex>
                   </Flex>
-                  <Box style={{ flex: 1, minHeight: 0, padding: '0 15px' }}>
-                    <LoadingOverlay visible={rawChartData === undefined} overlayProps={{ radius: 'sm', blur: 2 }} />
-                    {rawChartData !== undefined && chartData.length === 0 ? (
-                      <Flex h="100%" align="center" justify="center">
-                        <Text c="dimmed" fs="italic" size="sm">
-                          {store.totalFiltersAppliedCount > 0
-                            ? 'No data available for this chart after filtering'
-                            : 'No data available for this chart'}
-                        </Text>
-                      </Flex>
-                    ) : chartType === 'bar' ? (
+                  <Box style={{
+                    flex: 1,
+                    minHeight: 0,
+                    padding: '0 15px',
+                    position: 'relative',
+                  }}
+                  >
+                    {rawChartData.length === 0 && (
+                      <EmptyChartState hasFilters={store.totalFiltersAppliedCount > 0} />
+                    )}
+                    {chartType === 'bar' ? (
                       // Bar Chart
                       <BarChart
                         h="100%"
