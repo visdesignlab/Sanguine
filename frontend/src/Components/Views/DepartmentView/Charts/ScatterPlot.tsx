@@ -1037,7 +1037,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   onMouseDown={handleMouseDown}
                   onMouseMove={(e) => { brushHandleMouseMove(e); if (interactionMode === 'idle') handleHover(e); }}
                   onMouseUp={handleMouseUp}
-                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); store.clearHovered(); requestAnimationFrame(drawPoints); }}
+                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); caseSelection.clearHovered(); requestAnimationFrame(drawPoints); }}
                 >
                   {/* SVG layer for gridlines, bins, targets, avg, brush */}
                   <svg
@@ -1102,13 +1102,9 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                                     e.stopPropagation();
                                     const ids = binGroup.cases.map((c) => c.case_id);
                                     if (ids.length === 0) return;
-                                    const currentSelected = store.selectedCaseIds;
-                                    const allSelected = ids.every((id) => currentSelected.has(id));
-                                    if (allSelected) {
-                                      store.removeSelected(ids);
-                                    } else {
-                                      store.addSelected(ids);
-                                    }
+                                    const allSelected = ids.every((id) => caseSelection.selectedCaseIds.has(id));
+                                    if (allSelected) caseSelection.removeSelected(ids);
+                                    else caseSelection.addSelected(ids);
                                   }}
                                 />
                               </Tooltip>

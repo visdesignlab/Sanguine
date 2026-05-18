@@ -807,24 +807,15 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
 
   const rowIds = useCallback((row: DepartmentTableRow) => (row._case_ids ?? []) as string[], []);
 
-  const selectRow = useCallback((row: DepartmentTableRow) => {
+  const setRowSelected = useCallback((row: DepartmentTableRow, selected: boolean) => {
     const key = String(row._row_key ?? '');
     if (!key) return;
     const next = new Set(selectedRowKeysRef.current);
-    next.add(key);
+    if (selected) next.add(key); else next.delete(key);
     selectedRowKeysRef.current = next;
     setSelectedRowKeys(next);
-    caseSelection.addSelected(rowIds(row));
-  }, [rowIds]);
-
-  const deselectRow = useCallback((row: DepartmentTableRow) => {
-    const key = String(row._row_key ?? '');
-    if (!key) return;
-    const next = new Set(selectedRowKeysRef.current);
-    next.delete(key);
-    selectedRowKeysRef.current = next;
-    setSelectedRowKeys(next);
-    caseSelection.removeSelected(rowIds(row));
+    if (selected) caseSelection.addSelected(rowIds(row));
+    else caseSelection.removeSelected(rowIds(row));
   }, [rowIds]);
 
   const handleRowMouseDown = useCallback((row: DepartmentTableRow) => {
@@ -842,12 +833,8 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     const key = String(row._row_key ?? '');
     if (!key || key === dragStartKeyRef.current) return;
     didDragRef.current = true;
-    if (dragSelectingRef.current) selectRow(row); else deselectRow(row);
-  }, [rowIds, selectRow, deselectRow]);
-
-  const handleRowMouseLeave = useCallback(() => {
-    caseSelection.clearHovered();
-  }, []);
+    setRowSelected(row, dragSelectingRef.current);
+  }, [rowIds, setRowSelected]);
 
   const handleRowClick = useCallback(({ record, index, event }: { record: DepartmentTableRow; index: number; event: React.MouseEvent<Element> }) => {
     if (didDragRef.current) { didDragRef.current = false; return; }
@@ -856,13 +843,12 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     if (event.shiftKey && lastClickedIndexRef.current >= 0) {
       const lo = Math.min(lastClickedIndexRef.current, index);
       const hi = Math.max(lastClickedIndexRef.current, index);
-      displayedRowsRef.current.slice(lo, hi + 1).forEach((r) => selectRow(r));
+      displayedRowsRef.current.slice(lo, hi + 1).forEach((r) => setRowSelected(r, true));
     } else {
-      if (selectedRowKeysRef.current.has(key)) deselectRow(record);
-      else selectRow(record);
+      setRowSelected(record, !selectedRowKeysRef.current.has(key));
       lastClickedIndexRef.current = index;
     }
-  }, [rowIds, selectRow, deselectRow]);
+  }, [rowIds, setRowSelected]);
 
   // Syncing layout state
   const [isSyncing, setIsSyncing] = useState(false);
@@ -1721,7 +1707,6 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
             }}
           />
           {/** Close Chart */}
-          <CaseSelectionBadge />
           <CloseButton onClick={() => { store.removeDepartmentChart(chartConfig.chartId); }} />
         </Flex>
       </Flex>
@@ -1778,7 +1763,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
           customRowAttributes={(row) => ({
             onMouseDown: () => { handleRowMouseDown(row); },
             onMouseEnter: () => { handleRowMouseEnter(row); },
-            onMouseLeave: () => { handleRowMouseLeave(); },
+            onMouseLeave: () => caseSelection.clearHovered(),
           })}
           minHeight={!isSyncing && chartData !== undefined && rowsWithGroups.length === 0 ? 150 : undefined}
           emptyState={(() => {

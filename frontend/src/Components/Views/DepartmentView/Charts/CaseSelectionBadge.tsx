@@ -58,9 +58,7 @@ export function CaseSelectionBadge() {
             lineHeight: 1,
           }}
         >
-          {selectedCaseIds.size}
-          {' '}
-          Selected
+          {`${selectedCaseIds.size} Selected`}
         </Text>
         <ActionIcon
           size={16}

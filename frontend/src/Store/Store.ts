@@ -44,7 +44,6 @@ import {
   BloodComponent,
   CELL_SAVER_ML, PLT_UNITS, RBC_UNITS,
 } from '../Types/bloodProducts';
-import { caseSelection } from './CaseSelection';
 
 export const DEFAULT_CLAMP_PERCENTILE = 0.99;
 
@@ -1046,17 +1045,6 @@ export class RootStore {
   selectedVisits: { visit_no: number, [key: string]: unknown }[] = [];
 
   selectedVisitNos: number[] = [];
-
-  // Backward-compatibility alias used by Department/Hospital chart components.
-  get selectedCaseIds() { return caseSelection.selectedCaseIds; }
-
-  addSelected(ids: string[]) { caseSelection.addSelected(ids); }
-
-  removeSelected(ids: string[]) { caseSelection.removeSelected(ids); }
-
-  clearHovered() { caseSelection.clearHovered(); }
-
-  get isDashboardDataLoading() { return false; }
 
   // --- Department View State (non-provenance) ---
   departmentViewQuestionsOpened = true;

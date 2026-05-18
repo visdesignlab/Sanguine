@@ -51,18 +51,12 @@ export class CaseSelectionStore {
 
   addSelected(ids: string[]) {
     if (ids.length === 0) return;
+    const sizeBefore = this.selectedCaseIds.size;
     const next = new Set(this.selectedCaseIds);
-    let changed = false;
-    ids.forEach((id) => {
-      if (!next.has(id)) {
-        next.add(id);
-        changed = true;
-      }
-    });
-    if (changed) {
-      this.selectedCaseIds = next;
-      this.notify();
-    }
+    ids.forEach((id) => next.add(id));
+    if (next.size === sizeBefore) return;
+    this.selectedCaseIds = next;
+    this.notify();
   }
 
   toggleSelected(ids: string[]) {
@@ -78,18 +72,12 @@ export class CaseSelectionStore {
 
   removeSelected(ids: string[]) {
     if (ids.length === 0) return;
+    const sizeBefore = this.selectedCaseIds.size;
     const next = new Set(this.selectedCaseIds);
-    let changed = false;
-    ids.forEach((id) => {
-      if (next.has(id)) {
-        next.delete(id);
-        changed = true;
-      }
-    });
-    if (changed) {
-      this.selectedCaseIds = next;
-      this.notify();
-    }
+    ids.forEach((id) => next.delete(id));
+    if (next.size === sizeBefore) return;
+    this.selectedCaseIds = next;
+    this.notify();
   }
 
   clearSelected() {
@@ -121,22 +109,15 @@ export class CaseSelectionStore {
 // Singleton instance
 export const caseSelection = new CaseSelectionStore();
 
+const snapshot = () => ({
+  selectedCaseIds: caseSelection.selectedCaseIds,
+  hoveredCaseIds: caseSelection.hoveredCaseIds,
+  isFocusModeActive: caseSelection.isFocusModeActive,
+  isHoveringBadge: caseSelection.isHoveringBadge,
+});
+
 export function useCaseSelection() {
-  const [state, setState] = useState({
-    selectedCaseIds: caseSelection.selectedCaseIds,
-    hoveredCaseIds: caseSelection.hoveredCaseIds,
-    isFocusModeActive: caseSelection.isFocusModeActive,
-    isHoveringBadge: caseSelection.isHoveringBadge,
-  });
-
-  useEffect(() => caseSelection.subscribe(() => {
-    setState({
-      selectedCaseIds: caseSelection.selectedCaseIds,
-      hoveredCaseIds: caseSelection.hoveredCaseIds,
-      isFocusModeActive: caseSelection.isFocusModeActive,
-      isHoveringBadge: caseSelection.isHoveringBadge,
-    });
-  }), []);
-
+  const [state, setState] = useState(snapshot);
+  useEffect(() => caseSelection.subscribe(() => setState(snapshot())), []);
   return state;
 }

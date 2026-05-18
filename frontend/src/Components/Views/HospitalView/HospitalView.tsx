@@ -8,7 +8,6 @@ import { useObserver } from 'mobx-react-lite';
 import { useDisclosure } from '@mantine/hooks';
 import {
   useMantineTheme, Title, Stack, Card, Flex, Select, Button, CloseButton, ActionIcon, Menu, Modal, Divider, Tooltip,
-  LoadingOverlay,
   Box,
 } from '@mantine/core';
 import { BarChart, LineChart } from '@mantine/charts';
@@ -390,14 +389,7 @@ export function HospitalView() {
                     position: 'relative',
                   }}
                   >
-                    <LoadingOverlay
-                      visible={rawChartData.length === 0 && store.isDashboardDataLoading}
-                      overlayProps={{
-                        radius: 'sm',
-                        blur: 2,
-                      }}
-                    />
-                    {rawChartData.length === 0 && !store.isDashboardDataLoading && (
+                    {rawChartData.length === 0 && (
                       <EmptyChartState hasFilters={store.totalFiltersAppliedCount > 0} />
                     )}
                     {chartType === 'bar' ? (

@@ -855,13 +855,9 @@ export const DumbbellChartContent = memo(({
                 e.stopPropagation();
                 const ids = binGroup.cases.map((c) => c.case_id);
                 if (ids.length === 0) return;
-                const currentSelected = store.selectedCaseIds;
-                const allSelected = ids.every((id) => currentSelected.has(id));
-                if (allSelected) {
-                  store.removeSelected(ids);
-                } else {
-                  store.addSelected(ids);
-                }
+                const allSelected = ids.every((id) => caseSelection.selectedCaseIds.has(id));
+                if (allSelected) caseSelection.removeSelected(ids);
+                else caseSelection.addSelected(ids);
               }}
             >
               <title>
@@ -953,7 +949,7 @@ export const DumbbellChartContent = memo(({
         handleMouseUp();
         hoveredCaseRef.current = null;
         setTooltipData(null);
-        store.clearHovered();
+        caseSelection.clearHovered();
       }}
     >
       <svg
