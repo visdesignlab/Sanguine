@@ -4,15 +4,6 @@ import {
 import { IconFocusCentered, IconX } from '@tabler/icons-react';
 import { caseSelection, useCaseSelection } from '../../../../Store/CaseSelection';
 
-/**
- * Compact badge showing the count of selected surgery cases with focus-mode and clear controls.
- *
- * - Hover the badge → temporarily dim non-selected cases in all charts
- * - Click the badge → lock focus-dimming until clicked again
- * - Click × → clear all selections and exit the focus mode
- *
- * Renders nothing when no cases are selected.
- */
 export function CaseSelectionBadge() {
   const theme = useMantineTheme();
   const { selectedCaseIds, isFocusModeActive } = useCaseSelection();
@@ -43,21 +34,8 @@ export function CaseSelectionBadge() {
         onMouseLeave={() => caseSelection.setHoveringBadge(false)}
         onClick={() => caseSelection.setFocusModeActive(!isFocusModeActive)}
       >
-        <IconFocusCentered
-          size={13}
-          style={{
-            color: isFocusModeActive ? theme.colors.orange[6] : theme.colors.gray[6],
-            flexShrink: 0,
-          }}
-        />
-        <Text
-          size="xs"
-          fw={500}
-          style={{
-            color: isFocusModeActive ? theme.colors.orange[7] : theme.colors.gray[7],
-            lineHeight: 1,
-          }}
-        >
+        <IconFocusCentered size={13} style={{ color: isFocusModeActive ? theme.colors.orange[6] : theme.colors.gray[6], flexShrink: 0 }} />
+        <Text size="xs" fw={500} style={{ color: isFocusModeActive ? theme.colors.orange[7] : theme.colors.gray[7], lineHeight: 1 }}>
           {`${selectedCaseIds.size} Selected`}
         </Text>
         <ActionIcon

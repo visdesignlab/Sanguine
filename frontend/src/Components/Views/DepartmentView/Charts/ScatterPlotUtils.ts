@@ -148,44 +148,25 @@ export function getProcessedScatterData(
 
   // Sort bin group keys
   const sortedKeys = Array.from(groupedByBinGroup.keys());
-  // Natural ordering for axes with an inherent sequence
-  const hasNaturalOrder = ['year', 'rbc_units', 'plt_units', 'cryo_units', 'ffp_units', 'quarter', 'cell_saver_ml'].includes(selectedX);
-
-  if (hasNaturalOrder) {
-    if (['year', 'rbc_units', 'plt_units', 'cryo_units', 'ffp_units'].includes(selectedX)) {
-      sortedKeys.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-    } else if (selectedX === 'quarter') {
-      sortedKeys.sort((a, b) => a.localeCompare(b));
-    } else if (selectedX === 'cell_saver_ml') {
-      sortedKeys.sort((a, b) => {
-        if (a === '0 mL') return -1;
-        if (b === '0 mL') return 1;
-        const aVal = parseInt(a.split('-')[0], 10);
-        const bVal = parseInt(b.split('-')[0], 10);
-        return aVal - bVal;
-      });
-    }
+  if (['year', 'rbc_units', 'plt_units', 'cryo_units', 'ffp_units'].includes(selectedX)) {
+    sortedKeys.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  } else if (selectedX === 'quarter') {
+    sortedKeys.sort((a, b) => a.localeCompare(b));
+  } else if (selectedX === 'cell_saver_ml') {
+    sortedKeys.sort((a, b) => {
+      if (a === '0 mL') return -1;
+      if (b === '0 mL') return 1;
+      return parseInt(a.split('-')[0], 10) - parseInt(b.split('-')[0], 10);
+    });
   } else if (binSort === 'count') {
-    sortedKeys.sort((a, b) => {
-      const aCount = groupedByBinGroup.get(a)?.length || 0;
-      const bCount = groupedByBinGroup.get(b)?.length || 0;
-      return bCount - aCount;
-    });
+    sortedKeys.sort((a, b) => (groupedByBinGroup.get(b)?.length ?? 0) - (groupedByBinGroup.get(a)?.length ?? 0));
   } else if (binSort === 'avg') {
-    sortedKeys.sort((a, b) => {
-      const getAvg = (cases: DumbbellCase[]) => {
-        let sum = 0;
-        let count = 0;
-        cases.forEach((c) => {
-          const val = c[yKey] as number | undefined;
-          if (val !== undefined && val !== null) { sum += val; count += 1; }
-        });
-        return count > 0 ? sum / count : 0;
-      };
-      return getAvg(groupedByBinGroup.get(b) || []) - getAvg(groupedByBinGroup.get(a) || []);
-    });
+    const avg = (k: string) => {
+      const vals = (groupedByBinGroup.get(k) ?? []).map((c) => c[yKey] as number | null).filter((v): v is number => v != null);
+      return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
+    };
+    sortedKeys.sort((a, b) => avg(b) - avg(a));
   } else {
-    // alpha (default)
     sortedKeys.sort();
   }
 

@@ -1,11 +1,3 @@
-/**
- * Shared hook that encapsulates the 2-D box-selection interaction (draw, move, resize)
- * used by both DumbbellChartContent and ScatterPlot.
- *
- * Each chart supplies its own `extractBoxIds` (which case IDs fall inside a given rect)
- * and `onClickPoint` (what to do when the user clicks without dragging — typically toggle
- * the currently-hovered point). Everything else is generic brush state.
- */
 import React, {
   useState, useRef, useCallback, useEffect, type RefObject,
 } from 'react';
@@ -33,31 +25,20 @@ function getBrushCursor(x: number, y: number, box: BrushRect, tol = 10): string 
 }
 
 interface UseBrushSelectionOptions {
-  /** Ref to the chart container div — used to translate client coords to chart coords. */
   chartRef: RefObject<HTMLDivElement | null>;
-  /** Total pixel height of the chart area (including margins). */
   height: number;
-  /** Top margin in pixels — brush is constrained below this y. */
   marginTop: number;
-  /** Bottom margin in pixels — brush is constrained above `height - bottomMargin`. */
   bottomMargin: number;
-  /** Minimum drag distance before treating the gesture as a box draw vs. a click. */
   dragLimit: number;
-  /** Given a brush rect, return the case_ids whose data points fall inside it. */
   extractBoxIds: (box: BrushRect) => string[];
-  /** Called when the user clicks without dragging — typically toggles the hovered point. */
   onClickPoint: () => void;
 }
 
 export interface BrushSelectionReturn {
-  /** The live brush rect while dragging (null when not dragging). */
   selection: BrushRect | null;
-  /** The persisted box shown after a drag completes (null when cleared). */
   appliedSelection: BrushRect | null;
   interactionMode: InteractionMode;
-  /** Active resize handle identifier, e.g. 'nw', 'se' (null when not resizing). */
   resizeHandle: string | null;
-  /** CSS cursor to use when idle, based on pointer proximity to the selection box. */
   brushCursor: string;
   handleMouseDown: (e: React.MouseEvent) => void;
   handleMouseMove: (e: React.MouseEvent) => void;
