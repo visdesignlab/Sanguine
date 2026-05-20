@@ -645,7 +645,9 @@ export const BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS = [
 ] as const;
 
 // Metrics that have no meaningful sum/avg distinction (e.g. CMI-weighted rates)
-export const DASHBOARD_NO_AGGREGATION_TOGGLE_VARS = new Set<string>([
+export const DASHBOARD_NO_AGGREGATION_TOGGLE_VARS = new Set<
+  typeof dashboardYAxisVars[number]
+>([
   CASE_MIX_INDEX.value,
   TRANSFUSIONS_PER_CMI_VISIT.value,
   ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS.map((o) => o.value),
