@@ -722,6 +722,38 @@ export const dashboardYAxisOptions = [
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
+// Grouped version for use in Mantine Select components
+export const dashboardYAxisOptionsGrouped = [
+  {
+    group: 'Blood Products',
+    items: BLOOD_COMPONENT_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'Guideline Adherence',
+    items: [OVERALL_GUIDELINE_ADHERENT, ...GUIDELINE_ADHERENT_OPTIONS].map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'Outcomes',
+    items: OUTCOME_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'Prophylactic Medications',
+    items: PROPHYL_MED_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'Costs',
+    items: [...COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST].map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'General',
+    items: [VISIT_COUNT].map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'CMI Weighted Discharge',
+    items: [CASE_MIX_INDEX, TRANSFUSIONS_PER_CMI_VISIT, ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS].map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+];
+
 export const providerViewYAxisOptions = [
   ...dashboardYAxisOptions,
   PRE_OP_ANEMIA_RATE,
