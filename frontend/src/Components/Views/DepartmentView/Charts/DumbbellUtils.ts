@@ -263,43 +263,55 @@ export function calculateDumbbellLayout(
     let isOverflowing = false;
     const isSurgeon = isProviderXAxis(selectedX);
 
-    if (isSurgeon) {
-      const MIN_SURGEON_WIDTH = 40;
-      if (binGroupWidth < MIN_SURGEON_WIDTH) {
-        const deficit = MIN_SURGEON_WIDTH - binGroupWidth;
-        items.push({ type: 'spacer', width: deficit });
-        currentX += deficit;
-        binGroupWidth += deficit;
-      }
-    }
-
-    const fullWidth = measureText(displayLabel);
-    if (binGroupWidth < fullWidth + 10) {
+    if (!collapsedBinGroups.has(binGroup.id)) {
       if (isSurgeon) {
-        const lastName = getProviderLastName(displayLabel);
-        const shortWidth = measureText(lastName);
-        displayLabel = lastName;
-        if (binGroupWidth < shortWidth + 10) {
-          isOverflowing = true;
-        }
-      } else {
-        const shortLabel = getShortenedLabel(displayLabel);
-        const shortWidth = measureText(shortLabel);
-        if (shortLabel !== displayLabel) {
-          displayLabel = shortLabel;
-        }
-        if (binGroupWidth < shortWidth + 10) {
-          isOverflowing = true;
+        const MIN_SURGEON_WIDTH = 40;
+        if (binGroupWidth < MIN_SURGEON_WIDTH) {
+          const deficit = MIN_SURGEON_WIDTH - binGroupWidth;
+          items.push({ type: 'spacer', width: deficit });
+          currentX += deficit;
+          binGroupWidth += deficit;
         }
       }
-    }
 
-    binGroupLayout.set(binGroup.id, {
-      x: binGroupStartX,
-      width: binGroupWidth,
-      label: displayLabel,
-      isOverflowing,
-    });
+      const fullWidth = measureText(displayLabel);
+      if (binGroupWidth < fullWidth + 10) {
+        if (isSurgeon) {
+          const lastName = getProviderLastName(displayLabel);
+          const shortWidth = measureText(lastName);
+          displayLabel = lastName;
+          if (binGroupWidth < shortWidth + 10) {
+            isOverflowing = true;
+          }
+        } else {
+          const shortLabel = getShortenedLabel(displayLabel);
+          if (shortLabel !== displayLabel) {
+            displayLabel = shortLabel;
+          }
+          const labelWidth = measureText(displayLabel) + 10;
+          if (binGroupWidth < labelWidth) {
+            const deficit = labelWidth - binGroupWidth;
+            items.push({ type: 'spacer', width: deficit });
+            currentX += deficit;
+            binGroupWidth += deficit;
+          }
+        }
+      }
+
+      binGroupLayout.set(binGroup.id, {
+        x: binGroupStartX,
+        width: binGroupWidth,
+        label: displayLabel,
+        isOverflowing,
+      });
+    } else {
+      binGroupLayout.set(binGroup.id, {
+        x: binGroupStartX,
+        width: binGroupWidth,
+        label: displayLabel,
+        isOverflowing: false,
+      });
+    }
   });
 
   return { items, binGroupLayout };

@@ -11,6 +11,8 @@ import {
   IconArrowUp,
   IconArrowsVertical,
   IconArrowRightDashed,
+  IconChevronLeft,
+  IconChevronRight,
 } from '@tabler/icons-react';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { Store } from '../../../../Store/Store';
@@ -1003,6 +1005,11 @@ export const DumbbellChartContent = memo(({
                 }}
               >
                 {isBinGroupCollapsed ? '...' : binGroupLabel}
+                {hoveredCollapse === binGroup.id && (
+                  isBinGroupCollapsed
+                    ? <IconChevronRight size={14} style={{ marginLeft: 4 }} />
+                    : <IconChevronLeft size={14} style={{ marginLeft: 4 }} />
+                )}
               </div>
             </foreignObject>
 
@@ -1017,16 +1024,6 @@ export const DumbbellChartContent = memo(({
               onMouseLeave={() => setHoveredCollapse(null)}
               onClick={(e) => onToggleBinGroupCollapse(e, binGroup.id)}
             />
-            {hoveredCollapse === binGroup.id && (
-              <path
-                d={isBinGroupCollapsed ? 'M 2 5 L 8 12 L 2 19' : 'M 8 5 L 2 12 L 8 19'}
-                transform={`translate(${binGroupX + binGroupWidth - 12}, ${innerHeight + 6}) scale(0.6)`}
-                fill="none"
-                stroke={theme.colors.gray[7]}
-                strokeWidth={2}
-                style={{ pointerEvents: 'none' }}
-              />
-            )}
 
           </g>
         );
@@ -1362,7 +1359,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   return (
     <Box h="100%" display="flex" style={{ flexDirection: 'column' }}>
       {/* Header */}
-      <Flex direction="row" justify="space-between" align="center" pl="md" pr="md" pt="xs">
+      <Flex direction="column" justify="space-between" align="start" pl="md" pr="md" pt="xs" gap="xs">
         <Flex direction="row" align="center" gap="md" ml={-12}>
           <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
           <Title order={4}>
