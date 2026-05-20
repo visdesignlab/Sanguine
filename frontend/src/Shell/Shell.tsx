@@ -25,6 +25,7 @@ import {
   IconInfoSquareRounded,
   IconEyeglass,
   IconEyeglassOff,
+  IconMessageChatbot,
 } from '@tabler/icons-react';
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
@@ -39,6 +40,7 @@ import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
 import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
 import { SavedStatesMenu } from '../Components/Menus/ManageStatesMenu';
 import { apiPath } from '../Utils/api';
+import { LlmChatPanel } from '../Components/Toolbar/LlmChat/LlmChatPanel';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -121,6 +123,11 @@ export const Shell = observer(() => {
         </Badge>,
 
       ],
+    },
+    {
+      icon: IconMessageChatbot,
+      label: 'LLM Chat',
+      content: <LlmChatPanel />,
     },
   ];
 

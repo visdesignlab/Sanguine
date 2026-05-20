@@ -20,4 +20,5 @@ urlpatterns = [
     path("api/get_visit_attributes", views.get_visit_attributes, name="get_visit_attributes"),
     path("api/get_surgery_case_attributes", views.get_surgery_case_attributes, name="get_surgery_case_attributes"),
     path("api/get_procedure_hierarchy", views.get_procedure_hierarchy, name="get_procedure_hierarchy"),
+    path("api/llm_chat", views.llm_chat, name="llm_chat"),
 ]
