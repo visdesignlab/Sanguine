@@ -644,6 +644,15 @@ export const BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS = [
   },
 ] as const;
 
+// Metrics that have no meaningful sum/avg distinction (e.g. CMI-weighted rates)
+export const DASHBOARD_NO_AGGREGATION_TOGGLE_VARS = new Set<
+  typeof dashboardYAxisVars[number]
+>([
+  CASE_MIX_INDEX.value,
+  TRANSFUSIONS_PER_CMI_VISIT.value,
+  ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS.map((o) => o.value),
+]);
+
 // Costs -----------------------------------------------------------
 export const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
   rbc_units_cost: 200,
@@ -721,6 +730,38 @@ export const dashboardYAxisOptions = [
   ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
+
+// Grouped version for use in Mantine Select components
+export const dashboardYAxisOptionsGrouped = [
+  {
+    group: 'Blood Products',
+    items: BLOOD_COMPONENT_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'Guideline Adherence',
+    items: [OVERALL_GUIDELINE_ADHERENT, ...GUIDELINE_ADHERENT_OPTIONS].map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'Outcomes',
+    items: OUTCOME_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'Prophylactic Medications',
+    items: PROPHYL_MED_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'Costs',
+    items: [...COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST].map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'General',
+    items: [VISIT_COUNT].map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+  {
+    group: 'CMI Weighted Discharge',
+    items: [CASE_MIX_INDEX, TRANSFUSIONS_PER_CMI_VISIT, ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS].map((opt) => ({ value: opt.value, label: opt.label.base })),
+  },
+];
 
 export const providerViewYAxisOptions = [
   ...dashboardYAxisOptions,
@@ -861,6 +902,7 @@ export type CostBarData = CostBarDatum[];
 
 // --- Dumbbell Chart ---
 export const DUMBBELL_X_AXIS_OPTIONS = [
+  { value: 'provider', label: 'Provider' },
   { value: 'surgeon', label: 'Surgeon' },
   { value: 'anesthesiologist', label: 'Anesthesiologist' },
   { value: 'year', label: 'Year' },
@@ -872,6 +914,9 @@ export const DUMBBELL_X_AXIS_OPTIONS = [
   { value: 'cell_salvage', label: 'Cell Salvage Volume (mL)' },
 ] as const;
 export type DumbbellXAxisVar = typeof DUMBBELL_X_AXIS_OPTIONS[number]['value'];
+
+export const PROVIDER_X_AXIS_VALUES = ['surgeon', 'anesthesiologist', 'provider'] as const;
+export const isProviderXAxis = (v: string) => PROVIDER_X_AXIS_VALUES.includes(v as typeof PROVIDER_X_AXIS_VALUES[number]);
 
 export const DUMBBELL_Y_AXIS_OPTIONS = [
   { value: 'hgb', label: 'Hemoglobin' },
@@ -946,6 +991,7 @@ export type DumbbellData = DumbbellCase[];
 
 // --- Scatter plots ---
 export const SCATTER_X_AXIS_OPTIONS = [
+  { value: 'provider' as const, label: 'Provider', isDiscrete: true },
   { value: 'surgeon' as const, label: 'Surgeon', isDiscrete: true },
   { value: 'anesthesiologist' as const, label: 'Anesthesiologist', isDiscrete: true },
   { value: 'year' as const, label: 'Year', isDiscrete: true },

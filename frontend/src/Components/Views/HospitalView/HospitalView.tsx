@@ -29,12 +29,14 @@ import {
 } from '../../../Theme/mantineTheme';
 import {
   dashboardYAxisOptions,
+  dashboardYAxisOptionsGrouped,
   AGGREGATION_OPTIONS,
   dashboardXAxisOptions,
   type DashboardChartConfig,
   DashboardStatConfig,
   chartColors,
   BLOOD_PRODUCT_COLOR_THEME,
+  DASHBOARD_NO_AGGREGATION_TOGGLE_VARS,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 import { getDepartmentContextLabel } from '../../../Utils/departmentContext';
@@ -171,24 +173,23 @@ export function HospitalView() {
           centered
         >
           <Stack gap="md">
-            {/** Modal - choose aggregation for chart or stat */}
+            {/** Modal - choose aggregation for chart or stat (disabled for CMI-weighted metrics) */}
             <Select
               label="Aggregation"
               placeholder="Choose aggregation type"
               data={aggregationOptions}
               value={selectedAggregation}
               onChange={(value) => setSelectedAggregation(value || 'Average')}
+              disabled={DASHBOARD_NO_AGGREGATION_TOGGLE_VARS.has(selectedYAxisVar)}
             />
             {/** Modal - choose y-axis for chart or stat */}
             <Select
               label={`${itemModalType === 'chart' ? 'Metric (Y-Axis)' : 'Metric'}`}
               placeholder={`Choose ${itemModalType} metric`}
-              data={dashboardYAxisOptions.map((opt) => ({
-                value: opt.value,
-                label: opt.label.base,
-              }))}
+              data={dashboardYAxisOptionsGrouped}
               value={selectedYAxisVar}
               onChange={(value) => setSelectedYAxisVar(value || '')}
+              searchable
             />
             {/** Modal - choose x-axis for chart only */}
             {itemModalType === 'chart' && (
@@ -332,10 +333,11 @@ export function HospitalView() {
                         </ActionIcon>
                       </Tooltip>
 
-                      {/* Chart y-axis aggregation toggle */}
+                      {/* Chart y-axis aggregation toggle (disabled for CMI-weighted metrics) */}
                       <Tooltip label={`Change Y-Axis Aggregation to ${aggregation === 'sum' ? 'Average' : 'Sum'}`}>
                         <ActionIcon
                           variant="subtle"
+                          disabled={DASHBOARD_NO_AGGREGATION_TOGGLE_VARS.has(yAxisVar)}
                           onClick={() => store.setDashboardChartConfig(chartId, {
                             chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum', chartType,
                           })}
@@ -356,13 +358,11 @@ export function HospitalView() {
                       </Tooltip>
                       {/* Chart Select Attribute Menu */}
                       <Select
-                        data={dashboardYAxisOptions.map((opt) => ({
-                          value: opt.value,
-                          label: opt.label.base,
-                        }))}
+                        data={dashboardYAxisOptionsGrouped}
                         defaultValue={yAxisVar}
                         value={yAxisVar}
                         allowDeselect={false}
+                        searchable
                         onChange={(value) => {
                           const selectedOption = dashboardYAxisOptions.find((opt) => opt.value === value);
                           let inferredChartType: DashboardChartConfig['chartType'] = 'line';
