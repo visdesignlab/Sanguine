@@ -3,7 +3,7 @@ import {
   makeAutoObservable, reaction, runInAction, observable, computed, createAtom, type IAtom,
 } from 'mobx';
 import { createContext } from 'react';
-import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
+import type { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
 import { initProvenance, Provenance, NodeID } from '@visdesignlab/trrack';
 import { Layout } from 'react-grid-layout';
 // @ts-expect-error: rgl utils not typed
@@ -18,16 +18,21 @@ import {
   DashboardChartDatum,
   DashboardStatConfig,
   DashboardStatData,
-  ExploreChartConfig,
-  ExploreChartData,
-  ExploreStatConfig,
-  ExploreStatData,
-  ExploreTableConfig,
-  ExploreTableRow,
+  DepartmentChartConfig,
+  DepartmentChartData,
+  DepartmentStatConfig,
+  DepartmentStatData,
+  DepartmentTableConfig,
+  DepartmentTableRow,
+  ProviderChart,
+  ProviderChartConfig,
+  ProviderChartData,
+  providerXAxisOptions,
   ProcedureHierarchyResponse,
   TimePeriod,
   dashboardXAxisVars,
   dashboardYAxisOptions,
+  providerViewYAxisOptions,
   DEFAULT_UNIT_COSTS,
 } from '../Types/application';
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
@@ -40,10 +45,85 @@ import {
   CELL_SAVER_ML, PLT_UNITS, RBC_UNITS,
 } from '../Types/bloodProducts';
 
+export const DEFAULT_CLAMP_PERCENTILE = 0.99;
+
 export const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
 const sqlString = (value: string) => `'${value.replace(/'/g, "''")}'`;
 const safeIdPattern = /^[A-Za-z0-9_-]+$/;
+const cmiAdjustedBenchmarkNumerators: Record<string, string> = {
+  transfusions_per_cmi_visit: 'overall_units',
+  rbc_units_per_cmi_visit: 'rbc_units',
+  ffp_units_per_cmi_visit: 'ffp_units',
+  plt_units_per_cmi_visit: 'plt_units',
+  cryo_units_per_cmi_visit: 'cryo_units',
+  whole_units_per_cmi_visit: 'whole_units',
+  cell_saver_ml_per_cmi_visit: 'cell_saver_ml',
+};
+
+const cmiAdjustedBenchmarkExpression = (metric: string, condition?: string, qualifier = '') => {
+  const numerator = cmiAdjustedBenchmarkNumerators[metric];
+  if (!numerator) return null;
+
+  const qualifiedNumerator = `${qualifier}${numerator}`;
+  const qualifiedCmi = `${qualifier}ms_drg_weight`;
+  const qualifiedVisitNo = `${qualifier}visit_no`;
+  const numeratorExpression = condition
+    ? `CASE WHEN ${condition} THEN ${qualifiedNumerator} ELSE 0 END`
+    : qualifiedNumerator;
+  const cmiExpression = condition
+    ? `CASE WHEN ${condition} THEN ${qualifiedCmi} ELSE NULL END`
+    : qualifiedCmi;
+  const visitExpression = condition
+    ? `CASE WHEN ${condition} THEN ${qualifiedVisitNo} ELSE NULL END`
+    : qualifiedVisitNo;
+
+  return `CAST(SUM(${numeratorExpression}) AS DOUBLE) / NULLIF(AVG(${cmiExpression}) * COUNT(DISTINCT ${visitExpression}), 0)`;
+};
+
+const DASHBOARD_BOOLEAN_Y_AXIS_VARS = new Set([
+  'death',
+  'vent',
+  'stroke',
+  'ecmo',
+  'b12',
+  'iron',
+  'antifibrinolytic',
+]);
+
+const dashboardMetricSqlExpression = (yAxisVar: string) => (
+  DASHBOARD_BOOLEAN_Y_AXIS_VARS.has(yAxisVar)
+    ? `CASE WHEN ${yAxisVar} THEN 1 ELSE 0 END`
+    : yAxisVar
+);
+
+const GUIDELINE_ADHERENCE_GROUP_VAR = 'overall_units_adherent';
+const GUIDELINE_ADHERENCE_UNIT_COLUMNS: Record<string, string> = {
+  rbc_units: 'rbc_units_adherent',
+  ffp_units: 'ffp_units_adherent',
+  plt_units: 'plt_units_adherent',
+  cryo_units: 'cryo_units_adherent',
+};
+
+const guidelineAdherenceEligibleUnitsExpression = (qualifier = '') => (
+  Object.keys(GUIDELINE_ADHERENCE_UNIT_COLUMNS)
+    .map((col) => `COALESCE(${qualifier}${col}, 0)`)
+    .join(' + ')
+);
+
+const guidelineAdherenceBucketUnitsExpression = (isAdherentExpression: string, qualifier = '') => {
+  const eligibleUnits = guidelineAdherenceEligibleUnitsExpression(qualifier);
+  const adherentUnits = `COALESCE(${qualifier}overall_units_adherent, 0)`;
+
+  return `CASE WHEN ${isAdherentExpression} THEN ${adherentUnits} ELSE GREATEST((${eligibleUnits}) - ${adherentUnits}, 0) END`;
+};
+
+const guidelineAdherenceProductExpression = (metric: string, isAdherentExpression: string, qualifier = '') => {
+  const adherentMetric = GUIDELINE_ADHERENCE_UNIT_COLUMNS[metric];
+  if (!adherentMetric) return null;
+
+  return `CASE WHEN ${isAdherentExpression} THEN COALESCE(${qualifier}${adherentMetric}, 0) ELSE GREATEST(COALESCE(${qualifier}${metric}, 0) - COALESCE(${qualifier}${adherentMetric}, 0), 0) END`;
+};
 
 export const DEFAULT_CHART_LAYOUTS: { [key: string]: Layout[] } = {
   main: [
@@ -92,7 +172,744 @@ export const DEFAULT_STAT_CONFIGS: DashboardStatConfig[] = [
   },
 ];
 
+/**
+ * ProvidersStore manages provider data for the provider view.
+ */
+export class ProvidersStore {
+  _rootStore: RootStore;
+
+  constructor(rootStore: RootStore) {
+    this._rootStore = rootStore;
+    makeAutoObservable(this);
+  }
+
+  providerChartData: ProviderChartData = {};
+
+  providerList: string[] = [];
+
+  _selectedProvider: string | null = null;
+
+  // Number of unique surgeries performed by the selected provider (all time)
+  selectedProvSurgCount: number | null = null;
+
+  selectedProvRbcUnits: number | null = null;
+
+  selectedProvCmi: number | null = null;
+
+  averageProvCmi: number | null = null;
+
+  cmiComparisonLabel: string = 'within typical range';
+
+  // Current date range applied for Providers view (nullable = all time)
+  dateStart: string | null = null;
+
+  dateEnd: string | null = null;
+
+  earliestDate: string | null = null;
+
+  async findEarliestDate(): Promise<string | null> {
+    if (!this._rootStore.duckDB) {
+      return null;
+    }
+
+    try {
+      const query = `
+        SELECT MIN(dsch_dtm) AS earliest_date
+        FROM filteredVisits
+        WHERE dsch_dtm IS NOT NULL;
+      `;
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
+      const earliestDate = rows[0]?.earliest_date ?? null;
+      return earliestDate ? String(earliestDate) : null;
+    } catch (e) {
+      console.error('Error finding earliest discharge date:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Set date range for Providers view and refresh provider-related data.
+   */
+  setDateRange(startDate: string | null, endDate: string | null) {
+    this.dateStart = startDate || null;
+    this.dateEnd = endDate || null;
+
+    // Refresh provider view data constrained to this date range
+    this.getProviderCharts(this.dateStart, this.dateEnd).catch((e) => {
+      console.error('Error refreshing provider charts after date range change:', e);
+    });
+    this.fetchProviderList(this.dateStart, this.dateEnd).catch((e) => {
+      console.error('Error refreshing provider list after date range change:', e);
+    });
+    // If a selected provider exists, refresh provider-specific stats constrained to date range
+    if (this.selectedProvider) {
+      this.fetchSelectedProvSurgCount(this.dateStart, this.dateEnd).catch((e) => {
+        console.error('Error refreshing surgery count after date range change:', e);
+      });
+      this.fetchSelectedProvRbcUnits(this.dateStart, this.dateEnd).catch((e) => {
+        console.error('Error refreshing RBC units after date range change:', e);
+      });
+      this.fetchCmiComparison(this.dateStart, this.dateEnd).catch((e) => {
+        console.error('Error refreshing CMI comparison after date range change:', e);
+      });
+    }
+  }
+
+  /**
+     * Fetch count of unique surgeries for the currently selected provider.
+     * If startDate/endDate provided, restrict to that discharge date range.
+     * Sets selectedProvSurgCount to 0 when no provider is selected or duckDB missing.
+     */
+  async fetchSelectedProvSurgCount(startDate?: string | null, endDate?: string | null) {
+    if (!this._rootStore.duckDB || !this.selectedProvider) {
+      this.selectedProvSurgCount = 0;
+      return this.selectedProvSurgCount;
+    }
+
+    try {
+      // protect single quotes in provider name
+      const prov = String(this.selectedProvider).replace(/'/g, "''");
+
+      let dateClause = '';
+      if (startDate) dateClause += ` AND fv.dsch_dtm >= DATE '${startDate}'`;
+      if (endDate) dateClause += ` AND fv.dsch_dtm <= DATE '${endDate}'`;
+
+      const query = `
+        SELECT COUNT(DISTINCT sc.case_id) AS cnt
+        FROM filteredSurgeryCases sc
+        INNER JOIN filteredVisits fv ON sc.visit_no = fv.visit_no
+        WHERE fv.attending_provider = '${prov}' ${dateClause};
+      `;
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
+      const cnt = rows[0]?.cnt ?? 0;
+      this.selectedProvSurgCount = Number(cnt) || 0;
+    } catch (e) {
+      console.error('Error fetching selected provider surgery count:', e);
+      this.selectedProvSurgCount = 0;
+    }
+
+    return this.selectedProvSurgCount;
+  }
+
+  async fetchSelectedProvRbcUnits(startDate?: string | null, endDate?: string | null) {
+    // If no DB or no selected provider, set to zero and return
+    if (!this._rootStore.duckDB || !this.selectedProvider) {
+      this.selectedProvRbcUnits = 0;
+      return this.selectedProvRbcUnits;
+    }
+
+    try {
+      const prov = String(this.selectedProvider).replace(/'/g, "''");
+
+      // Build WHERE clause (optionally constrain by discharge date range)
+      let dateClause = '';
+      if (startDate) {
+        // duckdb accepts DATE 'YYYY-MM-DD' or comparable formats
+        dateClause += ` AND dsch_dtm >= DATE '${startDate}'`;
+      }
+      if (endDate) {
+        dateClause += ` AND dsch_dtm <= DATE '${endDate}'`;
+      }
+
+      const query = `
+        SELECT SUM(rbc_units) AS total_rbc
+        FROM filteredVisits
+        WHERE attending_provider = '${prov}' ${dateClause};
+      `;
+
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
+
+      const total = rows[0]?.total_rbc ?? 0;
+      this.selectedProvRbcUnits = Number(total) || 0;
+    } catch (e) {
+      console.error('Error fetching selected provider RBC units:', e);
+      this.selectedProvRbcUnits = 0;
+    }
+
+    return this.selectedProvRbcUnits;
+  }
+
+  get selectedProvider(): string | null {
+    return this._selectedProvider;
+  }
+
+  set selectedProvider(val: string | null) {
+    if (this._selectedProvider === val) return;
+    this._selectedProvider = val;
+    // Recompute charts and stats when selected provider changes, respecting current date range
+    const s = this.dateStart ?? null;
+    const eDate = this.dateEnd ?? null;
+    this.getProviderCharts(s, eDate).catch((e) => {
+      console.error('Error refreshing provider charts after provider change:', e);
+    });
+    // Refresh surgery count for the newly selected provider
+    this.fetchSelectedProvSurgCount(s, eDate).catch((e) => {
+      console.error('Error fetching surgery count after provider change:', e);
+    });
+    // Refresh RBC units (all time by default) when provider changes
+    this.fetchSelectedProvRbcUnits(s, eDate).catch((e) => {
+      console.error('Error fetching RBC units after provider change:', e);
+    });
+    this.fetchCmiComparison(s, eDate).catch((e) => {
+      console.error('Error fetching CMI comparison after provider change:', e);
+    });
+  }
+
+  // Chart configurations by default
+  _chartConfigs: ProviderChartConfig[] = [
+    {
+      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'rbc_units_adherent', aggregation: 'avg', chartType: 'time-series-line', group: 'Anemia Management',
+    },
+    {
+      chartId: '1', xAxisVar: 'ffp_units_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'population-histogram', group: 'Anemia Management',
+    },
+    {
+      chartId: '2', xAxisVar: 'antifibrinolytic', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'population-histogram', group: 'Anemia Management',
+    },
+    {
+      chartId: '3', xAxisVar: 'b12', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'population-histogram', group: 'Outcomes',
+    },
+    {
+      chartId: '4', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'time-series-line', group: 'Outcomes',
+    },
+    {
+      chartId: '5', xAxisVar: 'quarter', yAxisVar: 'rbc_units_cost', aggregation: 'avg', chartType: 'time-series-line', group: 'Costs',
+    },
+    {
+      chartId: '6', xAxisVar: 'quarter', yAxisVar: 'pre_anemia_rate', aggregation: 'avg', chartType: 'time-series-line', group: 'Anemia Management',
+    },
+    {
+      chartId: '7', xAxisVar: 'pre_anemia_rate', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'population-histogram', group: 'Anemia Management',
+    },
+  ];
+
+  get chartConfigs() {
+    return this._chartConfigs;
+  }
+
+  set chartConfigs(input: ProviderChartConfig[]) {
+    this._chartConfigs = input;
+  }
+
+  /**
+     * Adds new chart
+     * @param config Chart data specification for chart to add
+     */
+  addChart(config: ProviderChartConfig) {
+    this._chartConfigs = [config, ...this._chartConfigs];
+    this.getProviderCharts(this.dateStart, this.dateEnd);
+  }
+
+  /**
+   * Removes chart, by ID.
+   */
+  removeChart(chartId: string) {
+    this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
+  }
+
+  /**
+   * Fetches CMI for all providers (optionally bounded by date range),
+   * computes average CMI across providers and selected provider CMI,
+   * and sets cmiComparisonLabel based on relative difference.
+   */
+  async fetchCmiComparison(startDate?: string | null, endDate?: string | null) {
+    if (!this._rootStore.duckDB || !this.selectedProvider) {
+      this.selectedProvCmi = null;
+      this.averageProvCmi = null;
+      this.cmiComparisonLabel = 'within typical range';
+      return this.cmiComparisonLabel;
+    }
+
+    try {
+      let dateClause = '';
+      if (startDate) dateClause += ` WHERE dsch_dtm >= DATE '${startDate}'`;
+      if (endDate) {
+        dateClause += `${dateClause ? ' AND' : ' WHERE'} dsch_dtm <= DATE '${endDate}'`;
+      }
+
+      const query = `
+        SELECT attending_provider, SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS cmi
+        FROM filteredVisits
+        ${dateClause}
+        GROUP BY attending_provider;
+      `;
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
+
+      const cmiValues = rows
+        .map((r) => {
+          const v = Number(r.cmi);
+          return Number.isFinite(v) ? v : NaN;
+        })
+        .filter(Number.isFinite);
+
+      if (cmiValues.length === 0) {
+        this.selectedProvCmi = null;
+        this.averageProvCmi = null;
+        this.cmiComparisonLabel = 'within typical range';
+        return this.cmiComparisonLabel;
+      }
+
+      const avg = cmiValues.reduce((a, b) => a + b, 0) / cmiValues.length;
+      this.averageProvCmi = avg;
+
+      const match = rows.find((r) => String(r.attending_provider) === String(this.selectedProvider));
+      this.selectedProvCmi = match && match.cmi != null ? Number(match.cmi) : null;
+
+      // relative difference
+      const sel = this.selectedProvCmi ?? avg;
+      const rel = avg === 0 ? 0 : (sel - avg) / avg;
+
+      // thresholds (tunable)
+      let label = 'within typical range';
+      if (rel >= 0.15) label = 'much higher than average';
+      else if (rel >= 0.07) label = 'higher than average';
+      else if (rel >= 0.03) label = 'slightly higher than average';
+      else if (rel <= -0.15) label = 'much lower than average';
+      else if (rel <= -0.07) label = 'lower than average';
+      else if (rel <= -0.03) label = 'slightly lower than average';
+      else label = 'within typical range';
+
+      this.cmiComparisonLabel = label;
+      return this.cmiComparisonLabel;
+    } catch (e) {
+      console.error('Error fetching CMI comparison:', e);
+      this.selectedProvCmi = null;
+      this.averageProvCmi = null;
+      this.cmiComparisonLabel = 'within typical range';
+      return this.cmiComparisonLabel;
+    }
+  }
+
+  async fetchProviderList(startDate?: string | null, endDate?: string | null) {
+    if (!this._rootStore.duckDB) {
+      return [];
+    }
+
+    try {
+      let dateClause = '';
+      if (startDate) dateClause += ` WHERE dsch_dtm >= DATE '${startDate}'`;
+      if (endDate) {
+        dateClause += `${dateClause ? ' AND' : ' WHERE'} dsch_dtm <= DATE '${endDate}'`;
+      }
+
+      const query = `
+        SELECT DISTINCT attending_provider
+        FROM filteredVisits
+        ${dateClause}
+        ${dateClause ? ' AND' : ' WHERE'} attending_provider IS NOT NULL
+        ORDER BY attending_provider;
+        `;
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r) => r.toJSON());
+      this.providerList = rows.map((r) => String(r.attending_provider)).filter((v) => v);
+
+      // If no provider is selected yet, pick the first one so UI has a default
+      if (!this.selectedProvider && this.providerList.length > 0) {
+        this.selectedProvider = this.providerList[0];
+        // ensure surgery count populated for default provider
+        this.fetchSelectedProvSurgCount(startDate, endDate).catch((e) => {
+          console.error('Error fetching surgery count for default provider:', e);
+        });
+      }
+    } catch (e) {
+      console.error('Error fetching provider list:', e);
+      this.providerList = [];
+    }
+
+    return this.providerList;
+  }
+
+  // ── Provider chart helpers ──────────────────────────────────────────────────
+
+  /** Pre-operative anemia condition (Hgb < 13.0 g/dL) used in surgery-case SQL queries. */
+  private readonly ANEMIA_EXPR = 'CASE WHEN pre_hgb IS NOT NULL AND pre_hgb < 13.0 THEN 1.0 ELSE 0.0 END';
+
+  /** Aggregate raw query rows by a time-period column into a map of timePeriod → value. */
+  private aggregateByTimePeriod(
+    rows: Array<Record<string, unknown>>,
+    xVar: string,
+    alias: string,
+    agg: string,
+  ): Map<string, number> {
+    const buckets = new Map<string, number[]>();
+    rows.forEach((r) => {
+      const timeVal = r[xVar];
+      const raw = r[alias];
+      if (timeVal == null || raw == null) return;
+      const num = Number(raw);
+      if (!Number.isFinite(num)) return;
+      const arr = buckets.get(String(timeVal)) ?? [];
+      arr.push(num);
+      buckets.set(String(timeVal), arr);
+    });
+    const result = new Map<string, number>();
+    buckets.forEach((arr, tp) => {
+      result.set(tp, agg === 'sum' ? arr.reduce((a, b) => a + b, 0) : arr.reduce((a, b) => a + b, 0) / arr.length);
+    });
+    return result;
+  }
+
+  /** Merge all-providers and selected-provider time maps into sorted Recharts-ready points. */
+  private buildTimeSeriesPoints(
+    allMap: Map<string, number>,
+    selMap: Map<string, number>,
+    xVar: string,
+    providerLabel: string | null,
+  ): Array<Record<string, string | number | undefined>> {
+    const points: Array<Record<string, string | number | undefined>> = [];
+    allMap.forEach((numAll, timePeriod) => {
+      if (!Number.isFinite(numAll)) return;
+      const numSel = selMap.get(timePeriod);
+      const point: Record<string, string | number | undefined> = { [xVar]: timePeriod, All: numAll };
+      if (providerLabel) {
+        point[providerLabel] = numSel !== undefined && Number.isFinite(numSel) ? numSel : undefined;
+      }
+      points.push(point);
+    });
+    points.sort((a, b) => {
+      try { return compareTimePeriods(a[xVar] as TimePeriod, b[xVar] as TimePeriod); } catch { return 0; }
+    });
+    return points;
+  }
+
+  /** Bin a flat array of per-provider numeric values into histogram data points. */
+  private buildHistogramData(
+    values: number[],
+    yVar: string,
+    xVar: string,
+    recommendedMark: number,
+  ): ProviderChart['data'] {
+    if (values.length === 0) return [];
+    const withMark = !Number.isNaN(recommendedMark);
+    const min = Math.min(...values, ...(withMark ? [recommendedMark] : []));
+    const max = Math.max(...values, ...(withMark ? [recommendedMark] : []));
+    if (min === max) return [{ [xVar]: Number(min.toFixed(2)), [yVar]: values.length }];
+    const bins = Math.min(new Set(values.map((v) => Number(v.toFixed(2)))).size || 1, 20);
+    const binWidth = (max - min) / bins;
+    const counts = new Array<number>(bins).fill(0);
+    values.forEach((v) => {
+      let idx = Math.floor((v - min) / binWidth);
+      if (idx < 0) idx = 0;
+      if (idx >= bins) idx = bins - 1;
+      counts[idx] += 1;
+    });
+
+    // Choose decimal precision that guarantees unique bin center labels.
+    // When the range is small relative to the number of bins, toFixed(2)
+    // can produce duplicate category values which breaks Recharts reference lines.
+    let precision = 2;
+    for (let p = 2; p <= 6; p += 1) {
+      const labels = counts.map((_, i) => Number((min + (i + 0.5) * binWidth).toFixed(p)));
+      if (new Set(labels).size === labels.length) { precision = p; break; }
+    }
+
+    return counts.map((count, i) => ({
+      [xVar]: Number((min + (i + 0.5) * binWidth).toFixed(precision)),
+      [yVar]: count,
+    }));
+  }
+
+  async getProviderCharts(startDate?: string | null, endDate?: string | null) {
+    if (!this._rootStore.duckDB) return {};
+
+    try {
+      const charts: ProviderChartData = {};
+      const provEscaped = this.selectedProvider ? String(this.selectedProvider).replace(/'/g, "''") : null;
+      const providerLabel = this.selectedProvider ? String(this.selectedProvider) : null;
+
+      // Date clauses differ by source table: visits use dsch_dtm, surgery cases use case_date
+      const visitDateClause = [
+        startDate && ` AND dsch_dtm >= DATE '${startDate}'`,
+        endDate && ` AND dsch_dtm <= DATE '${endDate}'`,
+      ].filter(Boolean).join('');
+      const surgDateClause = [
+        startDate && ` AND case_date >= DATE '${startDate}'`,
+        endDate && ` AND case_date <= DATE '${endDate}'`,
+      ].filter(Boolean).join('');
+
+      // Convenience wrapper: execute SQL and return plain JS objects
+      const runQuery = async (sql: string) => (
+        await this._rootStore.duckDB!.query(sql)
+      ).toArray().map((r) => r.toJSON());
+
+      // ── HISTOGRAMS ──────────────────────────────────────────────────────────
+
+      const histConfigs = this._chartConfigs.filter((cfg) => cfg.chartType === 'population-histogram');
+      const stdHistConfigs = histConfigs.filter((cfg) => cfg.xAxisVar !== 'pre_anemia_rate');
+      const surgHistConfigs = histConfigs.filter((cfg) => cfg.xAxisVar === 'pre_anemia_rate');
+
+      // Per-provider aggregates from filteredVisits (all standard metrics)
+      let visitHistRows: Array<Record<string, unknown>> = [];
+      if (stdHistConfigs.length > 0) {
+        const selects = stdHistConfigs.flatMap(({ xAxisVar }) => (
+          Object.keys(AGGREGATION_OPTIONS).flatMap((agg) => {
+            const fn = agg.toUpperCase();
+            if (xAxisVar === 'total_blood_product_cost') {
+              const expr = '(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost)';
+              return [`${fn}(${expr}) AS ${agg}_total_blood_product_cost`];
+            }
+            if (xAxisVar === 'case_mix_index') return `SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS ${agg}_case_mix_index`;
+            if (xAxisVar.endsWith('_units_adherent') && agg === 'avg') {
+              const baseVar = xAxisVar === 'overall_units_adherent' ? '(rbc_units + ffp_units + plt_units + cryo_units)' : xAxisVar.replace('_adherent', '');
+              return `CAST(SUM(${xAxisVar}) AS DOUBLE) / NULLIF(SUM(${baseVar}), 0) AS avg_${xAxisVar}`;
+            }
+            return `${fn}(CAST(${xAxisVar} AS DOUBLE)) AS ${agg}_${xAxisVar}`;
+          })
+        ));
+        visitHistRows = await runQuery(`
+          SELECT attending_provider, ${selects.join(', ')}
+          FROM filteredVisits
+          WHERE attending_provider IS NOT NULL ${visitDateClause}
+          GROUP BY attending_provider;
+        `);
+      }
+
+      // Per-provider pre-op anemia rate from filteredSurgeryCases.
+      // Uses UNION to include both surgeons and attending providers so
+      // that the provider marker appears for either role.
+      let surgHistRows: Array<Record<string, unknown>> = [];
+      if (surgHistConfigs.length > 0) {
+        surgHistRows = await runQuery(`
+          SELECT provider_name AS attending_provider,
+            AVG(anemia_flag) AS avg_pre_anemia_rate,
+            SUM(anemia_flag) AS sum_pre_anemia_rate
+          FROM (
+            SELECT surgeon_prov_name AS provider_name,
+              ${this.ANEMIA_EXPR} AS anemia_flag
+            FROM filteredSurgeryCases
+            WHERE surgeon_prov_name IS NOT NULL ${surgDateClause}
+            UNION ALL
+            SELECT fv.attending_provider AS provider_name,
+              ${this.ANEMIA_EXPR} AS anemia_flag
+            FROM filteredSurgeryCases sc
+            INNER JOIN filteredVisits fv ON sc.visit_no = fv.visit_no
+            WHERE fv.attending_provider IS NOT NULL
+              AND fv.attending_provider != sc.surgeon_prov_name
+              ${surgDateClause}
+          ) combined
+          GROUP BY provider_name;
+        `);
+      }
+
+      // Bin each histogram config into chart data
+      histConfigs.forEach((cfg) => {
+        const sourceRows = cfg.xAxisVar === 'pre_anemia_rate' ? surgHistRows : visitHistRows;
+        const {
+          xAxisVar: xVar, yAxisVar: yVar, aggregation: agg = 'avg', chartId, group,
+        } = cfg;
+        const chartKey = `${chartId}_${xVar}`;
+
+        const opt = providerXAxisOptions.find((o) => o.value === xVar) as
+          | { recommendation?: Partial<Record<keyof typeof AGGREGATION_OPTIONS, number>> } | undefined;
+        const recommendedMark = opt?.recommendation?.[agg as keyof typeof AGGREGATION_OPTIONS] ?? NaN;
+
+        const values = sourceRows.map((r) => Number(r[`${agg}_${xVar}`])).filter((n) => Number.isFinite(n));
+        const provMatch = this.selectedProvider
+          ? sourceRows.find((r) => String(r.attending_provider).trim() === String(this.selectedProvider).trim())
+          : undefined;
+        const matchVal = provMatch != null ? Number(provMatch[`${agg}_${xVar}`]) : NaN;
+        const providerMark = Number.isFinite(matchVal) ? Number(matchVal.toFixed(2)) : undefined;
+        const providerName = (providerMark !== undefined && provMatch) ? String(provMatch.attending_provider) : null;
+
+        charts[chartKey] = {
+          group: group || 'Ungrouped',
+          title: providerViewYAxisOptions.find((o) => o.value === xVar)?.label?.[agg] ?? xVar,
+          data: this.buildHistogramData(values, yVar, xVar, recommendedMark),
+          dataKey: xVar,
+          orientation: 'horizontal',
+          recommendedMark,
+          providerMark,
+          providerName,
+        };
+      });
+
+      // ── TIME-SERIES ─────────────────────────────────────────────────────────
+
+      const lineConfigs = this._chartConfigs.filter((cfg) => cfg.chartType === 'time-series-line');
+      const stdLineConfigs = lineConfigs.filter((cfg) => cfg.yAxisVar !== 'pre_anemia_rate');
+      const surgLineConfigs = lineConfigs.filter((cfg) => cfg.yAxisVar === 'pre_anemia_rate');
+
+      // Group standard line configs by xAxisVar to avoid double-averaging
+      const stdLineByXVar = new Map<string, typeof stdLineConfigs>();
+      stdLineConfigs.forEach((cfg) => {
+        const arr = stdLineByXVar.get(cfg.xAxisVar) || [];
+        arr.push(cfg);
+        stdLineByXVar.set(cfg.xAxisVar, arr);
+      });
+
+      // Additive metrics that should be SUM'd per visit in the inner subquery
+      const additiveMetrics = new Set([
+        'rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'whole_units', 'cell_saver_ml',
+        'overall_units', 'rbc_units_adherent', 'ffp_units_adherent', 'plt_units_adherent',
+        'cryo_units_adherent', 'overall_units_adherent',
+        'rbc_units_cost', 'ffp_units_cost', 'plt_units_cost', 'cryo_units_cost',
+        'whole_cost', 'cell_saver_cost',
+      ]);
+
+      // For each unique xAxisVar, run correctly-grouped queries
+      const visitLineRowsAllByXVar = new Map<string, Array<Record<string, unknown>>>();
+      const visitLineRowsSelByXVar = new Map<string, Array<Record<string, unknown>>>();
+
+      for (const [xVar, configs] of stdLineByXVar) {
+        // Build inner per-visit selects and outer time-period selects
+        const innerSelectMap = new Map<string, string>();
+        const outerSelectMap = new Map<string, string>();
+        const selProvSelectMap = new Map<string, string>();
+
+        configs.forEach(({ yAxisVar: yVar, aggregation: cfgAgg = 'avg' }) => {
+          const agg = cfgAgg.toLowerCase();
+          const alias = `${agg}_${yVar}`;
+          if (outerSelectMap.has(alias)) return;
+
+          if (yVar === 'case_mix_index') {
+            innerSelectMap.set('visit_ms_drg_weight', 'SUM(ms_drg_weight) AS visit_ms_drg_weight');
+            innerSelectMap.set('visit_drg_count', 'COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END) AS visit_drg_count');
+            outerSelectMap.set(alias, `SUM(visit_ms_drg_weight) / NULLIF(SUM(visit_drg_count), 0) AS ${alias}`);
+            selProvSelectMap.set(alias, `SUM(ms_drg_weight) / NULLIF(COUNT(CASE WHEN ms_drg_weight IS NOT NULL THEN 1 END), 0) AS ${alias}`);
+          } else if (yVar.endsWith('_units_adherent') && agg === 'avg') {
+            const baseVar = yVar === 'overall_units_adherent' ? '(rbc_units + ffp_units + plt_units + cryo_units)' : yVar.replace('_adherent', '');
+            innerSelectMap.set(`visit_${yVar}`, `SUM(CAST(${yVar} AS DOUBLE)) AS visit_${yVar}`);
+            if (yVar === 'overall_units_adherent') {
+              innerSelectMap.set('visit_overall_base', 'SUM(CAST(rbc_units AS DOUBLE) + CAST(ffp_units AS DOUBLE) + CAST(plt_units AS DOUBLE) + CAST(cryo_units AS DOUBLE)) AS visit_overall_base');
+              outerSelectMap.set(alias, `SUM(visit_${yVar}) / NULLIF(SUM(visit_overall_base), 0) AS ${alias}`);
+            } else {
+              innerSelectMap.set(`visit_${baseVar}`, `SUM(CAST(${baseVar} AS DOUBLE)) AS visit_${baseVar}`);
+              outerSelectMap.set(alias, `SUM(visit_${yVar}) / NULLIF(SUM(visit_${baseVar}), 0) AS ${alias}`);
+            }
+            selProvSelectMap.set(alias, `CAST(SUM(${yVar}) AS DOUBLE) / NULLIF(SUM(${baseVar}), 0) AS ${alias}`);
+          } else {
+            const innerFn = additiveMetrics.has(yVar) ? 'SUM' : 'MAX';
+            const visitAlias = `visit_${yVar}`;
+            if (!innerSelectMap.has(visitAlias)) {
+              innerSelectMap.set(visitAlias, `${innerFn}(CAST(${yVar} AS DOUBLE)) AS ${visitAlias}`);
+            }
+            outerSelectMap.set(alias, `${agg.toUpperCase()}(${visitAlias}) AS ${alias}`);
+            selProvSelectMap.set(alias, `${agg.toUpperCase()}(CAST(${yVar} AS DOUBLE)) AS ${alias}`);
+          }
+        });
+
+        const innerSel = Array.from(innerSelectMap.values()).join(', ');
+        const outerSel = Array.from(outerSelectMap.values()).join(', ');
+        const selSel = Array.from(selProvSelectMap.values()).join(', ');
+
+        // eslint-disable-next-line no-await-in-loop
+        visitLineRowsAllByXVar.set(xVar, await runQuery(`
+          SELECT ${xVar}, ${outerSel}
+          FROM (
+            SELECT visit_no, ${xVar}, ${innerSel}
+            FROM filteredVisits
+            WHERE attending_provider IS NOT NULL ${visitDateClause}
+            GROUP BY visit_no, ${xVar}
+          ) sub
+          GROUP BY ${xVar};
+        `));
+
+        if (provEscaped) {
+          // Selected provider: one row per visit, so direct aggregation is correct
+          // eslint-disable-next-line no-await-in-loop
+          visitLineRowsSelByXVar.set(xVar, await runQuery(`
+            SELECT ${xVar}, ${selSel}
+            FROM filteredVisits WHERE attending_provider = '${provEscaped}' ${visitDateClause}
+            GROUP BY ${xVar};
+          `));
+        }
+      }
+
+      // Fetch surgery-case time-series rows (all surgeons + selected surgeon)
+      let surgLineRowsAll: Array<Record<string, unknown>> = [];
+      let surgLineRowsSel: Array<Record<string, unknown>> = [];
+      if (surgLineConfigs.length > 0) {
+        const anemiaSel = `AVG(${this.ANEMIA_EXPR}) AS avg_pre_anemia_rate, SUM(${this.ANEMIA_EXPR}) AS sum_pre_anemia_rate`;
+        surgLineRowsAll = await runQuery(`
+          SELECT month, quarter, year, ${anemiaSel}
+          FROM filteredSurgeryCases WHERE surgeon_prov_name IS NOT NULL ${surgDateClause}
+          GROUP BY month, quarter, year;
+        `);
+        if (provEscaped) {
+          surgLineRowsSel = await runQuery(`
+            SELECT sc.month, sc.quarter, sc.year,
+              AVG(${this.ANEMIA_EXPR}) AS avg_pre_anemia_rate,
+              SUM(${this.ANEMIA_EXPR}) AS sum_pre_anemia_rate
+            FROM filteredSurgeryCases sc
+            LEFT JOIN filteredVisits fv ON sc.visit_no = fv.visit_no
+            WHERE (sc.surgeon_prov_name = '${provEscaped}' OR fv.attending_provider = '${provEscaped}')
+              ${surgDateClause}
+            GROUP BY sc.month, sc.quarter, sc.year;
+          `);
+        }
+      }
+
+      // Build all time-series charts in a single unified loop
+      lineConfigs.forEach((cfg) => {
+        const isAnemia = cfg.yAxisVar === 'pre_anemia_rate';
+        const agg = (cfg.aggregation || 'avg').toLowerCase();
+        const xVar = cfg.xAxisVar as 'month' | 'quarter' | 'year';
+        const alias = `${agg}_${cfg.yAxisVar}`;
+        const chartKey = `${cfg.chartId}_${xVar}`;
+
+        const allRows = isAnemia ? surgLineRowsAll : (visitLineRowsAllByXVar.get(xVar) || []);
+        const selRows = isAnemia ? surgLineRowsSel : (visitLineRowsSelByXVar.get(xVar) || []);
+
+        const allMap = this.aggregateByTimePeriod(allRows, xVar, alias, agg);
+        const selMap = this.aggregateByTimePeriod(selRows, xVar, alias, agg);
+        const points = this.buildTimeSeriesPoints(allMap, selMap, xVar, providerLabel);
+
+        const yOption = providerViewYAxisOptions.find((o) => o.value === cfg.yAxisVar);
+        const chartTitle = (yOption as { label?: Record<string, string> })?.label?.[agg as 'sum' | 'avg'] ?? String(cfg.yAxisVar);
+        const recommendedMark = (yOption as { recommendation?: Record<string, number> })?.recommendation?.[agg] ?? NaN;
+
+        charts[chartKey] = {
+          group: cfg.group || 'Ungrouped',
+          title: chartTitle,
+          data: points,
+          dataKey: xVar,
+          orientation: 'horizontal',
+          recommendedMark,
+          providerMark: undefined,
+          providerName: providerLabel,
+        };
+      });
+
+      this.providerChartData = charts;
+      return this.providerChartData;
+    } catch (e) {
+      console.error('Error building provider charts:', e);
+      this.providerChartData = {};
+      return this.providerChartData;
+    }
+  }
+}
+
 // endregion
+
+type LegacyApplicationState = ApplicationState & {
+  explore?: ApplicationState['department'];
+};
+
+const normalizeDepartmentState = (state: LegacyApplicationState): ApplicationState => ({
+  ...state,
+  department: (() => {
+    const departmentState = state.department ?? state.explore ?? {
+      chartConfigs: [],
+      chartLayouts: { main: [] },
+      statConfigs: [],
+    };
+
+    return {
+      ...departmentState,
+      chartConfigs: departmentState.chartConfigs.map((config) => {
+        const legacyConfig = config as { chartType?: string };
+        return legacyConfig.chartType === 'DepartmentTable'
+          ? { ...(config as Record<string, unknown>), chartType: 'departmentTable' as const }
+          : config;
+      }) as ApplicationState['department']['chartConfigs'],
+    };
+  })(),
+});
 
 // region Types
 export interface ApplicationState {
@@ -123,13 +940,14 @@ export interface ApplicationState {
     statConfigs: DashboardStatConfig[];
     chartLayouts: { [key: string]: Layout[] };
   };
-  explore: {
-    chartConfigs: ExploreChartConfig[];
+  department: {
+    chartConfigs: DepartmentChartConfig[];
     chartLayouts: { [key: string]: Layout[] };
-    statConfigs: ExploreStatConfig[];
+    statConfigs: DepartmentStatConfig[];
   };
   settings: {
     unitCosts: Record<Cost, number>;
+    clampPercentile: number;
   };
   ui: {
     activeTab: string;
@@ -164,16 +982,16 @@ export class RootStore {
 
   dashboardStatData: DashboardStatData = {} as DashboardStatData;
 
-  // --- Explore State ---
-  exploreInitialChartConfigs: ExploreChartConfig[] = [];
+  // --- Department State ---
+  departmentInitialChartConfigs: DepartmentChartConfig[] = [];
 
-  exploreInitialChartLayouts: { [key: string]: Layout[] } = { main: [] };
+  departmentInitialChartLayouts: { [key: string]: Layout[] } = { main: [] };
 
-  _transientExploreLayouts: { [key: string]: Layout[] } | null = null;
+  _transientDepartmentLayouts: { [key: string]: Layout[] } | null = null;
 
-  exploreChartData: ExploreChartData = {};
+  departmentChartData: DepartmentChartData = {};
 
-  exploreStatData: ExploreStatData = {};
+  departmentStatData: DepartmentStatData = {};
 
   // --- Filters State ---
   _initialFilterValues = {
@@ -197,6 +1015,15 @@ export class RootStore {
   };
 
   histogramData: Record<string, HistogramData> = {};
+
+  clampedMax: Record<BloodComponent|'los', number> = {
+    rbc_units: 0,
+    ffp_units: 0,
+    plt_units: 0,
+    cryo_units: 0,
+    cell_saver_ml: 0,
+    los: 0,
+  };
 
   getHistogramData(bloodProduct: BloodComponent | 'los') {
     return this.histogramData[bloodProduct];
@@ -230,11 +1057,14 @@ export class RootStore {
   allVisitsLength = 0;
 
   filteredVisitsLength = 0;
+
+  providersStore: ProvidersStore;
   // endregion
 
   // region Constructor
   constructor() {
     this._provenanceAtom = createAtom('provenance');
+    this.providersStore = new ProvidersStore(this);
 
     makeAutoObservable(this, {
       provenance: false,
@@ -245,8 +1075,8 @@ export class RootStore {
       currentState: computed,
       uiState: computed,
       dashboardChartData: observable.ref,
-      exploreChartData: observable.ref,
-      exploreStatData: observable.ref,
+      departmentChartData: observable.ref,
+      departmentStatData: observable.ref,
       procedureHierarchy: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
@@ -348,14 +1178,14 @@ export class RootStore {
         },
       }), partialUiState);
     },
-    updateExploreState: (exploreState: Partial<ApplicationState['explore']>, label: string = 'Update Explore State') => {
+    updateDepartmentState: (departmentState: Partial<ApplicationState['department']>, label: string = 'Update Department State') => {
       this.applyAction(label, (state, partial) => ({
         ...state,
-        explore: {
-          ...state.explore,
+        department: {
+          ...state.department,
           ...partial,
         },
-      }), exploreState);
+      }), departmentState);
     },
     updateSettings: (unitCosts: Record<Cost, number>) => {
       this.applyAction('Update Settings', (state, costs) => ({
@@ -454,13 +1284,14 @@ export class RootStore {
         statConfigs: JSON.parse(JSON.stringify(DEFAULT_STAT_CONFIGS || [])),
         chartLayouts: JSON.parse(JSON.stringify(DEFAULT_CHART_LAYOUTS || {})),
       },
-      explore: {
-        chartConfigs: JSON.parse(JSON.stringify(this.exploreInitialChartConfigs || [])),
-        chartLayouts: JSON.parse(JSON.stringify(this.exploreInitialChartLayouts || {})),
+      department: {
+        chartConfigs: JSON.parse(JSON.stringify(this.departmentInitialChartConfigs || [])),
+        chartLayouts: JSON.parse(JSON.stringify(this.departmentInitialChartLayouts || {})),
         statConfigs: [],
       },
       settings: {
         unitCosts: { ...DEFAULT_UNIT_COSTS },
+        clampPercentile: DEFAULT_CLAMP_PERCENTILE,
       },
       ui: {
         activeTab: 'Hospital',
@@ -480,6 +1311,9 @@ export class RootStore {
    * This should be called after data is loaded and default filter values are calculated.
    */
   init() {
+    this.providersStore.fetchProviderList().catch((e) => {
+      console.error('Error fetching provider list on init:', e);
+    });
     if (this.provenance) {
       console.warn('ProvenanceStore already initialized');
       return;
@@ -538,7 +1372,7 @@ export class RootStore {
     if (!this.provenance) return;
     this.provenance.apply({
       apply: (state: ApplicationState) => {
-        const newState = updater(state, payload);
+        const newState = updater(normalizeDepartmentState(state as LegacyApplicationState), payload);
         return {
           state: newState,
           label,
@@ -759,11 +1593,14 @@ export class RootStore {
     };
 
     // Compare relevant sections
-    return isEqual(stateA.filterValues, stateB.filterValues)
-      && isEqual(stateA.selections, stateB.selections)
-      && isEqual(stateA.dashboard, stateB.dashboard)
-      && isEqual(stateA.explore, stateB.explore)
-      && isEqual(stateA.settings, stateB.settings);
+    const normalizedA = normalizeDepartmentState(stateA as LegacyApplicationState);
+    const normalizedB = normalizeDepartmentState(stateB as LegacyApplicationState);
+
+    return isEqual(normalizedA.filterValues, normalizedB.filterValues)
+      && isEqual(normalizedA.selections, normalizedB.selections)
+      && isEqual(normalizedA.dashboard, normalizedB.dashboard)
+      && isEqual(normalizedA.department, normalizedB.department)
+      && isEqual(normalizedA.settings, normalizedB.settings);
   }
 
   get currentState(): ApplicationState {
@@ -773,7 +1610,7 @@ export class RootStore {
       // Return default/empty state if not initialized
       return this.getBaseInitialState();
     }
-    return this.provenance.getState(this.provenance.current);
+    return normalizeDepartmentState(this.provenance.getState(this.provenance.current) as LegacyApplicationState);
   }
 
   get uiState() {
@@ -984,6 +1821,10 @@ export class RootStore {
             `${aggFn}(COALESCE(rbc_units_cost, 0) + COALESCE(plt_units_cost, 0) + COALESCE(ffp_units_cost, 0) + COALESCE(cryo_units_cost, 0) + COALESCE(whole_cost, 0) + COALESCE(cell_saver_cost, 0)) AS ${aggregation}_total_blood_product_cost`,
           ];
         }
+        const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar);
+        if (adjustedBenchmarkExpression) {
+          return `${adjustedBenchmarkExpression} AS ${aggregation}_${yAxisVar}`;
+        }
         // Special case: case mix index
         if (yAxisVar === 'case_mix_index') {
           return `AVG(ms_drg_weight) AS ${aggregation}_case_mix_index`;
@@ -1000,7 +1841,7 @@ export class RootStore {
             `SUM(${baseUnit}) AS ${aggregation}_${yAxisVar}_den`,
           ];
         }
-        return `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
+        return `${aggFn}(${dashboardMetricSqlExpression(yAxisVar)}) AS ${aggregation}_${yAxisVar}`;
       })
     ));
 
@@ -1152,6 +1993,16 @@ export class RootStore {
                   THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
               `;
         }
+        const currentPeriodCondition = `dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'`;
+        const comparisonPeriodCondition = `dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'`;
+        const currentBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar, currentPeriodCondition);
+        if (currentBenchmarkExpression) {
+          const comparisonBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar, comparisonPeriodCondition);
+          return `
+                ${currentBenchmarkExpression} AS ${yAxisVar}_current_${aggregation},
+                ${comparisonBenchmarkExpression} AS ${yAxisVar}_comparison_${aggregation}
+              `;
+        }
         // Exception: Case mix index
         if (yAxisVar === 'case_mix_index') {
           return `
@@ -1185,11 +2036,12 @@ export class RootStore {
               `;
         }
         // Default: Other stats
+        const metricExpression = dashboardMetricSqlExpression(yAxisVar);
         return `
               ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
-                THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
+                THEN ${metricExpression} ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
               ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
-                THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
+                THEN ${metricExpression} ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
             `;
       }),
     ].join(',\n');
@@ -1225,6 +2077,13 @@ export class RootStore {
         );
         return;
       }
+      const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar);
+      if (adjustedBenchmarkExpression) {
+        sparklineSelects.push(
+          `${adjustedBenchmarkExpression} AS ${aggregation}_${yAxisVar}`,
+        );
+        return;
+      }
       // Exception: Visit count
       if (yAxisVar === 'visit_count') {
         sparklineSelects.push(
@@ -1249,7 +2108,7 @@ export class RootStore {
       }
       // Default: Other stats
       sparklineSelects.push(
-        `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
+        `${aggFn}(${dashboardMetricSqlExpression(yAxisVar)}) AS ${aggregation}_${yAxisVar}`,
       );
     });
 
@@ -1301,91 +2160,91 @@ export class RootStore {
   }
   // endregion
 
-  // region Explore
+  // region Department
 
-  get exploreChartLayouts() {
-    if (this._transientExploreLayouts) {
-      return this._transientExploreLayouts;
+  get departmentChartLayouts() {
+    if (this._transientDepartmentLayouts) {
+      return this._transientDepartmentLayouts;
     }
     const { state } = this;
-    return (state && state.explore && state.explore.chartLayouts) ? state.explore.chartLayouts : this.exploreInitialChartLayouts;
+    return (state && state.department && state.department.chartLayouts) ? state.department.chartLayouts : this.departmentInitialChartLayouts;
   }
 
-  set exploreChartLayouts(input: { [key: string]: Layout[] }) {
+  set departmentChartLayouts(input: { [key: string]: Layout[] }) {
     if (this.state.ui.activeTab !== 'Department') return;
-    this._transientExploreLayouts = input;
+    this._transientDepartmentLayouts = input;
   }
 
-  updateExploreLayout(input: { [key: string]: Layout[] }) {
-    this.actions.updateExploreState({ chartLayouts: input }, 'Update Explore Layout');
-    this._transientExploreLayouts = null;
+  updateDepartmentLayout(input: { [key: string]: Layout[] }) {
+    this.actions.updateDepartmentState({ chartLayouts: input }, 'Update Department Layout');
+    this._transientDepartmentLayouts = null;
   }
 
-  get exploreChartConfigs() {
+  get departmentChartConfigs() {
     const { state } = this;
-    return (state && state.explore && state.explore.chartConfigs) ? state.explore.chartConfigs : this.exploreInitialChartConfigs;
+    return (state && state.department && state.department.chartConfigs) ? state.department.chartConfigs : this.departmentInitialChartConfigs;
   }
 
-  set exploreChartConfigs(input: ExploreChartConfig[]) {
-    this.actions.updateExploreState({ chartConfigs: input }, 'Update Explore Config');
+  set departmentChartConfigs(input: DepartmentChartConfig[]) {
+    this.actions.updateDepartmentState({ chartConfigs: input }, 'Update Department Config');
   }
 
-  loadExplorePreset(configs: ExploreChartConfig[], layouts: { [key: string]: Layout[] }, title?: string, statConfigs?: ExploreStatConfig[]) {
-    this.actions.updateExploreState({ chartConfigs: configs, chartLayouts: layouts, statConfigs: statConfigs || [] }, 'Load Explore Preset');
-    this._transientExploreLayouts = null;
+  loadDepartmentPreset(configs: DepartmentChartConfig[], layouts: { [key: string]: Layout[] }, title?: string, statConfigs?: DepartmentStatConfig[]) {
+    this.actions.updateDepartmentState({ chartConfigs: configs, chartLayouts: layouts, statConfigs: statConfigs || [] }, 'Load Department Preset');
+    this._transientDepartmentLayouts = null;
     this.activeDepartmentViewQuestion = title || null;
   }
 
-  addExploreChart(config: ExploreChartConfig) {
+  addDepartmentChart(config: DepartmentChartConfig) {
     this.activeDepartmentViewQuestion = null;
-    const currentConfigs = this.exploreChartConfigs;
-    const currentLayouts = this.exploreChartLayouts;
+    const currentConfigs = this.departmentChartConfigs;
+    const currentLayouts = this.departmentChartLayouts;
     const newConfigs = [config, ...currentConfigs];
     const shifted = currentLayouts.main.map((l) => ({ ...l, y: l.y + 2 }));
     shifted.unshift({
-      i: config.chartId, x: 0, y: 0, w: 4, h: 3, maxH: 4,
+      i: config.chartId, x: 0, y: 0, w: 4, h: 45,
     });
     const newLayouts = { ...currentLayouts, main: compact(shifted, 'vertical', 4) };
-    this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Explore Chart');
-    this._transientExploreLayouts = null;
+    this.actions.updateDepartmentState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Add Department Chart');
+    this._transientDepartmentLayouts = null;
   }
 
-  removeExploreChart(chartId: string) {
+  removeDepartmentChart(chartId: string) {
     this.activeDepartmentViewQuestion = null;
-    const currentConfigs = this.exploreChartConfigs;
-    const currentLayouts = this.exploreChartLayouts;
+    const currentConfigs = this.departmentChartConfigs;
+    const currentLayouts = this.departmentChartLayouts;
     const newConfigs = currentConfigs.filter((config) => config.chartId !== chartId);
     // Filter the layouts for the main and sm breakpoints
     const filteredMain = (currentLayouts.main || []).filter((layout) => layout.i !== chartId);
     const filteredSm = (currentLayouts.sm || []).filter((layout) => layout.i !== chartId);
     const newLayouts = { ...currentLayouts, main: compact(filteredMain, 'vertical', 2), ...(currentLayouts.sm ? { sm: compact(filteredSm, 'vertical', 1) } : {}) };
-    this.actions.updateExploreState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Explore Chart');
-    this._transientExploreLayouts = null;
+    this.actions.updateDepartmentState({ chartConfigs: newConfigs, chartLayouts: newLayouts }, 'Remove Department Chart');
+    this._transientDepartmentLayouts = null;
   }
 
-  updateExploreChartConfig(updatedConfig: ExploreChartConfig) {
-    this.exploreChartConfigs = this.exploreChartConfigs.map((cfg) => (cfg.chartId === updatedConfig.chartId ? updatedConfig : cfg));
+  updateDepartmentChartConfig(updatedConfig: DepartmentChartConfig) {
+    this.departmentChartConfigs = this.departmentChartConfigs.map((cfg) => (cfg.chartId === updatedConfig.chartId ? updatedConfig : cfg));
   }
 
-  get exploreStatConfigs(): ExploreStatConfig[] {
+  get departmentStatConfigs(): DepartmentStatConfig[] {
     const { state } = this;
-    return (state && state.explore && state.explore.statConfigs) ? state.explore.statConfigs : [];
+    return (state && state.department && state.department.statConfigs) ? state.department.statConfigs : [];
   }
 
-  set exploreStatConfigs(input: ExploreStatConfig[]) {
-    this.actions.updateExploreState({ statConfigs: input }, 'Update Explore Stats');
+  set departmentStatConfigs(input: DepartmentStatConfig[]) {
+    this.actions.updateDepartmentState({ statConfigs: input }, 'Update Department Stats');
   }
 
-  addExploreStat(config: ExploreStatConfig) {
+  addDepartmentStat(config: DepartmentStatConfig) {
     this.activeDepartmentViewQuestion = null;
-    const currentStats = this.exploreStatConfigs;
-    this.actions.updateExploreState({ statConfigs: [...currentStats, config] }, 'Add Explore Stat');
+    const currentStats = this.departmentStatConfigs;
+    this.actions.updateDepartmentState({ statConfigs: [...currentStats, config] }, 'Add Department Stat');
   }
 
-  removeExploreStat(statId: string) {
+  removeDepartmentStat(statId: string) {
     this.activeDepartmentViewQuestion = null;
-    const newStats = this.exploreStatConfigs.filter((s) => s.statId !== statId);
-    this.actions.updateExploreState({ statConfigs: newStats }, 'Remove Explore Stat');
+    const newStats = this.departmentStatConfigs.filter((s) => s.statId !== statId);
+    this.actions.updateDepartmentState({ statConfigs: newStats }, 'Remove Department Stat');
   }
   // endregion
 
@@ -1446,6 +2305,7 @@ export class RootStore {
 
   async calculateDefaultFilterValues() {
     if (!this.duckDB) return;
+    const percentileClamp = this.state.settings.clampPercentile || DEFAULT_CLAMP_PERCENTILE;
     // Default filter values based on visit-level min and max values
     const result = await this.duckDB.query(`
       WITH visit_rollups AS (
@@ -1465,18 +2325,29 @@ export class RootStore {
       SELECT
         MIN(min_adm_dtm) AS min_adm,
         MAX(max_dsch_dtm) AS max_dsch,
-        MIN(rbc_units) AS min_rbc,
-        MAX(rbc_units) AS max_rbc,
-        MIN(ffp_units) AS min_ffp,
-        MAX(ffp_units) AS max_ffp,
-        MIN(plt_units) AS min_plt,
-        MAX(plt_units) AS max_plt,
-        MIN(cryo_units) AS min_cryo,
-        MAX(cryo_units) AS max_cryo,
-        MIN(cell_saver_ml) AS min_cell_saver,
-        MAX(cell_saver_ml) AS max_cell_saver,
-        MIN(los) AS min_los,
-        MAX(los) AS max_los
+        MIN(rbc_units)::DOUBLE AS min_rbc,
+        MAX(rbc_units)::DOUBLE AS max_rbc,
+        COALESCE(quantile_disc(NULLIF(rbc_units, 0), ${percentileClamp}), MAX(rbc_units))::DOUBLE AS stats_max_rbc,
+
+        MIN(ffp_units)::DOUBLE AS min_ffp,
+        MAX(ffp_units)::DOUBLE AS max_ffp,
+        COALESCE(approx_quantile(NULLIF(ffp_units, 0), ${percentileClamp}), MAX(ffp_units))::DOUBLE AS stats_max_ffp,
+
+        MIN(plt_units)::DOUBLE AS min_plt,
+        MAX(plt_units)::DOUBLE AS max_plt,
+        COALESCE(approx_quantile(NULLIF(plt_units, 0), ${percentileClamp}), MAX(plt_units))::DOUBLE AS stats_max_plt,
+
+        MIN(cryo_units)::DOUBLE AS min_cryo,
+        MAX(cryo_units)::DOUBLE AS max_cryo,
+        COALESCE(approx_quantile(NULLIF(cryo_units, 0), ${percentileClamp}), MAX(cryo_units))::DOUBLE AS stats_max_cryo,
+
+        MIN(cell_saver_ml)::DOUBLE AS min_cell_saver,
+        MAX(cell_saver_ml)::DOUBLE AS max_cell_saver,
+       (CEIL(COALESCE(approx_quantile(NULLIF(cell_saver_ml, 0), ${percentileClamp}), MAX(cell_saver_ml)) / 50.0) * 50)::DOUBLE AS stats_max_cell_saver,
+
+        MIN(los)::DOUBLE AS min_los,
+        MAX(los)::DOUBLE AS max_los,
+        approx_quantile(los, ${percentileClamp})::DOUBLE AS stats_max_los
       FROM visit_rollups;
     `);
     const row = result.toArray()[0].toJSON();
@@ -1494,12 +2365,22 @@ export class RootStore {
       cell_saver_ml: [Number(row.min_cell_saver), Number(row.max_cell_saver)],
       los: [Number(row.min_los), Number(row.max_los)],
     };
+
+    this.clampedMax = {
+      rbc_units: Number(row.stats_max_rbc),
+      ffp_units: Number(row.stats_max_ffp),
+      plt_units: Number(row.stats_max_plt),
+      cryo_units: Number(row.stats_max_cryo),
+      cell_saver_ml: Number(row.stats_max_cell_saver),
+      los: Number(row.stats_max_los),
+    };
   }
 
   /**
    * Returns the number of date filters that are applied
    */
   get dateFiltersAppliedCount(): number {
+    if (this.state.ui.activeTab === 'Provider') return 0;
     const filters = this.filterValues;
     const dateFrom = safeParseDate(filters.dateFrom);
     const dateTo = safeParseDate(filters.dateTo);
@@ -1663,7 +2544,7 @@ export class RootStore {
    */
   async generateHistogramData() {
     if (!this.duckDB) return;
-    const components = [...BLOOD_PRODUCTS_ARRAY, 'los'];
+    const components = [...BLOOD_PRODUCTS_ARRAY, 'los'] as const;
     const histogramData: Record<string, { units: string, count: number }[]> = {};
     // For each component, generate histogram data
     await Promise.all(components.map(async (component) => {
@@ -1681,15 +2562,18 @@ export class RootStore {
         ),
         histogram_bins AS (
           SELECT
-            CASE
-              WHEN '${component}' = 'cell_saver_ml' THEN
-                CASE
-                  WHEN visit_value = 0 THEN 0
-                  ELSE CEIL(visit_value / 50.0) * 50
-                END
-              ELSE
-                visit_value
-            END AS bin_value
+            LEAST(
+              CASE
+                WHEN '${component}' = 'cell_saver_ml' THEN
+                  CASE
+                    WHEN visit_value = 0 THEN 0
+                    ELSE CEIL(visit_value / 50.0) * 50
+                  END
+                ELSE
+                  visit_value
+              END,
+              ${this.clampedMax[component]}
+            ) AS bin_value
           FROM visit_values
           WHERE visit_value IS NOT NULL
         )
@@ -1738,7 +2622,7 @@ export class RootStore {
 
   async togglePrivateMode() {
     this.actions.togglePrivateMode();
-    await this.computeExploreChartData();
+    await this.computeDepartmentChartData();
   }
 
   async getVisitInfo(visitNo: number) {
@@ -1797,12 +2681,12 @@ export class RootStore {
       async () => { await this.updateCostsTable(); },
     );
     reaction(
-      () => this.state.explore.chartConfigs,
-      async () => { await this.computeExploreChartData(); },
+      () => this.state.department.chartConfigs,
+      async () => { await this.computeDepartmentChartData(); },
     );
     reaction(
-      () => this.state.explore.statConfigs,
-      async () => { await this.computeExploreStatData(); },
+      () => this.state.department.statConfigs,
+      async () => { await this.computeDepartmentStatData(); },
     );
   }
 
@@ -1896,14 +2780,29 @@ export class RootStore {
     await this.updateFilteredVisitsLength();
     await this.computeDashboardChartData();
     await this.computeDashboardStatData();
-    await this.computeExploreChartData();
-    await this.computeExploreStatData();
+    await this.computeDepartmentChartData();
+    await this.computeDepartmentStatData();
     await this.generateHistogramData();
     await this.updateSelectedVisits();
+
+    // Update provider store
+    const { dateStart, dateEnd } = this.providersStore;
+    await this.providersStore.fetchProviderList(dateStart, dateEnd);
+    await this.providersStore.getProviderCharts(dateStart, dateEnd);
+    if (this.providersStore.selectedProvider) {
+      await this.providersStore.fetchSelectedProvSurgCount(dateStart, dateEnd);
+      await this.providersStore.fetchSelectedProvRbcUnits(dateStart, dateEnd);
+      await this.providersStore.fetchCmiComparison(dateStart, dateEnd);
+    }
   }
 
-  async computeExploreChartData(): Promise<void> {
-    const promises = this.exploreChartConfigs.map(async (config) => {
+  async computeDepartmentChartData(): Promise<void> {
+    if (!this.duckDB || this.departmentChartConfigs.length === 0) {
+      this.departmentChartData = {};
+      return;
+    }
+
+    const promises = this.departmentChartConfigs.map(async (config) => {
       const surgeonNameExpr = this.uiState.isInPrivateMode
         ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY surgeon_prov_name)'
         : 'surgeon_prov_name';
@@ -1916,9 +2815,17 @@ export class RootStore {
         ? '\'Provider \' || DENSE_RANK() OVER (ORDER BY attending_provider)'
         : 'attending_provider';
 
-      if (config.chartType === 'exploreTable') {
+      if (config.chartType === 'departmentTable') {
         // Configuration of table (rowVar, columns, aggregation, etc.)
-        const tableConfig = config as ExploreTableConfig;
+        const tableConfig = config as DepartmentTableConfig;
+        const isGuidelineAdherenceGroup = tableConfig.groupByVar === GUIDELINE_ADHERENCE_GROUP_VAR;
+        const adherenceGroupExpr = 'adherence_group.is_guideline_adherent';
+        const adherenceGroupJoinClause = isGuidelineAdherenceGroup
+          ? 'CROSS JOIN (VALUES (TRUE), (FALSE)) AS adherence_group(is_guideline_adherent)'
+          : '';
+        const adherenceGroupWhereClause = isGuidelineAdherenceGroup
+          ? `WHERE ${guidelineAdherenceBucketUnitsExpression(adherenceGroupExpr, 'v.')} > 0`
+          : '';
         const internalRowKeyExpr = tableConfig.rowVar === 'attending_provider'
           ? 'v.attending_provider_id'
           : `v.${tableConfig.rowVar}`;
@@ -1936,22 +2843,35 @@ export class RootStore {
           const caseIdExpr = tableConfig.rowVar === 'attending_provider'
             ? 'provider_cases.case_id'
             : 'surgery_cases.case_id';
+          const caseAdherenceGroupExpr = 'case_adherence_group.is_guideline_adherent';
+          const caseAdherenceJoinClause = isGuidelineAdherenceGroup
+            ? 'CROSS JOIN (VALUES (TRUE), (FALSE)) AS case_adherence_group(is_guideline_adherent)'
+            : '';
           const caseSource = tableConfig.rowVar === 'attending_provider'
             ? `${needsVisitCaseJoin ? `(
               SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id, visit_no
               FROM filteredSurgeryCases
             ) provider_cases
-            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = provider_cases.visit_no` : `(
+            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = provider_cases.visit_no
+            ${caseAdherenceJoinClause}` : `(
               SELECT UNNEST([surgeon_prov_id, anesth_prov_id]) AS prov_id, case_id
               FROM filteredSurgeryCases
             ) provider_cases`}`
             : `filteredSurgeryCases surgery_cases
-            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = surgery_cases.visit_no`;
-          const caseWhereClause = tableConfig.rowVar === 'attending_provider'
-            ? 'WHERE provider_cases.prov_id IS NOT NULL'
+            INNER JOIN filteredVisits visit_cases ON visit_cases.visit_no = surgery_cases.visit_no
+            ${caseAdherenceJoinClause}`;
+          const caseWhereConditions = [];
+          if (tableConfig.rowVar === 'attending_provider') {
+            caseWhereConditions.push('provider_cases.prov_id IS NOT NULL');
+          }
+          if (isGuidelineAdherenceGroup) {
+            caseWhereConditions.push(`${guidelineAdherenceBucketUnitsExpression(caseAdherenceGroupExpr, 'visit_cases.')} > 0`);
+          }
+          const caseWhereClause = caseWhereConditions.length > 0
+            ? `WHERE ${caseWhereConditions.join(' AND ')}`
             : '';
           const caseGroupExpr = tableConfig.groupByVar
-            ? `visit_cases.${tableConfig.groupByVar}`
+            ? (isGuidelineAdherenceGroup ? caseAdherenceGroupExpr : `visit_cases.${tableConfig.groupByVar}`)
             : null;
           const caseSelects = [`${caseRowExpr} AS row_key`];
           const caseGroupBys = [caseRowExpr];
@@ -1962,7 +2882,7 @@ export class RootStore {
           if (caseGroupExpr) {
             caseSelects.push(`${caseGroupExpr} AS group_key`);
             caseGroupBys.push(caseGroupExpr);
-            caseJoinConditions.push(`pc.group_key = v.${tableConfig.groupByVar}`);
+            caseJoinConditions.push(isGuidelineAdherenceGroup ? `pc.group_key = ${adherenceGroupExpr}` : `pc.group_key = v.${tableConfig.groupByVar}`);
           }
 
           caseCountExpr = 'COALESCE(MAX(pc.case_count), 0)';
@@ -2022,6 +2942,12 @@ export class RootStore {
             return;
           }
 
+          // Special case: visits
+          if (colVar === 'visit_count') {
+            columnClauses.push(`COUNT(DISTINCT v.visit_no) AS ${colVar}`);
+            return;
+          }
+
           // Special case: attending_provider as non-row column
           if (colVar === 'attending_provider') {
             const expr = this.uiState.isInPrivateMode
@@ -2050,6 +2976,21 @@ export class RootStore {
           // Special case: salvage_savings
           if (colVar === 'salvage_savings') {
             columnClauses.push(`${aggFn}(cell_saver_cost) AS salvage_savings`);
+            return;
+          }
+
+          // Special case: CMI weighted discharge benchmark metrics
+          const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(colVar, undefined, 'v.');
+          if (adjustedBenchmarkExpression) {
+            columnClauses.push(`${adjustedBenchmarkExpression} AS ${colVar}`);
+            return;
+          }
+
+          const guidelineAdherenceProduct = isGuidelineAdherenceGroup
+            ? guidelineAdherenceProductExpression(colVar, adherenceGroupExpr, 'v.')
+            : null;
+          if (guidelineAdherenceProduct && (colAggregation === 'avg' || colAggregation === 'sum')) {
+            columnClauses.push(`${aggFn}(${guidelineAdherenceProduct}) AS ${colVar}`);
             return;
           }
 
@@ -2104,7 +3045,7 @@ export class RootStore {
 
         // Add secondary grouping variable if present
         if (tableConfig.groupByVar) {
-          const secondaryGroupCol = `v.${tableConfig.groupByVar}`;
+          const secondaryGroupCol = isGuidelineAdherenceGroup ? adherenceGroupExpr : `v.${tableConfig.groupByVar}`;
           groupByParts.push(secondaryGroupCol);
           orderByParts.push(secondaryGroupCol);
           columnClauses.splice(1, 0, `${secondaryGroupCol} AS _group_val`);
@@ -2118,19 +3059,21 @@ export class RootStore {
           SELECT
             ${columnClauses.join(',\n            ')}
           FROM filteredVisits v
+          ${adherenceGroupJoinClause}
           ${caseJoinClause}
+          ${adherenceGroupWhereClause}
           GROUP BY ${groupByClause}
           ORDER BY ${orderByClause};
         `;
 
         try {
           const queryResult = await this.duckDB!.query(query);
-          const rawRows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as ExploreTableRow);
+          const rawRows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as DepartmentTableRow);
 
           let rows = rawRows;
           if (tableConfig.groupByVar) {
             // Transform flat rows into grouped rows
-            const groupedMap = new Map<string | number, ExploreTableRow>();
+            const groupedMap = new Map<string | number, DepartmentTableRow>();
 
             rawRows.forEach((r) => {
               const rowKey = String(r._row_key ?? r[tableConfig.rowVar] ?? 'Unknown');
@@ -2141,7 +3084,7 @@ export class RootStore {
                 });
               }
               const rowObj = groupedMap.get(rowKey)!;
-              (rowObj._groups as ExploreTableRow[]).push(r);
+              (rowObj._groups as DepartmentTableRow[]).push(r);
             });
 
             rows = Array.from(groupedMap.values());
@@ -2153,7 +3096,7 @@ export class RootStore {
 
           return { id: config.chartId, data: rows };
         } catch (error) {
-          console.error('Error executing explore table query:', error);
+          console.error('Error executing department table query:', error);
           return { id: config.chartId, data: [] };
         }
       }
@@ -2263,30 +3206,35 @@ export class RootStore {
     });
 
     const results = await Promise.all(promises);
-    const data: ExploreChartData = {};
+    const data: DepartmentChartData = {};
     results.forEach(({ id, data: d }) => {
       data[id] = d;
     });
 
-    this.exploreChartData = data;
+    this.departmentChartData = data;
   }
 
-  async computeExploreStatData(): Promise<void> {
-    if (!this.duckDB || this.exploreStatConfigs.length === 0) {
-      this.exploreStatData = {};
+  async computeDepartmentStatData(): Promise<void> {
+    if (!this.duckDB || this.departmentStatConfigs.length === 0) {
+      this.departmentStatData = {};
       return;
     }
 
-    const result: ExploreStatData = {};
+    const result: DepartmentStatData = {};
 
     const statSelects: string[] = [];
-    this.exploreStatConfigs.forEach(({ yAxisVar, aggregation }) => {
+    this.departmentStatConfigs.forEach(({ yAxisVar, aggregation }) => {
       const aggFn = aggregation.toUpperCase();
 
       if (yAxisVar === 'total_blood_product_cost') {
         statSelects.push(
           `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + whole_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
         );
+        return;
+      }
+      const adjustedBenchmarkExpression = cmiAdjustedBenchmarkExpression(yAxisVar);
+      if (adjustedBenchmarkExpression) {
+        statSelects.push(`${adjustedBenchmarkExpression} AS ${aggregation}_${yAxisVar}`);
         return;
       }
       if (yAxisVar === 'case_mix_index') {
@@ -2317,7 +3265,7 @@ export class RootStore {
     });
 
     if (statSelects.length === 0) {
-      this.exploreStatData = {};
+      this.departmentStatData = {};
       return;
     }
 
@@ -2330,7 +3278,7 @@ export class RootStore {
       const row = queryResult.toArray()[0]?.toJSON();
 
       if (row) {
-        this.exploreStatConfigs.forEach(({ yAxisVar, aggregation }) => {
+        this.departmentStatConfigs.forEach(({ yAxisVar, aggregation }) => {
           const key = `${aggregation}_${yAxisVar}`;
           const rawValue = Number(row[key]);
           const formattedValue = yAxisVar.includes('adherent')
@@ -2340,10 +3288,10 @@ export class RootStore {
         });
       }
     } catch (error) {
-      console.error('Error computing explore stat data:', error);
+      console.error('Error computing department stat data:', error);
     }
 
-    this.exploreStatData = result;
+    this.departmentStatData = result;
   }
 
   async updateFilteredVisitsLength() {

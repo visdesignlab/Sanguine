@@ -706,9 +706,9 @@ class Command(BaseCommand):
                         result_value = fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=10, max_value=16)
                 else:
                     if last_lab["result_value"] < 6:
-                        result_value = last_lab["result_value"] + 2
+                        result_value = last_lab["result_value"] + 0.5
                     elif last_lab["result_value"] < 8:
-                        result_value = last_lab["result_value"] + 1
+                        result_value = last_lab["result_value"] + 0.2
                     else:
                         result_value = fake.pydecimal(
                             left_digits=2,
@@ -973,7 +973,7 @@ class Command(BaseCommand):
         def gen_transfusions():
             transfusion_id_counter = 1
             for rank, (surg, lab) in enumerate(labs):
-                num_transfusions = random.choices([0, 1, 2, 3, 4], weights=[0.94, 0.03, 0.015, 0.01, 0.005])[0]
+                num_transfusions = random.choices([0, 1, 2, 3, 4], weights=[0.70, 0.15, 0.10, 0.03, 0.02])[0]
                 for t in range(num_transfusions):
                     rcb_units = 0
                     cell_saver_ml = 0
@@ -984,8 +984,8 @@ class Command(BaseCommand):
                         elif lab["result_value"] < 7:
                             rcb_units = fake.random_int(min=1, max=2)
                             cell_saver_ml = fake.random_int(min=100, max=500)
-                        elif lab["result_value"] < 8:
-                            rcb_units = fake.random_int(min=0, max=1)
+                        elif lab["result_value"] < 10:
+                            rcb_units = fake.random_int(min=1, max=2)
                             cell_saver_ml = fake.random_int(min=100, max=200)
 
                     rbcs = rcb_units
@@ -1008,10 +1008,10 @@ class Command(BaseCommand):
                     # PLT if PLT count below 10,000
                     plt_units = 0
                     if lab["result_desc"] in ["PLT", "Platelet Count"]:
-                        if lab["result_value"] < 10000:
+                        if lab["result_value"] < 50000:
                             # One plt unit = ~6 Pooled WB Units
                             plt_units = fake.random_int(min=1, max=2)
-                        elif lab["result_value"] < 20000:
+                        elif lab["result_value"] < 100000:
                             plt_units = fake.random_int(min=0, max=1)
                     
                     # Add to MTP

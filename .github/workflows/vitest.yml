@@ -1,0 +1,26 @@
+name: Unit Tests
+
+on:
+  pull_request:
+    branches:
+      - intelvia
+
+jobs:
+  test:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: "yarn"
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install dependencies
+        run: yarn --cwd frontend install --immutable
+
+      - name: Run unit tests
+        run: yarn --cwd frontend unittest

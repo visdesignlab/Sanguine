@@ -1,0 +1,41 @@
+.comparisonText {
+  color: var(--mantine-color-gray-6);
+  transition: color 0.2s;
+}
+
+.comparisonTextHovered {
+  color: var(--mantine-color-blue-6);
+}
+
+.icon {
+  color: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-3));
+}
+
+.deleteIcon {
+  color: var(--mantine-color-red-6);
+}
+
+.valueRow {
+  max-width: 100%;
+}
+
+.metricValue {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.sparklineWrap {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.titleEllipsis {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

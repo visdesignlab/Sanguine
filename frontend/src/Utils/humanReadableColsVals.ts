@@ -5,6 +5,8 @@ import {
   LAB_RESULTS,
   COSTS,
   TIME_AGGREGATION_OPTIONS,
+  TRANSFUSIONS_PER_CMI_VISIT,
+  BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
 } from '../Types/application';
 import { BLOOD_COMPONENTS } from '../Types/bloodProducts';
 
@@ -44,8 +46,20 @@ const columnNameMap: Record<string, string> = {
   vent: 'Ventilator',
   visit_no: 'Visit Number',
   whole_units: '# Whole Blood Units',
+  whole_cost: 'Whole Blood Cost',
   year: 'Year',
   departments: 'Departments',
+  attending_provider: 'Attending Provider',
+  attending_provider_id: 'Attending Provider ID',
+  attending_provider_line: 'Attending Provider Line',
+  attending_provider_department: 'Attending Provider Department',
+  is_admitting_attending: 'Is Admitting Attending',
+  surgeon_provider: 'Surgeon',
+  surgeon_provider_id: 'Surgeon ID',
+  anesthesiologist_provider: 'Anesthesiologist',
+  anesthesiologist_provider_id: 'Anesthesiologist ID',
+  procedure_ids: 'Procedures',
+  total_blood_product_cost: 'Total Blood Product Cost',
 };
 
 export function makeHumanReadableColumn(columnName: keyof typeof columnNameMap): string {
@@ -70,7 +84,7 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
     return value.toFixed(3);
   }
   if (columnName === 'departments') {
-    return (value as string).replace(/["[\]]/g, '').replace(/,\s*/g, ', ');
+    return (value as string).replace(/[[\]"]/g, '').replace(/,\s*/g, ', ');
   }
   return `${value}`;
 }
@@ -104,6 +118,8 @@ export const formatStateDetailName = (key: string): string => {
     Object.values(GUIDELINE_ADHERENT),
     LAB_RESULTS,
     Object.values(COSTS),
+    TRANSFUSIONS_PER_CMI_VISIT,
+    BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
   ].flat();
   const found = attributes.find((c) => c.value === key);
   if (found) {

@@ -11,7 +11,6 @@ import {
   Anchor,
 } from '@mantine/core';
 import {
-  IconDatabase, IconBook,
   IconArrowNarrowLeftDashed,
   IconArrowNarrowRightDashed, IconDeviceFloppy,
   IconCamera, IconLogout, IconMenu,
@@ -122,18 +121,6 @@ export const Shell = observer(() => {
         </Badge>,
 
       ],
-    },
-    {
-      icon: IconDatabase,
-      label: 'Database',
-      content: <Text>Database content</Text>,
-      disabled: true,
-    },
-    {
-      icon: IconBook,
-      label: 'Learn',
-      content: <Text>Learning content</Text>,
-      disabled: true,
     },
   ];
 
@@ -282,13 +269,6 @@ export const Shell = observer(() => {
                   onClick={() => { setAboutModalOpened(true); }}
                 >
                   About Intelvia
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconBook size={14} />}
-                  onClick={() => { window.open('https://docs.intelvia.app/', '_blank'); }}
-                  disabled
-                >
-                  Documentation
                 </Menu.Item>
                 <Menu.Item
                   leftSection={<IconAt size={14} />}

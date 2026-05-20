@@ -55,7 +55,7 @@ export function DepartmentViewQuestions() {
     // Flash the clicked card border
     setFlashKey(question);
 
-    store.loadExplorePreset([...chartConfigs], {
+    store.loadDepartmentPreset([...chartConfigs], {
       main: [...chartLayouts.main],
     }, question, statConfigs ? [...statConfigs] : undefined);
 

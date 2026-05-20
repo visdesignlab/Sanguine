@@ -3,14 +3,14 @@ import {
   IconReportSearch,
 } from '@tabler/icons-react';
 import { Layout } from 'react-grid-layout';
-import { ExploreChartConfig, ExploreStatConfig } from '../../../Types/application';
+import { DepartmentChartConfig, DepartmentStatConfig } from '../../../Types/application';
 
 export type PresetOption = {
   question: string;
   Icon: React.ComponentType<IconProps>;
-  chartConfigs: ExploreChartConfig[];
+  chartConfigs: DepartmentChartConfig[];
   chartLayouts: { [key: string]: Layout[] };
-  statConfigs?: ExploreStatConfig[];
+  statConfigs?: DepartmentStatConfig[];
 };
 export type PresetGroup = { groupLabel: string; options: PresetOption[] };
 
@@ -24,15 +24,21 @@ export const presetStateCards: PresetGroup[] = [
         chartConfigs: [
           {
             chartId: 'preset-overview-department',
-            title: 'Blood Product Utilization per Surgeon',
-            chartType: 'exploreTable',
+            title: 'Blood Product Utilization per Provider',
+            chartType: 'departmentTable',
             rowVar: 'attending_provider',
             columns: [
               {
                 colVar: 'attending_provider',
                 aggregation: 'none',
                 type: 'text',
-                title: 'Surgeon',
+                title: 'Provider',
+              },
+              {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
               },
               {
                 colVar: 'cases',
@@ -87,7 +93,7 @@ export const presetStateCards: PresetGroup[] = [
               x: 0,
               y: 0,
               w: 4,
-              h: 4,
+              h: 20,
             },
           ],
         },
@@ -120,12 +126,12 @@ export const presetStateCards: PresetGroup[] = [
       {
         question: 'How common is preoperative anemia in patients undergoing elective surgery?',
         Icon: IconDropletHalf2Filled,
-        // Add a ExploreTable chart config so clicking this preset opens the ExploreTable.
+        // Add a DepartmentTable chart config so clicking this preset opens the DepartmentTable.
         chartConfigs: [
           {
-            chartId: 'preset-explore-table-preop-anemia',
+            chartId: 'preset-department-table-preop-anemia',
             title: 'RBC Transfusions per Provider',
-            chartType: 'exploreTable',
+            chartType: 'departmentTable',
             rowVar: 'attending_provider',
             columns: [
               {
@@ -145,6 +151,12 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'none',
                 type: 'text',
                 title: 'Provider',
+              },
+              {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
               },
               {
                 colVar: 'cases',
@@ -203,18 +215,18 @@ export const presetStateCards: PresetGroup[] = [
         chartLayouts: {
           main: [
             {
-              i: 'preset-explore-table-preop-anemia',
+              i: 'preset-department-table-preop-anemia',
               x: 0,
               y: 0,
               w: 4,
-              h: 3,
+              h: 20,
             },
             {
               i: 'preset-scatter-prevent-anemia',
               x: 0,
-              y: 3,
+              y: 20,
               w: 4,
-              h: 4,
+              h: 22,
             },
           ],
         },
@@ -231,9 +243,9 @@ export const presetStateCards: PresetGroup[] = [
             aggregation: 'none',
           },
           {
-            chartId: 'preset-explore-table-hgb',
+            chartId: 'preset-department-table-hgb',
             title: 'Transfusions per Provider',
-            chartType: 'exploreTable',
+            chartType: 'departmentTable',
             rowVar: 'attending_provider',
             columns: [
               {
@@ -247,6 +259,12 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'none',
                 type: 'text',
                 title: 'Provider',
+              },
+              {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
               },
               {
                 colVar: 'cases',
@@ -301,14 +319,14 @@ export const presetStateCards: PresetGroup[] = [
               x: 0,
               y: 0,
               w: 4,
-              h: 5,
+              h: 20,
             },
             {
-              i: 'preset-explore-table-hgb',
+              i: 'preset-department-table-hgb',
               x: 0,
-              y: 5,
+              y: 20,
               w: 4,
-              h: 4,
+              h: 20,
             },
           ],
         },
@@ -323,9 +341,9 @@ export const presetStateCards: PresetGroup[] = [
         Icon: IconVaccineBottle,
         chartConfigs: [
           {
-            chartId: 'preset-explore-table-antifib',
+            chartId: 'preset-department-table-antifib',
             title: 'Antifibrinolytic Usage & Outcomes per Provider',
-            chartType: 'exploreTable',
+            chartType: 'departmentTable',
             rowVar: 'attending_provider',
             columns: [
               {
@@ -351,6 +369,12 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'avg',
                 type: 'heatmap',
                 title: 'Death',
+              },
+              {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
               },
               {
                 colVar: 'cases',
@@ -395,11 +419,11 @@ export const presetStateCards: PresetGroup[] = [
         chartLayouts: {
           main: [
             {
-              i: 'preset-explore-table-antifib',
+              i: 'preset-department-table-antifib',
               x: 0,
               y: 0,
               w: 4,
-              h: 4,
+              h: 20,
             },
           ],
         },
@@ -409,9 +433,9 @@ export const presetStateCards: PresetGroup[] = [
         Icon: IconRecycle,
         chartConfigs: [
           {
-            chartId: 'preset-explore-table-cell-salvage',
+            chartId: 'preset-department-table-cell-salvage',
             title: 'Cell Salvage per Anesthesiologist',
-            chartType: 'exploreTable',
+            chartType: 'departmentTable',
             rowVar: 'anesth_prov_id',
             columns: [
               {
@@ -433,6 +457,12 @@ export const presetStateCards: PresetGroup[] = [
                 title: 'Cell Salvage (mL)',
               },
               {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
+              },
+              {
                 colVar: 'cases',
                 aggregation: 'sum',
                 type: 'numeric',
@@ -444,11 +474,11 @@ export const presetStateCards: PresetGroup[] = [
         ],
         chartLayouts: {
           main: [{
-            i: 'preset-explore-table-cell-salvage',
+            i: 'preset-department-table-cell-salvage',
             x: 0,
             y: 0,
             w: 4,
-            h: 4,
+            h: 20,
           }],
         },
       },
@@ -458,13 +488,13 @@ export const presetStateCards: PresetGroup[] = [
     groupLabel: 'Cost / Savings',
     options: [
       {
-        question: 'What are the costs of blood products transfused intraoperatively by surgeon?',
+        question: 'What are the costs of blood products transfused intraoperatively by provider?',
         Icon: IconCoin,
         chartConfigs: [
           {
             chartId: 'preset-cost-savings-table',
             title: 'Intraoperative Blood Product Costs per Provider',
-            chartType: 'exploreTable',
+            chartType: 'departmentTable',
             rowVar: 'attending_provider',
             columns: [
               {
@@ -478,6 +508,12 @@ export const presetStateCards: PresetGroup[] = [
                 aggregation: 'none',
                 type: 'text',
                 title: 'Provider',
+              },
+              {
+                colVar: 'visit_count',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Visits',
               },
               {
                 colVar: 'cases',
@@ -508,7 +544,7 @@ export const presetStateCards: PresetGroup[] = [
               x: 0,
               y: 0,
               w: 12,
-              h: 4,
+              h: 20,
             },
           ],
         },

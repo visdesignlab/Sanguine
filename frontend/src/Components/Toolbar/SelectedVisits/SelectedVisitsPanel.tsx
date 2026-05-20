@@ -3,7 +3,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { useObserver } from 'mobx-react-lite';
@@ -31,6 +30,7 @@ import {
   makeHumanReadableColumn,
   makeHumanReadableValues,
 } from '../../../Utils/humanReadableColsVals';
+import { SELECTED_VISITS_PANEL_ATTRIBUTES } from '../../../Types/application';
 import classes from '../../../Shell/Shell.module.css';
 
 function formatVisitCount(count: number): string {
@@ -41,6 +41,44 @@ function formatVisitCount(count: number): string {
     return `${(count / 1_000).toFixed(1)} K`;
   }
   return count.toString();
+}
+
+function ProcedureList({ procedureIdsStr }: { procedureIdsStr: unknown }) {
+  const [search, setSearch] = useState('');
+  const procedures = useMemo(() => {
+    if (!procedureIdsStr) return [];
+    const raw = String(procedureIdsStr);
+    return Array.from(new Set(raw.split(/[[\],{}"]+/).map((s) => s.trim()).filter(Boolean)))
+      .map((proc) => proc.replace(/__/g, ': ').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()));
+  }, [procedureIdsStr]);
+
+  const filtered = procedures.filter((p) => p.toLowerCase().includes(search.toLowerCase().trim()));
+
+  return (
+    <Stack gap="xs" mt="xs">
+      <TextInput
+        placeholder="Search procedures..."
+        value={search}
+        onChange={(e) => setSearch(e.currentTarget.value)}
+        leftSection={<IconSearch size={12} />}
+        size="xs"
+      />
+      <ScrollArea h={150} type="auto" offsetScrollbars>
+        <Stack gap={4}>
+          {filtered.length > 0 ? filtered.map((p, i) => (
+            <Flex key={i} align="flex-start" gap={6} px={4}>
+              <Text size="sm" c="blue" fw={700}>•</Text>
+              <Text size="sm" style={{ wordBreak: 'break-word', flex: 1 }}>{p}</Text>
+            </Flex>
+          )) : (
+            <Text size="xs" c="dimmed" fs="italic" p="xs">
+              {procedures.length === 0 ? 'No procedures recorded.' : 'No match found.'}
+            </Text>
+          )}
+        </Stack>
+      </ScrollArea>
+    </Stack>
+  );
 }
 
 /**
@@ -89,7 +127,10 @@ export function SelectedVisitsPanel() {
   // Fetch details whenever a visit number is chosen
   useEffect(() => {
     if (store.state.ui.selectedVisitNo != null) {
-      store.getVisitInfo(store.state.ui.selectedVisitNo).then(setSelectedVisit);
+      setLoadingVisit(true);
+      store.getVisitInfo(store.state.ui.selectedVisitNo)
+        .then(setSelectedVisit)
+        .finally(() => setLoadingVisit(false));
     } else {
       setSelectedVisit(null);
     }
@@ -97,56 +138,46 @@ export function SelectedVisitsPanel() {
 
   // Filter visit details based on search query
   const [attributeSearchQuery, setAttributeSearchQuery] = useState('');
-  const filteredVisitAttributes = useMemo(() => {
-    let visitAttributes = selectedVisit ? Object.entries(selectedVisit) : [];
-    if (store.state.ui.isInPrivateMode) {
-      visitAttributes = visitAttributes.filter(([key]) => key !== 'attending_provider_id' && key !== 'attending_provider');
-    }
-    if (!selectedVisit || !attributeSearchQuery.trim()) {
-      return visitAttributes;
-    }
 
+  const groupedAttributes = useMemo(() => {
+    if (!selectedVisit) return [];
     const searchTerm = attributeSearchQuery.toLowerCase().trim();
-    return Object.entries(visitAttributes).filter(([key, value]) => {
-      // Search in the human-readable column name
-      const humanReadableKey = makeHumanReadableColumn(key).toLowerCase();
-      // Search in the human-readable value
-      const humanReadableValue = makeHumanReadableValues(
-        key,
-        value,
-      ).toString().toLowerCase();
+    const { isInPrivateMode } = store.state.ui;
+    const usedKeys = new Set<string>();
 
-      return humanReadableKey.includes(searchTerm)
-        || humanReadableValue.includes(searchTerm)
-        || key.toLowerCase().includes(searchTerm);
-    });
-  }, [selectedVisit, store.state.ui.isInPrivateMode, attributeSearchQuery]);
+    const filterEntry = (key: string, val: unknown) => {
+      if (isInPrivateMode && ['attending_provider_id', 'attending_provider'].includes(key)) return false;
+      if (val == null) return false;
+      if (!searchTerm) return true;
+      return [key, makeHumanReadableColumn(key), String(makeHumanReadableValues(key, val))]
+        .some((s) => s.toLowerCase().includes(searchTerm));
+    };
 
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const groups = SELECTED_VISITS_PANEL_ATTRIBUTES.map((group) => ({
+      ...group,
+      items: group.keys
+        .filter((key) => filterEntry(key, selectedVisit[key]) && usedKeys.add(key))
+        .map((key) => ({ key, value: selectedVisit[key] })),
+    }));
+
+    const miscItems = Object.entries(selectedVisit)
+      .filter(([key, value]) => !usedKeys.has(key) && filterEntry(key, value))
+      .map(([key, value]) => ({ key, value }));
+
+    if (miscItems.length) {
+      groups.push({
+        id: 'misc', label: 'Other Details', keys: [], items: miscItems,
+      });
+    }
+    return groups.filter((g) => g.items.length > 0);
+  }, [selectedVisit, attributeSearchQuery, store.state.ui]);
+
   const handleClickVisitNo = useCallback((visitNo: number) => {
-    // Deselect if already selected
-    if (store.state.ui.selectedVisitNo === visitNo) {
-      setSelectedVisitNo(null);
-      return;
-    }
-
-    // Render loading overlay when changing selection
-    if (store.state.ui.selectedVisitNo !== null) {
-      setLoadingVisit(true);
-    }
-    setSelectedVisitNo(visitNo);
-
-    // Clear any existing timeout before starting a new one
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-    }
-
-    // Simulate loading delay for better UX
-    loadingTimeoutRef.current = setTimeout(() => setLoadingVisit(false), 200);
+    setSelectedVisitNo(store.state.ui.selectedVisitNo === visitNo ? null : visitNo);
   }, [store.state.ui.selectedVisitNo, setSelectedVisitNo]);
 
   return useObserver(() => (
-    <Box>
+    <Box style={{ minWidth: 0, width: '100%' }}>
       {/* Panel Header */}
       <Flex direction="row" justify="space-between" align="center" h={40}>
         <Title order={3}>Selected Visits</Title>
@@ -220,26 +251,38 @@ export function SelectedVisitsPanel() {
                 mb="sm"
               />
 
-              {/* Display filtered attributes */}
-              {filteredVisitAttributes.length > 0 ? (
-                filteredVisitAttributes.map(([key, value]) => (
-                  <Stack key={key} gap={0}>
-                    <Title order={6}>{makeHumanReadableColumn(key)}</Title>
-                    <Text>
-                      {makeHumanReadableValues(
-                        key as keyof typeof makeHumanReadableColumn,
-                        value,
-                      )}
+              <Stack gap="lg">
+                {groupedAttributes.map((group) => (
+                  <Box key={group.id}>
+                    <Text
+                      fw={700}
+                      size="xs"
+                      tt="uppercase"
+                      c="blue.7"
+                      mb={8}
+                      style={{ borderBottom: '1px solid var(--mantine-color-gray-2)', paddingBottom: 2 }}
+                    >
+                      {group.label}
                     </Text>
-                  </Stack>
-                ))
-              ) : (
-                <Text c="dimmed" size="sm">
-                  No attributes match your search &quot;
-                  {attributeSearchQuery}
-                  &quot;
-                </Text>
-              )}
+                    <Stack gap="xs">
+                      {group.items.map(({ key, value }) => (
+                        <Box key={key}>
+                          <Text size="xs" fw={500} c="dimmed" lh={1}>
+                            {makeHumanReadableColumn(key)}
+                          </Text>
+                          {key === 'procedure_ids' ? (
+                            <ProcedureList procedureIdsStr={value} />
+                          ) : (
+                            <Text size="sm" style={{ wordBreak: 'break-word' }} lh={1.4}>
+                              {makeHumanReadableValues(key, value)}
+                            </Text>
+                          )}
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                ))}
+              </Stack>
               <Space h={15} />
             </Stack>
           ) : (

@@ -528,6 +528,122 @@ export const CASE_MIX_INDEX = {
   decimals: { sum: 2, avg: 2 },
 };
 
+export const TRANSFUSIONS_PER_CMI_VISIT = {
+  value: 'transfusions_per_cmi_visit',
+  label: {
+    short: 'Adjusted Transfusions',
+    base: 'Transfusions / CMI Weighted Discharge',
+    sum: 'Transfusions / CMI Weighted Discharge',
+    avg: 'Transfusions / CMI Weighted Discharge',
+  },
+  units: {
+    sum: 'Units per CMI Weighted Discharge',
+    avg: 'Units per CMI Weighted Discharge',
+    sumShort: 'Units',
+    avgShort: 'Units',
+  },
+  decimals: { sum: 3, avg: 3 },
+} as const;
+
+export const BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS = [
+  {
+    value: 'rbc_units_per_cmi_visit',
+    label: {
+      short: 'Adjusted RBCs',
+      base: 'RBC Units / CMI Weighted Discharge',
+      sum: 'RBC Units / CMI Weighted Discharge',
+      avg: 'RBC Units / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'RBC Units per CMI Weighted Discharge',
+      avg: 'RBC Units per CMI Weighted Discharge',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+  {
+    value: 'ffp_units_per_cmi_visit',
+    label: {
+      short: 'Adjusted FFP',
+      base: 'FFP Units / CMI Weighted Discharge',
+      sum: 'FFP Units / CMI Weighted Discharge',
+      avg: 'FFP Units / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'FFP Units per CMI Weighted Discharge',
+      avg: 'FFP Units per CMI Weighted Discharge',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+  {
+    value: 'plt_units_per_cmi_visit',
+    label: {
+      short: 'Adjusted Platelets',
+      base: 'Platelet Units / CMI Weighted Discharge',
+      sum: 'Platelet Units / CMI Weighted Discharge',
+      avg: 'Platelet Units / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'Platelet Units per CMI Weighted Discharge',
+      avg: 'Platelet Units per CMI Weighted Discharge',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+  {
+    value: 'cryo_units_per_cmi_visit',
+    label: {
+      short: 'Adjusted Cryo',
+      base: 'Cryo Units / CMI Weighted Discharge',
+      sum: 'Cryo Units / CMI Weighted Discharge',
+      avg: 'Cryo Units / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'Cryo Units per CMI Weighted Discharge',
+      avg: 'Cryo Units per CMI Weighted Discharge',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+  {
+    value: 'whole_units_per_cmi_visit',
+    label: {
+      short: 'Adjusted Whole Blood',
+      base: 'Whole Blood Units / CMI Weighted Discharge',
+      sum: 'Whole Blood Units / CMI Weighted Discharge',
+      avg: 'Whole Blood Units / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'Whole Blood Units per CMI Weighted Discharge',
+      avg: 'Whole Blood Units per CMI Weighted Discharge',
+      sumShort: 'Units',
+      avgShort: 'Units',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+  {
+    value: 'cell_saver_ml_per_cmi_visit',
+    label: {
+      short: 'Adjusted Cell Salvage',
+      base: 'Cell Salvage Volume / CMI Weighted Discharge',
+      sum: 'Cell Salvage Volume / CMI Weighted Discharge',
+      avg: 'Cell Salvage Volume / CMI Weighted Discharge',
+    },
+    units: {
+      sum: 'mL per CMI Weighted Discharge',
+      avg: 'mL per CMI Weighted Discharge',
+      sumShort: 'mL',
+      avgShort: 'mL',
+    },
+    decimals: { sum: 3, avg: 3 },
+  },
+] as const;
+
 // Costs -----------------------------------------------------------
 export const DEFAULT_UNIT_COSTS: Record<Cost, number> = {
   rbc_units_cost: 200,
@@ -558,7 +674,7 @@ type ChartConfig<X, Y, A, T> = {
   yAxisVar: Y;
   aggregation: A;
   chartType: T;
-  rowVar?: typeof ExploreTableRowVars[number];
+  rowVar?: typeof DepartmentTableRowVars[number];
 };
 
 // PBM Dashboard ---------------------------------------------------
@@ -577,6 +693,19 @@ export type TimeAggregation = keyof typeof TIME_AGGREGATION_OPTIONS;
 export const dashboardXAxisOptions = Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label })) as { value: keyof typeof TIME_AGGREGATION_OPTIONS; label: string }[];
 export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
 
+// Pre-operative anemia rate (% of surgery cases where pre_hgb < 13.0 g/dL)
+export const PRE_OP_ANEMIA_RATE = {
+  value: 'pre_anemia_rate',
+  label: {
+    short: 'Pre-op Anemia Rate',
+    base: 'Pre-op Anemia Rate (Hgb < 13 g/dL)',
+    sum: 'Total Cases with Pre-op Anemia (Hgb < 13 g/dL)',
+    avg: '% of Cases with Pre-op Anemia (Hgb < 13 g/dL)',
+  },
+  units: { sum: 'Cases', avg: '% of Cases', avgShort: '%' },
+  decimals: { sum: 0, avg: 1 },
+} as const;
+
 // Dashboard chart y-axis variable options
 export const dashboardYAxisOptions = [
   ...BLOOD_COMPONENT_OPTIONS,
@@ -588,8 +717,15 @@ export const dashboardYAxisOptions = [
   OVERALL_BLOOD_PRODUCT_COST,
   VISIT_COUNT,
   CASE_MIX_INDEX,
+  TRANSFUSIONS_PER_CMI_VISIT,
+  ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
+
+export const providerViewYAxisOptions = [
+  ...dashboardYAxisOptions,
+  PRE_OP_ANEMIA_RATE,
+];
 
 // Dashboard aggregate y-axis variable type
 export type DashboardAggYAxisVar = `${keyof typeof AGGREGATION_OPTIONS}_${typeof dashboardYAxisVars[number]}`;
@@ -624,6 +760,49 @@ export type DashboardStatConfig = {
 
 export type DashboardStatData = Record<DashboardAggYAxisVar, { value: string, diff: number, comparedTo?: string, sparklineData: number[] }>;
 
+// Provider View ----------------------------------------------------
+export type ProviderChart = {
+  group?: string;
+  title: string;
+  data: Array<Record<string, string | number | boolean | null | undefined>>;
+  dataKey: string;
+  recommendedMark?: number;
+  providerMark?: number;
+  providerName?: string | null;
+  orientation: 'horizontal' | 'vertical';
+};
+
+export const providerXAxisOptions = [
+  ...dashboardYAxisOptions.filter(
+    (opt) => opt.value !== 'stroke' && opt.value !== 'death' && opt.value !== 'ecmo' && opt.value !== 'visit_count',
+  ),
+  PRE_OP_ANEMIA_RATE,
+];
+export const providerXAxisVars = providerXAxisOptions.map((opt) => opt.value);
+export const providerChartGroups = ['Anemia Management', 'Outcomes', 'Costs'] as const;
+
+export type ProviderChartData = Record<string, ProviderChart>;
+
+export type ProviderChartConfig = ChartConfig<
+  typeof providerXAxisVars[number] | typeof dashboardXAxisVars[number] | 'attending_provider',
+  typeof dashboardXAxisVars[number] | 'attending_provider' | typeof providerXAxisVars[number],
+  keyof typeof AGGREGATION_OPTIONS,
+  'time-series-line' | 'population-histogram'
+> & { group?: (typeof providerChartGroups)[number] };
+
+/**
+ * Props for the ProviderChartTooltip component.
+ */
+export interface ProviderChartTooltipProps {
+  active?: boolean;
+  payload?: unknown[];
+  label?: string | number;
+  xAxisVar: string;
+  yAxisVar: string;
+  aggregation: string;
+  providerName?: string | null;
+}
+
 // Chart colors (12-color categorical palette, professional and distinct)
 export const chartColors = [
   '#4E79A7', // Blue
@@ -650,15 +829,14 @@ export const BLOOD_PRODUCT_COLOR_THEME: Record<string, string> = {
   cell_saver: '#E4572E',
 };
 
-// Explore View ----------------------------------------------------
-// Aggregation options for explore view
-const _AGGREGATIONS = ['surgeon_prov_id', 'anesth_prov_id', 'year', 'quarter'] as const;
+// Department View ----------------------------------------------------
+// Aggregation options for department view
+const _AGGREGATIONS = ['attending_provider', 'year', 'quarter'] as const;
 export type Aggregation = typeof _AGGREGATIONS[number];
 
-// --- Cost bar charts TODO: Change to Explore Table ---
+// --- Cost bar charts TODO: Change to Department Table ---
 const CostAggregations: { value: Aggregation; label: string }[] = [
-  { value: 'surgeon_prov_id', label: 'Surgeon ID' },
-  { value: 'anesth_prov_id', label: 'Anesthesiologist ID' },
+  { value: 'attending_provider', label: 'Provider' },
   { value: 'year', label: 'Year' },
   { value: 'quarter', label: 'Quarter' },
 ];
@@ -673,6 +851,7 @@ export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof c
 
 // TOOD: Update or remove CostBarData type
 export interface CostBarDatum extends Record<Cost, number> {
+  attending_provider?: string;
   surgeon_prov_id?: string;
   anesth_prov_id?: string;
   year?: string | number;
@@ -794,10 +973,57 @@ export type ScatterYAxisVar = typeof SCATTER_Y_AXIS_OPTIONS[number]['value'];
 export type ScatterPlotConfig = ChartConfig<ScatterXAxisVar, ScatterYAxisVar, keyof typeof AGGREGATION_OPTIONS | 'none', 'scatterPlot'>;
 export type ScatterPlotData = DumbbellCase[];
 
-// --- Explore Table ---
+// --- Department Table ---
 
 // Column options
 const RBC_COUNTS = ['0', '1', '2', '3', '4', 'above_5'] as const;
+
+export const SELECTED_VISITS_PANEL_ATTRIBUTES = [
+  {
+    id: 'overview',
+    label: 'Visit Overview',
+    keys: [
+      'visit_no', 'mrn', 'adm_dtm', 'dsch_dtm', 'age_at_adm',
+      'pat_class_desc', 'apr_drg_weight', 'ms_drg_weight',
+      'month', 'quarter', 'year',
+      'attending_provider', 'attending_provider_id', 'attending_provider_line',
+      'attending_provider_department', 'is_admitting_attending',
+    ],
+  },
+  {
+    id: 'procedures',
+    label: 'Visit Procedures',
+    keys: ['procedure_ids'],
+  },
+  {
+    id: 'blood-products',
+    label: 'Blood Products',
+    keys: [
+      'rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'whole_units',
+      'cell_saver_ml', 'overall_units',
+      'rbc_units_adherent', 'ffp_units_adherent', 'plt_units_adherent',
+      'cryo_units_adherent', 'overall_units_adherent',
+    ],
+  },
+  {
+    id: 'outcomes',
+    label: 'Outcomes',
+    keys: ['los', 'death', 'vent', 'stroke', 'ecmo'],
+  },
+  {
+    id: 'medications',
+    label: 'Prophylactic Medications',
+    keys: ['b12', 'iron', 'antifibrinolytic'],
+  },
+  {
+    id: 'costs',
+    label: 'Costs',
+    keys: [
+      'rbc_units_cost', 'plt_units_cost', 'ffp_units_cost', 'cryo_units_cost',
+      'whole_cost', 'cell_saver_cost',
+    ],
+  },
+];
 const RBC_PERCENT_OPTIONS = RBC_COUNTS.map((count) => ({
   value: `percent_${count}_rbc`,
   label: count === 'above_5' ? '≥5 RBC' : `${count} RBC`,
@@ -806,7 +1032,7 @@ const RBC_PERCENT_OPTIONS = RBC_COUNTS.map((count) => ({
 }));
 
 // Column Groups
-export const ExploreTableColumnOptionsGrouped = [
+export const DepartmentTableColumnOptionsGrouped = [
   {
     group: 'Blood Products',
     items: BLOOD_COMPONENT_OPTIONS.map((opt) => ({
@@ -818,6 +1044,23 @@ export const ExploreTableColumnOptionsGrouped = [
         sumShort: opt.units.sumShort,
         avgShort: opt.units.avgShort,
         type: opt.units.type,
+      },
+      decimals: opt.decimals,
+    })),
+  },
+  {
+    group: 'CMI Weighted Discharge',
+    items: [
+      TRANSFUSIONS_PER_CMI_VISIT,
+      ...BLOOD_PRODUCT_TRANSFUSIONS_PER_CMI_VISIT_OPTIONS,
+    ].map((opt) => ({
+      value: opt.value,
+      label: opt.label.base,
+      units: {
+        sum: opt.units.sum,
+        avg: opt.units.avg,
+        sumShort: opt.units.sumShort,
+        avgShort: opt.units.avgShort,
       },
       decimals: opt.decimals,
     })),
@@ -915,11 +1158,19 @@ export const ExploreTableColumnOptionsGrouped = [
         },
         decimals: 0,
       },
+      {
+        value: 'visit_count',
+        label: 'Visits',
+        units: {
+          sum: 'visits', avg: '% of visits', sumShort: ' Visits', avgShort: ' Visits',
+        },
+        decimals: 0,
+      },
     ],
   },
 ];
 
-export const ExploreTableColumnOptions: {
+export const DepartmentTableColumnOptions: {
   value: string;
   label: string;
   units?: {
@@ -930,7 +1181,7 @@ export const ExploreTableColumnOptions: {
     type?: 'prefix' | 'suffix';
   };
   decimals?: number | { sum: number; avg: number };
-}[] = ExploreTableColumnOptionsGrouped.flatMap((g) => g.items as {
+}[] = DepartmentTableColumnOptionsGrouped.flatMap((g) => g.items as {
   value: string;
   label: string;
   units?: {
@@ -944,13 +1195,13 @@ export const ExploreTableColumnOptions: {
 }[]);
 
 // Row options
-export const ExploreTableRowOptions: { value: string; label: string }[] = [
+export const DepartmentTableRowOptions: { value: string; label: string }[] = [
   { value: 'attending_provider', label: 'Provider' },
   { value: 'year', label: 'Year' },
   { value: 'quarter', label: 'Quarter' },
 ];
 
-export const ExploreTableGroupByOptions = [
+export const DepartmentTableGroupByOptions = [
   { value: 'death', label: 'Death' },
   { value: 'stroke', label: 'Stroke' },
   { value: 'vent', label: 'Ventilator >24hr' },
@@ -963,66 +1214,66 @@ export const ExploreTableGroupByOptions = [
 ];
 
 // Variables
-export const ExploreTableColumnVars = ExploreTableColumnOptions.map((opt) => opt.value);
-export const ExploreTableRowVars = ExploreTableRowOptions.map((opt) => opt.value);
+export const DepartmentTableColumnVars = DepartmentTableColumnOptions.map((opt) => opt.value);
+export const DepartmentTableRowVars = DepartmentTableRowOptions.map((opt) => opt.value);
 
 // Column type
-export type ExploreTableColumn = {
-  colVar: typeof ExploreTableColumnVars[number];
+export type DepartmentTableColumn = {
+  colVar: typeof DepartmentTableColumnVars[number];
   aggregation: keyof typeof AGGREGATION_OPTIONS | 'none';
   type: 'numeric' | 'text' | 'violin' | 'heatmap' | 'stackedBar' | 'numericBar';
   title: string;
   numericTextVisible?: boolean;
 };
 
-// Explore Table Sort
-export type ExploreTableSort = {
+// Department Table Sort
+export type DepartmentTableSort = {
   colVar: string;
   direction: 'asc' | 'desc';
 };
 
-// Explore Table Chart Config
-export type ExploreTableConfig = {
+// Department Table Chart Config
+export type DepartmentTableConfig = {
   chartId: string;
   title: string;
-  chartType: 'exploreTable';
-  rowVar: typeof ExploreTableRowVars[number];
-  columns: ExploreTableColumn[];
+  chartType: 'departmentTable';
+  rowVar: typeof DepartmentTableRowVars[number];
+  columns: DepartmentTableColumn[];
   aggregation?: 'sum' | 'avg';
   twoValsPerRow?: boolean;
   groupByVar?: string;
-  sort?: ExploreTableSort;
+  sort?: DepartmentTableSort;
 };
 
-// Explore Table Data
-export type ExploreTableRow = {
+// Department Table Data
+export type DepartmentTableRow = {
   [key: string]: string | number | number[] | number[][] | unknown[] | undefined;
 } & {
   _row_key?: string | number;
-  _groups?: ExploreTableRow[];
+  _groups?: DepartmentTableRow[];
   _case_ids?: string[];
 };
-export type ExploreTableData = ExploreTableRow[]; // E.g. [{ attending_provider: 'Dr. Smith', cases: 100}, { attending_provider: 'Dr. Johnson', cases: 200}]
+export type DepartmentTableData = DepartmentTableRow[]; // E.g. [{ attending_provider: 'Dr. Smith', cases: 100}, { attending_provider: 'Dr. Johnson', cases: 200}]
 
-// --- Explore Chart ---
-export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData | DumbbellData>;
-export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig | DumbbellChartConfig;
+// --- Department Chart ---
+export type DepartmentChartData = Record<string, ScatterPlotData | CostBarData | DepartmentTableData | DumbbellData>;
+export type DepartmentChartConfig = CostChartConfig | ScatterPlotConfig | DepartmentTableConfig | DumbbellChartConfig;
 
-// --- Explore Stats ---
-// Stat options for explore view — same as dashboard but excluding costs
-export const exploreStatYAxisOptions = dashboardYAxisOptions.filter(
+// --- Department Stats ---
+// Stat options for department view — same as dashboard but excluding costs
+export const departmentStatYAxisOptions = dashboardYAxisOptions.filter(
   (opt) => !COST_OPTIONS.some((c) => c.value === opt.value)
     && opt.value !== OVERALL_BLOOD_PRODUCT_COST.value,
 );
 
-export type ExploreStatConfig = {
+export type DepartmentStatConfig = {
   statId: string;
   yAxisVar: typeof dashboardYAxisVars[number];
   aggregation: keyof typeof AGGREGATION_OPTIONS;
   title: string;
 };
 
-export type ExploreStatData = Record<string, { value: string }>;
+export type DepartmentStatData = Record<string, { value: string }>;
 
 // Procedure hierarchy ---------------------------------------------------
 

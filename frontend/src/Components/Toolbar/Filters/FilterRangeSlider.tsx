@@ -1,11 +1,9 @@
 import { RangeSliderValue, RangeSlider } from '@mantine/core';
 import { useObserver } from 'mobx-react-lite';
 import {
-  useContext, useMemo, useState, useEffect,
+  useContext, useEffect, useState,
 } from 'react';
-import {
-  Store, MANUAL_INFINITY, ApplicationState,
-} from '../../../Store/Store';
+import { Store, ApplicationState } from '../../../Store/Store';
 import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 import { CELL_SAVER_ML } from '../../../Types/bloodProducts';
 
@@ -13,53 +11,45 @@ type NumberArrayKeys<T> = {
   [K in keyof T]: T[K] extends number[] ? K : never
 }[keyof T];
 
-export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: { varName: NumberArrayKeys<ApplicationState['filterValues']>; paddingLeft?: number; paddingRight?: number }) {
+type FilterRangeSliderProps = {
+  varName: NumberArrayKeys<ApplicationState['filterValues']>;
+  paddingLeft?: number;
+  paddingRight?: number;
+};
+
+export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: FilterRangeSliderProps) {
   const store = useContext(Store);
 
-  // Initial filter range & store filter range
   const [initialFilterMin, initialFilterMax] = store.initialFilterValues[varName];
-  const [currentFilterMin, currentFilterMax] = store.filterValues[varName];
+  const [filterMin, filterMax] = store.filterValues[varName];
+  const clampedMax = Math.min(store.clampedMax[varName], initialFilterMax);
+  const displayMax = Math.min(filterMax, clampedMax);
+  const isFilterActive = filterMin !== initialFilterMin || filterMax !== initialFilterMax;
+  const [sliderValues, setSliderValues] = useState<[number, number]>([filterMin, displayMax]);
 
-  // TODO redo the clamping logic
-  // Clamp slider max value to prevent outliers
-  const clampedMax = useMemo(
-    () => Math.min(MANUAL_INFINITY, initialFilterMax),
-    [initialFilterMax],
-  );
+  useEffect(() => {
+    setSliderValues([filterMin, displayMax]);
+  }, [displayMax, filterMax, filterMin]);
 
-  // Local state for smooth sliding
-  const [sliderValues, setSliderValues] = useState<[number, number]>(
-    [currentFilterMin, Math.min(currentFilterMax, clampedMax)],
-  );
-
-  // Sync with store updates
-  useEffect(
-    () => setSliderValues([currentFilterMin, Math.min(currentFilterMax, clampedMax)]),
-    [currentFilterMin, currentFilterMax, clampedMax],
-  );
-
-  const isFilterActive = useMemo(
-    () => sliderValues[0] !== initialFilterMin || sliderValues[1] !== clampedMax,
-    [sliderValues, initialFilterMin, clampedMax],
-  );
-
-  function setStoreFilterValue(v: RangeSliderValue) {
+  const handleCommit = (v: RangeSliderValue) => {
     store.setFilterValue(varName, [v[0], v[1] === clampedMax ? initialFilterMax : v[1]]);
-  }
+  };
+
+  const formatLabel = (n: number) => (varName === 'los' ? n.toFixed(2) : `${n}`);
 
   return useObserver(() => (
     <RangeSlider
       value={sliderValues}
       size="sm"
       onChange={setSliderValues}
-      onChangeEnd={(v) => setStoreFilterValue(v)}
+      onChangeEnd={handleCommit}
       min={initialFilterMin}
       max={clampedMax}
       step={varName === CELL_SAVER_ML ? 50 : 1}
       color={isFilterActive ? 'blue.6' : DEFAULT_DATA_COLOR}
       marks={[
-        { value: initialFilterMin, label: `${initialFilterMin}` },
-        { value: clampedMax, label: `${clampedMax}` },
+        { value: initialFilterMin, label: formatLabel(initialFilterMin) },
+        { value: clampedMax, label: `${formatLabel(clampedMax)}${clampedMax < initialFilterMax ? '+' : ''}` },
       ]}
       minRange={0}
       mb="xl"

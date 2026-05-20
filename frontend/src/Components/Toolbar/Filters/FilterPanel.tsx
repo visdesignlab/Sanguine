@@ -78,21 +78,32 @@ export function FilterPanel() {
         h={`calc(100vh - ${toolbarWidth}px - 45px)`}
         type="scroll"
         overscrollBehavior="contain"
+        scrollbars="y"
         mt="sm"
       >
         <Accordion
           multiple
-          value={store.state.ui.filterPanelExpandedItems}
+          value={store.state.ui.activeTab === 'Provider'
+            ? store.state.ui.filterPanelExpandedItems.filter((item) => item !== 'date-filters')
+            : store.state.ui.filterPanelExpandedItems}
           onChange={(value) => store.actions.setUiState({ filterPanelExpandedItems: value })}
           pb="xl"
         >
           {/* Date Filters */}
-          <Accordion.Item value="date-filters" key="date-filters">
+          <Accordion.Item
+            value="date-filters"
+            key="date-filters"
+            style={{
+              opacity: store.state.ui.activeTab === 'Provider' ? 0.5 : 1,
+            }}
+          >
             <FilterHeader
               countName="dateFiltersAppliedCount"
               title="Visit Date"
               tooltipLabel="Number of date filters applied"
               resetFunc={() => store.resetDateFilters()}
+              disabled={store.state.ui.activeTab === 'Provider'}
+              disabledTooltip="To filter date range in Provider View, click the calendar icon in the header"
             />
             <Accordion.Panel>
               <Flex direction="row" justify="space-between" align="center">

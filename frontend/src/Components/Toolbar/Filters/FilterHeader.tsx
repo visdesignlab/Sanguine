@@ -1,5 +1,5 @@
 import {
-  Accordion, ActionIcon, Badge, Flex, Title, Tooltip,
+  Accordion, ActionIcon, Badge, Flex, Title, Tooltip, Box,
 } from '@mantine/core';
 import { useContext } from 'react';
 import { IconRestore } from '@tabler/icons-react';
@@ -8,20 +8,26 @@ import { Store } from '../../../Store/Store';
 import { FilterCountKey } from '../../../Types/application';
 
 export function FilterHeader({
-  countName, title, tooltipLabel, resetFunc,
+  countName, title, tooltipLabel, resetFunc, countOverride, disabled, disabledTooltip,
 }: {
-  countName: FilterCountKey, title: string, tooltipLabel: string, resetFunc: () => void
+  countName: FilterCountKey,
+  title: string,
+  tooltipLabel: string,
+  resetFunc: () => void,
+  countOverride?: number,
+  disabled?: boolean,
+  disabledTooltip?: string
 }) {
   const store = useContext(Store);
 
   return useObserver(() => {
-    const count = store[countName] as number;
+    const count = countOverride !== undefined ? countOverride : (store[countName] as number);
 
-    return (
+    const content = (
       <Flex align="center">
-        <Accordion.Control px={2}>
+        <Accordion.Control px={2} disabled={disabled} style={{ pointerEvents: disabled ? 'none' : 'auto' }}>
           <Flex align="center" wrap="nowrap">
-            <Tooltip label={tooltipLabel}>
+            <Tooltip label={tooltipLabel} disabled={disabled}>
               <Title order={4} c={count ? 'blue.6' : undefined} style={{ whiteSpace: 'nowrap' }}>{title}</Title>
             </Tooltip>
 
@@ -50,5 +56,17 @@ export function FilterHeader({
         </Accordion.Control>
       </Flex>
     );
+
+    if (disabled && disabledTooltip) {
+      return (
+        <Tooltip label={disabledTooltip} position="left" withinPortal>
+          <Box style={{ cursor: 'not-allowed' }}>
+            {content}
+          </Box>
+        </Tooltip>
+      );
+    }
+
+    return content;
   });
 }
