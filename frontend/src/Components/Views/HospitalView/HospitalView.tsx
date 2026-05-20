@@ -36,6 +36,7 @@ import {
   DashboardStatConfig,
   chartColors,
   BLOOD_PRODUCT_COLOR_THEME,
+  DASHBOARD_NO_AGGREGATION_TOGGLE_VARS,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 import { getDepartmentContextLabel } from '../../../Utils/departmentContext';
@@ -172,13 +173,14 @@ export function HospitalView() {
           centered
         >
           <Stack gap="md">
-            {/** Modal - choose aggregation for chart or stat */}
+            {/** Modal - choose aggregation for chart or stat (disabled for CMI-weighted metrics) */}
             <Select
               label="Aggregation"
               placeholder="Choose aggregation type"
               data={aggregationOptions}
               value={selectedAggregation}
               onChange={(value) => setSelectedAggregation(value || 'Average')}
+              disabled={DASHBOARD_NO_AGGREGATION_TOGGLE_VARS.has(selectedYAxisVar)}
             />
             {/** Modal - choose y-axis for chart or stat */}
             <Select
@@ -331,10 +333,11 @@ export function HospitalView() {
                         </ActionIcon>
                       </Tooltip>
 
-                      {/* Chart y-axis aggregation toggle */}
+                      {/* Chart y-axis aggregation toggle (disabled for CMI-weighted metrics) */}
                       <Tooltip label={`Change Y-Axis Aggregation to ${aggregation === 'sum' ? 'Average' : 'Sum'}`}>
                         <ActionIcon
                           variant="subtle"
+                          disabled={DASHBOARD_NO_AGGREGATION_TOGGLE_VARS.has(yAxisVar)}
                           onClick={() => store.setDashboardChartConfig(chartId, {
                             chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum', chartType,
                           })}
