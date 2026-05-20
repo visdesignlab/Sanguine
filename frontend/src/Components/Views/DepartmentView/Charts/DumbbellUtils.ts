@@ -252,49 +252,59 @@ export function calculateDumbbellLayout(
     }
 
     let binGroupWidth = currentX - binGroupStartX;
-    let isOverflowing = false;
-    const isSurgeon = selectedX === 'surgeon' || selectedX === 'anesthesiologist';
 
-    if (isSurgeon) {
-      const MIN_SURGEON_WIDTH = 40;
-      if (binGroupWidth < MIN_SURGEON_WIDTH) {
-        const deficit = MIN_SURGEON_WIDTH - binGroupWidth;
-        items.push({ type: 'spacer', width: deficit });
-        currentX += deficit;
-        binGroupWidth += deficit;
-      }
-    }
+    if (!collapsedBinGroups.has(binGroup.id)) {
+      let isOverflowing = false;
+      const isSurgeon = selectedX === 'surgeon' || selectedX === 'anesthesiologist';
 
-    const fullWidth = measureText(displayLabel);
-    if (binGroupWidth < fullWidth + 10) {
       if (isSurgeon) {
-        const lastName = getProviderLastName(displayLabel);
-        const shortWidth = measureText(lastName);
-        displayLabel = lastName;
-        if (binGroupWidth < shortWidth + 10) {
-          isOverflowing = true;
-        }
-      } else {
-        const shortLabel = getShortenedLabel(displayLabel);
-        if (shortLabel !== displayLabel) {
-          displayLabel = shortLabel;
-        }
-        const labelWidth = measureText(displayLabel) + 10;
-        if (binGroupWidth < labelWidth) {
-          const deficit = labelWidth - binGroupWidth;
+        const MIN_SURGEON_WIDTH = 40;
+        if (binGroupWidth < MIN_SURGEON_WIDTH) {
+          const deficit = MIN_SURGEON_WIDTH - binGroupWidth;
           items.push({ type: 'spacer', width: deficit });
           currentX += deficit;
           binGroupWidth += deficit;
         }
       }
-    }
 
-    binGroupLayout.set(binGroup.id, {
-      x: binGroupStartX,
-      width: binGroupWidth,
-      label: displayLabel,
-      isOverflowing,
-    });
+      const fullWidth = measureText(displayLabel);
+      if (binGroupWidth < fullWidth + 10) {
+        if (isSurgeon) {
+          const lastName = getProviderLastName(displayLabel);
+          const shortWidth = measureText(lastName);
+          displayLabel = lastName;
+          if (binGroupWidth < shortWidth + 10) {
+            isOverflowing = true;
+          }
+        } else {
+          const shortLabel = getShortenedLabel(displayLabel);
+          if (shortLabel !== displayLabel) {
+            displayLabel = shortLabel;
+          }
+          const labelWidth = measureText(displayLabel) + 10;
+          if (binGroupWidth < labelWidth) {
+            const deficit = labelWidth - binGroupWidth;
+            items.push({ type: 'spacer', width: deficit });
+            currentX += deficit;
+            binGroupWidth += deficit;
+          }
+        }
+      }
+
+      binGroupLayout.set(binGroup.id, {
+        x: binGroupStartX,
+        width: binGroupWidth,
+        label: displayLabel,
+        isOverflowing,
+      });
+    } else {
+      binGroupLayout.set(binGroup.id, {
+        x: binGroupStartX,
+        width: binGroupWidth,
+        label: displayLabel,
+        isOverflowing: false,
+      });
+    }
   });
 
   return { items, binGroupLayout };
