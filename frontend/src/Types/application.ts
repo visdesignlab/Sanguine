@@ -874,6 +874,9 @@ export const DUMBBELL_X_AXIS_OPTIONS = [
 ] as const;
 export type DumbbellXAxisVar = typeof DUMBBELL_X_AXIS_OPTIONS[number]['value'];
 
+export const PROVIDER_X_AXIS_VALUES = ['surgeon', 'anesthesiologist', 'provider'] as const;
+export const isProviderXAxis = (v: string) => PROVIDER_X_AXIS_VALUES.includes(v as typeof PROVIDER_X_AXIS_VALUES[number]);
+
 export const DUMBBELL_Y_AXIS_OPTIONS = [
   { value: 'hgb', label: 'Hemoglobin' },
   { value: 'platelet', label: 'Platelet Count' },

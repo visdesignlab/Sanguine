@@ -1,6 +1,6 @@
 import {
   DumbbellCase, DumbbellData, DumbbellLabConfig, DumbbellSortState,
-  DUMBBELL_CHAR_WIDTH_CASE,
+  DUMBBELL_CHAR_WIDTH_CASE, isProviderXAxis,
 } from '../../../../Types/application';
 
 // Grouping and processing logic
@@ -261,7 +261,7 @@ export function calculateDumbbellLayout(
 
     let binGroupWidth = currentX - binGroupStartX;
     let isOverflowing = false;
-    const isSurgeon = selectedX === 'surgeon' || selectedX === 'anesthesiologist';
+    const isSurgeon = isProviderXAxis(selectedX);
 
     if (isSurgeon) {
       const MIN_SURGEON_WIDTH = 40;

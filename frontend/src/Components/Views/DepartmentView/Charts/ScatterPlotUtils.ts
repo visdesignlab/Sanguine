@@ -1,6 +1,7 @@
 import {
   DumbbellCase,
   SCATTER_CHAR_WIDTH_CASE,
+  isProviderXAxis,
 } from '../../../../Types/application';
 
 // ---------- Types ----------
@@ -226,7 +227,7 @@ export function calculateScatterLayout(
     const binGroupWidth = currentX - binGroupStartX;
     let isOverflowing = false;
 
-    const isProvider = selectedX === 'surgeon' || selectedX === 'anesthesiologist';
+    const isProvider = isProviderXAxis(selectedX);
 
     // Ensure bin group labels fit
     const fullWidth = measureText(displayLabel);
