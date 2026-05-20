@@ -1,6 +1,6 @@
 import {
   DumbbellCase, DumbbellData, DumbbellLabConfig, DumbbellSortState,
-  DUMBBELL_CHAR_WIDTH_CASE,
+  DUMBBELL_CHAR_WIDTH_CASE, isProviderXAxis,
 } from '../../../../Types/application';
 
 // Grouping and processing logic
@@ -25,6 +25,14 @@ export function getProcessedDumbbellData(
 
   // Grouping Logic based on selectedX
   filteredData.forEach((d: DumbbellCase) => {
+    if (selectedX === 'provider') {
+      [d.surgeon_prov_name, d.anesth_prov_name].forEach((k) => {
+        if (!k) return;
+        if (!groupedByBinGroup.has(k)) groupedByBinGroup.set(k, []);
+        groupedByBinGroup.get(k)?.push(d);
+      });
+      return;
+    }
     let key = d.surgeon_prov_name; // Default Surgeon Name
     if (selectedX === 'anesthesiologist') key = d.anesth_prov_name;
     else if (selectedX === 'year') {
@@ -253,7 +261,7 @@ export function calculateDumbbellLayout(
 
     let binGroupWidth = currentX - binGroupStartX;
     let isOverflowing = false;
-    const isSurgeon = selectedX === 'surgeon' || selectedX === 'anesthesiologist';
+    const isSurgeon = isProviderXAxis(selectedX);
 
     if (isSurgeon) {
       const MIN_SURGEON_WIDTH = 40;

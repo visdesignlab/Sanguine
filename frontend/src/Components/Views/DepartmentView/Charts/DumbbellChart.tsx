@@ -19,6 +19,7 @@ import {
   LAB_RESULTS, DUMBBELL_X_AXIS_OPTIONS, DUMBBELL_MARGIN,
   DUMBBELL_CHAR_WIDTH_CASE, DUMBBELL_DOT_RADIUS,
   DUMBBELL_DRAG_LIMIT, DumbbellLabConfig as LabConfig,
+  isProviderXAxis,
 } from '../../../../Types/application';
 import { smallHoverColor } from '../../../../Theme/mantineTheme';
 import { getProcessedDumbbellData, calculateDumbbellLayout } from './DumbbellUtils';
@@ -967,8 +968,7 @@ export const DumbbellChartContent = memo(({
             >
               <title>
                 {(() => {
-                  if (selectedX === 'surgeon') return `Surgical Cases for ${binGroup.label}`;
-                  if (selectedX === 'anesthesiologist') return `Surgical Cases for ${binGroup.label}`;
+                  if (isProviderXAxis(selectedX)) return `Surgical Cases for ${binGroup.label}`;
                   if (selectedX === 'year' || selectedX === 'quarter') return `Surgical Cases in ${binGroup.label}`;
                   if (['rbc', 'platelet', 'cryo', 'ffp'].includes(selectedX)) {
                     return `Surgical Cases where ${binGroup.label} Transfused`;
@@ -1600,7 +1600,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
             />
 
             {/* Provider Sort Toggle */}
-            {(selectedX === 'surgeon' || selectedX === 'anesthesiologist') && (
+            {(isProviderXAxis(selectedX)) && (
               <Box style={{
                 position: 'absolute', bottom: 0, right: 5, zIndex: 10,
               }}

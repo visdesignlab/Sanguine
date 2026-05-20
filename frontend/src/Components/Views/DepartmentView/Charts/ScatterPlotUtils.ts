@@ -1,6 +1,7 @@
 import {
   DumbbellCase,
   SCATTER_CHAR_WIDTH_CASE,
+  isProviderXAxis,
 } from '../../../../Types/application';
 
 // ---------- Types ----------
@@ -105,6 +106,13 @@ export function getProcessedScatterData(
   const groupedByBinGroup = new Map<string, DumbbellCase[]>();
 
   filteredData.forEach((d: DumbbellCase) => {
+    if (selectedX === 'provider') {
+      [d.surgeon_prov_name || 'Unknown', d.anesth_prov_name || 'Unknown'].forEach((k) => {
+        if (!groupedByBinGroup.has(k)) groupedByBinGroup.set(k, []);
+        groupedByBinGroup.get(k)?.push(d);
+      });
+      return;
+    }
     let key = '';
     if (selectedX === 'surgeon') {
       key = d.surgeon_prov_name || 'Unknown';
@@ -219,7 +227,7 @@ export function calculateScatterLayout(
     const binGroupWidth = currentX - binGroupStartX;
     let isOverflowing = false;
 
-    const isProvider = selectedX === 'surgeon' || selectedX === 'anesthesiologist';
+    const isProvider = isProviderXAxis(selectedX);
 
     // Ensure bin group labels fit
     const fullWidth = measureText(displayLabel);
