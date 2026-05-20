@@ -546,7 +546,7 @@ export function DepartmentView() {
                 cols={{
                   main: 4, sm: 1,
                 }}
-                rowHeight={150}
+                rowHeight={10}
                 containerPadding={[0, 0]}
                 draggableHandle=".move-icon"
                 onDragStop={(_layout: Layout[], _oldItem: Layout, _newItem: Layout, _placeholder: Layout, _e: MouseEvent, _element: HTMLElement) => {

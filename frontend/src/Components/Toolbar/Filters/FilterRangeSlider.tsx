@@ -35,6 +35,8 @@ export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: Filter
     store.setFilterValue(varName, [v[0], v[1] === clampedMax ? initialFilterMax : v[1]]);
   };
 
+  const formatLabel = (n: number) => (varName === 'los' ? n.toFixed(2) : `${n}`);
+
   return useObserver(() => (
     <RangeSlider
       value={sliderValues}
@@ -46,8 +48,8 @@ export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: Filter
       step={varName === CELL_SAVER_ML ? 50 : 1}
       color={isFilterActive ? 'blue.6' : DEFAULT_DATA_COLOR}
       marks={[
-        { value: initialFilterMin, label: `${initialFilterMin}` },
-        { value: clampedMax, label: `${clampedMax}${clampedMax < initialFilterMax ? '+' : ''}` },
+        { value: initialFilterMin, label: formatLabel(initialFilterMin) },
+        { value: clampedMax, label: `${formatLabel(clampedMax)}${clampedMax < initialFilterMax ? '+' : ''}` },
       ]}
       minRange={0}
       mb="xl"
