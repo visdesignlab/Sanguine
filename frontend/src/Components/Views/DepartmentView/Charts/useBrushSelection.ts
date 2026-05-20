@@ -64,8 +64,6 @@ export function useBrushSelection({
   const initialSelection = useRef<BrushRect | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const prevSelectionRef = useRef<Set<string>>(new Set());
-
-  // Keep layout/callback opts in a ref so callbacks don't recreate on every layout change
   const optsRef = useRef({
     height, marginTop, bottomMargin, dragLimit, extractBoxIds, onClickPoint, chartRef,
   });

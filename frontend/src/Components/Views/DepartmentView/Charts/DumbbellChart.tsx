@@ -426,7 +426,6 @@ export const DumbbellChartContent = memo(({
   targets: { preMin: number; postMin: number; postMax: number },
   setHoveredTarget: (t: string | null) => void,
 }) => {
-  const store = useContext(Store);
   const chartRef = useRef<HTMLDivElement>(null);
   const bottomMargin = 25;
   const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - bottomMargin);
@@ -927,7 +926,7 @@ export const DumbbellChartContent = memo(({
         );
       })}
     </g>
-  ), [processedData, collapsedBinGroups, hoveredCollapse, theme, innerHeight, onToggleBinGroupCollapse, setHoveredCollapse, binGroupLayout, selectedX, visibleRange, store]);
+  ), [processedData, collapsedBinGroups, hoveredCollapse, theme, innerHeight, onToggleBinGroupCollapse, setHoveredCollapse, binGroupLayout, selectedX, visibleRange]);
 
   return (
     <div
@@ -1102,9 +1101,6 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
   const [showMedian, setShowMedian] = useState<boolean>(true);
   const [sortMode, setSortMode] = useState<string>('pre');
   const [providerSort, setProviderSort] = useState<'alpha' | 'count' | 'pre' | 'post'>('alpha');
-
-  // Clear provider sorts when global sort changes
-  const handleSortChange = setSortMode;
 
   const labConfig = useMemo(() => {
     const pre = LAB_RESULTS.find((l) => l.metricId === selectedLab && l.value.startsWith('pre'));
@@ -1293,7 +1289,7 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
             <SegmentedControl
               size="xs"
               value={sortMode}
-              onChange={handleSortChange}
+              onChange={setSortMode}
               data={[
                 {
                   label: (

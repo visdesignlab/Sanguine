@@ -34,6 +34,9 @@ import {
 } from './ScatterPlotUtils';
 import { BLOOD_COMPONENTS } from '../../../../Types/bloodProducts';
 
+const BIN_SORT_ORDER = ['alpha', 'count', 'avg'] as const;
+type BinSort = typeof BIN_SORT_ORDER[number];
+
 // #region Y-Axis
 const ScatterYAxis = memo(({
   height, yScale, theme, varConfig, targets, setTargets,
@@ -315,7 +318,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [showTargets, setShowTargets] = useState(true);
   const [showAvg, setShowAvg] = useState(true);
   const [sortMode, setSortMode] = useState<string>('asc');
-  const [binSort, setBinSort] = useState<'alpha' | 'count' | 'avg'>('alpha');
+  const [binSort, setBinSort] = useState<BinSort>('alpha');
   const [collapsedBinGroups, setCollapsedBinGroups] = useState<Set<string>>(new Set());
 
   // Groups
@@ -658,7 +661,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     canvas.style.height = `${height}px`;
     canvas.style.left = `${Math.max(0, visibleRange[0])}px`;
     drawPoints();
-  }, [totalWidth, height, visibleRange, drawPoints, store]);
+  }, [totalWidth, height, visibleRange, drawPoints]);
 
   // Extract case IDs from a brush box
   const extractBoxIds = (box: BrushRect) => {
@@ -917,14 +920,11 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                         backgroundColor: 'rgba(255,255,255,0.85)',
                         border: `1px solid ${theme.colors.gray[3]}`,
                       }}
-                      onClick={() => {
-                        const order: ('alpha' | 'count' | 'avg')[] = ['alpha', 'count', 'avg'];
-                        setBinSort(order[(order.indexOf(binSort) + 1) % order.length]);
-                      }}
+                      onClick={() => setBinSort(BIN_SORT_ORDER[(BIN_SORT_ORDER.indexOf(binSort) + 1) % BIN_SORT_ORDER.length])}
                     >
                       {binSort === 'alpha' && 'A/Z →'}
                       {binSort === 'count' && 'Cases →'}
-                      {binSort === 'avg' && <Text size="0.6rem" fw={700} c="blue">Avg →</Text>}
+                      {binSort === 'avg' && 'Avg →'}
                     </Button>
                   </Tooltip>
                 </Box>
@@ -1037,7 +1037,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   onMouseDown={handleMouseDown}
                   onMouseMove={(e) => { brushHandleMouseMove(e); if (interactionMode === 'idle') handleHover(e); }}
                   onMouseUp={handleMouseUp}
-                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); caseSelection.clearHovered(); requestAnimationFrame(drawPoints); }}
+                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); caseSelection.clearHovered(); }}
                 >
                   {/* SVG layer for gridlines, bins, targets, avg, brush */}
                   <svg
