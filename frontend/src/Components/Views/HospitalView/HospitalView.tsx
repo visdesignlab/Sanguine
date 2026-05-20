@@ -389,7 +389,7 @@ export function HospitalView() {
                     position: 'relative',
                   }}
                   >
-                    {rawChartData.length === 0 && (
+                    {(rawChartData || []).length === 0 && (
                       <EmptyChartState hasFilters={store.totalFiltersAppliedCount > 0} />
                     )}
                     {chartType === 'bar' ? (

@@ -1098,6 +1098,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                                   stroke={theme.colors.gray[5]}
                                   strokeWidth={1}
                                   style={{ cursor: 'pointer' }}
+                                  onMouseEnter={() => caseSelection.setHovered(binGroup.cases.map((c) => c.case_id))}
+                                  onMouseLeave={() => caseSelection.clearHovered()}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     const ids = binGroup.cases.map((c) => c.case_id);
