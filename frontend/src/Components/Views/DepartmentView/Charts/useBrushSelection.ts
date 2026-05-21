@@ -7,10 +7,8 @@ type InteractionMode = 'idle' | 'selecting' | 'moving' | 'resizing';
 
 /** Returns the CSS cursor string for a pointer at (x, y) relative to a selection box. */
 function getBrushCursor(x: number, y: number, box: BrushRect, tol = 10): string {
-  const minX = Math.min(box.x1, box.x2);
-  const maxX = Math.max(box.x1, box.x2);
-  const minY = Math.min(box.y1, box.y2);
-  const maxY = Math.max(box.y1, box.y2);
+  const minX = Math.min(box.x1, box.x2); const maxX = Math.max(box.x1, box.x2);
+  const minY = Math.min(box.y1, box.y2); const maxY = Math.max(box.y1, box.y2);
   if (Math.abs(x - minX) < tol && Math.abs(y - minY) < tol) return 'nw-resize';
   if (Math.abs(x - maxX) < tol && Math.abs(y - minY) < tol) return 'ne-resize';
   if (Math.abs(x - minX) < tol && Math.abs(y - maxY) < tol) return 'sw-resize';
@@ -19,8 +17,7 @@ function getBrushCursor(x: number, y: number, box: BrushRect, tol = 10): string 
   if (Math.abs(y - maxY) < tol && x > minX && x < maxX) return 's-resize';
   if (Math.abs(x - minX) < tol && y > minY && y < maxY) return 'w-resize';
   if (Math.abs(x - maxX) < tol && y > minY && y < maxY) return 'e-resize';
-  if (x > minX && x < maxX && y > minY && y < maxY) return 'move';
-  return 'crosshair';
+  return (x > minX && x < maxX && y > minY && y < maxY) ? 'move' : 'crosshair';
 }
 
 interface UseBrushSelectionOptions {
@@ -35,17 +32,6 @@ interface UseBrushSelectionOptions {
   setSelected: (ids: string[]) => void;
 }
 
-export interface BrushSelectionReturn {
-  selection: BrushRect | null;
-  appliedSelection: BrushRect | null;
-  interactionMode: InteractionMode;
-  resizeHandle: string | null;
-  brushCursor: string;
-  handleMouseDown: (e: React.MouseEvent) => void;
-  handleMouseMove: (e: React.MouseEvent) => void;
-  handleMouseUp: () => void;
-}
-
 export function useBrushSelection({
   chartRef,
   height,
@@ -56,7 +42,7 @@ export function useBrushSelection({
   onClickPoint,
   getSelectedCaseIds,
   setSelected,
-}: UseBrushSelectionOptions): BrushSelectionReturn {
+}: UseBrushSelectionOptions) {
   const [selection, setSelection] = useState<BrushRect | null>(null);
   const [appliedSelection, setAppliedSelection] = useState<BrushRect | null>(null);
   const [interactionMode, setInteractionMode] = useState<InteractionMode>('idle');
@@ -90,26 +76,20 @@ export function useBrushSelection({
     } = optsRef.current;
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const chartTop = mt;
-    const chartBottom = h - bm;
+    const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+    const chartTop = mt; const chartBottom = h - bm;
 
     const applied = brushRef.current.appliedSelection;
     if (applied) {
       const cursor = getBrushCursor(x, y, applied);
-      if (cursor.endsWith('-resize')) {
-        const handle = cursor.slice(0, -7); // 'nw-resize' → 'nw'
-        brushRef.current.mode = 'resizing'; setInteractionMode('resizing');
-        brushRef.current.resizeHandle = handle; setResizeHandle(handle);
-        initialSelection.current = { ...applied };
-        const boxIds = new Set(extract(applied));
-        prevSelectionRef.current = new Set([...optsRef.current.getSelectedCaseIds()].filter((id) => !boxIds.has(id)));
-        return;
-      }
-      if (cursor === 'move') {
-        brushRef.current.mode = 'moving'; setInteractionMode('moving');
-        dragStart.current = { x, y };
+      if (cursor.endsWith('-resize') || cursor === 'move') {
+        if (cursor === 'move') {
+          brushRef.current.mode = 'moving'; setInteractionMode('moving'); dragStart.current = { x, y };
+        } else {
+          const handle = cursor.slice(0, -7);
+          brushRef.current.mode = 'resizing'; setInteractionMode('resizing');
+          brushRef.current.resizeHandle = handle; setResizeHandle(handle);
+        }
         initialSelection.current = { ...applied };
         const boxIds = new Set(extract(applied));
         prevSelectionRef.current = new Set([...optsRef.current.getSelectedCaseIds()].filter((id) => !boxIds.has(id)));
@@ -139,10 +119,8 @@ export function useBrushSelection({
     } = optsRef.current;
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const chartTop = mt;
-    const chartBottom = h - bm;
+    const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+    const chartTop = mt; const chartBottom = h - bm;
     const clampedY = Math.max(chartTop, Math.min(y, chartBottom));
     const { mode } = brushRef.current;
     const applied = brushRef.current.appliedSelection;
@@ -170,16 +148,11 @@ export function useBrushSelection({
         y2: initialSelection.current.y2 + clampedDy,
       });
     } else if (mode === 'resizing' && initialSelection.current) {
-      const handle = brushRef.current.resizeHandle;
-      const minX = Math.min(initialSelection.current.x1, initialSelection.current.x2);
-      const maxX = Math.max(initialSelection.current.x1, initialSelection.current.x2);
-      const minY = Math.min(initialSelection.current.y1, initialSelection.current.y2);
-      const maxY = Math.max(initialSelection.current.y1, initialSelection.current.y2);
-      let nMinX = minX; let nMaxX = maxX; let nMinY = minY; let nMaxY = maxY;
-      if (handle?.includes('w')) nMinX = x;
-      if (handle?.includes('e')) nMaxX = x;
-      if (handle?.includes('n')) nMinY = clampedY;
-      if (handle?.includes('s')) nMaxY = clampedY;
+      const init = initialSelection.current; const handle = brushRef.current.resizeHandle;
+      const nMinX = handle?.includes('w') ? x : Math.min(init.x1, init.x2);
+      const nMaxX = handle?.includes('e') ? x : Math.max(init.x1, init.x2);
+      const nMinY = handle?.includes('n') ? clampedY : Math.min(init.y1, init.y2);
+      const nMaxY = handle?.includes('s') ? clampedY : Math.max(init.y1, init.y2);
       setBox({
         x1: nMinX, y1: nMinY, x2: nMaxX, y2: nMaxY,
       });
@@ -198,18 +171,10 @@ export function useBrushSelection({
 
     const dx = Math.abs(sel.x2 - sel.x1);
     const dy = Math.abs(sel.y2 - sel.y1);
-    const {
-      dragLimit: limit, extractBoxIds: extract, onClickPoint: onClick,
-    } = optsRef.current;
+    const { dragLimit: limit, extractBoxIds: extract, onClickPoint: onClick } = optsRef.current;
 
-    if (mode === 'moving' || mode === 'resizing') {
-      optsRef.current.setSelected([...prevSelectionRef.current, ...extract(sel)]);
-      brushRef.current.appliedSelection = sel; setAppliedSelection(sel);
-      brushRef.current.selection = null; setSelection(null);
-      return;
-    }
-
-    if (dx < limit && dy < limit) {
+    const isClick = mode !== 'moving' && mode !== 'resizing' && dx < limit && dy < limit;
+    if (isClick) {
       onClick();
       brushRef.current.appliedSelection = null; setAppliedSelection(null);
     } else {
@@ -219,7 +184,6 @@ export function useBrushSelection({
     brushRef.current.selection = null; setSelection(null);
   }, []);
 
-  // Live-update the global selection as the box changes during drag / move / resize.
   // Points that fall outside a shrinking box are deselected immediately.
   useEffect(() => {
     const sel = brushRef.current.selection;

@@ -10,9 +10,7 @@ export const CaseSelectionBadge = observer(() => {
   const store = useContext(Store);
   const theme = useMantineTheme();
   const { selectedCaseIds, isFocusModeActive } = store;
-
   if (selectedCaseIds.size === 0) return null;
-
   return (
     <Tooltip
       label={isFocusModeActive ? 'Click to unlock focus mode' : 'Click to lock focus mode (dims other cases)'}

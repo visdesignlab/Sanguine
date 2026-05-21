@@ -777,8 +777,6 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
   const [selectedLegendGroup, setSelectedLegendGroup] = useState<string | null>(null);
 
   // Cross-chart selection state
-  // selectedRowKeys is the source of truth for row highlighting — updated directly in handlers.
-  // store is kept in sync so DumbbellChart/ScatterPlot respond to changes.
   const [selectedRowKeys, setSelectedRowKeys] = useState<Set<string>>(new Set());
   const selectedRowKeysRef = useRef<Set<string>>(new Set());
   selectedRowKeysRef.current = selectedRowKeys;

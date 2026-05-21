@@ -1056,7 +1056,6 @@ export class RootStore {
   isHoveringBadge = false;
 
   // Incremented on every mutation so canvas charts can react via reaction(() => store.caseSelectionVersion, ...)
-  // without needing to iterate the Sets. Solves the same-size setSelected correctness pitfall.
   caseSelectionVersion = 0;
 
   // --- Department View State (non-provenance) ---
