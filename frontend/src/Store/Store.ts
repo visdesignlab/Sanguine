@@ -1046,6 +1046,19 @@ export class RootStore {
 
   selectedVisitNos: number[] = [];
 
+  // --- Case Selection (cross-chart hover/selection, Department View) ---
+  selectedCaseIds: Set<string> = new Set();
+
+  hoveredCaseIds: Set<string> = new Set();
+
+  isFocusModeActive = false;
+
+  isHoveringBadge = false;
+
+  // Incremented on every mutation so canvas charts can react via reaction(() => store.caseSelectionVersion, ...)
+  // without needing to iterate the Sets. Solves the same-size setSelected correctness pitfall.
+  caseSelectionVersion = 0;
+
   // --- Department View State (non-provenance) ---
   departmentViewQuestionsOpened = true;
 
@@ -1080,6 +1093,8 @@ export class RootStore {
       procedureHierarchy: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
+      selectedCaseIds: observable.ref,
+      hoveredCaseIds: observable.ref,
     });
 
     this.initReactions();
@@ -1088,6 +1103,71 @@ export class RootStore {
   // --- Common Helpers ---
   get state() {
     return this.currentState;
+  }
+  // endregion
+
+  // region Case Selection Actions
+  setHovered(ids: string[]) {
+    if (ids.length === this.hoveredCaseIds.size && ids.every((id) => this.hoveredCaseIds.has(id))) return;
+    this.hoveredCaseIds = new Set(ids);
+    this.caseSelectionVersion += 1;
+  }
+
+  clearHovered() {
+    if (this.hoveredCaseIds.size === 0) return;
+    this.hoveredCaseIds = new Set();
+    this.caseSelectionVersion += 1;
+  }
+
+  addSelected(ids: string[]) {
+    if (ids.length === 0) return;
+    const next = new Set(this.selectedCaseIds);
+    ids.forEach((id) => next.add(id));
+    if (next.size === this.selectedCaseIds.size) return;
+    this.selectedCaseIds = next;
+    this.caseSelectionVersion += 1;
+  }
+
+  toggleSelected(ids: string[]) {
+    if (ids.length === 0) return;
+    const next = new Set(this.selectedCaseIds);
+    ids.forEach((id) => { if (next.has(id)) next.delete(id); else next.add(id); });
+    this.selectedCaseIds = next;
+    this.caseSelectionVersion += 1;
+  }
+
+  removeSelected(ids: string[]) {
+    if (ids.length === 0) return;
+    const next = new Set(this.selectedCaseIds);
+    ids.forEach((id) => next.delete(id));
+    if (next.size === this.selectedCaseIds.size) return;
+    this.selectedCaseIds = next;
+    this.caseSelectionVersion += 1;
+  }
+
+  clearSelected() {
+    if (this.selectedCaseIds.size === 0 && !this.isFocusModeActive) return;
+    this.selectedCaseIds = new Set();
+    this.isFocusModeActive = false;
+    this.caseSelectionVersion += 1;
+  }
+
+  setSelected(ids: string[]) {
+    this.selectedCaseIds = new Set(ids);
+    if (ids.length === 0) this.isFocusModeActive = false;
+    this.caseSelectionVersion += 1;
+  }
+
+  setFocusModeActive(active: boolean) {
+    if (this.isFocusModeActive === active) return;
+    this.isFocusModeActive = active;
+    this.caseSelectionVersion += 1;
+  }
+
+  setHoveringBadge(hovering: boolean) {
+    if (this.isHoveringBadge === hovering) return;
+    this.isHoveringBadge = hovering;
+    this.caseSelectionVersion += 1;
   }
   // endregion
 

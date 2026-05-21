@@ -1,12 +1,15 @@
+import React, { useContext } from 'react';
 import {
   Flex, Text, Tooltip, ActionIcon, useMantineTheme,
 } from '@mantine/core';
 import { IconFocusCentered, IconX } from '@tabler/icons-react';
-import { caseSelection, useCaseSelection } from '../../../../Store/CaseSelection';
+import { observer } from 'mobx-react-lite';
+import { Store } from '../../../../Store/Store';
 
-export function CaseSelectionBadge() {
+export const CaseSelectionBadge = observer(() => {
+  const store = useContext(Store);
   const theme = useMantineTheme();
-  const { selectedCaseIds, isFocusModeActive } = useCaseSelection();
+  const { selectedCaseIds, isFocusModeActive } = store;
 
   if (selectedCaseIds.size === 0) return null;
 
@@ -30,9 +33,9 @@ export function CaseSelectionBadge() {
           flexShrink: 0,
           transition: 'background 120ms, border-color 120ms',
         }}
-        onMouseEnter={() => caseSelection.setHoveringBadge(true)}
-        onMouseLeave={() => caseSelection.setHoveringBadge(false)}
-        onClick={() => caseSelection.setFocusModeActive(!isFocusModeActive)}
+        onMouseEnter={() => store.setHoveringBadge(true)}
+        onMouseLeave={() => store.setHoveringBadge(false)}
+        onClick={() => store.setFocusModeActive(!isFocusModeActive)}
       >
         <IconFocusCentered size={13} style={{ color: isFocusModeActive ? theme.colors.orange[6] : theme.colors.gray[6], flexShrink: 0 }} />
         <Text size="xs" fw={500} style={{ color: isFocusModeActive ? theme.colors.orange[7] : theme.colors.gray[7], lineHeight: 1 }}>
@@ -42,7 +45,7 @@ export function CaseSelectionBadge() {
           size={16}
           variant="transparent"
           color={isFocusModeActive ? 'orange' : 'gray'}
-          onClick={(e: React.MouseEvent) => { e.stopPropagation(); caseSelection.clearSelected(); }}
+          onClick={(e: React.MouseEvent) => { e.stopPropagation(); store.clearSelected(); }}
           style={{ marginLeft: 2 }}
           aria-label="Clear selection"
         >
@@ -51,4 +54,4 @@ export function CaseSelectionBadge() {
       </Flex>
     </Tooltip>
   );
-}
+});

@@ -7,6 +7,7 @@ import { scaleLinear, scaleLog } from 'd3-scale';
 import { max as d3Max, ticks as d3Ticks } from 'd3-array';
 import { interpolateReds } from 'd3';
 import { observer, useLocalObservable } from 'mobx-react-lite';
+import { reaction } from 'mobx';
 import {
   MultiSelect,
   CloseButton,
@@ -32,7 +33,6 @@ import {
 import { BarChart } from '@mantine/charts';
 
 import { Store } from '../../../../Store/Store';
-import { caseSelection } from '../../../../Store/CaseSelection';
 import { CaseSelectionBadge } from './CaseSelectionBadge';
 import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3Utils';
 import {
@@ -778,7 +778,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
 
   // Cross-chart selection state
   // selectedRowKeys is the source of truth for row highlighting — updated directly in handlers.
-  // caseSelection is kept in sync so DumbbellChart/ScatterPlot respond to changes.
+  // store is kept in sync so DumbbellChart/ScatterPlot respond to changes.
   const [selectedRowKeys, setSelectedRowKeys] = useState<Set<string>>(new Set());
   const selectedRowKeysRef = useRef<Set<string>>(new Set());
   selectedRowKeysRef.current = selectedRowKeys;
@@ -790,13 +790,13 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
   const displayedRowsRef = useRef<DepartmentTableRow[]>([]);
 
   // External clear (badge ×) — clear local row keys too
-  useEffect(() => caseSelection.subscribe(() => {
-    if (caseSelection.selectedCaseIds.size === 0) {
+  useEffect(() => reaction(() => store.selectedCaseIds.size, (size) => {
+    if (size === 0) {
       setSelectedRowKeys(new Set());
       selectedRowKeysRef.current = new Set();
       lastClickedIndexRef.current = -1;
     }
-  }), []);
+  }), [store]);
 
   // End drag on mouseup anywhere
   useEffect(() => {
@@ -814,9 +814,9 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     if (selected) next.add(key); else next.delete(key);
     selectedRowKeysRef.current = next;
     setSelectedRowKeys(next);
-    if (selected) caseSelection.addSelected(rowIds(row));
-    else caseSelection.removeSelected(rowIds(row));
-  }, [rowIds]);
+    if (selected) store.addSelected(rowIds(row));
+    else store.removeSelected(rowIds(row));
+  }, [rowIds, store]);
 
   const handleRowMouseDown = useCallback((row: DepartmentTableRow) => {
     const key = String(row._row_key ?? '');
@@ -828,13 +828,13 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
   }, []);
 
   const handleRowMouseEnter = useCallback((row: DepartmentTableRow) => {
-    caseSelection.setHovered(rowIds(row));
+    store.setHovered(rowIds(row));
     if (!isDraggingRef.current) return;
     const key = String(row._row_key ?? '');
     if (!key || key === dragStartKeyRef.current) return;
     didDragRef.current = true;
     setRowSelected(row, dragSelectingRef.current);
-  }, [rowIds, setRowSelected]);
+  }, [rowIds, setRowSelected, store]);
 
   const handleRowClick = useCallback(({ record, index, event }: { record: DepartmentTableRow; index: number; event: React.MouseEvent<Element> }) => {
     if (didDragRef.current) { didDragRef.current = false; return; }
@@ -1763,7 +1763,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
           customRowAttributes={(row) => ({
             onMouseDown: () => { handleRowMouseDown(row); },
             onMouseEnter: () => { handleRowMouseEnter(row); },
-            onMouseLeave: () => caseSelection.clearHovered(),
+            onMouseLeave: () => store.clearHovered(),
           })}
           minHeight={!isSyncing && chartData !== undefined && rowsWithGroups.length === 0 ? 150 : undefined}
           emptyState={(() => {

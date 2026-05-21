@@ -1,7 +1,6 @@
 import React, {
   useState, useRef, useCallback, useEffect, type RefObject,
 } from 'react';
-import { caseSelection } from '../../../../Store/CaseSelection';
 
 export type BrushRect = { x1: number; y1: number; x2: number; y2: number };
 type InteractionMode = 'idle' | 'selecting' | 'moving' | 'resizing';
@@ -32,6 +31,8 @@ interface UseBrushSelectionOptions {
   dragLimit: number;
   extractBoxIds: (box: BrushRect) => string[];
   onClickPoint: () => void;
+  getSelectedCaseIds: () => Set<string>;
+  setSelected: (ids: string[]) => void;
 }
 
 export interface BrushSelectionReturn {
@@ -53,6 +54,8 @@ export function useBrushSelection({
   dragLimit,
   extractBoxIds,
   onClickPoint,
+  getSelectedCaseIds,
+  setSelected,
 }: UseBrushSelectionOptions): BrushSelectionReturn {
   const [selection, setSelection] = useState<BrushRect | null>(null);
   const [appliedSelection, setAppliedSelection] = useState<BrushRect | null>(null);
@@ -65,10 +68,10 @@ export function useBrushSelection({
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const prevSelectionRef = useRef<Set<string>>(new Set());
   const optsRef = useRef({
-    height, marginTop, bottomMargin, dragLimit, extractBoxIds, onClickPoint, chartRef,
+    height, marginTop, bottomMargin, dragLimit, extractBoxIds, onClickPoint, chartRef, getSelectedCaseIds, setSelected,
   });
   optsRef.current = {
-    height, marginTop, bottomMargin, dragLimit, extractBoxIds, onClickPoint, chartRef,
+    height, marginTop, bottomMargin, dragLimit, extractBoxIds, onClickPoint, chartRef, getSelectedCaseIds, setSelected,
   };
 
   // Single ref for all mutable interaction state — read inside stable callbacks
@@ -101,7 +104,7 @@ export function useBrushSelection({
         brushRef.current.resizeHandle = handle; setResizeHandle(handle);
         initialSelection.current = { ...applied };
         const boxIds = new Set(extract(applied));
-        prevSelectionRef.current = new Set([...caseSelection.selectedCaseIds].filter((id) => !boxIds.has(id)));
+        prevSelectionRef.current = new Set([...optsRef.current.getSelectedCaseIds()].filter((id) => !boxIds.has(id)));
         return;
       }
       if (cursor === 'move') {
@@ -109,7 +112,7 @@ export function useBrushSelection({
         dragStart.current = { x, y };
         initialSelection.current = { ...applied };
         const boxIds = new Set(extract(applied));
-        prevSelectionRef.current = new Set([...caseSelection.selectedCaseIds].filter((id) => !boxIds.has(id)));
+        prevSelectionRef.current = new Set([...optsRef.current.getSelectedCaseIds()].filter((id) => !boxIds.has(id)));
         return;
       }
     }
@@ -120,7 +123,7 @@ export function useBrushSelection({
       return;
     }
 
-    prevSelectionRef.current = new Set(caseSelection.selectedCaseIds);
+    prevSelectionRef.current = new Set(optsRef.current.getSelectedCaseIds());
     brushRef.current.mode = 'selecting'; setInteractionMode('selecting');
     const box: BrushRect = {
       x1: x, y1: y, x2: x, y2: y,
@@ -200,7 +203,7 @@ export function useBrushSelection({
     } = optsRef.current;
 
     if (mode === 'moving' || mode === 'resizing') {
-      caseSelection.setSelected([...prevSelectionRef.current, ...extract(sel)]);
+      optsRef.current.setSelected([...prevSelectionRef.current, ...extract(sel)]);
       brushRef.current.appliedSelection = sel; setAppliedSelection(sel);
       brushRef.current.selection = null; setSelection(null);
       return;
@@ -210,7 +213,7 @@ export function useBrushSelection({
       onClick();
       brushRef.current.appliedSelection = null; setAppliedSelection(null);
     } else {
-      caseSelection.setSelected([...prevSelectionRef.current, ...extract(sel)]);
+      optsRef.current.setSelected([...prevSelectionRef.current, ...extract(sel)]);
       brushRef.current.appliedSelection = sel; setAppliedSelection(sel);
     }
     brushRef.current.selection = null; setSelection(null);
@@ -224,7 +227,7 @@ export function useBrushSelection({
     const dx = Math.abs(sel.x2 - sel.x1);
     const dy = Math.abs(sel.y2 - sel.y1);
     if (dx < optsRef.current.dragLimit && dy < optsRef.current.dragLimit) return;
-    caseSelection.setSelected([...prevSelectionRef.current, ...optsRef.current.extractBoxIds(sel)]);
+    optsRef.current.setSelected([...prevSelectionRef.current, ...optsRef.current.extractBoxIds(sel)]);
   }, [selection]); // intentionally depends on selection state (triggers on every box update)
 
   return {

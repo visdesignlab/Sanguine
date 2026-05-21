@@ -1,6 +1,7 @@
 import {
   useMemo, useState, useContext, memo, useCallback, useEffect, useRef,
 } from 'react';
+import { reaction } from 'mobx';
 import { useElementSize } from '@mantine/hooks';
 import {
   Box, CloseButton, Title, Flex, useMantineTheme,
@@ -20,7 +21,6 @@ import {
   DUMBBELL_CHAR_WIDTH_CASE, DUMBBELL_DOT_RADIUS,
   DUMBBELL_DRAG_LIMIT, DumbbellLabConfig as LabConfig,
 } from '../../../../Types/application';
-import { caseSelection } from '../../../../Store/CaseSelection';
 import { EmptyChartState } from './EmptyChartState';
 import { CaseSelectionBadge } from './CaseSelectionBadge';
 import { useBrushSelection, type BrushRect } from './useBrushSelection';
@@ -426,6 +426,7 @@ export const DumbbellChartContent = memo(({
   targets: { preMin: number; postMin: number; postMax: number },
   setHoveredTarget: (t: string | null) => void,
 }) => {
+  const store = useContext(Store);
   const chartRef = useRef<HTMLDivElement>(null);
   const bottomMargin = 25;
   const innerHeight = Math.max(0, height - DUMBBELL_MARGIN.top - bottomMargin);
@@ -459,7 +460,7 @@ export const DumbbellChartContent = memo(({
 
   const onClickPoint = () => {
     if (hoveredCaseRef.current) {
-      caseSelection.toggleSelected([hoveredCaseRef.current.caseData.case_id]);
+      store.toggleSelected([hoveredCaseRef.current.caseData.case_id]);
     }
   };
 
@@ -474,6 +475,8 @@ export const DumbbellChartContent = memo(({
     dragLimit: DUMBBELL_DRAG_LIMIT,
     extractBoxIds,
     onClickPoint,
+    getSelectedCaseIds: () => store.selectedCaseIds,
+    setSelected: (ids) => store.setSelected(ids),
   });
 
   // Canvas rendering for cases
@@ -509,7 +512,7 @@ export const DumbbellChartContent = memo(({
     ctx.setLineDash([]); // Reset dash for subsequent drawing
 
     // Read cross-chart state directly from singleton (no React deps needed)
-    const { hoveredCaseIds: hoveredIds, selectedCaseIds: selectedIds } = caseSelection;
+    const { hoveredCaseIds: hoveredIds, selectedCaseIds: selectedIds } = store;
     const hasSelection = selectedIds.size > 0;
 
     const getGradient = (gradWidth: number, baseColorHex: string) => {
@@ -604,7 +607,7 @@ export const DumbbellChartContent = memo(({
                 lineColor = theme.colors.orange[4];
               }
 
-              const focusDim = hasSelection && (caseSelection.isFocusModeActive || caseSelection.isHoveringBadge);
+              const focusDim = hasSelection && (store.isFocusModeActive || store.isHoveringBadge);
               if (focusDim && !isSelectedCase && !isHovered) {
                 opacity = 0.25;
               }
@@ -644,15 +647,15 @@ export const DumbbellChartContent = memo(({
     }
 
     ctx.restore();
-  }, [processedData, collapsedBinGroups, visibleRange, labConfig, yScale, showPre, showPost, theme, binGroupLayout, showMedian, totalWidth]);
+  }, [processedData, collapsedBinGroups, visibleRange, labConfig, yScale, showPre, showPost, theme, binGroupLayout, showMedian, totalWidth, store]);
 
   // Redraw when own deps change
   useEffect(() => { drawDumbbells(); }, [drawDumbbells]);
 
   // Redraw canvas whenever cross-chart hover/selection state changes
-  useEffect(() => caseSelection.subscribe(() => {
+  useEffect(() => reaction(() => store.caseSelectionVersion, () => {
     requestAnimationFrame(drawDumbbells);
-  }), [drawDumbbells]);
+  }), [drawDumbbells, store]);
 
   // Resize canvas
   useEffect(() => {
@@ -681,7 +684,7 @@ export const DumbbellChartContent = memo(({
       if (hoveredCaseRef.current) {
         hoveredCaseRef.current = null;
         setTooltipData(null);
-        caseSelection.clearHovered(); // subscription triggers rAF redraw
+        store.clearHovered(); // reaction triggers rAF redraw
       }
       return;
     }
@@ -790,10 +793,10 @@ export const DumbbellChartContent = memo(({
           postVal,
         });
         // Notify all charts (subscription triggers rAF redraws in each subscriber)
-        caseSelection.setHovered([bestCase.caseData.case_id]);
+        store.setHovered([bestCase.caseData.case_id]);
       } else {
         setTooltipData(null);
-        caseSelection.clearHovered();
+        store.clearHovered();
       }
     }
 
@@ -801,7 +804,7 @@ export const DumbbellChartContent = memo(({
       hoveredAvgRef.current = hoveredAvg;
       setAvgTooltipData(hoveredAvg);
     }
-  }, [processedData, collapsedBinGroups, binGroupLayout, showMedian, labConfig, yScale, showPre, showPost, height, bottomMargin]);
+  }, [processedData, collapsedBinGroups, binGroupLayout, showMedian, labConfig, yScale, showPre, showPost, height, bottomMargin, store]);
 
   const chartBody = useMemo(() => (
     <g transform={`translate(0, ${DUMBBELL_MARGIN.top})`}>
@@ -850,15 +853,15 @@ export const DumbbellChartContent = memo(({
               stroke={theme.colors.gray[5]}
               strokeWidth={1}
               style={{ cursor: 'pointer' }}
-              onMouseEnter={() => caseSelection.setHovered(binGroup.cases.map((c) => c.case_id))}
-              onMouseLeave={() => caseSelection.clearHovered()}
+              onMouseEnter={() => store.setHovered(binGroup.cases.map((c) => c.case_id))}
+              onMouseLeave={() => store.clearHovered()}
               onClick={(e) => {
                 e.stopPropagation();
                 const ids = binGroup.cases.map((c) => c.case_id);
                 if (ids.length === 0) return;
-                const allSelected = ids.every((id) => caseSelection.selectedCaseIds.has(id));
-                if (allSelected) caseSelection.removeSelected(ids);
-                else caseSelection.addSelected(ids);
+                const allSelected = ids.every((id) => store.selectedCaseIds.has(id));
+                if (allSelected) store.removeSelected(ids);
+                else store.addSelected(ids);
               }}
             >
               <title>
@@ -928,7 +931,7 @@ export const DumbbellChartContent = memo(({
         );
       })}
     </g>
-  ), [processedData, collapsedBinGroups, hoveredCollapse, theme, innerHeight, onToggleBinGroupCollapse, setHoveredCollapse, binGroupLayout, selectedX, visibleRange]);
+  ), [processedData, collapsedBinGroups, hoveredCollapse, theme, innerHeight, onToggleBinGroupCollapse, setHoveredCollapse, binGroupLayout, selectedX, visibleRange, store]);
 
   return (
     <div
@@ -950,7 +953,7 @@ export const DumbbellChartContent = memo(({
         handleMouseUp();
         hoveredCaseRef.current = null;
         setTooltipData(null);
-        caseSelection.clearHovered();
+        store.clearHovered();
       }}
     >
       <svg

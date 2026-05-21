@@ -11,8 +11,8 @@ import {
 } from '@tabler/icons-react';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { useObserver } from 'mobx-react-lite';
+import { reaction } from 'mobx';
 import { Store } from '../../../../Store/Store';
-import { caseSelection } from '../../../../Store/CaseSelection';
 import { EmptyChartState } from './EmptyChartState';
 
 import {
@@ -582,7 +582,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     ctx.translate(-Math.max(0, visibleRange[0]), 0);
 
     // Read cross-chart state directly from singleton (no React deps needed)
-    const { hoveredCaseIds: hoveredIds, selectedCaseIds: selectedIds } = caseSelection;
+    const { hoveredCaseIds: hoveredIds, selectedCaseIds: selectedIds } = store;
     const hasSelection = selectedIds.size > 0;
 
     const legendHover = hoveredLegendGroup;
@@ -614,7 +614,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       const isSelectedCase = caseId ? selectedIds.has(caseId) : false;
 
       // Highlight selected cases; dim non-selected only when focus mode is active
-      const focusDim = hasSelection && (caseSelection.isFocusModeActive || caseSelection.isHoveringBadge);
+      const focusDim = hasSelection && (store.isFocusModeActive || store.isHoveringBadge);
       if (!hasLegendEmphasis) {
         if (isSelectedCase) {
           color = smallSelectColor;
@@ -639,15 +639,15 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
 
     ctx.restore();
-  }, [pointPositions, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange, rawData]);
+  }, [pointPositions, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange, rawData, store]);
 
   // Redraw canvas when dependencies change
   useEffect(() => { drawPoints(); }, [drawPoints]);
 
   // Redraw canvas whenever cross-chart hover/selection state changes
-  useEffect(() => caseSelection.subscribe(() => {
+  useEffect(() => reaction(() => store.caseSelectionVersion, () => {
     requestAnimationFrame(drawPoints);
-  }), [drawPoints]);
+  }), [drawPoints, store]);
 
   // Set canvas size
   useEffect(() => {
@@ -682,7 +682,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const onClickPoint = () => {
     if (hoveredPointRef.current) {
       const caseData = rawData[hoveredPointRef.current.caseIdx];
-      if (caseData) caseSelection.toggleSelected([caseData.case_id]);
+      if (caseData) store.toggleSelected([caseData.case_id]);
     }
   };
 
@@ -697,6 +697,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     dragLimit: SCATTER_DRAG_LIMIT,
     extractBoxIds,
     onClickPoint,
+    getSelectedCaseIds: () => store.selectedCaseIds,
+    setSelected: (ids) => store.setSelected(ids),
   });
 
   // Hover detection — called from onMouseMove when idle
@@ -713,14 +715,14 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
         const caseData = rawData[nearest.caseIdx];
         if (caseData) {
           setTooltipData({ x: nearest.x, y: nearest.y, caseData });
-          caseSelection.setHovered([caseData.case_id]);
+          store.setHovered([caseData.case_id]);
         }
       } else {
         setTooltipData(null);
-        caseSelection.clearHovered();
+        store.clearHovered();
       }
     }
-  }, [spatialIndex, pointPositions, rawData]);
+  }, [spatialIndex, pointPositions, rawData, store]);
 
   // X axis label for title
   const xLabel = xAxisOption?.label || selectedX;
@@ -1037,7 +1039,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                   onMouseDown={handleMouseDown}
                   onMouseMove={(e) => { brushHandleMouseMove(e); if (interactionMode === 'idle') handleHover(e); }}
                   onMouseUp={handleMouseUp}
-                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); caseSelection.clearHovered(); }}
+                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); store.clearHovered(); }}
                 >
                   {/* SVG layer for gridlines, bins, targets, avg, brush */}
                   <svg
@@ -1098,15 +1100,15 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                                   stroke={theme.colors.gray[5]}
                                   strokeWidth={1}
                                   style={{ cursor: 'pointer' }}
-                                  onMouseEnter={() => caseSelection.setHovered(binGroup.cases.map((c) => c.case_id))}
-                                  onMouseLeave={() => caseSelection.clearHovered()}
+                                  onMouseEnter={() => store.setHovered(binGroup.cases.map((c) => c.case_id))}
+                                  onMouseLeave={() => store.clearHovered()}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     const ids = binGroup.cases.map((c) => c.case_id);
                                     if (ids.length === 0) return;
-                                    const allSelected = ids.every((id) => caseSelection.selectedCaseIds.has(id));
-                                    if (allSelected) caseSelection.removeSelected(ids);
-                                    else caseSelection.addSelected(ids);
+                                    const allSelected = ids.every((id) => store.selectedCaseIds.has(id));
+                                    if (allSelected) store.removeSelected(ids);
+                                    else store.addSelected(ids);
                                   }}
                                 />
                               </Tooltip>
