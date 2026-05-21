@@ -37,7 +37,6 @@ export class CaseSelectionStore {
   // --- Actions ---
 
   setHovered(ids: string[]) {
-    // Basic optimization: don't notify if the set of IDs hasn't changed
     if (ids.length === this.hoveredCaseIds.size && ids.every((id) => this.hoveredCaseIds.has(id))) return;
     this.hoveredCaseIds = new Set(ids);
     this.notify();
