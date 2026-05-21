@@ -53,19 +53,15 @@ export function useBrushSelection({
   const initialSelection = useRef<BrushRect | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const prevSelectionRef = useRef<Set<string>>(new Set());
-  const optsRef = useRef({
-    height, marginTop, bottomMargin, dragLimit, extractBoxIds, onClickPoint, chartRef, getSelectedCaseIds, setSelected,
-  });
+  const optsRef = useRef<UseBrushSelectionOptions>(null!);
   optsRef.current = {
     height, marginTop, bottomMargin, dragLimit, extractBoxIds, onClickPoint, chartRef, getSelectedCaseIds, setSelected,
   };
 
   // Single ref for all mutable interaction state — read inside stable callbacks
   const brushRef = useRef<{
-    mode: InteractionMode;
-    resizeHandle: string | null;
-    appliedSelection: BrushRect | null;
-    selection: BrushRect | null;
+    mode: InteractionMode; resizeHandle: string | null;
+    appliedSelection: BrushRect | null; selection: BrushRect | null;
   }>({
     mode: 'idle', resizeHandle: null, appliedSelection: null, selection: null,
   });
@@ -122,8 +118,7 @@ export function useBrushSelection({
     const x = e.clientX - rect.left; const y = e.clientY - rect.top;
     const chartTop = mt; const chartBottom = h - bm;
     const clampedY = Math.max(chartTop, Math.min(y, chartBottom));
-    const { mode } = brushRef.current;
-    const applied = brushRef.current.appliedSelection;
+    const { mode, appliedSelection: applied } = brushRef.current;
 
     if (mode === 'idle') {
       setBrushCursor(applied ? getBrushCursor(x, y, applied) : 'crosshair');

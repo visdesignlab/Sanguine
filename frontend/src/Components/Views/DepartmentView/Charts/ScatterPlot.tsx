@@ -665,10 +665,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
 
   // Extract case IDs from a brush box
   const extractBoxIds = (box: BrushRect) => {
-    const minX = Math.min(box.x1, box.x2);
-    const maxX = Math.max(box.x1, box.x2);
-    const minY = Math.min(box.y1, box.y2);
-    const maxY = Math.max(box.y1, box.y2);
+    const minX = Math.min(box.x1, box.x2); const maxX = Math.max(box.x1, box.x2);
+    const minY = Math.min(box.y1, box.y2); const maxY = Math.max(box.y1, box.y2);
     const ids: string[] = [];
     pointPositions.forEach((p) => {
       if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
@@ -680,10 +678,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   };
 
   const onClickPoint = () => {
-    if (hoveredPointRef.current) {
-      const caseData = rawData[hoveredPointRef.current.caseIdx];
-      if (caseData) store.toggleSelected([caseData.case_id]);
-    }
+    const caseData = hoveredPointRef.current ? rawData[hoveredPointRef.current.caseIdx] : null;
+    if (caseData) store.toggleSelected([caseData.case_id]);
   };
 
   const {
@@ -705,8 +701,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const handleHover = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
     const rect = chartRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
     const nearest = findNearestPoint(spatialIndex, pointPositions, x, y, 12);
     const prev = hoveredPointRef.current;
     if (nearest !== prev) {
@@ -924,9 +919,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                       }}
                       onClick={() => setBinSort(BIN_SORT_ORDER[(BIN_SORT_ORDER.indexOf(binSort) + 1) % BIN_SORT_ORDER.length])}
                     >
-                      {binSort === 'alpha' && 'A/Z →'}
-                      {binSort === 'count' && 'Cases →'}
-                      {binSort === 'avg' && 'Avg →'}
+                      {{ alpha: 'A/Z →', count: 'Cases →', avg: 'Avg →' }[binSort]}
                     </Button>
                   </Tooltip>
                 </Box>

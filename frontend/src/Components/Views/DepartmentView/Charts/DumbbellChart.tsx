@@ -433,10 +433,8 @@ export const DumbbellChartContent = memo(({
   const hoveredCaseRef = useRef<{ caseData: DumbbellCase; x: number; preY: number | null; postY: number | null; hoveredDot: 'pre' | 'post' | null } | null>(null);
 
   const extractBoxIds = (box: BrushRect) => {
-    const minX = Math.min(box.x1, box.x2);
-    const maxX = Math.max(box.x1, box.x2);
-    const minY = Math.min(box.y1, box.y2);
-    const maxY = Math.max(box.y1, box.y2);
+    const minX = Math.min(box.x1, box.x2); const maxX = Math.max(box.x1, box.x2);
+    const minY = Math.min(box.y1, box.y2); const maxY = Math.max(box.y1, box.y2);
     const ids: string[] = [];
     processedData.forEach((binGroup) => {
       if (collapsedBinGroups.has(binGroup.id)) return;
@@ -459,9 +457,7 @@ export const DumbbellChartContent = memo(({
   };
 
   const onClickPoint = () => {
-    if (hoveredCaseRef.current) {
-      store.toggleSelected([hoveredCaseRef.current.caseData.case_id]);
-    }
+    if (hoveredCaseRef.current) store.toggleSelected([hoveredCaseRef.current.caseData.case_id]);
   };
 
   const {
@@ -511,7 +507,6 @@ export const DumbbellChartContent = memo(({
     });
     ctx.setLineDash([]); // Reset dash for subsequent drawing
 
-    // Read cross-chart state directly from singleton (no React deps needed)
     const { hoveredCaseIds: hoveredIds, selectedCaseIds: selectedIds } = store;
     const hasSelection = selectedIds.size > 0;
 

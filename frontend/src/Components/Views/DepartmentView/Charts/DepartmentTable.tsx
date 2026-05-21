@@ -781,24 +781,21 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
   const selectedRowKeysRef = useRef<Set<string>>(new Set());
   selectedRowKeysRef.current = selectedRowKeys;
   const lastClickedIndexRef = useRef<number>(-1);
-  const isDraggingRef = useRef(false);
-  const dragSelectingRef = useRef(true);
-  const didDragRef = useRef(false);
-  const dragStartKeyRef = useRef('');
+  const dragRef = useRef({
+    active: false, selecting: true, did: false, startKey: '',
+  });
   const displayedRowsRef = useRef<DepartmentTableRow[]>([]);
 
   // External clear (badge ×) — clear local row keys too
   useEffect(() => reaction(() => store.selectedCaseIds.size, (size) => {
     if (size === 0) {
-      setSelectedRowKeys(new Set());
-      selectedRowKeysRef.current = new Set();
-      lastClickedIndexRef.current = -1;
+      setSelectedRowKeys(new Set()); selectedRowKeysRef.current = new Set(); lastClickedIndexRef.current = -1;
     }
   }), [store]);
 
   // End drag on mouseup anywhere
   useEffect(() => {
-    const onMouseUp = () => { isDraggingRef.current = false; };
+    const onMouseUp = () => { dragRef.current.active = false; };
     window.addEventListener('mouseup', onMouseUp);
     return () => window.removeEventListener('mouseup', onMouseUp);
   }, []);
@@ -810,37 +807,31 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     if (!key) return;
     const next = new Set(selectedRowKeysRef.current);
     if (selected) next.add(key); else next.delete(key);
-    selectedRowKeysRef.current = next;
-    setSelectedRowKeys(next);
-    if (selected) store.addSelected(rowIds(row));
-    else store.removeSelected(rowIds(row));
+    selectedRowKeysRef.current = next; setSelectedRowKeys(next);
+    if (selected) store.addSelected(rowIds(row)); else store.removeSelected(rowIds(row));
   }, [rowIds, store]);
 
   const handleRowMouseDown = useCallback((row: DepartmentTableRow) => {
     const key = String(row._row_key ?? '');
     if (!key) return;
-    isDraggingRef.current = true;
-    didDragRef.current = false;
-    dragStartKeyRef.current = key;
-    dragSelectingRef.current = !selectedRowKeysRef.current.has(key);
+    dragRef.current.active = true; dragRef.current.did = false;
+    dragRef.current.startKey = key; dragRef.current.selecting = !selectedRowKeysRef.current.has(key);
   }, []);
 
   const handleRowMouseEnter = useCallback((row: DepartmentTableRow) => {
     store.setHovered(rowIds(row));
-    if (!isDraggingRef.current) return;
+    if (!dragRef.current.active) return;
     const key = String(row._row_key ?? '');
-    if (!key || key === dragStartKeyRef.current) return;
-    didDragRef.current = true;
-    setRowSelected(row, dragSelectingRef.current);
+    if (!key || key === dragRef.current.startKey) return;
+    dragRef.current.did = true; setRowSelected(row, dragRef.current.selecting);
   }, [rowIds, setRowSelected, store]);
 
   const handleRowClick = useCallback(({ record, index, event }: { record: DepartmentTableRow; index: number; event: React.MouseEvent<Element> }) => {
-    if (didDragRef.current) { didDragRef.current = false; return; }
+    if (dragRef.current.did) { dragRef.current.did = false; return; }
     const key = String(record._row_key ?? '');
     if (!key || rowIds(record).length === 0) return;
     if (event.shiftKey && lastClickedIndexRef.current >= 0) {
-      const lo = Math.min(lastClickedIndexRef.current, index);
-      const hi = Math.max(lastClickedIndexRef.current, index);
+      const [lo, hi] = [Math.min(lastClickedIndexRef.current, index), Math.max(lastClickedIndexRef.current, index)];
       displayedRowsRef.current.slice(lo, hi + 1).forEach((r) => setRowSelected(r, true));
     } else {
       setRowSelected(record, !selectedRowKeysRef.current.has(key));
@@ -1748,15 +1739,13 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
           onRowClick={handleRowClick}
           rowStyle={(row) => {
             const base: React.CSSProperties = { cursor: 'pointer', userSelect: 'none' };
-            if (selectedRowKeys.has(String(row._row_key ?? ''))) {
-              return {
-                ...base,
-                backgroundColor: backgroundSelectedColor,
-                outline: `1px solid ${backgroundSelectedColor}`,
-                outlineOffset: '-1px',
-              };
-            }
-            return base;
+            if (!selectedRowKeys.has(String(row._row_key ?? ''))) return base;
+            return {
+              ...base,
+              backgroundColor: backgroundSelectedColor,
+              outline: `1px solid ${backgroundSelectedColor}`,
+              outlineOffset: '-1px',
+            };
           }}
           customRowAttributes={(row) => ({
             onMouseDown: () => { handleRowMouseDown(row); },
