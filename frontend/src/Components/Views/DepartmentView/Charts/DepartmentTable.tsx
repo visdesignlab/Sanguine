@@ -1739,7 +1739,9 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
           onRowClick={handleRowClick}
           rowStyle={(row) => {
             const base: React.CSSProperties = { cursor: 'pointer', userSelect: 'none' };
-            if (!selectedRowKeys.has(String(row._row_key ?? ''))) return base;
+            const caseIds = (row._case_ids ?? []) as string[];
+            const allCasesSelected = caseIds.length > 0 && caseIds.every((id) => store.selectedCaseIds.has(id));
+            if (!selectedRowKeys.has(String(row._row_key ?? '')) && !allCasesSelected) return base;
             return {
               ...base,
               backgroundColor: backgroundSelectedColor,
