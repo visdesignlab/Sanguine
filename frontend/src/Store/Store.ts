@@ -2966,7 +2966,7 @@ export class RootStore {
         }
 
         // Build column selection clauses based on config.columns
-        const columnClauses: string[] = [`${internalRowKeyExpr} AS _row_key`, 'COALESCE(ANY_VALUE(pc.case_ids), []) AS _case_ids'];
+        const columnClauses: string[] = [`${internalRowKeyExpr} AS _row_key`, 'COALESCE(ANY_VALUE(pc.case_ids), []::VARCHAR[]) AS _case_ids'];
 
         // Iterate over the columns and build the column selection clauses
         tableConfig.columns.forEach((col) => {
