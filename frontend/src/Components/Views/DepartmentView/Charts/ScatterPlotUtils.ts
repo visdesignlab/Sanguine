@@ -161,11 +161,12 @@ export function getProcessedScatterData(
   } else if (binSort === 'count') {
     sortedKeys.sort((a, b) => (groupedByBinGroup.get(b)?.length ?? 0) - (groupedByBinGroup.get(a)?.length ?? 0));
   } else if (binSort === 'avg') {
-    const avg = (k: string) => {
+    const avgByBin = new Map<string, number>();
+    sortedKeys.forEach((k) => {
       const vals = (groupedByBinGroup.get(k) ?? []).map((c) => c[yKey] as number | null).filter((v): v is number => v != null);
-      return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
-    };
-    sortedKeys.sort((a, b) => avg(b) - avg(a));
+      avgByBin.set(k, vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0);
+    });
+    sortedKeys.sort((a, b) => (avgByBin.get(b) ?? 0) - (avgByBin.get(a) ?? 0));
   } else {
     sortedKeys.sort();
   }
