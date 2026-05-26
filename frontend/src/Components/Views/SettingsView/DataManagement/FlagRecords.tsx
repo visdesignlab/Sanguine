@@ -193,11 +193,57 @@ export function FlagRecords({
 
   const effectiveThresholds = getEffectiveThresholds(flag, flagThresholds);
 
+  // Width for the inline threshold NumberInput — grows with the digit count of the current value
+  const inlineInputW = (() => {
+    const t = flag.thresholds?.[0];
+    if (!t?.titlePrefix) return 48;
+    const val = effectiveThresholds[t.key] ?? t.default;
+    const str = t.decimalScale ? val.toFixed(t.decimalScale) : String(Math.round(val));
+    return Math.max(48, str.length * 10 + 22);
+  })();
+
   return (
     <Stack gap="sm" h="100%">
       {/* Flag header + bulk actions inline */}
       <Box>
-        <Text fw={600} size="sm" mb={4}>{resolveLabel(flag, flagThresholds)}</Text>
+        {/* Title — inline editable for threshold flags */}
+        {flag.thresholds?.[0]?.titlePrefix !== undefined ? (
+          <Group gap={4} align="baseline" mb={4} wrap="nowrap">
+            <Text fw={600} size="sm" style={{ whiteSpace: 'nowrap' }}>
+              {flag.thresholds[0].titlePrefix}
+            </Text>
+            <NumberInput
+              size="xs"
+              w={inlineInputW}
+              value={effectiveThresholds[flag.thresholds[0].key]}
+              min={flag.thresholds[0].min}
+              max={flag.thresholds[0].max}
+              step={flag.thresholds[0].step ?? 1}
+              decimalScale={flag.thresholds[0].decimalScale ?? 0}
+              styles={{
+                input: {
+                  height: 22,
+                  minHeight: 22,
+                  fontWeight: 600,
+                  fontSize: 'var(--mantine-font-size-sm)',
+                  textAlign: 'center',
+                },
+              }}
+              onChange={(val) => {
+                if (val !== '' && val !== undefined) {
+                  onThresholdChange(flag.key, flag.thresholds![0].key, Number(val));
+                }
+              }}
+            />
+            {flag.thresholds[0].titleSuffix && (
+              <Text fw={600} size="sm" style={{ whiteSpace: 'nowrap' }}>
+                {flag.thresholds[0].titleSuffix}
+              </Text>
+            )}
+          </Group>
+        ) : (
+          <Text fw={600} size="sm" mb={4}>{resolveLabel(flag, flagThresholds)}</Text>
+        )}
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <Text size="sm" c="dimmed" style={{ flex: 1 }}>{flag.rationale}</Text>
           <Group gap="xs" style={{ flexShrink: 0 }}>
@@ -237,29 +283,6 @@ export function FlagRecords({
             </Text>
           </Group>
         </Group>
-        {flag.thresholds && flag.thresholds.length > 0 && (
-          <Group gap="md" mt="xs" align="flex-end">
-            <Text size="xs" c="dimmed" fw={500} style={{ alignSelf: 'center' }}>Thresholds:</Text>
-            {flag.thresholds.map((t) => (
-              <NumberInput
-                key={t.key}
-                label={t.label}
-                size="xs"
-                value={effectiveThresholds[t.key]}
-                min={t.min}
-                max={t.max}
-                step={t.step ?? 1}
-                decimalScale={t.decimalScale ?? 0}
-                styles={{ input: { width: 80 } }}
-                onChange={(val) => {
-                  if (val !== '' && val !== undefined) {
-                    onThresholdChange(flag.key, t.key, Number(val));
-                  }
-                }}
-              />
-            ))}
-          </Group>
-        )}
       </Box>
 
       {/* Pending summary */}

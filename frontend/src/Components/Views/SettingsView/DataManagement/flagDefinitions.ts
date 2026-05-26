@@ -20,6 +20,10 @@ export interface ThresholdDefinition {
   max?: number;
   step?: number;
   decimalScale?: number;
+  /** Text before the number in the inline flag title, e.g. "High Whole Blood Usage ≥ " */
+  titlePrefix?: string;
+  /** Text after the number in the inline flag title, e.g. " units" */
+  titleSuffix?: string;
 }
 
 export interface FlagDefinition {
@@ -209,7 +213,7 @@ export const FLAGS: FlagDefinition[] = [
     whereClause: (t) => `los > ${t.los_days}`,
     thresholds: [
       {
-        key: 'los_days', label: 'LOS threshold (days)', default: 365, min: 1, step: 1,
+        key: 'los_days', label: 'LOS threshold (days)', default: 365, min: 1, step: 1, titlePrefix: 'Extreme Length of Stay > ', titleSuffix: ' days',
       },
     ],
     displayColumns: [
@@ -237,7 +241,7 @@ export const FLAGS: FlagDefinition[] = [
     whereClause: (t) => `whole_units >= ${t.min_units}`,
     thresholds: [
       {
-        key: 'min_units', label: 'Minimum units', default: 5, min: 1, step: 1,
+        key: 'min_units', label: 'Minimum units', default: 5, min: 1, step: 1, titlePrefix: 'High Whole Blood Usage ≥ ', titleSuffix: ' units',
       },
     ],
     displayColumns: [
@@ -302,7 +306,7 @@ export const FLAGS: FlagDefinition[] = [
     whereClause: (t) => `rbc_units >= ${t.min_rbc_units}`,
     thresholds: [
       {
-        key: 'min_rbc_units', label: 'Minimum RBC units', default: 10, min: 1, step: 1,
+        key: 'min_rbc_units', label: 'Minimum RBC units', default: 10, min: 1, step: 1, titlePrefix: 'Massive Transfusion ≥ ', titleSuffix: ' RBC units',
       },
     ],
     displayColumns: [
@@ -327,7 +331,7 @@ export const FLAGS: FlagDefinition[] = [
     whereClause: (t) => `pre_hgb IS NOT NULL AND post_hgb IS NOT NULL AND (pre_hgb - post_hgb) >= ${t.min_hgb_drop} AND intraop_rbc_units = 0`,
     thresholds: [
       {
-        key: 'min_hgb_drop', label: 'Minimum Hgb drop (g/dL)', default: 3, min: 0.5, step: 0.5, decimalScale: 1,
+        key: 'min_hgb_drop', label: 'Minimum Hgb drop (g/dL)', default: 3, min: 0.5, step: 0.5, decimalScale: 1, titlePrefix: 'Large Hgb Drop Without Transfusion ≥ ', titleSuffix: ' g/dL',
       },
     ],
     displayColumns: [
@@ -355,7 +359,7 @@ export const FLAGS: FlagDefinition[] = [
     whereClause: (t) => `pre_hgb > 0 AND pre_hgb < ${t.max_hgb}`,
     thresholds: [
       {
-        key: 'max_hgb', label: 'Anemia threshold (g/dL)', default: 13, min: 5, max: 20, step: 0.5, decimalScale: 1,
+        key: 'max_hgb', label: 'Anemia threshold (g/dL)', default: 13, min: 5, max: 20, step: 0.5, decimalScale: 1, titlePrefix: 'Pre-operative Anemia (Hgb < ', titleSuffix: ' g/dL)',
       },
     ],
     displayColumns: [
@@ -383,7 +387,7 @@ export const FLAGS: FlagDefinition[] = [
     whereClause: (t) => `intraop_rbc_units >= ${t.min_rbc_units} AND intraop_cell_saver_ml = 0`,
     thresholds: [
       {
-        key: 'min_rbc_units', label: 'Minimum intraop RBC units', default: 3, min: 1, step: 1,
+        key: 'min_rbc_units', label: 'Minimum intraop RBC units', default: 3, min: 1, step: 1, titlePrefix: 'No Cell Saver with High Intraop RBC ≥ ', titleSuffix: ' units',
       },
     ],
     displayColumns: [
