@@ -13,7 +13,9 @@ import {
   useCallback, useContext, useEffect, useMemo, useState,
 } from 'react';
 import { Store } from '../../../../Store/Store';
-import { FLAGS, type RecordType } from './flagDefinitions';
+import {
+  FLAGS, resolveWhereClause, type RecordType,
+} from './flagDefinitions';
 import { FlagList } from './FlagList';
 import { FlagRecords } from './FlagRecords';
 import { apiPath } from '../../../../Utils/api';
@@ -30,6 +32,25 @@ export function DataManagementView() {
   const [excludedKeys, setExcludedKeys] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Threshold overrides: flagKey → { thresholdKey → value }
+  const [flagThresholds, setFlagThresholds] = useState<Record<string, Record<string, number>>>(
+    () => store.flagThresholds,
+  );
+
+  const handleThresholdChange = useCallback((flagKey: string, thresholdKey: string, value: number) => {
+    setFlagThresholds((prev) => {
+      const safe = prev ?? {};
+      return {
+        ...safe,
+        [flagKey]: { ...(safe[flagKey] ?? {}), [thresholdKey]: value },
+      };
+    });
+  }, []);
+
+  // Sync threshold changes to the provenance store after each render
+  useEffect(() => {
+    store.flagThresholds = flagThresholds;
+  }, [store, flagThresholds]);
 
   // Load flag counts and current exclusion state on open
   const loadCounts = useCallback(async () => {
@@ -37,8 +58,9 @@ export function DataManagementView() {
     const counts: Record<string, number> = {};
     await Promise.all(FLAGS.map(async (flag) => {
       try {
+        const whereClause = resolveWhereClause(flag, flagThresholds);
         const res = await store.duckDB!.query(
-          `SELECT COUNT(*) AS n FROM ${flag.source} WHERE ${flag.whereClause}`,
+          `SELECT COUNT(*) AS n FROM ${flag.source} WHERE ${whereClause}`,
         );
         counts[flag.key] = Number(res.toArray()[0].toJSON().n);
       } catch {
@@ -55,7 +77,7 @@ export function DataManagementView() {
         setSelectedFlagKey(firstWithIssues.key);
       }
     }
-  }, [store.duckDB, userHasSelected]);
+  }, [store.duckDB, userHasSelected, flagThresholds]);
 
   const loadExcludedKeys = useCallback(async () => {
     try {
@@ -145,6 +167,7 @@ export function DataManagementView() {
               selectedFlagKey={selectedFlagKey}
               flagCounts={flagCounts}
               totalExcluded={totalExcluded}
+              flagThresholds={flagThresholds}
               onSelectFlag={(key) => {
                 setUserHasSelected(true);
                 setSelectedFlagKey(key);
@@ -159,6 +182,8 @@ export function DataManagementView() {
               pendingChanges={pendingChanges}
               excludedKeys={excludedKeys}
               onPendingChange={handlePendingChange}
+              flagThresholds={flagThresholds}
+              onThresholdChange={handleThresholdChange}
             />
           </Box>
         </Paper>

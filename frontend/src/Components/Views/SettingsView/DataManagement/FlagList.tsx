@@ -2,12 +2,15 @@ import {
   Badge, Box, Group, NavLink, Stack, Text,
 } from '@mantine/core';
 import { IconCheck, IconFlag } from '@tabler/icons-react';
-import { FLAG_CATEGORY_META, FLAGS, type FlagCategory } from './flagDefinitions';
+import {
+  FLAG_CATEGORY_META, FLAGS, resolveLabel, type FlagCategory,
+} from './flagDefinitions';
 
 interface FlagListProps {
   selectedFlagKey: string | null;
   flagCounts: Record<string, number>;
   totalExcluded: number;
+  flagThresholds: Record<string, Record<string, number>>;
   onSelectFlag: (key: string) => void;
 }
 
@@ -17,6 +20,7 @@ export function FlagList({
   selectedFlagKey,
   flagCounts,
   totalExcluded,
+  flagThresholds,
   onSelectFlag,
 }: FlagListProps) {
   return (
@@ -75,7 +79,7 @@ export function FlagList({
               return (
                 <NavLink
                   key={flag.key}
-                  label={flag.label}
+                  label={resolveLabel(flag, flagThresholds)}
                   active={isActive}
                   onClick={() => onSelectFlag(flag.key)}
                   rightSection={rightSection}

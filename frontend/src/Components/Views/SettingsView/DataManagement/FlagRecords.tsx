@@ -6,6 +6,7 @@ import {
   Checkbox,
   Group,
   Loader,
+  NumberInput,
   Popover,
   ScrollArea,
   Stack,
@@ -28,7 +29,7 @@ import {
 } from 'react';
 import { Store } from '../../../../Store/Store';
 import {
-  FLAGS, type DisplayColumn, type FlagDefinition,
+  FLAGS, getEffectiveThresholds, resolveLabel, resolveWhereClause, type DisplayColumn, type FlagDefinition,
 } from './flagDefinitions';
 
 interface FlagRecordsProps {
@@ -38,6 +39,8 @@ interface FlagRecordsProps {
   /** Set of "record_type:record_id" strings currently excluded in backend */
   excludedKeys: Set<string>;
   onPendingChange: (key: string, excluded: boolean) => void;
+  flagThresholds: Record<string, Record<string, number>>;
+  onThresholdChange: (flagKey: string, thresholdKey: string, value: number) => void;
 }
 
 type Row = Record<string, unknown>;
@@ -61,6 +64,8 @@ export function FlagRecords({
   pendingChanges,
   excludedKeys,
   onPendingChange,
+  flagThresholds,
+  onThresholdChange,
 }: FlagRecordsProps) {
   const store = useContext(Store);
   const [rows, setRows] = useState<Row[]>([]);
@@ -83,8 +88,9 @@ export function FlagRecords({
     setLoading(true);
     try {
       const cols = flag.displayColumns.map((c) => c.key).join(', ');
+      const whereClause = resolveWhereClause(flag, flagThresholds);
       const result = await store.duckDB.query(
-        `SELECT ${cols} FROM ${flag.source} WHERE ${flag.whereClause} ORDER BY 1 LIMIT 1000`,
+        `SELECT ${cols} FROM ${flag.source} WHERE ${whereClause} ORDER BY 1 LIMIT 1000`,
       );
       setRows(result.toArray().map((r) => r.toJSON() as Row));
     } catch (e) {
@@ -92,7 +98,7 @@ export function FlagRecords({
     } finally {
       setLoading(false);
     }
-  }, [store.duckDB, flag]);
+  }, [store.duckDB, flag, flagThresholds]);
 
   useEffect(() => {
     load();
@@ -185,11 +191,13 @@ export function FlagRecords({
 
   if (!flag) return null;
 
+  const effectiveThresholds = getEffectiveThresholds(flag, flagThresholds);
+
   return (
     <Stack gap="sm" h="100%">
       {/* Flag header + bulk actions inline */}
       <Box>
-        <Text fw={600} size="sm" mb={4}>{flag.label}</Text>
+        <Text fw={600} size="sm" mb={4}>{resolveLabel(flag, flagThresholds)}</Text>
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <Text size="sm" c="dimmed" style={{ flex: 1 }}>{flag.rationale}</Text>
           <Group gap="xs" style={{ flexShrink: 0 }}>
@@ -229,6 +237,29 @@ export function FlagRecords({
             </Text>
           </Group>
         </Group>
+        {flag.thresholds && flag.thresholds.length > 0 && (
+          <Group gap="md" mt="xs" align="flex-end">
+            <Text size="xs" c="dimmed" fw={500} style={{ alignSelf: 'center' }}>Thresholds:</Text>
+            {flag.thresholds.map((t) => (
+              <NumberInput
+                key={t.key}
+                label={t.label}
+                size="xs"
+                value={effectiveThresholds[t.key]}
+                min={t.min}
+                max={t.max}
+                step={t.step ?? 1}
+                decimalScale={t.decimalScale ?? 0}
+                styles={{ input: { width: 80 } }}
+                onChange={(val) => {
+                  if (val !== '' && val !== undefined) {
+                    onThresholdChange(flag.key, t.key, Number(val));
+                  }
+                }}
+              />
+            ))}
+          </Group>
+        )}
       </Box>
 
       {/* Pending summary */}
