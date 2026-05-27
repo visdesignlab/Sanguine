@@ -7,7 +7,7 @@ import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 export function TrueFalseNotAppliedToggle({ label, currentFilterValue, setFilterCallback }: {label: string, currentFilterValue: boolean|null, setFilterCallback: (value: boolean|null) => void}) {
   return (
     <Flex>
-      <Text w="45%" c={currentFilterValue === null ? undefined : 'blue'}>
+      <Text w="45%" c={currentFilterValue === null ? undefined : 'blue'} size="sm">
         {label}
       </Text>
       <Rating

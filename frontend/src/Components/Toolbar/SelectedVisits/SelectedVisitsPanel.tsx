@@ -179,13 +179,13 @@ export function SelectedVisitsPanel() {
   return useObserver(() => (
     <Box style={{ minWidth: 0, width: '100%' }}>
       {/* Panel Header */}
-      <Flex direction="row" justify="space-between" align="center" h={40}>
-        <Title order={3}>Selected Visits</Title>
+      <Flex direction="row" justify="space-between" align="center" mb="xs" w="100%">
+        <Title order={4}>Selected Visits</Title>
         <Flex direction="row" align="center">
           <Tooltip label={`${store.selectedVisitNos.length} visits selected`} position="bottom">
             <Badge
               variant="light"
-              size="sm"
+              size="xs"
             >
               {formatVisitCount(store.selectedVisitNos.length)}
               {' '}
@@ -198,8 +198,9 @@ export function SelectedVisitsPanel() {
               onClick={() => { store.resetSelections(); }}
               className={classes.leftToolbarIcon}
               ml={4}
+              size="sm"
             >
-              <IconRestore stroke={iconStroke} size={21} />
+              <IconRestore stroke={iconStroke} size={16} />
             </ActionIcon>
           </Tooltip>
         </Flex>

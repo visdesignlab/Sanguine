@@ -47,8 +47,8 @@ export function FilterPanel() {
   return useObserver(() => (
     <Box>
       {/* Panel Header */}
-      <Flex direction="row" justify="space-between" align="center" h={40}>
-        <Title order={3}>Filter Panel</Title>
+      <Flex direction="row" justify="space-between" align="center" mb="xs" w="100%">
+        <Title order={4}>Filter Panel</Title>
         <Flex direction="row" align="center">
           <Tooltip label="Reset all filters" position="bottom">
             <ActionIcon
@@ -56,8 +56,9 @@ export function FilterPanel() {
               onClick={() => { store.resetAllFilters(); }}
               className={classes.leftToolbarIcon}
               ml="xs"
+              size="sm"
             >
-              <IconRestore stroke={iconStroke} size={21} />
+              <IconRestore stroke={iconStroke} size={16} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label="Toggle filter histograms" position="bottom">
@@ -67,8 +68,9 @@ export function FilterPanel() {
               data-active={store.state.ui.showFilterHistograms}
               className={classes.leftToolbarIcon}
               ml="xs"
+              size="sm"
             >
-              <IconChartBar stroke={iconStroke} />
+              <IconChartBar stroke={iconStroke} size={16} />
             </ActionIcon>
           </Tooltip>
         </Flex>
@@ -108,7 +110,7 @@ export function FilterPanel() {
             <Accordion.Panel>
               <Flex direction="row" justify="space-between" align="center">
                 <DateInput
-                  label="Admission Date From"
+                  label="Adm. Date From"
                   styles={{ label: { color: dateChanged(store, 'dateFrom') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   value={dateSimplify(store.filterValues.dateFrom)}
                   onChange={(date) => date && store.setFilterValue('dateFrom', new Date(date))}
@@ -116,9 +118,10 @@ export function FilterPanel() {
                   maxDate={dateSimplify(store.initialFilterValues.dateTo)}
                   valueFormat="YYYY-MM-DD"
                   w="45%"
+                  size="xs"
                 />
                 <DateInput
-                  label="Discharge Date To"
+                  label="Disch. Date To"
                   styles={{ label: { color: dateChanged(store, 'dateTo') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   value={dateSimplify(store.filterValues.dateTo)}
                   onChange={(date) => date && store.setFilterValue('dateTo', new Date(date))}
@@ -126,6 +129,7 @@ export function FilterPanel() {
                   maxDate={dateSimplify(store.initialFilterValues.dateTo)}
                   valueFormat="YYYY-MM-DD"
                   w="45%"
+                  size="xs"
                 />
               </Flex>
             </Accordion.Panel>
@@ -157,7 +161,7 @@ export function FilterPanel() {
             />
             <Accordion.Panel>
               <Stack gap={0}>
-                <Grid ml="sm">
+                <Grid>
                   <Grid.Col span={7}>
                     <Text
                       ta="right"
@@ -168,12 +172,13 @@ export function FilterPanel() {
                       ].some((v) => v === false)
                         ? 'blue'
                         : undefined}
+                      size="xs"
                     >
                       False
                     </Text>
                   </Grid.Col>
                   <Grid.Col span={2}>
-                    <Text>Off</Text>
+                    <Text size="xs" ta="center">Off</Text>
                   </Grid.Col>
                   <Grid.Col span={3}>
                     <Text
@@ -184,6 +189,7 @@ export function FilterPanel() {
                       ].some((v) => v === true)
                         ? 'blue'
                         : undefined}
+                      size="xs"
                     >
                       True
                     </Text>
@@ -220,12 +226,13 @@ export function FilterPanel() {
                       ].some((v) => v === false)
                         ? 'blue'
                         : undefined}
+                      size="xs"
                     >
                       False
                     </Text>
                   </Grid.Col>
                   <Grid.Col span={2}>
-                    <Text>Off</Text>
+                    <Text size="xs" ta="center">Off</Text>
                   </Grid.Col>
                   <Grid.Col span={3}>
                     <Text
@@ -237,6 +244,7 @@ export function FilterPanel() {
                       ].some((v) => v === true)
                         ? 'blue'
                         : undefined}
+                      size="xs"
                     >
                       True
                     </Text>

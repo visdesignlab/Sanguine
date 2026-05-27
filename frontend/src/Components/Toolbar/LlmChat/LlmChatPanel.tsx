@@ -12,10 +12,11 @@ import {
   Stack,
   Text,
   Textarea,
+  Title,
   Tooltip,
 } from '@mantine/core';
-import { IconArrowUp, IconTrash, IconX } from '@tabler/icons-react';
-import type { LlmChatSession } from './useLlmChatSession';
+import { IconArrowUp, IconTrash } from '@tabler/icons-react';
+import { LlmChatSession } from './useLlmChatSession';
 import classes from './LlmChatPanel.module.css';
 
 /**
@@ -29,9 +30,6 @@ import classes from './LlmChatPanel.module.css';
  * `useLlmChatSession` hook which lives at the Shell level so that
  * history survives left-panel toggling and tab switches.
  */
-export interface LlmChatPanelProps extends LlmChatSession {
-  onCloseSidebar: () => void;
-}
 
 export function LlmChatPanel({
   messages,
@@ -39,8 +37,7 @@ export function LlmChatPanel({
   error,
   sendMessage,
   clearMessages,
-  onCloseSidebar,
-}: LlmChatPanelProps) {
+}: LlmChatSession) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -85,7 +82,6 @@ export function LlmChatPanel({
         width: '100%',
         maxWidth: '100%',
       }}
-      gap={0}
     >
       {/* Header */}
       <Flex
@@ -95,14 +91,9 @@ export function LlmChatPanel({
         mb="xs"
         w="100%"
       >
-        <Text
-          fw={700}
-          size="xs"
-          tt="uppercase"
-          c="blue.7"
-        >
+        <Title order={4}>
           LLM Chat
-        </Text>
+        </Title>
         <Flex gap={4}>
           <Tooltip label="Clear chat" position="bottom">
             <ActionIcon
@@ -113,18 +104,7 @@ export function LlmChatPanel({
               color="gray"
               disabled={isSending}
             >
-              <IconTrash size={14} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Close sidebar" position="bottom">
-            <ActionIcon
-              aria-label="Close sidebar"
-              onClick={onCloseSidebar}
-              size="sm"
-              variant="subtle"
-              color="gray"
-            >
-              <IconX size={14} />
+              <IconTrash size={16} />
             </ActionIcon>
           </Tooltip>
         </Flex>
