@@ -13,7 +13,6 @@ import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { useObserver } from 'mobx-react-lite';
 import { reaction } from 'mobx';
 import { Store } from '../../../../Store/Store';
-import { EmptyChartState } from './EmptyChartState';
 
 import {
   DumbbellCase, LAB_RESULTS,
@@ -875,7 +874,13 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
           ref={sizeRef}
         >
           {processedData.length === 0 && store.departmentChartData[chartConfig.chartId] !== undefined && (
-            <EmptyChartState hasFilters={store.totalFiltersAppliedCount > 0} />
+            <Flex style={{ position: 'absolute', inset: 0, zIndex: 10 }} align="center" justify="center">
+              <Text c="dimmed" fs="italic" size="sm">
+                {store.totalFiltersAppliedCount > 0
+                  ? 'No data available for this chart after filtering'
+                  : 'No data available for this chart'}
+              </Text>
+            </Flex>
           )}
           <Flex direction="row" h={height}>
             {/* Fixed Y Axis */}

@@ -21,7 +21,6 @@ import {
   DUMBBELL_CHAR_WIDTH_CASE, DUMBBELL_DOT_RADIUS,
   DUMBBELL_DRAG_LIMIT, DumbbellLabConfig as LabConfig,
 } from '../../../../Types/application';
-import { EmptyChartState } from './EmptyChartState';
 import { CaseSelectionBadge } from './CaseSelectionBadge';
 import { useBrushSelection, type BrushRect } from './useBrushSelection';
 import { getProcessedDumbbellData, calculateDumbbellLayout } from './DumbbellUtils';
@@ -1485,7 +1484,13 @@ export function DumbbellChart({ chartConfig }: { chartConfig: DumbbellChartConfi
         ref={ref}
       >
         {processedData.length === 0 && store.departmentChartData[chartConfig.chartId] !== undefined && (
-          <EmptyChartState hasFilters={store.totalFiltersAppliedCount > 0} />
+          <Flex style={{ position: 'absolute', inset: 0, zIndex: 10 }} align="center" justify="center">
+            <Text c="dimmed" fs="italic" size="sm">
+              {store.totalFiltersAppliedCount > 0
+                ? 'No data available for this chart after filtering'
+                : 'No data available for this chart'}
+            </Text>
+          </Flex>
         )}
         <Flex direction="row" h={height}>
           {/* Fixed Y Axis */}
