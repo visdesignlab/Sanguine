@@ -141,7 +141,10 @@ def llm_chat(request):
             return streaming_response
 
         data = response.json()
-        content = data.get("choices", [{}])[0].get("message", {}).get("content")
+        choices = data.get("choices") or []
+        content = None
+        if choices:
+            content = choices[0].get("message", {}).get("content")
         if content is None:
             logger.error("Silicon Flow returned no content for user: %s", request.user)
             return JsonResponse(

@@ -2,17 +2,18 @@ import json
 from unittest.mock import MagicMock, patch
 
 from django.conf import settings
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from api.views.llm_chat import _SILICON_FLOW_URL
 
 
+@override_settings(DISABLE_LOGINS=True)
 class LlmChatEndpointTests(TestCase):
     """Tests for the /api/llm_chat proxy endpoint."""
 
     def setUp(self):
-        self.client = Client(enforce_csrf_checks=True)
+        self.csrf_client = Client(enforce_csrf_checks=True)
         self.default_origin = settings.CSRF_TRUSTED_ORIGINS[0]
         self.requests_post_patcher = patch("api.views.llm_chat.requests.post")
         self.mock_requests_post = self.requests_post_patcher.start()
@@ -22,6 +23,31 @@ class LlmChatEndpointTests(TestCase):
 
     def tearDown(self):
         self.requests_post_patcher.stop()
+
+    def request_llm_chat(self, payload=None, raw_body=None, method="post", **extra):
+        csrf_response = self.csrf_client.get(
+            reverse("email_gate_csrf"),
+            HTTP_ORIGIN=self.default_origin,
+            secure=True,
+        )
+        self.assertEqual(csrf_response.status_code, 200)
+
+        csrf_cookie = self.csrf_client.cookies.get("csrftoken")
+        self.assertIsNotNone(csrf_cookie)
+        csrf_token = csrf_cookie.value
+
+        data = raw_body if raw_body is not None else json.dumps(payload or {})
+        request_method = getattr(self.csrf_client, method.lower())
+
+        return request_method(
+            reverse("llm_chat"),
+            data=data,
+            content_type="application/json",
+            HTTP_ORIGIN=self.default_origin,
+            HTTP_X_CSRFTOKEN=csrf_token,
+            secure=True,
+            **extra,
+        )
 
     # ------------------------------------------------------------------
     # 1. Success — valid message returns 200 with LLM content
@@ -37,11 +63,7 @@ class LlmChatEndpointTests(TestCase):
         self.mock_requests_post.side_effect = None
         self.mock_requests_post.return_value = mock_response
 
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "What is the RBC transfusion rate?"}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": "What is the RBC transfusion rate?"})
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -87,11 +109,7 @@ class LlmChatEndpointTests(TestCase):
         self.mock_requests_post.side_effect = None
         self.mock_requests_post.return_value = mock_response
 
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "What is the RBC transfusion rate?", "stream": True}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": "What is the RBC transfusion rate?", "stream": True})
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.streaming)
@@ -110,11 +128,7 @@ class LlmChatEndpointTests(TestCase):
     # ------------------------------------------------------------------
     def test_empty_message_returns_400(self):
         """POST with an empty message body returns 400."""
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": ""}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": ""})
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -124,11 +138,7 @@ class LlmChatEndpointTests(TestCase):
 
     def test_missing_message_key_returns_400(self):
         """POST with no 'message' key returns 400."""
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({})
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -138,11 +148,7 @@ class LlmChatEndpointTests(TestCase):
 
     def test_whitespace_only_message_returns_400(self):
         """POST with whitespace-only message returns 400."""
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "   "}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": "   "})
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -159,11 +165,7 @@ class LlmChatEndpointTests(TestCase):
         mock_settings.SILICON_FLOW_API_KEY = ""
         mock_settings.SILICON_FLOW_MODEL = "Qwen/Qwen2.5-72B-Instruct"
 
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "test"}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": "test"})
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(
@@ -177,11 +179,7 @@ class LlmChatEndpointTests(TestCase):
         mock_settings.SILICON_FLOW_API_KEY = "fake-key"
         mock_settings.SILICON_FLOW_MODEL = ""
 
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "test"}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": "test"})
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(
@@ -203,11 +201,7 @@ class LlmChatEndpointTests(TestCase):
         self.mock_requests_post.side_effect = None
         self.mock_requests_post.return_value = mock_response
 
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "test"}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": "test"})
 
         self.assertEqual(response.status_code, 502)
         self.assertIn("LLM proxy failed", response.json()["error"])
@@ -221,11 +215,7 @@ class LlmChatEndpointTests(TestCase):
         self.mock_requests_post.side_effect = None
         self.mock_requests_post.return_value = mock_response
 
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "test"}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": "test"})
 
         self.assertEqual(response.status_code, 502)
         self.assertEqual(
@@ -251,11 +241,7 @@ class LlmChatEndpointTests(TestCase):
         self.mock_requests_post.side_effect = None
         self.mock_requests_post.return_value = mock_response
 
-        self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "test"}),
-            content_type="application/json",
-        )
+        self.request_llm_chat({"message": "test"})
 
         # Verify the model arg is from settings
         json_body = self.mock_requests_post.call_args[1]["json"]
@@ -264,17 +250,10 @@ class LlmChatEndpointTests(TestCase):
     # ------------------------------------------------------------------
     # 6. Auth behavior — requires login when not DISABLE_LOGINS
     # ------------------------------------------------------------------
-    @patch("api.views.llm_chat.settings")
-    def test_requires_login_when_disabled_logins_false(self, mock_settings):
+    @override_settings(DISABLE_LOGINS=False)
+    def test_requires_login_when_disabled_logins_false(self):
         """When DISABLE_LOGINS is False, unauthenticated requests are redirected."""
-        mock_settings.DISABLE_LOGINS = False
-        mock_settings.LOGIN_URL = "/api/accounts/login"
-
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "test"}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": "test"})
 
         # CAS login redirects with 302 to the login URL
         self.assertEqual(response.status_code, 302)
@@ -287,8 +266,6 @@ class LlmChatEndpointTests(TestCase):
         mock_settings.SILICON_FLOW_API_KEY = "fake-key"
         mock_settings.SILICON_FLOW_MODEL = "Qwen/Qwen2.5-72B-Instruct"
 
-        import requests as requests_lib
-
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
@@ -298,11 +275,7 @@ class LlmChatEndpointTests(TestCase):
 
         self.mock_requests_post.side_effect = None
         self.mock_requests_post.return_value = mock_response
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "test"}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": "test"})
 
         self.assertEqual(response.status_code, 200)
 
@@ -311,16 +284,12 @@ class LlmChatEndpointTests(TestCase):
     # ------------------------------------------------------------------
     def test_get_method_returns_405(self):
         """GET requests are not allowed."""
-        response = self.client.get(reverse("llm_chat"))
+        response = self.csrf_client.get(reverse("llm_chat"))
         self.assertEqual(response.status_code, 405)
 
     def test_put_method_returns_405(self):
         """PUT requests are not allowed."""
-        response = self.client.put(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "test"}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": "test"}, method="put")
         self.assertEqual(response.status_code, 405)
 
     # ------------------------------------------------------------------
@@ -328,11 +297,7 @@ class LlmChatEndpointTests(TestCase):
     # ------------------------------------------------------------------
     def test_invalid_json_returns_400(self):
         """POST with malformed JSON returns 400."""
-        response = self.client.post(
-            reverse("llm_chat"),
-            data="not valid json {{{",
-            content_type="application/json",
-        )
+        response = self.request_llm_chat(raw_body="not valid json {{{")
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -349,11 +314,7 @@ class LlmChatEndpointTests(TestCase):
 
         self.mock_requests_post.side_effect = requests_lib.exceptions.Timeout("Request timed out")
 
-        response = self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "test"}),
-            content_type="application/json",
-        )
+        response = self.request_llm_chat({"message": "test"})
 
         self.assertEqual(response.status_code, 504)
         self.assertEqual(
@@ -375,11 +336,7 @@ class LlmChatEndpointTests(TestCase):
         self.mock_requests_post.side_effect = None
         self.mock_requests_post.return_value = mock_response
 
-        self.client.post(
-            reverse("llm_chat"),
-            data=json.dumps({"message": "  hello  "}),
-            content_type="application/json",
-        )
+        self.request_llm_chat({"message": "  hello  "})
 
         messages = self.mock_requests_post.call_args[1]["json"]["messages"]
         self.assertEqual(messages[1]["content"], "hello")
