@@ -8,7 +8,11 @@ from django.urls import reverse
 from api.views.llm_chat import _SILICON_FLOW_URL
 
 
-@override_settings(DISABLE_LOGINS=True)
+@override_settings(
+    DISABLE_LOGINS=True,
+    SILICON_FLOW_API_KEY="fake-key",
+    SILICON_FLOW_MODEL="Qwen/Qwen2.5-72B-Instruct",
+)
 class LlmChatEndpointTests(TestCase):
     """Tests for the /api/llm_chat proxy endpoint."""
 
