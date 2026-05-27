@@ -53,6 +53,7 @@ class LlmChatEndpointTests(TestCase):
         )
         self.assertEqual(call_args[1]["json"]["max_tokens"], 2048)
         self.assertEqual(call_args[1]["json"]["temperature"], 0.7)
+        self.assertFalse(call_args[1]["json"]["stream"])
         messages = call_args[1]["json"]["messages"]
         self.assertEqual(len(messages), 2)
         self.assertEqual(messages[0]["role"], "system")
@@ -61,6 +62,38 @@ class LlmChatEndpointTests(TestCase):
             messages[1]["content"],
             "What is the RBC transfusion rate?",
         )
+
+    @patch("api.views.llm_chat.requests.post")
+    def test_streaming_returns_text_stream(self, mock_post):
+        """A request with stream=true returns a streaming text response."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.raise_for_status.return_value = None
+        mock_response.iter_lines.return_value = [
+            'data: {"choices":[{"delta":{"content":"{\\"foo\\": "}}]}',
+            'data: {"choices":[{"delta":{"content":"\\"bar\\"}"}}]}',
+            'data: [DONE]',
+        ]
+        mock_response.close.return_value = None
+        mock_post.return_value = mock_response
+
+        response = self.client.post(
+            reverse("llm_chat"),
+            data=json.dumps({"message": "What is the RBC transfusion rate?", "stream": True}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.streaming)
+        self.assertEqual(
+            b"".join(response.streaming_content).decode("utf-8"),
+            '{"foo": "bar"}',
+        )
+
+        mock_post.assert_called_once()
+        call_args = mock_post.call_args
+        self.assertTrue(call_args[1]["stream"])
+        self.assertTrue(call_args[1]["json"]["stream"])
 
     # ------------------------------------------------------------------
     # 2. Empty message — returns 400

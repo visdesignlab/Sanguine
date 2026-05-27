@@ -6,6 +6,7 @@ import type { ApplicationStatePatch, RootStore } from '../../../Store/Store';
  * A single message in the chat conversation.
  */
 export interface ChatMessage {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
@@ -38,6 +39,10 @@ const parseApplicationStatePatch = (content: string): ApplicationStatePatch | nu
   }
 };
 
+const createMessageId = (): string => (
+  globalThis.crypto?.randomUUID?.() ?? `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`
+);
+
 /**
  * Hook that owns the current-session chat state.
  *
@@ -55,6 +60,7 @@ export function useLlmChatSession(store: RootStore): LlmChatSession {
 
     // Optimistically add the user message.
     const userMsg: ChatMessage = {
+      id: createMessageId(),
       role: 'user',
       content: trimmed,
       timestamp: new Date(),
@@ -64,19 +70,44 @@ export function useLlmChatSession(store: RootStore): LlmChatSession {
     setIsSending(true);
     setError(null);
 
+    const assistantId = createMessageId();
+    const assistantTimestamp = new Date();
+
     try {
-      const response = await sendChatMessage(trimmed);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantId,
+          role: 'assistant',
+          content: '',
+          timestamp: assistantTimestamp,
+        },
+      ]);
+
+      const response = await sendChatMessage(trimmed, {
+        onChunk: (chunk) => {
+          setMessages((prev) => prev.map((msg) => (
+            msg.id === assistantId
+              ? { ...msg, content: `${msg.content}${chunk}` }
+              : msg
+          )));
+        },
+      });
+
       const statePatch = parseApplicationStatePatch(response.message);
       if (statePatch) {
         store.applyApplicationStatePatch(statePatch);
       }
-      const assistantMsg: ChatMessage = {
-        role: 'assistant',
-        content: statePatch ? JSON.stringify(statePatch, null, 2) : response.message,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
+      setMessages((prev) => prev.map((msg) => (
+        msg.id === assistantId
+          ? {
+            ...msg,
+            content: statePatch ? JSON.stringify(statePatch, null, 2) : response.message,
+          }
+          : msg
+      )));
     } catch (err) {
+      setMessages((prev) => prev.filter((msg) => msg.id !== assistantId || msg.content.length > 0));
       const message = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(message);
     } finally {

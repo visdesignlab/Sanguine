@@ -130,7 +130,12 @@ export const Shell = observer(() => {
     {
       icon: IconMessage2,
       label: 'LLM Chat',
-      content: <LlmChatPanel {...llmChatSession} />,
+      content: (
+        <LlmChatPanel
+          {...llmChatSession}
+          onCloseSidebar={() => setActiveLeftPanel(null)}
+        />
+      ),
     },
   ];
 
@@ -355,7 +360,7 @@ export const Shell = observer(() => {
 
           {/** Left Panel Content */}
           {store.state.ui.activeLeftPanel !== null && (
-            <Box style={{ flexGrow: 1 }} p="md">
+            <Box style={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }} p="md">
               {leftToolbarIcons[store.state.ui.activeLeftPanel].content}
             </Box>
           )}

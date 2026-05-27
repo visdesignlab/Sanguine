@@ -4,7 +4,7 @@ from pathlib import Path
 
 import requests
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.http import require_http_methods
 
 from .decorators.conditional_login_required import conditional_login_required
@@ -21,6 +21,39 @@ _SILICON_FLOW_URL = "https://api.siliconflow.com/v1/chat/completions"
 # Chat parameters
 _MAX_TOKENS = 2048
 _TEMPERATURE = 0.7
+
+
+def _stream_silicon_flow_content(upstream_response):
+    """Yield assistant content chunks from an OpenAI-compatible SSE stream."""
+    try:
+        for raw_line in upstream_response.iter_lines(decode_unicode=True):
+            if not raw_line:
+                continue
+
+            line = raw_line.decode("utf-8") if isinstance(raw_line, bytes) else str(raw_line)
+            if not line.startswith("data:"):
+                continue
+
+            payload = line.removeprefix("data:").strip()
+            if not payload or payload == "[DONE]":
+                break
+
+            try:
+                data = json.loads(payload)
+            except (json.JSONDecodeError, ValueError):
+                logger.debug("Skipping malformed stream chunk: %s", payload)
+                continue
+
+            choices = data.get("choices") or []
+            if not choices:
+                continue
+
+            delta = choices[0].get("delta") or {}
+            content = delta.get("content")
+            if content:
+                yield str(content)
+    finally:
+        upstream_response.close()
 
 
 def _load_system_prompt() -> str:
@@ -68,6 +101,7 @@ def llm_chat(request):
             status=400,
         )
     user_message = str(user_message).strip()
+    stream_response = bool(body.get("stream"))
 
     # --- Build messages ---
     system_prompt = _load_system_prompt()
@@ -89,11 +123,23 @@ def llm_chat(request):
                 "messages": messages,
                 "max_tokens": _MAX_TOKENS,
                 "temperature": _TEMPERATURE,
-                "response_format": { "type": "json_object" },
+                "response_format": {"type": "json_object"},
+                "stream": stream_response,
             },
             timeout=60,
+            stream=stream_response,
         )
         response.raise_for_status()
+
+        if stream_response:
+            streaming_response = StreamingHttpResponse(
+                _stream_silicon_flow_content(response),
+                content_type="text/plain; charset=utf-8",
+            )
+            streaming_response["Cache-Control"] = "no-cache"
+            streaming_response["X-Accel-Buffering"] = "no"
+            return streaming_response
+
         data = response.json()
         content = data.get("choices", [{}])[0].get("message", {}).get("content")
         if content is None:

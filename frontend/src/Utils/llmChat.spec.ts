@@ -9,6 +9,28 @@ import {
 import { sendChatMessage } from './llmChat';
 import { apiPath } from './api';
 
+const makeStreamResponse = (chunks: string[]) => {
+  const encoder = new TextEncoder();
+  let index = 0;
+
+  return {
+    ok: true,
+    body: {
+      getReader: () => ({
+        read: async () => {
+          if (index >= chunks.length) {
+            return { done: true, value: undefined };
+          }
+
+          const value = encoder.encode(chunks[index]);
+          index += 1;
+          return { done: false, value };
+        },
+      }),
+    },
+  };
+};
+
 describe('sendChatMessage', () => {
   beforeEach(() => {
     // Clear cookies before each test.
@@ -162,5 +184,29 @@ describe('sendChatMessage', () => {
     const callArgs = mockFetch.mock.calls[0] as [string, RequestInit];
     const body = JSON.parse(callArgs[1].body as string);
     expect(body.message).toBe('hello world');
+    expect(body.stream).toBe(false);
+  });
+
+  test('streams chunks when a chunk callback is provided', async () => {
+    document.cookie = 'csrftoken=token; path=/';
+
+    const streamedChunks: string[] = [];
+    const mockFetch = vi.fn().mockResolvedValue(
+      makeStreamResponse(['{"foo": ', '"bar"}']) as unknown as Response,
+    );
+    vi.stubGlobal('fetch', mockFetch);
+
+    const result = await sendChatMessage('stream this', {
+      onChunk: (chunk) => {
+        streamedChunks.push(chunk);
+      },
+    });
+
+    expect(result.message).toBe('{"foo": "bar"}');
+    expect(streamedChunks).toEqual(['{"foo": ', '"bar"}']);
+
+    const callArgs = mockFetch.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(callArgs[1].body as string);
+    expect(body.stream).toBe(true);
   });
 });

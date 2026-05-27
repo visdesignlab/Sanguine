@@ -12,13 +12,9 @@ import {
   Stack,
   Text,
   Textarea,
-  ThemeIcon,
+  Tooltip,
 } from '@mantine/core';
-import {
-  IconPlayerPlay,
-  IconRobot,
-  IconX,
-} from '@tabler/icons-react';
+import { IconArrowUp, IconTrash, IconX } from '@tabler/icons-react';
 import type { LlmChatSession } from './useLlmChatSession';
 import classes from './LlmChatPanel.module.css';
 
@@ -26,20 +22,25 @@ import classes from './LlmChatPanel.module.css';
  * LlmChatPanel — the chat UI for the LLM-powered assistant.
  *
  * Displays a scrollable message history, a text input, send button,
- * loading indicator, and error display.  Assistant replies are rendered
+ * loading indicator, and error display. Assistant replies are rendered
  * as pre-wrapped text so JSON / code-style output remains readable.
  *
  * Session state (messages, isSending, error) is owned by the
  * `useLlmChatSession` hook which lives at the Shell level so that
  * history survives left-panel toggling and tab switches.
  */
+export interface LlmChatPanelProps extends LlmChatSession {
+  onCloseSidebar: () => void;
+}
+
 export function LlmChatPanel({
   messages,
   isSending,
   error,
   sendMessage,
   clearMessages,
-}: LlmChatSession) {
+  onCloseSidebar,
+}: LlmChatPanelProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -67,17 +68,23 @@ export function LlmChatPanel({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey) {
+        if (isSending) return;
         e.preventDefault();
         handleSend();
       }
     },
-    [handleSend],
+    [handleSend, isSending],
   );
 
   return (
     <Stack
       h="100%"
-      style={{ minHeight: 0 }}
+      style={{
+        minHeight: 0,
+        minWidth: 0,
+        width: '100%',
+        maxWidth: '100%',
+      }}
       gap={0}
     >
       {/* Header */}
@@ -86,6 +93,7 @@ export function LlmChatPanel({
         justify="space-between"
         align="center"
         mb="xs"
+        w="100%"
       >
         <Text
           fw={700}
@@ -95,21 +103,38 @@ export function LlmChatPanel({
         >
           LLM Chat
         </Text>
-        <ActionIcon
-          aria-label="Clear chat"
-          onClick={clearMessages}
-          size="xs"
-          variant="subtle"
-          color="gray"
-        >
-          <IconX size={14} />
-        </ActionIcon>
+        <Flex gap={4}>
+          <Tooltip label="Clear chat" position="bottom">
+            <ActionIcon
+              aria-label="Clear chat"
+              onClick={clearMessages}
+              size="sm"
+              variant="subtle"
+              color="gray"
+              disabled={isSending}
+            >
+              <IconTrash size={14} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Close sidebar" position="bottom">
+            <ActionIcon
+              aria-label="Close sidebar"
+              onClick={onCloseSidebar}
+              size="sm"
+              variant="subtle"
+              color="gray"
+            >
+              <IconX size={14} />
+            </ActionIcon>
+          </Tooltip>
+        </Flex>
       </Flex>
 
       {/* Message history */}
       <ScrollArea
         ref={scrollRef}
         className={classes.messageArea}
+        style={{ width: '100%', maxWidth: '100%', minWidth: 0 }}
         offsetScrollbars
       >
         {messages.length === 0 && !isSending && (
@@ -120,13 +145,12 @@ export function LlmChatPanel({
           </div>
         )}
 
-        {messages.map((msg, i) => (
+        {messages.map((msg) => (
           <Box
-            key={`${i}-${msg.timestamp.getTime()}`}
-            className={`${classes.messageRow} ${
-              msg.role === 'user'
-                ? classes.messageRowUser
-                : classes.messageRowAssistant
+            key={msg.id}
+            className={`${classes.messageRow} ${msg.role === 'user'
+              ? classes.messageRowUser
+              : classes.messageRowAssistant
             }`}
           >
             <Text
@@ -139,30 +163,28 @@ export function LlmChatPanel({
               {msg.role === 'user' ? 'You' : 'Assistant'}
             </Text>
             {msg.role === 'assistant' ? (
+              msg.content.length === 0 && isSending ? (
+                <Text size="sm" c="dimmed">
+                  Thinking…
+                </Text>
+              ) : (
+                <Box
+                  component="pre"
+                  className={classes.messageCodeBlock}
+                >
+                  {msg.content}
+                </Box>
+              )
+            ) : (
               <Text
                 size="sm"
-                ff="monospace"
-                style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
               >
                 {msg.content}
               </Text>
-            ) : (
-              <Text size="sm">{msg.content}</Text>
             )}
           </Box>
         ))}
 
-        {/* Loading indicator */}
-        {isSending && (
-          <div className={classes.loadingRow}>
-            <ThemeIcon variant="light" size="sm">
-              <IconRobot size={14} />
-            </ThemeIcon>
-            <Text size="xs" c="dimmed">
-              Thinking…
-            </Text>
-          </div>
-        )}
       </ScrollArea>
 
       {/* Error display */}
@@ -180,31 +202,33 @@ export function LlmChatPanel({
 
       {/* Input area */}
       <div className={classes.inputArea}>
-        <Flex direction="row" gap="xs" align="flex-end">
-          <Textarea
-            ref={inputRef}
-            placeholder="Ask a question…"
-            size="xs"
-            autosize
-            minRows={1}
-            maxRows={4}
-            onKeyDown={handleKeyDown}
-            style={{ flex: 1 }}
-            disabled={isSending}
-          />
-          <ActionIcon
-            aria-label="Send message"
-            onClick={handleSend}
-            disabled={isSending}
-            size="sm"
-            variant="filled"
-            color="blue"
-          >
-            <IconPlayerPlay size={14} />
-          </ActionIcon>
-        </Flex>
+        <Textarea
+          ref={inputRef}
+          placeholder="Ask a question…"
+          size="sm"
+          autosize
+          minRows={2}
+          maxRows={4}
+          onKeyDown={handleKeyDown}
+          rightSection={(
+            <Tooltip label="Send message" position="top">
+              <ActionIcon
+                aria-label="Send message"
+                onClick={handleSend}
+                disabled={isSending}
+                size="sm"
+                variant="filled"
+                color="blue"
+              >
+                <IconArrowUp size={14} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          rightSectionPointerEvents="all"
+          rightSectionWidth={40}
+        />
         <Text size="xs" c="dimmed" mt={4} pl={4}>
-          Press Enter to send · Shift+Enter for new line
+          Press Enter to send · Shift+Enter for new line ·
         </Text>
       </div>
     </Stack>

@@ -8,6 +8,54 @@ export interface LlmChatResponse {
   message: string;
 }
 
+export interface SendChatMessageOptions {
+  onChunk?: (chunk: string) => void;
+}
+
+const readStreamResponse = async (
+  response: Response,
+  onChunk: (chunk: string) => void,
+): Promise<string> => {
+  if (!response.body) {
+    throw new Error('Streaming response body is unavailable.');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullMessage = '';
+
+  const streamChunks = async function* streamChunksImpl(
+    nextRead: Promise<ReadableStreamReadResult<Uint8Array>>,
+  ): AsyncGenerator<string> {
+    const { done, value } = await nextRead;
+    if (done) {
+      const finalChunk = decoder.decode();
+      if (finalChunk) {
+        yield finalChunk;
+      }
+      return;
+    }
+
+    const chunk = decoder.decode(value, { stream: true });
+    if (chunk) {
+      yield chunk;
+    }
+
+    yield* streamChunksImpl(reader.read());
+  };
+
+  try {
+    for await (const chunk of streamChunks(reader.read())) {
+      fullMessage += chunk;
+      onChunk(chunk);
+    }
+  } finally {
+    reader.releaseLock?.();
+  }
+
+  return fullMessage;
+};
+
 /**
  * Send a user message to the LLM chat proxy.
  *
@@ -19,7 +67,10 @@ export interface LlmChatResponse {
  * @returns the LLM response message text
  * @throws Error with a human-readable message on failure
  */
-export async function sendChatMessage(message: string): Promise<{ message: string }> {
+export async function sendChatMessage(
+  message: string,
+  options: SendChatMessageOptions = {},
+): Promise<{ message: string }> {
   const trimmed = message.trim();
   if (!trimmed) {
     throw new Error('Message cannot be empty.');
@@ -37,12 +88,17 @@ export async function sendChatMessage(message: string): Promise<{ message: strin
       'Content-Type': 'application/json',
       'X-CSRFToken': csrfToken,
     },
-    body: JSON.stringify({ message: trimmed }),
+    body: JSON.stringify({ message: trimmed, stream: Boolean(options.onChunk) }),
   });
 
   if (!response.ok) {
     const body = await response.text().catch(() => '');
     throw new Error(`Chat request failed (${response.status}): ${body || response.statusText}`);
+  }
+
+  if (options.onChunk) {
+    const messageText = await readStreamResponse(response, options.onChunk);
+    return { message: messageText };
   }
 
   const data = await response.json().catch(() => null);
