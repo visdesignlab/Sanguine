@@ -13,7 +13,7 @@ import {
 import {
   IconArrowNarrowLeftDashed,
   IconArrowNarrowRightDashed, IconDeviceFloppy,
-  IconCamera, IconMenu,
+  IconCamera, IconLogout, IconMenu,
   IconRestore, type IconProps,
   IconChartBar,
   IconClipboardList,
@@ -21,6 +21,7 @@ import {
   IconMenu2,
   IconAt,
   IconFilter,
+  IconSubtask,
   IconInfoSquareRounded,
   IconEyeglass,
   IconEyeglassOff,
@@ -37,6 +38,7 @@ import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
 import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
 import { SavedStatesMenu } from '../Components/Menus/ManageStatesMenu';
+import { apiPath } from '../Utils/api';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -253,6 +255,14 @@ export const Shell = observer(() => {
                   Clear selected visits
                 </Menu.Item>
 
+                <Menu.Label>Session</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconSubtask size={14} />}
+                  disabled
+                >
+                  Manage Sessions
+                </Menu.Item>
+
                 <Menu.Label>Help & Feedback</Menu.Label>
                 <Menu.Item
                   leftSection={<IconInfoSquareRounded size={14} />}
@@ -274,6 +284,16 @@ export const Shell = observer(() => {
                   Report a Bug
                 </Menu.Item>
 
+                <Menu.Label>Account</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconLogout size={14} />}
+                  onClick={async () => {
+                    await fetch(apiPath('accounts/logout/'), { credentials: 'include' });
+                  }}
+                  disabled
+                >
+                  Log out
+                </Menu.Item>
               </Menu.Dropdown>
             </Menu>
           </Group>
