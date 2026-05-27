@@ -9,6 +9,7 @@ import {
   Stack,
   Badge,
   Anchor,
+  Loader,
 } from '@mantine/core';
 import {
   IconArrowNarrowLeftDashed,
@@ -25,7 +26,7 @@ import {
   IconInfoSquareRounded,
   IconEyeglass,
   IconEyeglassOff,
-  IconMessageChatbot,
+  IconMessage2,
 } from '@tabler/icons-react';
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
@@ -41,6 +42,7 @@ import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
 import { SavedStatesMenu } from '../Components/Menus/ManageStatesMenu';
 import { apiPath } from '../Utils/api';
 import { LlmChatPanel } from '../Components/Toolbar/LlmChat/LlmChatPanel';
+import { useLlmChatSession } from '../Components/Toolbar/LlmChat/useLlmChatSession';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -48,6 +50,7 @@ import { LlmChatPanel } from '../Components/Toolbar/LlmChat/LlmChatPanel';
  */
 export const Shell = observer(() => {
   const store = useContext(Store);
+  const llmChatSession = useLlmChatSession(store);
   // View tabs -----------------
   const TABS = [
     {
@@ -125,9 +128,9 @@ export const Shell = observer(() => {
       ],
     },
     {
-      icon: IconMessageChatbot,
+      icon: IconMessage2,
       label: 'LLM Chat',
-      content: <LlmChatPanel />,
+      content: <LlmChatPanel {...llmChatSession} />,
     },
   ];
 
@@ -319,7 +322,7 @@ export const Shell = observer(() => {
               {leftToolbarIcons.map(({ icon: Icon, label, disabled }, index) => (
                 <Tooltip
                   key={label}
-                  label={label}
+                  label={label === 'LLM Chat' && llmChatSession.isSending ? `${label} - thinking` : label}
                   position="right"
                 >
                   <ActionIcon
@@ -331,9 +334,19 @@ export const Shell = observer(() => {
                     style={{ overflow: 'visible' }}
                     disabled={disabled}
                   >
-                    <Icon
-                      stroke={iconStroke}
-                    />
+                    {label === 'LLM Chat' && llmChatSession.isSending
+                      ? (
+                        <Loader
+                          size={14}
+                          color="blue"
+                          type="dots"
+                        />
+                      )
+                      : (
+                        <Icon
+                          stroke={iconStroke}
+                        />
+                      )}
                   </ActionIcon>
                 </Tooltip>
               ))}

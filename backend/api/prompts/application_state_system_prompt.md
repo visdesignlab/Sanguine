@@ -132,6 +132,7 @@ type Layout = {
 - **Aggregation**: `"sum"` for totals, `"avg"` for rates/percentages.
 - **Tabs**: `"Hospital"` for hospital-wide, `"Department"` for department-level, `"Provider"` for provider metrics, `"Settings"` for settings.
 - **chartId**: Use simple strings like `"0"`, `"1"`, `"2"`.
+- **Department tables**: Ensure that the rowVar is also included as a column (e.g. if rowVar is `attending_provider`, include a column for `attending_provider`). Also include visit count and case count by default.
 
 ## Examples
 

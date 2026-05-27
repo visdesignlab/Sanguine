@@ -1,4 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react';
 import {
   ActionIcon,
   Alert,
@@ -15,7 +19,7 @@ import {
   IconRobot,
   IconX,
 } from '@tabler/icons-react';
-import { useLlmChatSession } from './useLlmChatSession';
+import type { LlmChatSession } from './useLlmChatSession';
 import classes from './LlmChatPanel.module.css';
 
 /**
@@ -29,15 +33,13 @@ import classes from './LlmChatPanel.module.css';
  * `useLlmChatSession` hook which lives at the Shell level so that
  * history survives left-panel toggling and tab switches.
  */
-export function LlmChatPanel() {
-  const {
-    messages,
-    isSending,
-    error,
-    sendMessage,
-    clearMessages,
-  } = useLlmChatSession();
-
+export function LlmChatPanel({
+  messages,
+  isSending,
+  error,
+  sendMessage,
+  clearMessages,
+}: LlmChatSession) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
