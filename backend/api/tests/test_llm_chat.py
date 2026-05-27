@@ -5,6 +5,8 @@ from django.conf import settings
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from api.views.llm_chat import _SILICON_FLOW_URL
+
 
 class LlmChatEndpointTests(TestCase):
     """Tests for the /api/llm_chat proxy endpoint."""
@@ -12,12 +14,19 @@ class LlmChatEndpointTests(TestCase):
     def setUp(self):
         self.client = Client(enforce_csrf_checks=True)
         self.default_origin = settings.CSRF_TRUSTED_ORIGINS[0]
+        self.requests_post_patcher = patch("api.views.llm_chat.requests.post")
+        self.mock_requests_post = self.requests_post_patcher.start()
+        self.mock_requests_post.side_effect = AssertionError(
+            "Unexpected outbound Silicon Flow request in test. Mock requests.post explicitly.",
+        )
+
+    def tearDown(self):
+        self.requests_post_patcher.stop()
 
     # ------------------------------------------------------------------
     # 1. Success — valid message returns 200 with LLM content
     # ------------------------------------------------------------------
-    @patch("api.views.llm_chat.requests.post")
-    def test_success_returns_llm_content(self, mock_post):
+    def test_success_returns_llm_content(self):
         """A valid POST with a message returns the LLM's response content."""
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -25,7 +34,8 @@ class LlmChatEndpointTests(TestCase):
             "choices": [{"message": {"content": "This is the generated state."}}],
         }
         mock_response.raise_for_status.return_value = None
-        mock_post.return_value = mock_response
+        self.mock_requests_post.side_effect = None
+        self.mock_requests_post.return_value = mock_response
 
         response = self.client.post(
             reverse("llm_chat"),
@@ -40,9 +50,9 @@ class LlmChatEndpointTests(TestCase):
         )
 
         # Verify requests.post was called with correct parameters
-        mock_post.assert_called_once()
-        call_args = mock_post.call_args
-        self.assertEqual(call_args[0][0], "https://api.siliconflow.cn/v1/chat/completions")
+        self.mock_requests_post.assert_called_once()
+        call_args = self.mock_requests_post.call_args
+        self.assertEqual(call_args[0][0], _SILICON_FLOW_URL)
         self.assertEqual(
             call_args[1]["headers"]["Authorization"],
             f"Bearer {settings.SILICON_FLOW_API_KEY}",
@@ -63,8 +73,7 @@ class LlmChatEndpointTests(TestCase):
             "What is the RBC transfusion rate?",
         )
 
-    @patch("api.views.llm_chat.requests.post")
-    def test_streaming_returns_text_stream(self, mock_post):
+    def test_streaming_returns_text_stream(self):
         """A request with stream=true returns a streaming text response."""
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -75,7 +84,8 @@ class LlmChatEndpointTests(TestCase):
             'data: [DONE]',
         ]
         mock_response.close.return_value = None
-        mock_post.return_value = mock_response
+        self.mock_requests_post.side_effect = None
+        self.mock_requests_post.return_value = mock_response
 
         response = self.client.post(
             reverse("llm_chat"),
@@ -90,8 +100,8 @@ class LlmChatEndpointTests(TestCase):
             '{"foo": "bar"}',
         )
 
-        mock_post.assert_called_once()
-        call_args = mock_post.call_args
+        self.mock_requests_post.assert_called_once()
+        call_args = self.mock_requests_post.call_args
         self.assertTrue(call_args[1]["stream"])
         self.assertTrue(call_args[1]["json"]["stream"])
 
@@ -182,8 +192,7 @@ class LlmChatEndpointTests(TestCase):
     # ------------------------------------------------------------------
     # 4. HTTP error — returns 502
     # ------------------------------------------------------------------
-    @patch("api.views.llm_chat.requests.post")
-    def test_http_error_returns_502(self, mock_post):
+    def test_http_error_returns_502(self):
         """When Silicon Flow returns an HTTP error, returns 502."""
         import requests as requests_lib
 
@@ -191,7 +200,8 @@ class LlmChatEndpointTests(TestCase):
         mock_response.raise_for_status.side_effect = requests_lib.exceptions.HTTPError(
             "400 Client Error"
         )
-        mock_post.return_value = mock_response
+        self.mock_requests_post.side_effect = None
+        self.mock_requests_post.return_value = mock_response
 
         response = self.client.post(
             reverse("llm_chat"),
@@ -202,14 +212,14 @@ class LlmChatEndpointTests(TestCase):
         self.assertEqual(response.status_code, 502)
         self.assertIn("LLM proxy failed", response.json()["error"])
 
-    @patch("api.views.llm_chat.requests.post")
-    def test_empty_content_returns_502(self, mock_post):
+    def test_empty_content_returns_502(self):
         """When Silicon Flow returns no content in choices, returns 502."""
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"choices": []}
         mock_response.raise_for_status.return_value = None
-        mock_post.return_value = mock_response
+        self.mock_requests_post.side_effect = None
+        self.mock_requests_post.return_value = mock_response
 
         response = self.client.post(
             reverse("llm_chat"),
@@ -226,9 +236,8 @@ class LlmChatEndpointTests(TestCase):
     # ------------------------------------------------------------------
     # 5. Fixed model forwarding — model comes from settings, not user
     # ------------------------------------------------------------------
-    @patch("api.views.llm_chat.requests.post")
     @patch("api.views.llm_chat.settings")
-    def test_fixed_model_from_settings(self, mock_settings, mock_post):
+    def test_fixed_model_from_settings(self, mock_settings):
         """The model arg is from settings, not user-controlled."""
         mock_settings.SILICON_FLOW_API_KEY = "fake-key"
         mock_settings.SILICON_FLOW_MODEL = "custom/model/from/settings"
@@ -239,7 +248,8 @@ class LlmChatEndpointTests(TestCase):
             "choices": [{"message": {"content": "result"}}],
         }
         mock_response.raise_for_status.return_value = None
-        mock_post.return_value = mock_response
+        self.mock_requests_post.side_effect = None
+        self.mock_requests_post.return_value = mock_response
 
         self.client.post(
             reverse("llm_chat"),
@@ -248,7 +258,7 @@ class LlmChatEndpointTests(TestCase):
         )
 
         # Verify the model arg is from settings
-        json_body = mock_post.call_args[1]["json"]
+        json_body = self.mock_requests_post.call_args[1]["json"]
         self.assertEqual(json_body["model"], "custom/model/from/settings")
 
     # ------------------------------------------------------------------
@@ -286,12 +296,13 @@ class LlmChatEndpointTests(TestCase):
         }
         mock_response.raise_for_status.return_value = None
 
-        with patch("api.views.llm_chat.requests.post", return_value=mock_response):
-            response = self.client.post(
-                reverse("llm_chat"),
-                data=json.dumps({"message": "test"}),
-                content_type="application/json",
-            )
+        self.mock_requests_post.side_effect = None
+        self.mock_requests_post.return_value = mock_response
+        response = self.client.post(
+            reverse("llm_chat"),
+            data=json.dumps({"message": "test"}),
+            content_type="application/json",
+        )
 
         self.assertEqual(response.status_code, 200)
 
@@ -332,12 +343,11 @@ class LlmChatEndpointTests(TestCase):
     # ------------------------------------------------------------------
     # 9. Timeout — returns 504
     # ------------------------------------------------------------------
-    @patch("api.views.llm_chat.requests.post")
-    def test_timeout_returns_504(self, mock_post):
+    def test_timeout_returns_504(self):
         """When Silicon Flow times out, returns 504."""
         import requests as requests_lib
 
-        mock_post.side_effect = requests_lib.exceptions.Timeout("Request timed out")
+        self.mock_requests_post.side_effect = requests_lib.exceptions.Timeout("Request timed out")
 
         response = self.client.post(
             reverse("llm_chat"),
@@ -354,8 +364,7 @@ class LlmChatEndpointTests(TestCase):
     # ------------------------------------------------------------------
     # 10. User message is stripped and stringified
     # ------------------------------------------------------------------
-    @patch("api.views.llm_chat.requests.post")
-    def test_user_message_is_stripped(self, mock_post):
+    def test_user_message_is_stripped(self):
         """Leading/trailing whitespace in the user message is stripped before sending."""
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -363,7 +372,8 @@ class LlmChatEndpointTests(TestCase):
             "choices": [{"message": {"content": "result"}}],
         }
         mock_response.raise_for_status.return_value = None
-        mock_post.return_value = mock_response
+        self.mock_requests_post.side_effect = None
+        self.mock_requests_post.return_value = mock_response
 
         self.client.post(
             reverse("llm_chat"),
@@ -371,5 +381,5 @@ class LlmChatEndpointTests(TestCase):
             content_type="application/json",
         )
 
-        messages = mock_post.call_args[1]["json"]["messages"]
+        messages = self.mock_requests_post.call_args[1]["json"]["messages"]
         self.assertEqual(messages[1]["content"], "hello")

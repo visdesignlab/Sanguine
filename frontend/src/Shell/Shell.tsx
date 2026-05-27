@@ -133,7 +133,6 @@ export const Shell = observer(() => {
       content: (
         <LlmChatPanel
           {...llmChatSession}
-          onCloseSidebar={() => setActiveLeftPanel(null)}
         />
       ),
     },
