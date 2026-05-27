@@ -911,6 +911,26 @@ const normalizeDepartmentState = (state: LegacyApplicationState): ApplicationSta
   })(),
 });
 
+const deepEqual = (a: unknown, b: unknown): boolean => {
+  if (a === b) return true;
+  if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false;
+
+  const objA = a as Record<string, unknown>;
+  const objB = b as Record<string, unknown>;
+
+  const keysA = Object.keys(objA);
+  const keysB = Object.keys(objB);
+
+  if (keysA.length !== keysB.length) return false;
+
+  for (const key of keysA) {
+    if (!keysB.includes(key)) return false;
+    if (!deepEqual(objA[key], objB[key])) return false;
+  }
+
+  return true;
+};
+
 // region Types
 export interface ApplicationState {
   filterValues: {
@@ -960,6 +980,70 @@ export interface ApplicationState {
     isInPrivateMode: boolean;
   };
 }
+
+export type ApplicationStatePatch = Partial<{
+  filterValues: Partial<ApplicationState['filterValues']>;
+  selections: Partial<ApplicationState['selections']>;
+  dashboard: Partial<ApplicationState['dashboard']>;
+  department: Partial<ApplicationState['department']>;
+  settings: Partial<ApplicationState['settings']>;
+  ui: Partial<ApplicationState['ui']>;
+}>;
+
+const mergeApplicationStatePatch = (
+  state: ApplicationState,
+  patch: ApplicationStatePatch,
+): ApplicationState => {
+  const patchDepartment = patch.department;
+  const departmentChartConfigs = patchDepartment?.chartConfigs ?? state.department.chartConfigs;
+  const patchedDepartmentLayouts = patchDepartment?.chartLayouts ?? state.department.chartLayouts;
+  const hasValidMainLayouts = Array.isArray(patchedDepartmentLayouts?.main)
+    && patchedDepartmentLayouts.main.length > 0
+    && departmentChartConfigs.every((config) => patchedDepartmentLayouts.main.some((layout) => layout.i === config.chartId));
+  const synthesizedDepartmentLayouts = hasValidMainLayouts
+    ? patchedDepartmentLayouts
+    : {
+      main: departmentChartConfigs.map((config, index) => ({
+        i: config.chartId,
+        x: 0,
+        y: index * 20,
+        w: 4,
+        h: 20,
+      })),
+    };
+
+  const nextState: ApplicationState = {
+    ...state,
+    filterValues: patch.filterValues ? {
+      ...state.filterValues,
+      ...patch.filterValues,
+    } : state.filterValues,
+    selections: patch.selections ? {
+      ...state.selections,
+      ...patch.selections,
+    } : state.selections,
+    dashboard: patch.dashboard ? {
+      ...state.dashboard,
+      ...patch.dashboard,
+    } : state.dashboard,
+    department: patch.department ? {
+      ...state.department,
+      ...patch.department,
+      chartConfigs: departmentChartConfigs,
+      chartLayouts: synthesizedDepartmentLayouts,
+    } : state.department,
+    settings: patch.settings ? {
+      ...state.settings,
+      ...patch.settings,
+    } : state.settings,
+    ui: patch.ui ? {
+      ...state.ui,
+      ...patch.ui,
+    } : state.ui,
+  };
+
+  return normalizeDepartmentState(nextState as LegacyApplicationState);
+};
 
 // endregion
 
@@ -1572,35 +1656,15 @@ export class RootStore {
    * Ignores UI state (active tab, etc.) as that is transient.
    */
   areStatesEqual(stateA: ApplicationState, stateB: ApplicationState): boolean {
-    // Helper for deep equality
-    const isEqual = (a: unknown, b: unknown): boolean => {
-      if (a === b) return true;
-      if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false;
-
-      const objA = a as Record<string, unknown>;
-      const objB = b as Record<string, unknown>;
-
-      const keysA = Object.keys(objA);
-      const keysB = Object.keys(objB);
-
-      if (keysA.length !== keysB.length) return false;
-
-      for (const key of keysA) {
-        if (!keysB.includes(key)) return false;
-        if (!isEqual(objA[key], objB[key])) return false;
-      }
-      return true;
-    };
-
     // Compare relevant sections
     const normalizedA = normalizeDepartmentState(stateA as LegacyApplicationState);
     const normalizedB = normalizeDepartmentState(stateB as LegacyApplicationState);
 
-    return isEqual(normalizedA.filterValues, normalizedB.filterValues)
-      && isEqual(normalizedA.selections, normalizedB.selections)
-      && isEqual(normalizedA.dashboard, normalizedB.dashboard)
-      && isEqual(normalizedA.department, normalizedB.department)
-      && isEqual(normalizedA.settings, normalizedB.settings);
+    return deepEqual(normalizedA.filterValues, normalizedB.filterValues)
+      && deepEqual(normalizedA.selections, normalizedB.selections)
+      && deepEqual(normalizedA.dashboard, normalizedB.dashboard)
+      && deepEqual(normalizedA.department, normalizedB.department)
+      && deepEqual(normalizedA.settings, normalizedB.settings);
   }
 
   get currentState(): ApplicationState {
@@ -1611,6 +1675,42 @@ export class RootStore {
       return this.getBaseInitialState();
     }
     return normalizeDepartmentState(this.provenance.getState(this.provenance.current) as LegacyApplicationState);
+  }
+
+  applyApplicationStatePatch(
+    patch: ApplicationStatePatch,
+    label: string = 'LLM State Update',
+  ): boolean {
+    if (!this.provenance) return false;
+
+    const { currentState } = this;
+    const nextState = mergeApplicationStatePatch(currentState, patch);
+    if (deepEqual(currentState, nextState)) {
+      return false;
+    }
+
+    this.provenance.apply({
+      apply: (state: ApplicationState) => {
+        const newState = mergeApplicationStatePatch(
+          normalizeDepartmentState(state as LegacyApplicationState),
+          patch,
+        );
+        return {
+          state: newState,
+          label,
+          stateSaveMode: 'Complete',
+          actionType: 'Regular',
+          eventType: 'Regular',
+          event: label,
+          meta: {
+            type: 'Regular',
+            value: label,
+          },
+        };
+      },
+    }, label);
+
+    return true;
   }
 
   get uiState() {

@@ -12,6 +12,7 @@ import {
   Title,
 } from '@mantine/core';
 import { apiPath } from '../../Utils/api';
+import { ensureCsrfToken } from '../../Utils/csrf';
 
 const EMAIL_GATE_STORAGE_KEY = 'intelvia_email_gate_v1';
 const EMAIL_GATE_COMPLETED_VALUE = 'true';
@@ -27,37 +28,6 @@ function persistGateStorage(): void {
   } catch {
     emailGateBypassedForSession = true;
   }
-}
-
-function getCookie(name: string): string | null {
-  if (!document.cookie) return null;
-
-  const cookies = document.cookie.split(';');
-  for (let i = 0; i < cookies.length; i += 1) {
-    const cookie = cookies[i].trim();
-    if (cookie.startsWith(`${name}=`)) {
-      return decodeURIComponent(cookie.slice(name.length + 1));
-    }
-  }
-
-  return null;
-}
-
-async function getEmailGateCsrfToken(): Promise<string | null> {
-  const existingToken = getCookie('csrftoken');
-  if (existingToken) {
-    return existingToken;
-  }
-
-  const csrfResponse = await fetch(apiPath('email_gate/csrf'), {
-    method: 'GET',
-    credentials: 'include',
-  });
-  if (!csrfResponse.ok) {
-    return null;
-  }
-
-  return getCookie('csrftoken');
 }
 
 export function isEmailGateEnabled(hostname: string = window.location.hostname): boolean {
@@ -78,7 +48,7 @@ export function isEmailGateBlocked(hostname: string = window.location.hostname):
 
 async function submitEmailGate(email: string, institution: string): Promise<EmailGateSubmitResponse> {
   try {
-    const csrfToken = await getEmailGateCsrfToken();
+    const csrfToken = await ensureCsrfToken();
     if (!csrfToken) {
       return { ok: false, error: 'Unable to submit gate form' };
     }

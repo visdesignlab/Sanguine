@@ -1,0 +1,102 @@
+/* LlmChatPanel.module.css */
+
+/* ── Message rows ─────────────────────────────────────── */
+.messageRow {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  word-break: break-word;
+}
+
+.messageRowUser {
+  align-self: flex-end;
+  background-color: var(--mantine-color-blue-light);
+}
+
+.messageRowAssistant {
+  align-self: flex-start;
+  background-color: var(--mantine-color-gray-light);
+}
+
+.messageLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.messageLabelUser {
+  color: var(--mantine-color-blue-7);
+  text-align: left;
+}
+
+.messageLabelAssistant {
+  color: var(--mantine-color-gray-7);
+}
+
+.messageCodeBlock {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-8));
+  color: light-dark(var(--mantine-color-dark-9), var(--mantine-color-gray-0));
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+  overflow-x: auto;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  tab-size: 2;
+  border: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+/* ── Scrollable message area ──────────────────────────── */
+.messageArea {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 0;
+}
+
+/* ── Input area ───────────────────────────────────────── */
+.inputArea {
+  border-top: 1px solid var(--mantine-color-gray-3);
+  padding-top: 8px;
+  margin-top: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ── Error display ────────────────────────────────────── */
+.errorText {
+  color: var(--mantine-color-red-6);
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+/* ── Empty state ──────────────────────────────────────── */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--mantine-color-dimmed);
+  font-size: 13px;
+  text-align: center;
+  padding: 16px;
+}

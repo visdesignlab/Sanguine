@@ -16,6 +16,8 @@ env = environ.Env(
     SENTRY_TRACES_SAMPLE_RATE=(float, 0.0),
     SENTRY_SEND_DEFAULT_PII=(bool, False),
     SENTRY_CAPTURE_HANDLED_HTTP_ERRORS=(bool, True),
+    SILICON_FLOW_API_KEY=(str, ""),
+    SILICON_FLOW_MODEL=(str, "Qwen/Qwen2.5-72B-Instruct"),
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -26,6 +28,8 @@ DEBUG = env("DJANGO_DEBUG")
 DISABLE_LOGINS = env("DJANGO_DISABLE_LOGINS")
 SENTRY_DSN = env("SENTRY_DSN")
 SENTRY_CAPTURE_HANDLED_HTTP_ERRORS = env("SENTRY_CAPTURE_HANDLED_HTTP_ERRORS")
+SILICON_FLOW_API_KEY = env("SILICON_FLOW_API_KEY")
+SILICON_FLOW_MODEL = env("SILICON_FLOW_MODEL")
 
 if SENTRY_DSN:
     sentry_sdk.init(

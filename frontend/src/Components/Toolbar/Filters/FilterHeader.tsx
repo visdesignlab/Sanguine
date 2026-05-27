@@ -28,7 +28,7 @@ export function FilterHeader({
         <Accordion.Control px={2} disabled={disabled} style={{ pointerEvents: disabled ? 'none' : 'auto' }}>
           <Flex align="center" wrap="nowrap">
             <Tooltip label={tooltipLabel} disabled={disabled}>
-              <Title order={4} c={count ? 'blue.6' : undefined} style={{ whiteSpace: 'nowrap' }}>{title}</Title>
+              <Title order={5} c={count ? 'blue.6' : undefined} style={{ whiteSpace: 'nowrap' }}>{title}</Title>
             </Tooltip>
 
             <Flex align="center" gap={4} ml="auto">

@@ -4,6 +4,7 @@ import {
 import { Layout } from 'react-grid-layout';
 import {
   RootStore, MANUAL_INFINITY,
+  type ApplicationStatePatch,
 } from './Store';
 import type { DashboardChartConfig, DepartmentChartConfig } from '../Types/application';
 
@@ -541,6 +542,61 @@ describe('Store - RootStore', () => {
       const dateFrom = '2020-01-01';
       store.actions.updateFilter('dateFrom', dateFrom);
       expect(store.state.filterValues.dateFrom).toBe(dateFrom);
+    });
+
+    test('should hydrate a partial application state patch into provenance', () => {
+      const originalLayouts = store.currentState.dashboard.chartLayouts;
+      const patch: ApplicationStatePatch = {
+        filterValues: {
+          dateFrom: '2024-01-01T00:00:00.000Z',
+        },
+        dashboard: {
+          chartConfigs: [
+            {
+              chartId: 'llm-chart-1',
+              xAxisVar: 'month',
+              yAxisVar: 'rbc_units',
+              aggregation: 'avg',
+              chartType: 'line',
+            },
+          ],
+        },
+        ui: {
+          activeTab: 'Provider',
+        },
+      };
+
+      const applied = store.applyApplicationStatePatch(patch);
+
+      expect(applied).toBe(true);
+      expect(store.currentState.filterValues.dateFrom).toBe(patch.filterValues?.dateFrom);
+      expect(store.currentState.dashboard.chartConfigs).toEqual(patch.dashboard?.chartConfigs);
+      expect(store.currentState.dashboard.chartLayouts).toEqual(originalLayouts);
+      expect(store.currentState.ui.activeTab).toBe('Provider');
+    });
+
+    test('should synthesize department layouts when the patch only provides chart configs', () => {
+      const patch: ApplicationStatePatch = {
+        department: {
+          chartConfigs: [
+            {
+              chartId: 'dept-llm-1',
+              title: 'Provider Breakdown',
+              chartType: 'departmentTable',
+              rowVar: 'attending_provider',
+              aggregation: 'avg',
+              columns: [],
+            },
+          ],
+        },
+      };
+
+      const applied = store.applyApplicationStatePatch(patch);
+
+      expect(applied).toBe(true);
+      expect(store.currentState.department.chartConfigs).toEqual(patch.department?.chartConfigs);
+      expect(store.currentState.department.chartLayouts.main).toHaveLength(1);
+      expect(store.currentState.department.chartLayouts.main[0].i).toBe('dept-llm-1');
     });
   });
 

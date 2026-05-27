@@ -71,8 +71,10 @@ export function FilterHistogramWithSliderComponent({
               color: rangeChanged(unitName)
                 ? 'var(--mantine-color-blue-filled)'
                 : undefined,
+              marginBottom: 4,
             },
           }}
+          size="xs"
         >
           <Flex
             justify="center"

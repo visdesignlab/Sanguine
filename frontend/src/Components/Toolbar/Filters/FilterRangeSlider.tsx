@@ -40,7 +40,7 @@ export function FilterRangeSlider({ varName, paddingLeft, paddingRight }: Filter
   return useObserver(() => (
     <RangeSlider
       value={sliderValues}
-      size="sm"
+      size="xs"
       onChange={setSliderValues}
       onChangeEnd={handleCommit}
       min={initialFilterMin}
