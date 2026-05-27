@@ -1141,12 +1141,18 @@ export class RootStore {
 
   clearSelected() {
     if (this.selectedCaseIds.size === 0 && !this.isFocusModeActive) return;
-    this.selectedCaseIds = new Set(); this.isFocusModeActive = false; this.caseSelectionVersion += 1;
+    this.selectedCaseIds = new Set();
+    this.isFocusModeActive = false;
+    this.isHoveringBadge = false;
+    this.caseSelectionVersion += 1;
   }
 
   setSelected(ids: string[]) {
     this.selectedCaseIds = new Set(ids);
-    if (ids.length === 0) this.isFocusModeActive = false;
+    if (ids.length === 0) {
+      this.isFocusModeActive = false;
+      this.isHoveringBadge = false;
+    }
     this.caseSelectionVersion += 1;
   }
 
