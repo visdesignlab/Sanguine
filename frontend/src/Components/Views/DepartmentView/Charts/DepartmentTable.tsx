@@ -757,6 +757,7 @@ const HistogramFooter = observer(({
 
 const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTableConfig }) => {
   const store = useContext(Store);
+  const { selectedCaseIds } = store;
   const chartData = store.departmentChartData[chartConfig.chartId] as DepartmentTableData;
 
   // Compute department context labels for tooltips
@@ -808,7 +809,16 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     const next = new Set(selectedRowKeysRef.current);
     if (selected) next.add(key); else next.delete(key);
     selectedRowKeysRef.current = next; setSelectedRowKeys(next);
-    if (selected) store.addSelected(rowIds(row)); else store.removeSelected(rowIds(row));
+    if (selected) {
+      store.addSelected(rowIds(row));
+    } else {
+      const otherSelectedCases = new Set(
+        displayedRowsRef.current
+          .filter((r) => next.has(String(r._row_key ?? '')))
+          .flatMap((r) => rowIds(r)),
+      );
+      store.removeSelected(rowIds(row).filter((id) => !otherSelectedCases.has(id)));
+    }
   }, [rowIds, store]);
 
   const handleRowMouseDown = useCallback((row: DepartmentTableRow) => {
@@ -1740,7 +1750,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
           rowStyle={(row) => {
             const base: React.CSSProperties = { cursor: 'pointer', userSelect: 'none' };
             const caseIds = (row._case_ids ?? []) as string[];
-            const allCasesSelected = caseIds.length > 0 && caseIds.every((id) => store.selectedCaseIds.has(id));
+            const allCasesSelected = caseIds.length > 0 && caseIds.every((id) => selectedCaseIds.has(id));
             if (!selectedRowKeys.has(String(row._row_key ?? '')) && !allCasesSelected) return base;
             return {
               ...base,
