@@ -994,6 +994,24 @@ const mergeApplicationStatePatch = (
   state: ApplicationState,
   patch: ApplicationStatePatch,
 ): ApplicationState => {
+  const patchDepartment = patch.department;
+  const departmentChartConfigs = patchDepartment?.chartConfigs ?? state.department.chartConfigs;
+  const patchedDepartmentLayouts = patchDepartment?.chartLayouts ?? state.department.chartLayouts;
+  const hasValidMainLayouts = Array.isArray(patchedDepartmentLayouts?.main)
+    && patchedDepartmentLayouts.main.length > 0
+    && departmentChartConfigs.every((config) => patchedDepartmentLayouts.main.some((layout) => layout.i === config.chartId));
+  const synthesizedDepartmentLayouts = hasValidMainLayouts
+    ? patchedDepartmentLayouts
+    : {
+      main: departmentChartConfigs.map((config, index) => ({
+        i: config.chartId,
+        x: 0,
+        y: index * 20,
+        w: 4,
+        h: 20,
+      })),
+    };
+
   const nextState: ApplicationState = {
     ...state,
     filterValues: patch.filterValues ? {
@@ -1011,6 +1029,8 @@ const mergeApplicationStatePatch = (
     department: patch.department ? {
       ...state.department,
       ...patch.department,
+      chartConfigs: departmentChartConfigs,
+      chartLayouts: synthesizedDepartmentLayouts,
     } : state.department,
     settings: patch.settings ? {
       ...state.settings,

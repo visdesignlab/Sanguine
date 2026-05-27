@@ -574,6 +574,30 @@ describe('Store - RootStore', () => {
       expect(store.currentState.dashboard.chartLayouts).toEqual(originalLayouts);
       expect(store.currentState.ui.activeTab).toBe('Provider');
     });
+
+    test('should synthesize department layouts when the patch only provides chart configs', () => {
+      const patch: ApplicationStatePatch = {
+        department: {
+          chartConfigs: [
+            {
+              chartId: 'dept-llm-1',
+              title: 'Provider Breakdown',
+              chartType: 'departmentTable',
+              rowVar: 'attending_provider',
+              aggregation: 'avg',
+              columns: [],
+            },
+          ],
+        },
+      };
+
+      const applied = store.applyApplicationStatePatch(patch);
+
+      expect(applied).toBe(true);
+      expect(store.currentState.department.chartConfigs).toEqual(patch.department?.chartConfigs);
+      expect(store.currentState.department.chartLayouts.main).toHaveLength(1);
+      expect(store.currentState.department.chartLayouts.main[0].i).toBe('dept-llm-1');
+    });
   });
 
   describe('Settings Management', () => {
