@@ -783,7 +783,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
   selectedRowKeysRef.current = selectedRowKeys;
   const lastClickedIndexRef = useRef<number>(-1);
   const dragRef = useRef({
-    active: false, selecting: true, did: false, startKey: '',
+    active: false, selecting: true, did: false, startKey: '', startRow: null as DepartmentTableRow | null,
   });
   const displayedRowsRef = useRef<DepartmentTableRow[]>([]);
 
@@ -796,7 +796,10 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
 
   // End drag on mouseup anywhere
   useEffect(() => {
-    const onMouseUp = () => { dragRef.current.active = false; };
+    const onMouseUp = () => {
+      dragRef.current.active = false;
+      dragRef.current.startRow = null;
+    };
     window.addEventListener('mouseup', onMouseUp);
     return () => window.removeEventListener('mouseup', onMouseUp);
   }, []);
@@ -825,7 +828,9 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     const key = String(row._row_key ?? '');
     if (!key) return;
     dragRef.current.active = true; dragRef.current.did = false;
-    dragRef.current.startKey = key; dragRef.current.selecting = !selectedRowKeysRef.current.has(key);
+    dragRef.current.startKey = key;
+    dragRef.current.startRow = row;
+    dragRef.current.selecting = !selectedRowKeysRef.current.has(key);
   }, []);
 
   const handleRowMouseEnter = useCallback((row: DepartmentTableRow) => {
@@ -833,7 +838,11 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     if (!dragRef.current.active) return;
     const key = String(row._row_key ?? '');
     if (!key || key === dragRef.current.startKey) return;
-    dragRef.current.did = true; setRowSelected(row, dragRef.current.selecting);
+    if (!dragRef.current.did && dragRef.current.startRow) {
+      setRowSelected(dragRef.current.startRow, dragRef.current.selecting);
+    }
+    dragRef.current.did = true;
+    setRowSelected(row, dragRef.current.selecting);
   }, [rowIds, setRowSelected, store]);
 
   const handleRowClick = useCallback(({ record, index, event }: { record: DepartmentTableRow; index: number; event: React.MouseEvent<Element> }) => {
