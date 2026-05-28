@@ -1,0 +1,55 @@
+import React, { useContext } from 'react';
+import {
+  Flex, Text, Tooltip, ActionIcon, useMantineTheme,
+} from '@mantine/core';
+import { IconFocusCentered, IconX } from '@tabler/icons-react';
+import { observer } from 'mobx-react-lite';
+import { Store } from '../../../../Store/Store';
+
+export const CaseSelectionBadge = observer(() => {
+  const store = useContext(Store);
+  const theme = useMantineTheme();
+  const { selectedCaseIds, isFocusModeActive } = store;
+  if (selectedCaseIds.size === 0) return null;
+  return (
+    <Tooltip
+      label={isFocusModeActive ? 'Click to unlock focus mode' : 'Click to lock focus mode (dims other cases)'}
+      openDelay={400}
+      withinPortal
+    >
+      <Flex
+        align="center"
+        gap={4}
+        px={8}
+        style={{
+          height: 26,
+          borderRadius: 13,
+          border: `1px solid ${isFocusModeActive ? theme.colors.orange[5] : theme.colors.gray[4]}`,
+          background: isFocusModeActive ? theme.colors.orange[0] : theme.colors.gray[0],
+          cursor: 'pointer',
+          userSelect: 'none',
+          flexShrink: 0,
+          transition: 'background 120ms, border-color 120ms',
+        }}
+        onMouseEnter={() => store.setHoveringBadge(true)}
+        onMouseLeave={() => store.setHoveringBadge(false)}
+        onClick={() => store.setFocusModeActive(!isFocusModeActive)}
+      >
+        <IconFocusCentered size={13} style={{ color: isFocusModeActive ? theme.colors.orange[6] : theme.colors.gray[6], flexShrink: 0 }} />
+        <Text size="xs" fw={500} style={{ color: isFocusModeActive ? theme.colors.orange[7] : theme.colors.gray[7], lineHeight: 1 }}>
+          {`${selectedCaseIds.size} Selected`}
+        </Text>
+        <ActionIcon
+          size={16}
+          variant="transparent"
+          color={isFocusModeActive ? 'orange' : 'gray'}
+          onClick={(e: React.MouseEvent) => { e.stopPropagation(); store.clearSelected(); }}
+          style={{ marginLeft: 2 }}
+          aria-label="Clear selection"
+        >
+          <IconX size={10} />
+        </ActionIcon>
+      </Flex>
+    </Tooltip>
+  );
+});

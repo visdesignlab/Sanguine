@@ -1130,6 +1130,18 @@ export class RootStore {
 
   selectedVisitNos: number[] = [];
 
+  // --- Case Selection (cross-chart hover/selection, Department View) ---
+  selectedCaseIds: Set<string> = new Set();
+
+  hoveredCaseIds: Set<string> = new Set();
+
+  isFocusModeActive = false;
+
+  isHoveringBadge = false;
+
+  // Incremented on every mutation so canvas charts can react via reaction(() => store.caseSelectionVersion, ...)
+  caseSelectionVersion = 0;
+
   // --- Department View State (non-provenance) ---
   departmentViewQuestionsOpened = true;
 
@@ -1164,6 +1176,8 @@ export class RootStore {
       procedureHierarchy: observable.ref,
       selectedVisits: observable.ref,
       selectedVisitNos: observable.ref,
+      selectedCaseIds: observable.ref,
+      hoveredCaseIds: observable.ref,
     });
 
     this.initReactions();
@@ -1172,6 +1186,68 @@ export class RootStore {
   // --- Common Helpers ---
   get state() {
     return this.currentState;
+  }
+  // endregion
+
+  // region Case Selection Actions
+  setHovered(ids: string[]) {
+    if (ids.length === this.hoveredCaseIds.size && ids.every((id) => this.hoveredCaseIds.has(id))) return;
+    this.hoveredCaseIds = new Set(ids); this.caseSelectionVersion += 1;
+  }
+
+  clearHovered() {
+    if (this.hoveredCaseIds.size === 0) return;
+    this.hoveredCaseIds = new Set(); this.caseSelectionVersion += 1;
+  }
+
+  addSelected(ids: string[]) {
+    if (ids.length === 0) return;
+    const next = new Set(this.selectedCaseIds);
+    ids.forEach((id) => next.add(id));
+    if (next.size === this.selectedCaseIds.size) return;
+    this.selectedCaseIds = next; this.caseSelectionVersion += 1;
+  }
+
+  toggleSelected(ids: string[]) {
+    if (ids.length === 0) return;
+    const next = new Set(this.selectedCaseIds);
+    ids.forEach((id) => { if (next.has(id)) next.delete(id); else next.add(id); });
+    this.selectedCaseIds = next; this.caseSelectionVersion += 1;
+  }
+
+  removeSelected(ids: string[]) {
+    if (ids.length === 0) return;
+    const next = new Set(this.selectedCaseIds);
+    ids.forEach((id) => next.delete(id));
+    if (next.size === this.selectedCaseIds.size) return;
+    this.selectedCaseIds = next; this.caseSelectionVersion += 1;
+  }
+
+  clearSelected() {
+    if (this.selectedCaseIds.size === 0 && !this.isFocusModeActive) return;
+    this.selectedCaseIds = new Set();
+    this.isFocusModeActive = false;
+    this.isHoveringBadge = false;
+    this.caseSelectionVersion += 1;
+  }
+
+  setSelected(ids: string[]) {
+    this.selectedCaseIds = new Set(ids);
+    if (ids.length === 0) {
+      this.isFocusModeActive = false;
+      this.isHoveringBadge = false;
+    }
+    this.caseSelectionVersion += 1;
+  }
+
+  setFocusModeActive(active: boolean) {
+    if (this.isFocusModeActive === active) return;
+    this.isFocusModeActive = active; this.caseSelectionVersion += 1;
+  }
+
+  setHoveringBadge(hovering: boolean) {
+    if (this.isHoveringBadge === hovering) return;
+    this.isHoveringBadge = hovering; this.caseSelectionVersion += 1;
   }
   // endregion
 
@@ -2928,16 +3004,16 @@ export class RootStore {
           ? 'v.attending_provider_id'
           : `v.${tableConfig.rowVar}`;
 
-        // --- Build JOIN for surgery case counts (only if cases column is requested) ---
-        const needsCaseJoin = tableConfig.columns.some((c) => c.colVar === 'cases');
+        // --- Build JOIN for surgery case counts and case ID lists ---
         let caseJoinClause = '';
         let caseCountExpr = '0';
 
-        if (needsCaseJoin) {
+        {
           const needsVisitCaseJoin = tableConfig.rowVar !== 'attending_provider' || Boolean(tableConfig.groupByVar);
+          // Use surgery-date columns for year/quarter so selections align with DumbbellChart/ScatterPlot
           const caseRowExpr = tableConfig.rowVar === 'attending_provider'
             ? 'provider_cases.prov_id'
-            : `visit_cases.${tableConfig.rowVar}`;
+            : `surgery_cases.${tableConfig.rowVar}`;
           const caseIdExpr = tableConfig.rowVar === 'attending_provider'
             ? 'provider_cases.case_id'
             : 'surgery_cases.case_id';
@@ -2987,6 +3063,7 @@ export class RootStore {
           caseJoinClause = `LEFT JOIN (
             SELECT
               ${caseSelects.join(',\n              ')},
+              LIST(DISTINCT CAST(${caseIdExpr} AS VARCHAR)) AS case_ids,
               COUNT(DISTINCT ${caseIdExpr}) AS case_count
             FROM ${caseSource}
             ${caseWhereClause}
@@ -2995,7 +3072,7 @@ export class RootStore {
         }
 
         // Build column selection clauses based on config.columns
-        const columnClauses: string[] = [`${internalRowKeyExpr} AS _row_key`];
+        const columnClauses: string[] = [`${internalRowKeyExpr} AS _row_key`, 'COALESCE(ANY_VALUE(pc.case_ids), []::VARCHAR[]) AS _case_ids'];
 
         // Iterate over the columns and build the column selection clauses
         tableConfig.columns.forEach((col) => {
@@ -3166,24 +3243,33 @@ export class RootStore {
 
         try {
           const queryResult = await this.duckDB!.query(query);
-          const rawRows = queryResult.toArray().map((row: { toJSON: () => unknown }) => row.toJSON() as unknown as DepartmentTableRow);
+          const rawRows = queryResult.toArray().map((row: { toJSON: () => unknown }) => {
+            const json = row.toJSON() as unknown as DepartmentTableRow;
+            // Arrow LIST columns come back as iterable vectors, not plain arrays — normalize here
+            json._case_ids = Array.from((json._case_ids ?? []) as Iterable<unknown>).map(String);
+            return json;
+          });
 
           let rows = rawRows;
           if (tableConfig.groupByVar) {
-            // Transform flat rows into grouped rows
+            // Transform flat rows into grouped rows, unioning case IDs across groups
             const groupedMap = new Map<string | number, DepartmentTableRow>();
+            const caseIdSets = new Map<string | number, Set<string>>();
 
             rawRows.forEach((r) => {
               const rowKey = String(r._row_key ?? r[tableConfig.rowVar] ?? 'Unknown');
               if (!groupedMap.has(rowKey)) {
-                groupedMap.set(rowKey, {
-                  ...r,
-                  _groups: [],
-                });
+                groupedMap.set(rowKey, { ...r, _case_ids: [], _groups: [] });
+                caseIdSets.set(rowKey, new Set());
               }
-              const rowObj = groupedMap.get(rowKey)!;
-              (rowObj._groups as DepartmentTableRow[]).push(r);
+              const idSet = caseIdSets.get(rowKey)!;
+              ((r._case_ids ?? []) as string[]).forEach((id) => idSet.add(id));
+              (groupedMap.get(rowKey)!._groups as DepartmentTableRow[]).push(r);
             });
+
+            for (const [rowKey, idSet] of caseIdSets) {
+              groupedMap.get(rowKey)!._case_ids = Array.from(idSet);
+            }
 
             rows = Array.from(groupedMap.values());
           }
@@ -3277,24 +3363,7 @@ export class RootStore {
         try {
           const result = await this.duckDB!.query(query);
           const data = result.toArray().map((row) => row.toJSON());
-
-          // We need to group by the 'grouping variable'.
-          const groupingVar = 'groupingVar' in config ? String((config as Record<string, unknown>).groupingVar) : 'surgeon_prov_id';
-
-          // We can do the grouping in JS.
-          const grouped: Record<string, Record<string, unknown>[]> = {};
-          data.forEach((row) => {
-            const key = String(row[groupingVar] || 'Unknown');
-            if (!grouped[key]) grouped[key] = [];
-            grouped[key].push(row as Record<string, unknown>);
-          });
-
-          const formattedData = Object.entries(grouped).map(([name, groupData]) => ({
-            name,
-            data: groupData,
-          }));
-
-          return { id: config.chartId, data: formattedData };
+          return { id: config.chartId, data };
         } catch (error) {
           console.error('Error executing scatter query:', error);
           return { id: config.chartId, data: [] };
@@ -3413,6 +3482,7 @@ export class RootStore {
     await this.computeDashboardStatData();
     await this.computeDashboardChartData();
   }
+
   // endregion
 }
 

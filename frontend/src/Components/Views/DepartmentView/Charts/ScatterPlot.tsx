@@ -11,6 +11,7 @@ import {
 } from '@tabler/icons-react';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { useObserver } from 'mobx-react-lite';
+import { reaction } from 'mobx';
 import { Store } from '../../../../Store/Store';
 
 import {
@@ -22,13 +23,18 @@ import {
 import {
   AddGroupModal, GroupDefinition, GroupCondition, CONDITION_FIELDS_FLAT,
 } from './AddGroupModal';
-import { smallHoverColor } from '../../../../Theme/mantineTheme';
+import { smallHoverColor, smallSelectColor } from '../../../../Theme/mantineTheme';
+import { CaseSelectionBadge } from './CaseSelectionBadge';
+import { useBrushSelection, type BrushRect } from './useBrushSelection';
 import {
   getProcessedScatterData, calculateScatterLayout,
   buildSpatialIndex, findNearestPoint,
   ScatterVarConfig, PointPosition,
 } from './ScatterPlotUtils';
 import { BLOOD_COMPONENTS } from '../../../../Types/bloodProducts';
+
+const BIN_SORT_ORDER = ['alpha', 'count', 'avg'] as const;
+type BinSort = typeof BIN_SORT_ORDER[number];
 
 // #region Y-Axis
 const ScatterYAxis = memo(({
@@ -311,6 +317,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   const [showTargets, setShowTargets] = useState(true);
   const [showAvg, setShowAvg] = useState(true);
   const [sortMode, setSortMode] = useState<string>('asc');
+  const [binSort, setBinSort] = useState<BinSort>('alpha');
   const [collapsedBinGroups, setCollapsedBinGroups] = useState<Set<string>>(new Set());
 
   // Groups
@@ -421,19 +428,13 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   }, [handleScroll]);
 
   // Flatten nested series data: store format is [{name, color, data: case[]}, ...]
-  const rawData = useMemo(() => {
-    const storeData = store.departmentChartData[chartConfig.chartId];
-    if (!storeData) return [] as DumbbellCase[];
-    // Check if data is in the old series format ({data: [...]})
-    if (Array.isArray(storeData) && storeData.length > 0 && 'data' in storeData[0]) {
-      // Old series format: flatten the inner data arrays
-      return ((storeData as unknown) as { data: DumbbellCase[] }[]).flatMap((s) => s.data);
-    }
-    return (storeData as DumbbellCase[]) || [];
-  }, [store.departmentChartData, chartConfig.chartId]);
+  const rawData = useMemo(
+    () => (store.departmentChartData[chartConfig.chartId] as DumbbellCase[]) || [],
+    [store.departmentChartData, chartConfig.chartId],
+  );
   const processedData = useMemo(
-    () => getProcessedScatterData(rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey),
-    [rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey],
+    () => getProcessedScatterData(rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey, binSort),
+    [rawData, selectedX, varConfig.key, sortMode, isDiscrete, xVarKey, binSort],
   );
   const rawIndexByCaseRef = useMemo(() => {
     const map = new Map<DumbbellCase, number>();
@@ -559,17 +560,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
   // Spatial index
   const spatialIndex = useMemo(() => buildSpatialIndex(pointPositions), [pointPositions]);
 
-  // Selection brush state
-  const chartRef = useRef<HTMLDivElement>(null);
-  const [selection, setSelection] = useState<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
-  const [appliedSelection, setAppliedSelection] = useState<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
-  const [interactionMode, setInteractionMode] = useState<'idle' | 'selecting' | 'moving' | 'resizing'>('idle');
-  const [resizeHandle, setResizeHandle] = useState<string | null>(null);
-  const [brushHoverCursor, setBrushHoverCursor] = useState<string>('crosshair');
-  const initialSelection = useRef<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
-  const dragStart = useRef<{ x: number, y: number } | null>(null);
-
   // Hover state for canvas
+  const chartRef = useRef<HTMLDivElement>(null);
   const hoveredPointRef = useRef<PointPosition | null>(null);
   const [tooltipData, setTooltipData] = useState<{ x: number; y: number; caseData: DumbbellCase } | null>(null);
 
@@ -588,8 +580,9 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     ctx.scale(dpr, dpr);
     ctx.translate(-Math.max(0, visibleRange[0]), 0);
 
-    const hovered = hoveredPointRef.current;
-    const sel = appliedSelection;
+    // Read cross-chart state directly from singleton (no React deps needed)
+    const { hoveredCaseIds: hoveredIds, selectedCaseIds: selectedIds } = store;
+    const hasSelection = selectedIds.size > 0;
 
     const legendHover = hoveredLegendGroup;
     const legendSelected = selectedLegendGroups;
@@ -602,32 +595,36 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
       let radius = SCATTER_DOT_RADIUS;
       let opacity = 0.7;
 
-      // Legend emphasis (selected takes precedence, hover overlays)
+      // Legend group emphasis
       if (hasLegendEmphasis) {
         const pointKey = groupColor || '__default__';
-        const isSelected = legendSelected.has(pointKey);
-        const isHovered = legendHover === pointKey;
-        if (isSelected || isHovered) {
+        const isLegendSelected = legendSelected.has(pointKey);
+        const isLegendHovered = legendHover === pointKey;
+        if (isLegendSelected || isLegendHovered) {
           opacity = 0.9;
         } else {
           opacity = 0.08;
         }
       }
 
-      // Check selection
-      if (sel) {
-        const minX = Math.min(sel.x1, sel.x2);
-        const maxX = Math.max(sel.x1, sel.x2);
-        const minY = Math.min(sel.y1, sel.y2);
-        const maxY = Math.max(sel.y1, sel.y2);
-        if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
-          color = theme.colors.orange[6];
+      // Case-level hover / selection (higher priority than legend emphasis)
+      const caseId = rawData[p.caseIdx]?.case_id;
+      const isHoveredCase = caseId ? hoveredIds.has(caseId) : false;
+      const isSelectedCase = caseId ? selectedIds.has(caseId) : false;
+
+      // Highlight selected cases; dim non-selected only when focus mode is active
+      const focusDim = hasSelection && (store.isFocusModeActive || store.isHoveringBadge);
+      if (!hasLegendEmphasis) {
+        if (isSelectedCase) {
+          color = smallSelectColor;
           opacity = 0.9;
+        } else if (focusDim && !isHoveredCase) {
+          opacity = 0.2;
         }
       }
 
-      // Check hover
-      if (hovered && p.caseIdx === hovered.caseIdx) {
+      // Hover is highest priority
+      if (isHoveredCase) {
         color = smallHoverColor;
         radius = SCATTER_DOT_RADIUS + 2;
         opacity = 1;
@@ -641,10 +638,15 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     }
 
     ctx.restore();
-  }, [pointPositions, appliedSelection, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange]);
+  }, [pointPositions, theme, caseGroupColors, hoveredLegendGroup, selectedLegendGroups, visibleRange, rawData, store]);
 
   // Redraw canvas when dependencies change
   useEffect(() => { drawPoints(); }, [drawPoints]);
+
+  // Redraw canvas whenever cross-chart hover/selection state changes
+  useEffect(() => reaction(() => store.caseSelectionVersion, () => {
+    requestAnimationFrame(drawPoints);
+  }), [drawPoints, store]);
 
   // Set canvas size
   useEffect(() => {
@@ -660,130 +662,61 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
     drawPoints();
   }, [totalWidth, height, visibleRange, drawPoints]);
 
-  // Mouse handlers for brush + hover
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!chartRef.current) return;
-    const rect = chartRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const chartTop = SCATTER_MARGIN.top;
-    const chartBottom = height - bottomMargin;
-
-    if (selection) {
-      const minX = Math.min(selection.x1, selection.x2);
-      const maxX = Math.max(selection.x1, selection.x2);
-      const minY = Math.min(selection.y1, selection.y2);
-      const maxY = Math.max(selection.y1, selection.y2);
-      const tol = 10;
-      let handle = null;
-      if (Math.abs(x - minX) < tol && Math.abs(y - minY) < tol) handle = 'nw';
-      else if (Math.abs(x - maxX) < tol && Math.abs(y - minY) < tol) handle = 'ne';
-      else if (Math.abs(x - minX) < tol && Math.abs(y - maxY) < tol) handle = 'sw';
-      else if (Math.abs(x - maxX) < tol && Math.abs(y - maxY) < tol) handle = 'se';
-      else if (Math.abs(y - minY) < tol && x > minX && x < maxX) handle = 'n';
-      else if (Math.abs(y - maxY) < tol && x > minX && x < maxX) handle = 's';
-      else if (Math.abs(x - minX) < tol && y > minY && y < maxY) handle = 'w';
-      else if (Math.abs(x - maxX) < tol && y > minY && y < maxY) handle = 'e';
-      if (handle) { setInteractionMode('resizing'); setResizeHandle(handle); initialSelection.current = { ...selection }; return; }
-      if (x > minX && x < maxX && y > minY && y < maxY) { setInteractionMode('moving'); dragStart.current = { x, y }; initialSelection.current = { ...selection }; return; }
-    }
-    if (y < chartTop || y > chartBottom) { setAppliedSelection(null); setSelection(null); return; }
-    setInteractionMode('selecting');
-    setSelection({
-      x1: x, y1: y, x2: x, y2: y,
+  // Extract case IDs from a brush box
+  const extractBoxIds = (box: BrushRect) => {
+    const minX = Math.min(box.x1, box.x2); const maxX = Math.max(box.x1, box.x2);
+    const minY = Math.min(box.y1, box.y2); const maxY = Math.max(box.y1, box.y2);
+    const ids: string[] = [];
+    pointPositions.forEach((p) => {
+      if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY) {
+        const caseData = rawData[p.caseIdx];
+        if (caseData?.case_id) ids.push(caseData.case_id);
+      }
     });
-    setAppliedSelection(null);
-    initialSelection.current = {
-      x1: x, y1: y, x2: x, y2: y,
-    };
-  }, [selection, height, bottomMargin]);
+    return ids;
+  };
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+  const onClickPoint = () => {
+    const caseData = hoveredPointRef.current ? rawData[hoveredPointRef.current.caseIdx] : null;
+    if (caseData) store.toggleSelected([caseData.case_id]);
+  };
+
+  const {
+    selection, appliedSelection, interactionMode, resizeHandle, brushCursor,
+    handleMouseDown, handleMouseMove: brushHandleMouseMove, handleMouseUp,
+  } = useBrushSelection({
+    chartRef,
+    height,
+    marginTop: SCATTER_MARGIN.top,
+    bottomMargin,
+    dragLimit: SCATTER_DRAG_LIMIT,
+    extractBoxIds,
+    onClickPoint,
+    getSelectedCaseIds: () => store.selectedCaseIds,
+    setSelected: (ids) => store.setSelected(ids),
+  });
+
+  // Hover detection — called from onMouseMove when idle
+  const handleHover = useCallback((e: React.MouseEvent) => {
     if (!chartRef.current) return;
     const rect = chartRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const chartTop = SCATTER_MARGIN.top;
-    const chartBottom = height - bottomMargin;
-    const clampedY = Math.max(chartTop, Math.min(y, chartBottom));
-
-    // Hover detection (always, even during brush)
-    if (interactionMode === 'idle') {
-      const nearest = findNearestPoint(spatialIndex, pointPositions, x, y, 12);
-      const prev = hoveredPointRef.current;
-      if (nearest !== prev) {
-        hoveredPointRef.current = nearest;
-        if (nearest) {
-          // Find the case data
-          const caseData = rawData[nearest.caseIdx];
-          if (caseData) setTooltipData({ x: nearest.x, y: nearest.y, caseData });
-        } else {
-          setTooltipData(null);
+    const [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
+    const nearest = findNearestPoint(spatialIndex, pointPositions, x, y, 12);
+    const prev = hoveredPointRef.current;
+    if (nearest !== prev) {
+      hoveredPointRef.current = nearest;
+      if (nearest) {
+        const caseData = rawData[nearest.caseIdx];
+        if (caseData) {
+          setTooltipData({ x: nearest.x, y: nearest.y, caseData });
+          store.setHovered([caseData.case_id]);
         }
-        requestAnimationFrame(drawPoints);
+      } else {
+        setTooltipData(null);
+        store.clearHovered();
       }
-
-      // Check for brush hover interaction to set dynamic resize/move cursor
-      let cursor = 'crosshair';
-      if (selection) {
-        const minX = Math.min(selection.x1, selection.x2);
-        const maxX = Math.max(selection.x1, selection.x2);
-        const minY = Math.min(selection.y1, selection.y2);
-        const maxY = Math.max(selection.y1, selection.y2);
-        const tol = 10;
-        if (Math.abs(x - minX) < tol && Math.abs(y - minY) < tol) cursor = 'nw-resize';
-        else if (Math.abs(x - maxX) < tol && Math.abs(y - minY) < tol) cursor = 'ne-resize';
-        else if (Math.abs(x - minX) < tol && Math.abs(y - maxY) < tol) cursor = 'sw-resize';
-        else if (Math.abs(x - maxX) < tol && Math.abs(y - maxY) < tol) cursor = 'se-resize';
-        else if (Math.abs(y - minY) < tol && x > minX && x < maxX) cursor = 'n-resize';
-        else if (Math.abs(y - maxY) < tol && x > minX && x < maxX) cursor = 's-resize';
-        else if (Math.abs(x - minX) < tol && y > minY && y < maxY) cursor = 'w-resize';
-        else if (Math.abs(x - maxX) < tol && y > minY && y < maxY) cursor = 'e-resize';
-        else if (x > minX && x < maxX && y > minY && y < maxY) cursor = 'move';
-      }
-      setBrushHoverCursor(cursor);
     }
-
-    if (interactionMode === 'selecting' && initialSelection.current) {
-      setSelection({ ...initialSelection.current, x2: x, y2: clampedY });
-    } else if (interactionMode === 'moving' && initialSelection.current && dragStart.current) {
-      const dx = x - dragStart.current.x;
-      const dy = y - dragStart.current.y;
-      const cMinY = Math.min(initialSelection.current.y1, initialSelection.current.y2);
-      const cMaxY = Math.max(initialSelection.current.y1, initialSelection.current.y2);
-      let clampedDy = dy;
-      if (cMinY + dy < chartTop) clampedDy = chartTop - cMinY;
-      if (cMaxY + dy > chartBottom) clampedDy = chartBottom - cMaxY;
-      setSelection({
-        x1: initialSelection.current.x1 + dx, y1: initialSelection.current.y1 + clampedDy, x2: initialSelection.current.x2 + dx, y2: initialSelection.current.y2 + clampedDy,
-      });
-    } else if (interactionMode === 'resizing' && initialSelection.current) {
-      const minX = Math.min(initialSelection.current.x1, initialSelection.current.x2);
-      const maxX = Math.max(initialSelection.current.x1, initialSelection.current.x2);
-      const minY = Math.min(initialSelection.current.y1, initialSelection.current.y2);
-      const maxY = Math.max(initialSelection.current.y1, initialSelection.current.y2);
-      let nMinX = minX; let nMaxX = maxX; let nMinY = minY; let nMaxY = maxY;
-      if (resizeHandle?.includes('w')) nMinX = x;
-      if (resizeHandle?.includes('e')) nMaxX = x;
-      if (resizeHandle?.includes('n')) nMinY = clampedY;
-      if (resizeHandle?.includes('s')) nMaxY = clampedY;
-      setSelection({
-        x1: nMinX, y1: nMinY, x2: nMaxX, y2: nMaxY,
-      });
-    }
-  }, [interactionMode, selection, height, resizeHandle, bottomMargin, spatialIndex, pointPositions, drawPoints, rawData]);
-
-  const handleMouseUp = useCallback(() => {
-    setInteractionMode('idle');
-    setResizeHandle(null);
-    dragStart.current = null;
-    initialSelection.current = null;
-    if (selection) {
-      if (Math.abs(selection.x2 - selection.x1) < 5 && Math.abs(selection.y2 - selection.y1) < 5) {
-        setSelection(null); setAppliedSelection(null);
-      } else { setAppliedSelection(selection); }
-    }
-  }, [selection]);
+  }, [spatialIndex, pointPositions, rawData, store]);
 
   // X axis label for title
   const xLabel = xAxisOption?.label || selectedX;
@@ -805,6 +738,8 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
             </Title>
           </Flex>
           <Flex direction="row" align="center" gap="sm">
+            {/* Selection badge */}
+            <CaseSelectionBadge />
             {/* Groups icon */}
             <Tooltip label="Manage color groups" openDelay={500}>
               <ActionIcon
@@ -949,17 +884,52 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
           )}
           <Flex direction="row" h={height}>
             {/* Fixed Y Axis */}
-            <ScatterYAxis
-              height={height}
-              isDiscrete={isDiscrete}
-              yScale={yScale}
-              theme={theme}
-              varConfig={varConfig}
-              targets={targets}
-              setTargets={setTargets}
-              hoveredTarget={hoveredTarget}
-              setHoveredTarget={setHoveredTarget}
-            />
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <ScatterYAxis
+                height={height}
+                isDiscrete={isDiscrete}
+                yScale={yScale}
+                theme={theme}
+                varConfig={varConfig}
+                targets={targets}
+                setTargets={setTargets}
+                hoveredTarget={hoveredTarget}
+                setHoveredTarget={setHoveredTarget}
+              />
+              {/* Bin Sort Toggle — overlaid bottom-right of Y axis, same as DumbbellChart */}
+              {isDiscrete && (
+                <Box
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 5,
+                    zIndex: 10,
+                  }}
+                >
+                  <Tooltip
+                    label={`Sort ${xAxisOption?.label || selectedX} bins: ${binSort === 'alpha' ? 'A→Z' : binSort === 'count' ? 'Case Count' : 'Avg Y'}`}
+                    position="right"
+                    openDelay={300}
+                  >
+                    <Button
+                      size="compact-xs"
+                      variant="subtle"
+                      color="gray"
+                      px={4}
+                      h={26}
+                      style={{
+                        fontSize: 10,
+                        backgroundColor: 'rgba(255,255,255,0.85)',
+                        border: `1px solid ${theme.colors.gray[3]}`,
+                      }}
+                      onClick={() => setBinSort(BIN_SORT_ORDER[(BIN_SORT_ORDER.indexOf(binSort) + 1) % BIN_SORT_ORDER.length])}
+                    >
+                      {{ alpha: 'A/Z →', count: 'Cases →', avg: 'Avg →' }[binSort]}
+                    </Button>
+                  </Tooltip>
+                </Box>
+              )}
+            </div>
 
             {/* Scrollable Content */}
             <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
@@ -1062,12 +1032,12 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                     height,
                     position: 'relative',
                     userSelect: 'none',
-                    cursor: interactionMode !== 'idle' ? (interactionMode === 'moving' ? 'move' : (interactionMode === 'resizing' && resizeHandle ? `${resizeHandle}-resize` : 'crosshair')) : brushHoverCursor,
+                    cursor: interactionMode === 'moving' ? 'move' : interactionMode === 'resizing' && resizeHandle ? `${resizeHandle}-resize` : interactionMode === 'selecting' ? 'crosshair' : brushCursor,
                   }}
                   onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
+                  onMouseMove={(e) => { brushHandleMouseMove(e); if (interactionMode === 'idle') handleHover(e); }}
                   onMouseUp={handleMouseUp}
-                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); setBrushHoverCursor('crosshair'); requestAnimationFrame(drawPoints); }}
+                  onMouseLeave={() => { handleMouseUp(); hoveredPointRef.current = null; setTooltipData(null); store.clearHovered(); }}
                 >
                   {/* SVG layer for gridlines, bins, targets, avg, brush */}
                   <svg
@@ -1127,6 +1097,17 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                                   fill={isBinGroupCollapsed ? theme.colors.gray[4] : bgColor}
                                   stroke={theme.colors.gray[5]}
                                   strokeWidth={1}
+                                  style={{ cursor: 'pointer' }}
+                                  onMouseEnter={() => store.setHovered(binGroup.cases.map((c) => c.case_id))}
+                                  onMouseLeave={() => store.clearHovered()}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const ids = binGroup.cases.map((c) => c.case_id);
+                                    if (ids.length === 0) return;
+                                    const allSelected = ids.every((id) => store.selectedCaseIds.has(id));
+                                    if (allSelected) store.removeSelected(ids);
+                                    else store.addSelected(ids);
+                                  }}
                                 />
                               </Tooltip>
                               <foreignObject
@@ -1165,7 +1146,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                                 style={{ cursor: 'pointer' }}
                                 onMouseEnter={() => setHoveredCollapse(binGroup.id)}
                                 onMouseLeave={() => setHoveredCollapse(null)}
-                                onClick={(e) => handleToggleBinGroupCollapse(e, binGroup.id)}
+                                onClick={(e) => { e.stopPropagation(); handleToggleBinGroupCollapse(e, binGroup.id); }}
                               />
                               {hoveredCollapse === binGroup.id && (
                                 <path
@@ -1254,7 +1235,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                       />
                     )}
 
-                    {/* Brush selection */}
+                    {/* Brush selection — live drag */}
                     {selection && (
                       <rect
                         x={Math.min(selection.x1, selection.x2)}
@@ -1265,6 +1246,22 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ScatterPlotConfig })
                         fillOpacity={0.2}
                         stroke={theme.colors.orange[6]}
                         strokeDasharray="4 2"
+                        style={{ pointerEvents: 'none' }}
+                      />
+                    )}
+                    {/* Applied selection box — persists after drag */}
+                    {!selection && appliedSelection && (
+                      <rect
+                        x={Math.min(appliedSelection.x1, appliedSelection.x2)}
+                        y={Math.min(appliedSelection.y1, appliedSelection.y2)}
+                        width={Math.abs(appliedSelection.x2 - appliedSelection.x1)}
+                        height={Math.abs(appliedSelection.y2 - appliedSelection.y1)}
+                        fill={theme.colors.orange[2]}
+                        fillOpacity={0.2}
+                        stroke={theme.colors.orange[5]}
+                        strokeWidth={1.5}
+                        strokeDasharray="5 3"
+                        style={{ pointerEvents: 'none' }}
                       />
                     )}
                     {/* Hover crosshair reference lines */}

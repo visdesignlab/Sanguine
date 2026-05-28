@@ -81,6 +81,7 @@ export function getProcessedScatterData(
   sortMode: string,
   isDiscrete: boolean,
   xVarKey?: keyof DumbbellCase | null,
+  binSort: 'alpha' | 'count' | 'avg' = 'alpha',
 ): ScatterBinGroup[] {
   // Filter out cases where Y is null
   let filteredData = rawData.filter((d) => d[yKey] != null);
@@ -163,10 +164,19 @@ export function getProcessedScatterData(
     sortedKeys.sort((a, b) => {
       if (a === '0 mL') return -1;
       if (b === '0 mL') return 1;
-      const aVal = parseInt(a.split('-')[0], 10);
-      const bVal = parseInt(b.split('-')[0], 10);
-      return aVal - bVal;
+      return parseInt(a.split('-')[0], 10) - parseInt(b.split('-')[0], 10);
     });
+  } else if (binSort === 'count') {
+    sortedKeys.sort((a, b) => (groupedByBinGroup.get(b)?.length ?? 0) - (groupedByBinGroup.get(a)?.length ?? 0));
+  } else if (binSort === 'avg') {
+    const avgByBin = new Map<string, number>();
+    sortedKeys.forEach((k) => {
+      const vals = (groupedByBinGroup.get(k) ?? []).map((c) => c[yKey] as number | null).filter((v): v is number => v != null);
+      avgByBin.set(k, vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0);
+    });
+    sortedKeys.sort((a, b) => (avgByBin.get(b) ?? 0) - (avgByBin.get(a) ?? 0));
+  } else {
+    sortedKeys.sort();
   }
 
   const hierarchy: ScatterBinGroup[] = [];

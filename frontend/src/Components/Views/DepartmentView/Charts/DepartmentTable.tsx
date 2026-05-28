@@ -7,6 +7,7 @@ import { scaleLinear, scaleLog } from 'd3-scale';
 import { max as d3Max, ticks as d3Ticks } from 'd3-array';
 import { interpolateReds } from 'd3';
 import { observer, useLocalObservable } from 'mobx-react-lite';
+import { reaction } from 'mobx';
 import {
   MultiSelect,
   CloseButton,
@@ -32,6 +33,7 @@ import {
 import { BarChart } from '@mantine/charts';
 
 import { Store } from '../../../../Store/Store';
+import { CaseSelectionBadge } from './CaseSelectionBadge';
 import { kernelEpanechnikov, kernelDensityEstimator } from '../../../../Utils/d3Utils';
 import {
   DepartmentTableRow,
@@ -43,7 +45,7 @@ import {
   DepartmentTableRowOptions,
   DepartmentTableGroupByOptions,
 } from '../../../../Types/application';
-import { backgroundHoverColor, smallHoverColor } from '../../../../Theme/mantineTheme';
+import { backgroundHoverColor, backgroundSelectedColor, smallHoverColor } from '../../../../Theme/mantineTheme';
 import { getDepartmentContextLabel } from '../../../../Utils/departmentContext';
 import './DepartmentTable.css';
 
@@ -755,6 +757,7 @@ const HistogramFooter = observer(({
 
 const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTableConfig }) => {
   const store = useContext(Store);
+  const { selectedCaseIds } = store;
   const chartData = store.departmentChartData[chartConfig.chartId] as DepartmentTableData;
 
   // Compute department context labels for tooltips
@@ -773,6 +776,87 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
   const setHoveredValue = useCallback((val: HoveredValue) => { hoverState.current = val; }, [hoverState]);
   const [hoveredLegendGroup, setHoveredLegendGroup] = useState<string | null>(null);
   const [selectedLegendGroup, setSelectedLegendGroup] = useState<string | null>(null);
+
+  // Cross-chart selection state
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Set<string>>(new Set());
+  const selectedRowKeysRef = useRef<Set<string>>(new Set());
+  selectedRowKeysRef.current = selectedRowKeys;
+  const lastClickedIndexRef = useRef<number>(-1);
+  const dragRef = useRef({
+    active: false, selecting: true, did: false, startKey: '', startRow: null as DepartmentTableRow | null,
+  });
+  const displayedRowsRef = useRef<DepartmentTableRow[]>([]);
+
+  // External clear (badge ×) — clear local row keys too
+  useEffect(() => reaction(() => store.selectedCaseIds.size, (size) => {
+    if (size === 0) {
+      setSelectedRowKeys(new Set()); selectedRowKeysRef.current = new Set(); lastClickedIndexRef.current = -1;
+    }
+  }), [store]);
+
+  // End drag on mouseup anywhere
+  useEffect(() => {
+    const onMouseUp = () => {
+      dragRef.current.active = false;
+      dragRef.current.startRow = null;
+    };
+    window.addEventListener('mouseup', onMouseUp);
+    return () => window.removeEventListener('mouseup', onMouseUp);
+  }, []);
+
+  const rowIds = useCallback((row: DepartmentTableRow) => (row._case_ids ?? []) as string[], []);
+
+  const setRowSelected = useCallback((row: DepartmentTableRow, selected: boolean) => {
+    const key = String(row._row_key ?? '');
+    if (!key) return;
+    const next = new Set(selectedRowKeysRef.current);
+    if (selected) next.add(key); else next.delete(key);
+    selectedRowKeysRef.current = next; setSelectedRowKeys(next);
+    if (selected) {
+      store.addSelected(rowIds(row));
+    } else {
+      const otherSelectedCases = new Set(
+        displayedRowsRef.current
+          .filter((r) => next.has(String(r._row_key ?? '')))
+          .flatMap((r) => rowIds(r)),
+      );
+      store.removeSelected(rowIds(row).filter((id) => !otherSelectedCases.has(id)));
+    }
+  }, [rowIds, store]);
+
+  const handleRowMouseDown = useCallback((row: DepartmentTableRow) => {
+    const key = String(row._row_key ?? '');
+    if (!key) return;
+    dragRef.current.active = true; dragRef.current.did = false;
+    dragRef.current.startKey = key;
+    dragRef.current.startRow = row;
+    dragRef.current.selecting = !selectedRowKeysRef.current.has(key);
+  }, []);
+
+  const handleRowMouseEnter = useCallback((row: DepartmentTableRow) => {
+    store.setHovered(rowIds(row));
+    if (!dragRef.current.active) return;
+    const key = String(row._row_key ?? '');
+    if (!key || key === dragRef.current.startKey) return;
+    if (!dragRef.current.did && dragRef.current.startRow) {
+      setRowSelected(dragRef.current.startRow, dragRef.current.selecting);
+    }
+    dragRef.current.did = true;
+    setRowSelected(row, dragRef.current.selecting);
+  }, [rowIds, setRowSelected, store]);
+
+  const handleRowClick = useCallback(({ record, index, event }: { record: DepartmentTableRow; index: number; event: React.MouseEvent<Element> }) => {
+    if (dragRef.current.did) { dragRef.current.did = false; return; }
+    const key = String(record._row_key ?? '');
+    if (!key || rowIds(record).length === 0) return;
+    if (event.shiftKey && lastClickedIndexRef.current >= 0) {
+      const [lo, hi] = [Math.min(lastClickedIndexRef.current, index), Math.max(lastClickedIndexRef.current, index)];
+      displayedRowsRef.current.slice(lo, hi + 1).forEach((r) => setRowSelected(r, true));
+    } else {
+      setRowSelected(record, !selectedRowKeysRef.current.has(key));
+      lastClickedIndexRef.current = index;
+    }
+  }, [rowIds, setRowSelected]);
 
   // Syncing layout state
   const [isSyncing, setIsSyncing] = useState(false);
@@ -880,6 +964,9 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
     chartConfig.columns,
   ]);
 
+  // Reset last-clicked index when the displayed row set changes so stale shift+click ranges don't apply
+  useEffect(() => { lastClickedIndexRef.current = -1; }, [rows]);
+
   // Derive unique group values from data for both Legend and columns
   const groupValues = useMemo(() => {
     const { groupByVar } = chartConfig;
@@ -925,6 +1012,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
       _filteredGroups: getFilteredGroups(row),
     }));
   }, [rows, chartConfig.groupByVar, getFilteredGroups]);
+  displayedRowsRef.current = rowsWithGroups;
 
   const tableStyle = useMemo(() => ({ fontStyle: 'italic' as const }), []);
 
@@ -1541,6 +1629,7 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
         </Flex>
 
         <Flex direction="row" align="center" gap="sm">
+          <CaseSelectionBadge />
           {/** Aggregation Toggle */}
           <DepartmentTableLegend
             groupByVar={chartConfig.groupByVar}
@@ -1666,7 +1755,24 @@ const DepartmentTable = observer(({ chartConfig }: { chartConfig: DepartmentTabl
           storeColumnsKey={columnStorageKey}
           columns={effectiveColumns}
           style={tableStyle}
-          onRowClick={undefined}
+          onRowClick={handleRowClick}
+          rowStyle={(row) => {
+            const base: React.CSSProperties = { cursor: 'pointer', userSelect: 'none' };
+            const caseIds = (row._case_ids ?? []) as string[];
+            const allCasesSelected = caseIds.length > 0 && caseIds.every((id) => selectedCaseIds.has(id));
+            if (!selectedRowKeys.has(String(row._row_key ?? '')) && !allCasesSelected) return base;
+            return {
+              ...base,
+              backgroundColor: backgroundSelectedColor,
+              outline: `1px solid ${backgroundSelectedColor}`,
+              outlineOffset: '-1px',
+            };
+          }}
+          customRowAttributes={(row) => ({
+            onMouseDown: () => { handleRowMouseDown(row); },
+            onMouseEnter: () => { handleRowMouseEnter(row); },
+            onMouseLeave: () => store.clearHovered(),
+          })}
           minHeight={!isSyncing && chartData !== undefined && rowsWithGroups.length === 0 ? 150 : undefined}
           emptyState={(() => {
             if (isSyncing || chartData === undefined || rowsWithGroups.length > 0) return <span />;
