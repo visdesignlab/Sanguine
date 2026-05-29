@@ -2422,6 +2422,7 @@ export class RootStore {
     const newStats = this.departmentStatConfigs.filter((s) => s.statId !== statId);
     this.actions.updateDepartmentState({ statConfigs: newStats }, 'Remove Department Stat');
   }
+
   // endregion
 
   // region Filters
@@ -2874,6 +2875,17 @@ export class RootStore {
     if (!this.duckDB) return;
     const { filterValues } = this;
     if (!filterValues.dateFrom || !filterValues.dateTo) return;
+
+    // If the Department tab is active but no department is selected yet, resolve
+    // the default (largest) department first and let the reaction re-run with it set.
+    if (this.uiState.activeTab === 'Department' && !this.uiState.departmentViewDepartment) {
+      const result = await this.duckDB.query(
+        'SELECT attending_provider_department FROM visits GROUP BY attending_provider_department ORDER BY COUNT(DISTINCT visit_no) DESC LIMIT 1',
+      );
+      const dept = (result.toArray()[0]?.attending_provider_department as string) ?? null;
+      if (dept) { this.actions.setUiState({ departmentViewDepartment: dept }); return; }
+    }
+
     const dateFrom = filterValues.dateFrom.toISOString();
     const dateTo = filterValues.dateTo.toISOString();
 
@@ -2952,21 +2964,27 @@ export class RootStore {
 
     // Update all the data retrievers
     await this.updateFilteredVisitsLength();
-    await this.computeDashboardChartData();
-    await this.computeDashboardStatData();
-    await this.computeDepartmentChartData();
-    await this.computeDepartmentStatData();
+    if (activeTab === 'Hospital') {
+      await this.computeDashboardChartData();
+      await this.computeDashboardStatData();
+    }
+    if (activeTab === 'Department') {
+      await this.computeDepartmentChartData();
+      await this.computeDepartmentStatData();
+    }
     await this.generateHistogramData();
     await this.updateSelectedVisits();
 
-    // Update provider store
-    const { dateStart, dateEnd } = this.providersStore;
-    await this.providersStore.fetchProviderList(dateStart, dateEnd);
-    await this.providersStore.getProviderCharts(dateStart, dateEnd);
-    if (this.providersStore.selectedProvider) {
-      await this.providersStore.fetchSelectedProvSurgCount(dateStart, dateEnd);
-      await this.providersStore.fetchSelectedProvRbcUnits(dateStart, dateEnd);
-      await this.providersStore.fetchCmiComparison(dateStart, dateEnd);
+    // Update provider store only when on Provider tab
+    if (activeTab === 'Provider') {
+      const { dateStart, dateEnd } = this.providersStore;
+      await this.providersStore.fetchProviderList(dateStart, dateEnd);
+      await this.providersStore.getProviderCharts(dateStart, dateEnd);
+      if (this.providersStore.selectedProvider) {
+        await this.providersStore.fetchSelectedProvSurgCount(dateStart, dateEnd);
+        await this.providersStore.fetchSelectedProvRbcUnits(dateStart, dateEnd);
+        await this.providersStore.fetchCmiComparison(dateStart, dateEnd);
+      }
     }
   }
 
