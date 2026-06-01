@@ -2,6 +2,8 @@ import { BLOOD_COMPONENTS } from './bloodProducts';
 
 // Time formatting ------------------------------------------------
 // Time period types
+export type ActiveTab = 'Hospital' | 'Department' | 'Provider' | 'Settings';
+
 export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
 export type Month = `${number}-${string}`; // e.g. "2023-Jan"
 export type Year = `${number}`; // e.g. "2023"

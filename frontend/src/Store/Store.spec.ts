@@ -437,8 +437,8 @@ describe('Store - RootStore', () => {
     });
 
     test('should set UI state', () => {
-      store.actions.setUiState({ activeTab: 'Providers' });
-      expect(store.uiState.activeTab).toBe('Providers');
+      store.actions.setUiState({ activeTab: 'Provider' });
+      expect(store.uiState.activeTab).toBe('Provider');
     });
 
     test('should toggle private mode', () => {

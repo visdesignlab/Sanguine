@@ -30,6 +30,7 @@ import {
 } from '@tabler/icons-react';
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
+import { ActiveTab } from '../Types/application';
 import classes from './Shell.module.css';
 import { HospitalView } from '../Components/Views/HospitalView/HospitalView';
 import { DepartmentView } from '../Components/Views/DepartmentView/DepartmentView';
@@ -74,7 +75,7 @@ export const Shell = observer(() => {
   const defaultTab = TABS[0].key;
 
   // Active tab in the view tabs
-  const setActiveTab = (tab: string) => {
+  const setActiveTab = (tab: ActiveTab) => {
     store.actions.setUiState({ activeTab: tab });
   };
 
@@ -183,7 +184,7 @@ export const Shell = observer(() => {
               variant="outline"
               value={store.state.ui.activeTab}
               onChange={(value) => {
-                if (value) setActiveTab(value);
+                if (value) setActiveTab(value as ActiveTab);
               }}
               radius="md"
               defaultValue={defaultTab}

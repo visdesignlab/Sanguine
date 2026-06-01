@@ -34,6 +34,7 @@ import {
   dashboardYAxisOptions,
   providerViewYAxisOptions,
   DEFAULT_UNIT_COSTS,
+  ActiveTab,
 } from '../Types/application';
 import { compareTimePeriods, safeParseDate } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
@@ -970,7 +971,7 @@ export interface ApplicationState {
     clampPercentile: number;
   };
   ui: {
-    activeTab: string;
+    activeTab: ActiveTab;
     departmentViewDepartment: string | null;
     leftToolbarOpened: boolean;
     activeLeftPanel: number | null;
@@ -2883,7 +2884,10 @@ export class RootStore {
         'SELECT attending_provider_department FROM visits GROUP BY attending_provider_department ORDER BY COUNT(DISTINCT visit_no) DESC LIMIT 1',
       );
       const dept = (result.toArray()[0]?.attending_provider_department as string) ?? null;
-      if (dept) { this.actions.setUiState({ departmentViewDepartment: dept }); return; }
+      if (dept) {
+        this.actions.setUiState({ departmentViewDepartment: dept });
+        return;
+      }
     }
 
     const dateFrom = filterValues.dateFrom.toISOString();
