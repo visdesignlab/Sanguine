@@ -1,3 +1,5 @@
+name: Frontend lint and build
+
 on:
   pull_request:
     branches:
@@ -5,7 +7,7 @@ on:
 
 jobs:
   lint_and_build_test:
-    name: Push Docker image to Docker Hub
+    name: Frontend lint and build
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
