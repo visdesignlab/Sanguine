@@ -27,10 +27,15 @@ function UIDInputModal({ stateName, visible, setVisibility }: Props) {
         'X-CSRFToken': csrftoken || '',
         'Access-Control-Allow-Credentials': 'true',
       },
-      body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&user=${`u${uIDInput}`}&role=${writeAccess ? 'WR' : 'RE'}`,
+      body: new URLSearchParams({
+        csrfmiddlewaretoken: csrftoken || '',
+        name: stateName,
+        user: `u${uIDInput}`,
+        role: writeAccess ? 'WR' : 'RE',
+      }),
     })
       .then((response) => {
-        if (response.status === 200) {
+        if (response.ok) {
           store.configStore.snackBarIsError = false;
           store.configStore.snackBarMessage = 'State shared successfully!';
           store.configStore.openSnackBar = true;
@@ -39,9 +44,9 @@ function UIDInputModal({ stateName, visible, setVisibility }: Props) {
           setWriteAccess(false);
           setVisibility(false);
         } else {
-          response.text().then(() => {
+          response.text().then((message) => {
             store.configStore.snackBarIsError = true;
-            store.configStore.snackBarMessage = `An error occurred: ${response.statusText}`;
+            store.configStore.snackBarMessage = `An error occurred: ${message || response.statusText}`;
             store.configStore.openSnackBar = true;
             console.error('There has been a problem with your fetch operation:', response.statusText);
           });

@@ -83,14 +83,14 @@ function RegularModeMenu() {
       },
       body: JSON.stringify({ old_name: store.configStore.loadedStateName, new_name: store.configStore.loadedStateName, new_definition: store.provenance.exportState(false) }),
     }).then((response) => {
-      if (response.status === 200) {
+      if (response.ok) {
         store.configStore.snackBarIsError = false;
         store.configStore.snackBarMessage = 'State updated!';
         store.configStore.openSnackBar = true;
       } else {
-        response.text().then(() => {
+        response.text().then((message) => {
           store.configStore.snackBarIsError = true;
-          store.configStore.snackBarMessage = `An error occurred: ${response.statusText}`;
+          store.configStore.snackBarMessage = `An error occurred: ${message || response.statusText}`;
           store.configStore.openSnackBar = true;
         });
       }
