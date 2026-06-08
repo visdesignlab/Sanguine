@@ -38,7 +38,7 @@ function ManageStateDialog({ setOpenSaveState, setVisbility, visible }: Props) {
       },
       body: JSON.stringify({ name: stateName }),
     }).then((response) => {
-      if (response.status === 200) {
+      if (response.ok) {
         if (store.configStore.loadedStateName === stateName) {
           store.configStore.loadedStateName = '';
         }
@@ -47,8 +47,8 @@ function ManageStateDialog({ setOpenSaveState, setVisbility, visible }: Props) {
         store.configStore.snackBarMessage = 'Deletion succeed.';
         store.configStore.openSnackBar = true;
       } else {
-        response.text().then(() => {
-          store.configStore.snackBarMessage = `An error occurred: ${response.statusText}`;
+        response.text().then((message) => {
+          store.configStore.snackBarMessage = `An error occurred: ${message || response.statusText}`;
           store.configStore.snackBarIsError = true;
           store.configStore.openSnackBar = true;
           console.error('There has been a problem with your fetch operation:', response.statusText);

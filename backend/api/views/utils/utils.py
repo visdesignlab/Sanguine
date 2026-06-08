@@ -1,5 +1,6 @@
 import ast
 import csv
+import json
 import logging
 from django.db import connections
 
@@ -41,8 +42,12 @@ def log_request(request, paramsToExclude=[]):
         params = request.GET
     if request.method == "POST":
         params = request.POST
-    if request.method == "PUT" or request.method == "DELTE":
-        params = ast.literal_eval(request.body.decode())
+    if request.method == "PUT" or request.method == "DELETE":
+        body = request.body.decode()
+        try:
+            params = json.loads(body)
+        except json.JSONDecodeError:
+            params = ast.literal_eval(body)
 
     # Remove excluded params
     params = {k: v for k, v in params.items() if k not in paramsToExclude}

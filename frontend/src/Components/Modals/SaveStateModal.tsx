@@ -22,8 +22,6 @@ function SaveStateModal({ visible, setVisibility }: Props) {
     setStateName(store.configStore.stateToUpdate);
   }, [store.configStore.stateToUpdate]);
 
-  const capitalizeFirstLetter = (string: string) => string.charAt(0).toUpperCase() + string.slice(1);
-
   const onSuccess = () => {
     setVisibility(false);
     store.configStore.snackBarIsError = false;
@@ -40,6 +38,19 @@ function SaveStateModal({ visible, setVisibility }: Props) {
     console.error('There has been a problem with your fetch operation:', errorMessage);
   };
 
+  const getErrorMessage = async (response: Response) => {
+    const message = await response.text();
+    return message || response.statusText;
+  };
+
+  const updateSavedStateName = (oldName: string, newName: string) => {
+    const savedStates = store.configStore.savedState.filter((name) => name !== oldName);
+    if (!savedStates.includes(newName)) {
+      savedStates.push(newName);
+    }
+    store.configStore.setSavedState(savedStates);
+  };
+
   const saveNewState = async () => {
     const csrftoken = await simulateAPIClick();
     if (store.configStore.stateToUpdate) {
@@ -53,17 +64,16 @@ function SaveStateModal({ visible, setVisibility }: Props) {
           'Access-Control-Allow-Credentials': 'true',
         },
         body: JSON.stringify({
-          old_name: store.configStore.stateToUpdate, new_name: stateName, new_definition: store.provenance.exportState(false), new_public: capitalizeFirstLetter(publicAccess.toString()),
+          old_name: store.configStore.stateToUpdate, new_name: stateName, new_definition: store.provenance.exportState(false), new_public: publicAccess.toString(),
         }),
       }).then((response) => {
-        if (response.status === 200) {
+        if (response.ok) {
+          updateSavedStateName(store.configStore.stateToUpdate, stateName);
           store.configStore.stateToUpdate = '';
           store.configStore.loadedStateName = stateName;
           onSuccess();
         } else {
-          response.text().then(() => {
-            onFail(response.statusText);
-          });
+          getErrorMessage(response).then(onFail);
         }
       }).catch((error) => {
         onFail(error.toString());
@@ -81,15 +91,21 @@ function SaveStateModal({ visible, setVisibility }: Props) {
           'Content-Type': 'application/x-www-form-urlencoded',
           'X-CSRFToken': csrftoken || '',
         },
-        body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${store.provenance.exportState(false)}&public=${publicAccess.toString()}`,
+        body: new URLSearchParams({
+          csrfmiddlewaretoken: csrftoken || '',
+          name: stateName,
+          definition: store.provenance.exportState(false),
+          public: publicAccess.toString(),
+        }),
       }).then((response) => {
-        if (response.status === 200) {
+        if (response.ok) {
           store.configStore.loadedStateName = stateName;
+          if (!store.configStore.savedState.includes(stateName)) {
+            store.configStore.addNewState(stateName);
+          }
           onSuccess();
         } else {
-          response.text().then(() => {
-            onFail(response.statusText);
-          });
+          getErrorMessage(response).then(onFail);
         }
       }).catch((error) => {
         onFail(error.toString());

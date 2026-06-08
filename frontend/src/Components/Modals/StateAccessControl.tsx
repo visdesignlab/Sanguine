@@ -27,7 +27,8 @@ function StateAccessControl({ stateName, openStateAccessControl, setOpenStateAcc
 
   const makeStateAccessRequest = () => {
     if (stateName) {
-      fetch(`${import.meta.env.VITE_QUERY_URL}state_unids?state_name=${stateName}`)
+      const params = new URLSearchParams({ state_name: stateName });
+      fetch(`${import.meta.env.VITE_QUERY_URL}state_unids?${params}`)
         .then((response) => response.json())
         .then((data) => {
           //   const result = data.result;
@@ -62,10 +63,15 @@ function StateAccessControl({ stateName, openStateAccessControl, setOpenStateAcc
         'X-CSRFToken': csrftoken || '',
         'Access-Control-Allow-Credentials': 'true',
       },
-      body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&user=${uID}&role=${newAccess}`,
+      body: new URLSearchParams({
+        csrfmiddlewaretoken: csrftoken || '',
+        name: stateName,
+        user: uID,
+        role: newAccess,
+      }),
     })
       .then((response) => {
-        if (response.status === 200) {
+        if (response.ok) {
           store.configStore.snackBarIsError = false;
           store.configStore.snackBarMessage = 'Change succeed.';
           store.configStore.openSnackBar = true;
@@ -74,9 +80,9 @@ function StateAccessControl({ stateName, openStateAccessControl, setOpenStateAcc
           // updateAccessArray(newAccessArray)
           makeStateAccessRequest();
         } else {
-          response.text().then(() => {
+          response.text().then((message) => {
             store.configStore.snackBarIsError = true;
-            store.configStore.snackBarMessage = `An error occurred: ${response.statusText}`;
+            store.configStore.snackBarMessage = `An error occurred: ${message || response.statusText}`;
             store.configStore.openSnackBar = true;
 
             console.error('There has been a problem with your fetch operation:', response.statusText);

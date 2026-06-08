@@ -50,7 +50,8 @@ function StateManagementSuite() {
   }, []);
 
   const loadSavedState = async (name: string) => {
-    const res = await (fetch(`${import.meta.env.VITE_QUERY_URL}state?name=${name}`));
+    const params = new URLSearchParams({ name });
+    const res = await (fetch(`${import.meta.env.VITE_QUERY_URL}state?${params}`));
     const result = await res.json();
     store.provenance.importState(result.definition);
   };

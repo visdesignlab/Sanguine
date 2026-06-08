@@ -1,4 +1,5 @@
 import ast
+import json
 from django.http import (
     HttpResponse,
     JsonResponse,
@@ -13,6 +14,22 @@ from django.views.decorators.http import require_http_methods
 from api.models import State, StateAccess, AccessLevel
 from .decorators.conditional_login_required import conditional_login_required
 from .utils.utils import log_request
+
+
+def parse_request_body(request):
+    body = request.body.decode()
+    try:
+        return json.loads(body)
+    except json.JSONDecodeError:
+        return ast.literal_eval(body)
+
+
+def parse_bool(value):
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    return str(value).lower() == "true"
 
 
 @require_http_methods(["GET", "POST", "PUT", "DELETE"])
@@ -72,19 +89,17 @@ def state(request):
             )
             new_state.save()
 
-            return HttpResponse("state object created", 201)
+            return HttpResponse("state object created", status=201)
         else:
             return HttpResponseBadRequest("missing params: [name, definition, owner]")
 
     elif request.method == "PUT":
         # Get the required information from the request body
-        put = ast.literal_eval(request.body.decode())
+        put = parse_request_body(request)
         old_name = put.get("old_name")
         new_name = put.get("new_name")
         new_definition = put.get("new_definition")
         new_public_request = put.get("new_public")
-
-        new_public = True if new_public_request == "true" else False
 
         owned_states = [o.name for o in State.objects.all().filter(owner=request.user)]
         public_states = [o.name for o in State.objects.all().filter(public=True)]
@@ -110,14 +125,15 @@ def state(request):
         result = State.objects.get(name=old_name)
         result.name = new_name
         result.definition = new_definition
-        result.public = new_public
+        if new_public_request is not None:
+            result.public = parse_bool(new_public_request)
         result.save()
 
         return HttpResponse("state object updated")
 
     elif request.method == "DELETE":
         # Get the required information from the request body
-        delete = ast.literal_eval(request.body.decode())
+        delete = parse_request_body(request)
         name = delete.get("name")
 
         # Delete the matching State object
@@ -190,7 +206,7 @@ def share_state(request):
         user=user,
         role=role,
     )
-    return HttpResponse("Added new user to role", 201)
+    return HttpResponse("Added new user to role", status=201)
 
 
 @require_http_methods(["GET"])
