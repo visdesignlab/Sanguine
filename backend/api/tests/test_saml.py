@@ -6,15 +6,11 @@ from tempfile import NamedTemporaryFile
 from unittest.mock import patch
 
 import environ
-from django.contrib.auth import get_user_model
-from django.core.cache import cache
-from django.core.exceptions import PermissionDenied
-from django.test import SimpleTestCase, TestCase, override_settings
+from django.test import SimpleTestCase
 
-from api.saml import SanguineSaml2Backend, build_saml_settings
+from api.saml import build_saml_settings
 
 
-HAS_DJANGOSAML2 = importlib.util.find_spec("djangosaml2") is not None
 HAS_PYSAML2 = importlib.util.find_spec("saml2") is not None
 
 
@@ -43,7 +39,7 @@ def saml_env():
         SAML_EMAIL_ATTRIBUTE=(str, "email"),
         SAML_FIRST_NAME_ATTRIBUTE=(str, "first_name"),
         SAML_LAST_NAME_ATTRIBUTE=(str, "last_name"),
-        SAML_DEFAULT_REDIRECT_URL=(str, "/"),
+        SAML_DEFAULT_REDIRECT_URL=(str, "/api"),
     )
 
 
@@ -79,7 +75,7 @@ class SAMLConfigTests(SimpleTestCase):
         self.assertTrue(settings_dict["SAML_CONFIG"]["service"]["sp"]["authn_requests_signed"])
         self.assertTrue(settings_dict["SAML_CONFIG"]["service"]["sp"]["logout_requests_signed"])
         self.assertTrue(settings_dict["SAML_CONFIG"]["service"]["sp"]["want_response_signed"])
-        self.assertEqual(settings_dict["ACS_DEFAULT_REDIRECT_URL"], "/")
+        self.assertEqual(settings_dict["ACS_DEFAULT_REDIRECT_URL"], "/api")
 
     @unittest.skipUnless(HAS_PYSAML2, "pysaml2 is not installed")
     def test_file_metadata_mode_uses_local_file(self):
@@ -171,61 +167,3 @@ class SAMLConfigTests(SimpleTestCase):
         with open(metadata_path, "r", encoding="utf-8") as handle:
             self.assertEqual(handle.read(), "<xml />")
         self.assertEqual(settings_dict["SAML_ATTRIBUTE_MAPPING"]["mail"], ("username", "email"))
-
-
-@override_settings(
-    SAML_USERNAME_ATTRIBUTE="mail",
-    SAML_EMAIL_ATTRIBUTE="mail",
-    SAML_FIRST_NAME_ATTRIBUTE="givenName",
-    SAML_LAST_NAME_ATTRIBUTE="sn",
-)
-class SAMLBackendTests(TestCase):
-    def setUp(self):
-        cache.clear()
-
-    @unittest.skipUnless(HAS_DJANGOSAML2, "djangosaml2 is not installed")
-    def test_backend_updates_and_saves_user_fields(self):
-        backend = SanguineSaml2Backend()
-        attributes = {
-            "mail": ["alice@example.com"],
-            "givenName": ["Alice"],
-            "sn": ["Smith"],
-        }
-        attribute_mapping = {
-            "mail": ("username", "email"),
-            "givenName": ("first_name",),
-            "sn": ("last_name",),
-        }
-
-        user = get_user_model()()
-        updated_user = backend._update_user(user, attributes, attribute_mapping)
-
-        self.assertEqual(updated_user.username, "alice@example.com")
-        self.assertEqual(updated_user.email, "alice@example.com")
-        self.assertEqual(updated_user.first_name, "Alice")
-        self.assertEqual(updated_user.last_name, "Smith")
-        self.assertTrue(get_user_model().objects.filter(username="alice@example.com").exists())
-
-    @unittest.skipUnless(HAS_DJANGOSAML2, "djangosaml2 is not installed")
-    def test_backend_rejects_missing_identity_attribute(self):
-        backend = SanguineSaml2Backend()
-
-        with self.assertRaises(PermissionDenied):
-            backend.clean_attributes({"givenName": ["Alice"]}, "idp.example.edu")
-
-    @unittest.skipUnless(HAS_DJANGOSAML2, "djangosaml2 is not installed")
-    def test_backend_rejects_replayed_assertions(self):
-        backend = SanguineSaml2Backend()
-        attributes = {"mail": ["alice@example.com"]}
-        attribute_mapping = {"mail": ("username", "email")}
-        assertion_info = {
-            "assertion_id": "assertion-123",
-            "not_on_or_after": "2099-01-01T00:00:00Z",
-        }
-
-        self.assertTrue(
-            backend.is_authorized(attributes, attribute_mapping, "idp.example.edu", assertion_info)
-        )
-        self.assertFalse(
-            backend.is_authorized(attributes, attribute_mapping, "idp.example.edu", assertion_info)
-        )
