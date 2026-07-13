@@ -169,9 +169,14 @@ class Command(BaseCommand):
 
         # Generate mock data for SURGERY_CASE
         for pat, visit in visits:
-            surg1_start = visit.ADM_DTM + timedelta(hours=2)
-            surg2_start = visit.ADM_DTM + timedelta(days=1)
-            for start_time in [surg1_start, surg2_start]:
+            if random.random() < 0.3:  # ~30% of visits get only one surgery
+                surgery_starts = [visit.ADM_DTM + timedelta(hours=2)]
+            else:
+                surgery_starts = [
+                    visit.ADM_DTM + timedelta(hours=2),
+                    visit.ADM_DTM + timedelta(days=1)
+                ]
+            for start_time in surgery_starts:
                 surg_end = make_aware(fake.date_time_between(start_date=start_time, end_date=start_time + timedelta(hours=5)))
 
                 surgeon = fake.random_element(elements=surgeons)
@@ -201,7 +206,6 @@ class Command(BaseCommand):
         # Generate mock data for BILLING_CODES
         codes, _, _ = get_all_cpt_code_filters()
         for surg in surgeries:
-            for rank in range(random.randint(1, 5)):
                 BILLING_CODES.objects.create(
                     VISIT_NO=surg.VISIT_NO,
                     CODE_TYPE_DESC=fake.sentence(),
@@ -211,8 +215,9 @@ class Command(BaseCommand):
                     PROV_ID=surg.SURGEON_PROV_ID,
                     PROV_NAME=surg.SURGEON_PROV_NAME,
                     PRESENT_ON_ADM_F=fake.random_element(elements=('Y', None)),
-                    CODE_RANK=rank,
+                    CODE_RANK=1,
                 )
+
         self.stdout.write(self.style.SUCCESS('Successfully generated billing codes data'))
 
         # Generate mock data for VISIT_LABS
